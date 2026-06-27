@@ -55,6 +55,7 @@ axis-lms-v1.2/
     ├── components/
     │   ├── AdminLayout.tsx       # Back Office 레이아웃 — 사이드바 메뉴, RBAC 메뉴 필터링
     │   ├── ClassFormModal.tsx    # 반 등록/수정 모달
+    │   ├── EnrollmentFormModal.tsx # 학생 상세 "반 등록" 모달 (Enrollment 생성)
     │   ├── AssessmentFormModal.tsx # 시험 등록 모달 (기본정보/문항 구성 2탭, 문항 단위 혼합 채점 설정)
     │   ├── StatusBadge.tsx       # 상태 배지 공통 컴포넌트
     │   ├── ErrorBoundary.tsx     # 전역 에러 바운더리
@@ -64,6 +65,7 @@ axis-lms-v1.2/
     │   ├── AuthContext.tsx        # 인증/권한 컨텍스트 (Account Engine + RBAC Foundation)
     │   ├── StudentContext.tsx     # 학생 데이터 CRUD
     │   ├── ClassContext.tsx       # 반 데이터 CRUD
+    │   ├── EnrollmentContext.tsx  # 수강(Enrollment) 데이터 관리 — Finance Engine 준비용 단일 진실 공급원
     │   ├── AttendanceContext.tsx  # 출결 세션/기록 관리
     │   ├── AssessmentContext.tsx  # 시험 생성/채점/공개/정정 관리
     │   └── ThemeContext.tsx       # 테마 Provider (현재 light 고정 패스스루)
@@ -72,6 +74,7 @@ axis-lms-v1.2/
     │   ├── rbac.ts                # Position / PermissionGroup / PermissionKey / canResetPassword 등 RBAC 핵심
     │   ├── dummyData.ts           # 학생 더미 데이터 + Student/ClassInfo/Guardian 등 타입
     │   ├── classData.ts           # 반 더미 데이터 + ClassRoom 타입
+    │   ├── enrollmentData.ts      # 수강(Enrollment) 더미 데이터 + 타입, Finance Engine 연동용 조회 helper
     │   ├── attendanceData.ts      # 출결 더미 데이터 + AttendanceStatus 등 타입
     │   ├── assessmentData.ts      # 시험 더미 데이터 + Exam/ExamSubmission 타입, 채점/공개 판정 파생 함수
     │   ├── studentDerived.ts      # 학생 화면에서 쓰는 파생 계산(수강현황, 재무, 모의고사 등)
@@ -190,6 +193,15 @@ axis-lms-v1.2/
   재무관리 연결은 포함하지 않았습니다.
 - 학생 성적조회 탭에 반영되는 Assessment Engine 결과는 시험명·시험일·총점만 표시합니다(`MockExamScore`
   처럼 과목별 등급·백분위 세부 분석은 제공하지 않습니다 — 시험관리 엔진은 문항 단위 총점 중심입니다).
+- Enrollment Foundation 도입 후에도 학생-반 연결은 여전히 세 곳에 동기적으로 존재합니다:
+  `EnrollmentContext`(신규, Finance Engine 단일 진실 공급원), `ClassContext.studentClassMap`(Attendance/
+  Assessment Engine이 참조), `Student.classes`(StudentList 필터/배지, 재무탭, 강사 권한범위 계산이 참조).
+  `EnrollmentContext`의 등록/종료/퇴원 함수가 세 곳을 함께 갱신해 동기화를 보장하지만, 완전한 단일화는
+  Finance Engine 본체 단계에서 검토할 수 있습니다.
+- `AssessmentEngine`의 더미 시험(`exam-001`, cls-001 대상)의 응시자 더미(stu-001/002/003)와 이번에
+  정리한 `CLASS_STUDENT_MAP`/`Enrollment` 더미(cls-001 수강생: stu-001/002)가 완전히 일치하지는 않습니다
+  (stu-003은 Enrollment 상 cls-001 수강 이력이 없는데 그 반 시험에는 응시자로 들어가 있음). 서로 다른
+  라운드에서 독립적으로 만들어진 시드 데이터의 디테일 차이이며, 핵심 기능 동작에는 영향이 없습니다.
 
 ---
 

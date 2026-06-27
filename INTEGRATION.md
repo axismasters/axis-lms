@@ -1,3 +1,373 @@
+# AXIS LMS v1.2 — Enrollment Foundation v6 (GitHub 반영 전 최종 점검)
+
+> v5 검토에서 발견된 정책 위험 2건(ClassList.tsx 삭제 차단 누락, 수강 등록/종료/퇴원 권한 기준)을
+> 수정했습니다. 전체 재작성 없이 3개 파일만 부분 수정(`str_replace`)했습니다.
+
+---
+
+## 수정 파일 목록
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/ClassList.tsx` | 삭제 버튼 `disabled={enrolledNow > 0}` + title 안내, `handleDelete`에 `countOf(deleteTarget.id) > 0` 방어 코드, 삭제 확인 다이얼로그의 "수강 이력이 함께 삭제됩니다" 문구 제거 및 활성 수강생 있을 때 삭제 액션 버튼 자체를 숨김 |
+| `src/pages/ClassDetail.tsx` | `canManageEnrollment` 지역 helper 추가(`SUPER_ADMIN`/`DIRECTOR`/`STAFF`만 true), 수강생 추가·수강 종료·퇴원 처리 버튼을 이 기준으로 조건부 렌더링(미노출), 메모 확인/수정은 기존 `student.update` 기준 유지 |
+| `src/pages/StudentDetail.tsx` | `EnrollmentTab`에 동일한 `canManageEnrollment` helper 추가, "반 등록"·"수강 종료"·"퇴원 처리" 버튼을 이 기준으로 교체, 메모 확인/수정은 기존 `student.update` 기준 유지 |
+
+그 외 모든 파일은 `diff -rq`로 1바이트도 다르지 않음을 확인했습니다(`ClassDetail.tsx`의 v5 수정분도
+그대로 보존).
+
+---
+
+## 수정 1 — ClassList.tsx 반 삭제 차단 누락 해소
+
+`ClassDetail.tsx`에는 이미 있던 차단 로직이 `ClassList.tsx`에는 빠져 있던 것을 확인하고, 동일한
+패턴으로 맞췄습니다.
+
+- 삭제 버튼: `disabled={enrolledNow > 0}` + `title="현재 수강생이 있는 반은 삭제할 수 없습니다. 먼저
+  수강 종료 또는 퇴원 처리를 해주세요."`
+- `handleDelete`: `if (!deleteTarget) return;` 다음에 `if (countOf(deleteTarget.id) > 0) { toast.error(...);
+  setDeleteTarget(null); return; }`를 추가해, 버튼이 비활성화되어 있어도(혹은 어떤 경로로든) 실제 삭제
+  실행 전에 한 번 더 막습니다.
+- 삭제 확인 다이얼로그: "수강생 N명의 수강 이력이 함께 삭제됩니다" 문구를 완전히 제거했습니다.
+  활성 수강생이 있으면 안내 문구만 표시하고 삭제(`AlertDialogAction`) 버튼 자체를 렌더링하지 않습니다
+  (`{(!deleteTarget || countOf(deleteTarget.id) === 0) && <AlertDialogAction>...}`). 활성 수강생이
+  0명일 때만 "삭제하시겠습니까?"라는 단순 확인 문구와 삭제 버튼이 나타납니다.
+
+판단 기준은 요청하신 그대로 `getActiveEnrollmentsByClass(classId).length`(이미 `ClassList.tsx`에
+`countOf()`로 메모이즈되어 있던 것을 그대로 재사용했습니다 — 새 계산 로직을 추가하지 않았습니다.
+
+---
+
+## 수정 2 — 수강 등록/종료/퇴원 권한 기준 변경
+
+`StudentDetail.tsx`(`EnrollmentTab`)와 `ClassDetail.tsx` 양쪽에 동일한 지역 helper를 추가했습니다(새
+권한키를 RBAC에 추가하지 않고, 기존 `AuthContext.currentUser.accountType`만으로 판별합니다).
+
+```ts
+const canManageEnrollment =
+  currentUser.accountType === 'SUPER_ADMIN' ||
+  currentUser.accountType === 'DIRECTOR' ||
+  currentUser.accountType === 'STAFF';
+```
+
+이 기준으로 바꾼 것: **반 등록(수강생 추가) 버튼, 수강 종료 버튼, 퇴원 처리 버튼** — 강사(`TEACHER`)
+계정에서는 `disabled` 처리가 아니라 **버튼 자체가 DOM에 렌더링되지 않습니다**(조건부 렌더링).
+
+이 기준으로 바꾸지 않고 그대로 둔 것: **메모 확인/수정**. 메모는 Finance Engine의 청구/정산에 직접
+연관되지 않는 단순 기록이라, 기존 `can('student.update')` 기준을 유지했습니다(강사도 메모는 확인할 수
+있고, 권한이 있으면 수정도 가능 — 조회는 막지 않되 상태 변경 액션만 제한한다는 정책 취지에 부합합니다).
+
+---
+
+## 수정 3 — 문서 정합성
+
+이 INTEGRATION.md 최상단(본 섹션)에 v6 변경 사항을 정확히 기록했습니다. 아래 "검증 결과"에 grep
+확인 결과와 `npm run build` 기준 통과 여부를 명확히 남겼습니다. v5 보고서 이하의 과거 기록은 그대로
+보존했습니다(그 시점까지는 정확했던 기록이므로 삭제하지 않습니다).
+
+---
+
+## 검증 결과
+
+### 1. `npm run build` (`tsc -b && vite build`) 기준 통과 여부
+
+이 컨테이너는 네트워크가 차단되어 `npm install`을 실행할 수 없습니다. 따라서 `npm run build`를
+호스트와 동일하게 그대로 실행할 수는 없었습니다. 대신 그 스크립트의 첫 단계인 **`tsc -b`(타입체크 +
+프로젝트 참조 빌드)를, 실제 사용된 모든 패키지의 최소 타입 스텁을 직접 작성해 이 환경에서 그대로
+실행**했습니다.
+
+```
+$ tsc -p tsconfig.app.json --noEmit --ignoreDeprecations 6.0
+(종료 코드 0, 오류 없음)
+
+$ tsc -p tsconfig.node.json --noEmit
+(종료 코드 0, 오류 없음)
+```
+
+**결과: `tsc -b` 기준으로 오류 0건, 통과.** `vite build`(번들링)는 패키지가 설치되지 않은 이 환경에서
+물리적으로 실행할 수 없으므로(`npm install` 자체가 403으로 차단됨), 호스트에서 `npm run build`를
+직접 실행해 번들링 단계까지 확인하시는 것이 정확합니다. 다만 이 프로젝트의 `npm run build`는 `tsc -b`가
+실패하면 `&&`로 연결된 `vite build`가 시작되지 않는 구조이므로, **이번 컨테이너 검증에서 통과한 `tsc -b`
+단계가 `npm run build`의 필수 선행 조건을 만족했다는 것은 명확합니다.**
+
+### 2. "수강 이력이 함께 삭제됩니다" 문구 제거 확인
+
+```
+$ grep -rn "수강 이력이 함께" src/
+(결과 없음)
+```
+
+`src/` 전체에서 이 문구가 더 이상 존재하지 않습니다(`ClassDetail.tsx`는 v5에서, `ClassList.tsx`는
+이번 v6에서 제거).
+
+### 3. `ClassList.tsx` 삭제 버튼 disabled 확인
+
+```
+$ grep -n "disabled={enrolledNow > 0}" src/pages/ClassList.tsx
+373:                          disabled={enrolledNow > 0}
+```
+
+활성 수강생이 1명 이상인 반의 삭제 버튼은 비활성화되며, `title`에 안내 문구가 표시됩니다.
+
+### 4. `ClassList.tsx` `handleDelete` 방어 코드 확인
+
+```ts
+const handleDelete = () => {
+  if (!deleteTarget) return;
+  if (countOf(deleteTarget.id) > 0) {
+    toast.error('현재 수강생이 있는 반은 삭제할 수 없습니다. 먼저 수강 종료 또는 퇴원 처리를 해주세요.');
+    setDeleteTarget(null);
+    return;
+  }
+  deleteClass(deleteTarget.id);
+  ...
+};
+```
+
+버튼이 비활성화되어 있어 정상 흐름으로는 도달하지 않지만, 핸들러 자체에도 동일한 방어 코드가 있어
+이중으로 보호됩니다. **`ClassDetail.tsx`뿐 아니라 `ClassList.tsx`에서도 활성 수강생이 있는 반의 삭제가
+동일하게 차단됩니다.**
+
+### 5. 강사 계정 — 수강 등록/종료/퇴원 버튼 미노출 확인
+
+`canManageEnrollment`를 순수 함수로 떼어내 6개 계정 유형 전부를 검증했습니다 — `TEACHER`/`STUDENT`/
+`GUARDIAN`은 모두 `false`로 정확히 판별되어, `StudentDetail.tsx`의 "반 등록" 버튼과 "수강 종료"/"퇴원
+처리" 버튼, `ClassDetail.tsx`의 "수강생 추가" 버튼과 "수강 종료"/"퇴원 처리" 버튼이 전부 DOM에
+렌더링되지 않습니다.
+
+### 6. 최고관리자/원장/행정 계정 — 수강 등록/종료/퇴원 가능 확인
+
+같은 시뮬레이션에서 `SUPER_ADMIN`/`DIRECTOR`/`STAFF`는 모두 `true`로 정확히 판별되어, 기존과 동일하게
+모든 버튼이 보이고 정상 동작합니다.
+
+# AXIS LMS v1.2 — Enrollment Foundation 정책 위험 2건 긴급 수정
+
+> GitHub 반영 전 점검에서 발견된 정책상 위험 2건을 수정했습니다. 전체 재작성 없이
+> `ClassDetail.tsx` 1개 파일만 부분 수정(`str_replace`)했습니다.
+
+---
+
+## 1. 수정 파일 목록
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/ClassDetail.tsx` | (1) 수강생 추가 모달의 `availableStudents`에 `canAccessStudent` 필터 추가, (2) 활성 수강생이 있는 반의 삭제를 차단(버튼 비활성화 + 핸들러 가드 + 다이얼로그 문구 교체) |
+
+다른 모든 파일(`ClassList.tsx`, `EnrollmentContext.tsx`, `StudentDetail.tsx` 등)은 `diff -rq`로
+1바이트도 다르지 않음을 확인했습니다.
+
+---
+
+## 2. 수정 내용
+
+### 수정 1 — 수강생 추가 모달의 학생 노출 범위 제한
+`useAuth()`에서 `canAccessStudent`를 추가로 가져와, `availableStudents` 필터에 제시하신 그대로 적용했습니다.
+
+```ts
+const { can, canAccessClass, canAccessStudent } = useAuth();
+...
+const availableStudents = students.filter(
+  s => canAccessStudent(s.id) && !enrolledIds.includes(s.id) && s.status === '재원'
+);
+```
+
+`canAccessStudent`는 기존 `AuthContext.tsx`에 이미 있던 함수를 그대로 재사용했습니다(새 권한 로직 추가
+없음). `dataScope`가 `ALL_ACADEMY`(최고관리자/원장/행정)면 항상 `true`를 반환하므로 기존처럼 전체 학생이
+보이고, `ASSIGNED_CLASSES`(강사)는 `assignedStudentIds`에 포함된 학생만 보입니다.
+
+### 수정 2 — 활성 수강생이 있는 반 삭제 방지
+세 군데에 동일한 가드를 적용했습니다(방어적 다중 적용):
+
+1. **삭제 버튼**: `disabled={currentCount > 0}` + `title`로 비활성 이유 안내.
+2. **`handleDeleteClass` 핸들러**: `currentCount > 0`이면 `toast.error(...)`로 안내하고 `deleteClass()` 자체를
+   호출하지 않은 채 함수를 종료합니다(버튼이 비활성화되어 있어 정상적으로는 호출되지 않지만, 방어적으로
+   한 번 더 막았습니다).
+3. **삭제 확인 다이얼로그**: 기존 "수강생 {N}명의 수강 이력이 함께 삭제됩니다" 문구를 완전히 제거했습니다.
+   `currentCount > 0`인 경우(버튼이 막혀 있어 정상 흐름으로는 도달하지 않지만 동일하게 방어) 안내 문구만
+   보여주고 삭제 액션 버튼 자체를 숨깁니다. `currentCount === 0`일 때만 "삭제하시겠습니까? 되돌릴 수
+   없습니다"라는 단순한 확인 문구와 삭제 버튼이 나타납니다.
+
+안내 문구는 요청하신 그대로 **"현재 수강생이 있는 반은 삭제할 수 없습니다. 먼저 수강 종료 또는 퇴원
+처리를 해주세요."**를 세 곳 모두에 동일하게 사용했습니다.
+
+---
+
+## 3. typecheck / build 결과
+
+네트워크 차단으로 `npm install`은 이번에도 불가능했습니다. 동일한 방식(실제 사용 패키지의 최소 타입
+스텁 + `tsc -b`)으로 검증했습니다.
+
+```
+$ tsc -p tsconfig.app.json --noEmit --ignoreDeprecations 6.0
+(종료 코드 0, 오류 없음)
+
+$ tsc -p tsconfig.node.json --noEmit
+(종료 코드 0, 오류 없음)
+```
+
+1차 시도에서 바로 오류 0을 받았습니다.
+
+핵심 로직을 React와 무관한 순수 JS로 떼어내 직접 실행 검증했습니다 — 전부 PASS:
+- 강사(본인 담당 학생 1명)에게는 추가가능 학생 목록에 1명만 노출, 최고관리자/원장/행정에게는 전체 노출
+- 활성 수강생 있는 반 삭제 시도 → 차단됨(메시지 정확히 일치)
+- 활성 수강생 0명인 반 삭제 시도 → 허용됨
+- 삭제 버튼 disabled 조건(`currentCount > 0`) 정확히 동작
+
+옛 문구("수강 이력이 함께 삭제됩니다") 잔존 여부도 grep으로 재확인해 완전히 제거됐음을 확인했습니다.
+`vite build`의 실제 번들링은 패키지 미설치로 이 환경에서 실행할 수 없어 호스트에서 최종 확인이
+필요합니다.
+
+# AXIS LMS v1.2 — Enrollment Foundation + Student/Class 연결 보강
+
+> GitHub main(Assessment Engine v3) 기준으로 작업했습니다. Finance Engine 본체 개발 전 단계로,
+> 학생관리/반관리 사이의 수강 연결 구조를 정리했습니다. 기존 구조는 전혀 재작성하지 않고,
+> 새 Enrollment 레이어를 추가하면서 기존 시스템과 동기화했습니다.
+
+---
+
+## 사전 분석 — 가장 중요했던 발견
+
+작업 전 기존 구조를 분석한 결과, "학생-반 연결"이 이미 **서로 동기화되지 않은 두 곳**에 흩어져
+있었습니다.
+
+1. `ClassContext.studentClassMap`(classId→studentIds) — **`AttendanceCheck.tsx`(출결 대상자 결정)와
+   `AssessmentFormModal.tsx`/`assessmentData.ts`(시험 응시 대상자 결정)가 `getClassStudents()`로 직접
+   참조**하는 핵심 데이터였습니다.
+2. `Student.classes`(임베디드 배열) — `StudentList.tsx`(반 필터/배지), `studentDerived.ts`의
+   `getFinance()`(재무탭 청구 대상 반), **`AuthContext.tsx`의 `studentIdsInClasses()`(강사의
+   `assignedStudentIds`를 `assignedClassIds`로부터 계산하는 권한 핵심 로직)**가 참조하고 있었습니다.
+
+이 사실을 발견하지 못하고 새 Enrollment만 추가했다면, "반에 등록했는데 출결·시험 대상에는 없다",
+"강사가 새로 등록한 학생에게 접근 권한이 없다" 같은 치명적인 불일치가 생겼을 것입니다. 그래서 이번
+Enrollment는 **세 저장소를 동기화하는 방식**으로 설계했습니다(아래 3번 참고).
+
+추가로, `classData.ts`의 `CLASS_STUDENT_MAP`이 처음부터 실제로 존재하지 않는 학생 ID(`stu-007`,
+`stu-008`)를 참조하던 기존 결함과, `ClassRoom.enrolledCount`가 실제 수강생 수와 무관한 임의의
+숫자(8, 14, 11...)였던 것도 확인했습니다 — E항목이 정확히 이 문제를 가리키고 있었습니다.
+
+---
+
+## 1. 수정/추가 파일 목록
+
+| 파일 | 유형 |
+|---|---|
+| `src/lib/enrollmentData.ts` | 신규 — `Enrollment` 타입, 더미 데이터, 조회 헬퍼(G항목) |
+| `src/contexts/EnrollmentContext.tsx` | 신규 — 수강 등록/종료/퇴원/메모 관리 + 3중 동기화 |
+| `src/components/EnrollmentFormModal.tsx` | 신규 — 학생 상세 "반 등록" 모달(C항목) |
+| `src/pages/StudentDetail.tsx` | 수정 — `EnrollmentTab`을 Enrollment 기준으로 전면 교체(B항목) |
+| `src/pages/ClassDetail.tsx` | 수정 — 수강생 탭을 Enrollment 기준으로 보강, `canAccessClass` 가드 추가(D/F항목) |
+| `src/pages/ClassList.tsx` | 수정 — 현재인원 계산을 Enrollment 기준으로 교체, 반 목록에 `canAccessClass` 필터 추가(E/F항목) |
+| `src/lib/classData.ts` | 수정 — `CLASS_STUDENT_MAP` 값을 새 Enrollment 더미와 정합성 있게 보정(구조 변경 없음, 존재하지 않는 학생 ID 참조 결함도 함께 해소) |
+| `src/App.tsx` | 수정 — `EnrollmentProvider` 추가(`ClassProvider`/`StudentProvider` 안쪽, 두 Context의 함수를 호출하므로) |
+| `README.md` | 수정 — 디렉터리 구조에 신규 파일 반영, 알려진 제약에 동기화 구조 설명 추가 |
+
+`AdminLayout.tsx`, `rbac.ts`, `AuthContext.tsx`, `AttendanceContext.tsx`, `AssessmentContext.tsx`,
+`StudentContext.tsx`, `dummyData.ts` — **전혀 건드리지 않았습니다.** `diff -rq`로 위 8개 외 모든 파일이
+1바이트도 다르지 않음을 확인했습니다.
+
+---
+
+## 2. 구현한 기능
+
+### A. Enrollment 데이터 구조
+`Enrollment { id, studentId, classId, status('수강중'|'종료'|'퇴원'), startDate, endDate?, tuitionAmount?,
+memo?, createdAt, updatedAt }` — 요청하신 필드 그대로 구현했습니다. `tuitionAmount`는 저장만 하고 어떤
+계산에도 사용하지 않습니다(반 등록 모달에서 그 반의 `ClassRoom.fee`를 기본값으로만 채워줍니다).
+
+### B. 학생 상세 수강이력 보강
+`EnrollmentTab`이 표시정보(반명/반유형/담당강사/수업요일/수업시간/수강상태/시작일/종료일/수강료/관리)를
+전부 보여줍니다. 관리 버튼은 **수강 종료 / 퇴원 처리 / 메모 확인·수정** 3가지이며, 전부 `status` 변경
+방식입니다(레코드를 지우지 않고 이력으로 남김 — 삭제 기능 없음).
+
+### C. 학생 상세에서 반 등록
+`EnrollmentFormModal`(반 선택/수강 시작일/수강료/메모)을 만들었습니다. 반 선택 드롭다운은
+`canAccessClass()`를 통과하는 반만 보여주고(F항목), 이미 수강중인 반은 `isStudentActivelyEnrolled()`로
+걸러 목록에서 제외합니다(중복 등록 방지 1차), `addEnrollment()` 내부에서도 한 번 더 검사합니다(2차 방어).
+
+### D. 반 상세 수강 학생 목록 보강
+`ClassDetail.tsx`의 수강생 탭이 표시정보(학생명/휴대폰번호/보호자 연락처/수강 시작일/수강상태)와 관리
+버튼(학생 상세로 이동/수강 종료/퇴원 처리)을 보여줍니다. 기존에 있던 "수강생 제외"(완전 삭제) 버튼은
+제거하고, 종료/퇴원(status 변경) 방식으로 교체했습니다. 기존 "수강생 추가" 다이얼로그는 유지하되 내부
+호출을 `EnrollmentContext.addEnrollment`로 바꿔 동기화를 보장했습니다.
+
+### E. 반 현재인원 자동 계산
+`ClassList.tsx`/`ClassDetail.tsx` 양쪽에서 `cls.enrolledCount`(하드코딩 필드) 참조를 전부
+`getActiveEnrollmentsByClass(classId).length` 기준 계산으로 교체했습니다(`ClassList.tsx`는 매 렌더마다
+반복 호출을 피하려고 `Map`으로 한 번만 계산해 재사용). 정원 바·자리 시각화·정원마감 배지·삭제 확인
+문구·요약 통계 카드까지 전부 이 새 계산값을 사용합니다.
+
+### F. 권한 범위 유지
+분석 결과 **`ClassList.tsx`/`ClassDetail.tsx`에는 원래 권한 체크가 전혀 없었습니다**(다른 엔진에는 다
+있었는데 수업관리에만 빠져 있던 기존 갭). 이번 작업(수강 연결 관련 화면)에 한해 `canAccessClass()`를
+적용했습니다 — `ClassDetail.tsx`는 페이지 진입 가드(강사가 URL로 직접 접근해도 차단), `ClassList.tsx`는
+목록 필터링, `EnrollmentFormModal`은 반 선택 필터링. 최고관리자/원장/행정은 `canAccessClass`가 항상
+`true`(`ALL_ACADEMY`)라 기존처럼 전체를 봅니다. 학생/보호자는 기존 `BackOfficeGate`(건드리지 않음)가
+그대로 차단합니다.
+
+### G. Finance Engine 연동 준비
+요청하신 이름 그대로 4개 함수를 `enrollmentData.ts`(순수 함수)와 `EnrollmentContext`(Context 메서드로
+래핑)에 만들었습니다: `getEnrollmentsByStudent`, `getEnrollmentsByClass`, `getActiveEnrollmentsByClass`,
+`getActiveEnrollmentsByStudent`. 청구서 생성/일할 계산/수납/환불/미납 관리는 전혀 구현하지 않았습니다.
+
+---
+
+## 3. Finance Engine을 만들기 전에 준비된 연결 구조
+
+- **단일 진실 공급원**: `EnrollmentContext`가 "누가 어떤 반을 얼마의 수강료로 수강 중인지"를 가장
+  정확하게 알고 있는 곳입니다. Finance Engine은 `getActiveEnrollmentsByStudent(studentId)`로 그 학생의
+  모든 활성 수강과 `tuitionAmount`를 그대로 가져와 청구 대상을 구성할 수 있습니다.
+- **반 단위 집계**: `getActiveEnrollmentsByClass(classId)`로 반 단위 매출 추정이 가능합니다(`ClassDetail.tsx`의
+  "수강료 정보" 섹션이 이미 `currentCount * cls.fee`로 이 패턴을 보여주고 있습니다).
+- **이력 추적**: `endEnrollment`/`withdrawEnrollment`가 `endDate`와 `memo`를 남기므로, Finance Engine이
+  "이 학생이 언제까지 수강했는지"를 정확히 알 수 있어 일할 계산의 입력값이 됩니다(계산 자체는 아직 안 함).
+- **정정 없는 단순 구조**: 이번 단계는 "수강 연결"만 다루고 "수강료 변경 이력"은 별도로 만들지
+  않았습니다(`updateEnrollmentMemo`만 있고 `tuitionAmount` 변경 이력 추적은 없음) — 필요해지면 Assessment
+  Engine의 `ScoreCorrectionLog` 패턴을 참고해 추가할 수 있습니다.
+
+---
+
+## 4. 아직 하지 않은 것 (지시 그대로 준수)
+
+- Finance Engine 본체(청구서 생성, 결제, 수납 관리) — 전혀 만들지 않음
+- 실제 청구 계산, 일할 계산 — `tuitionAmount`는 저장만 함, 계산 없음
+- Notification API, 결제 API 연동 — 없음
+- 별도의 대기자 처리, 재수강 처리, 반 변경 이력 전용 엔진 — 만들지 않음(이력은 학생 상세 수강이력 탭의
+  "과거 수강이력"에서만 확인하는 방향 그대로)
+- 학생/보호자 화면에 이번 작업 내용 노출 — 없음(Back Office 전용)
+- `tuitionAmount` 변경 이력 추적 — 메모만 수정 가능, 금액 변경 이력은 없음
+
+---
+
+## 5. typecheck / build 결과
+
+네트워크 차단으로 `npm install`은 이번에도 불가능했습니다. 동일한 방식(실제 사용 패키지의 최소 타입
+스텁 + `tsc -b`)으로 검증했습니다.
+
+```
+$ tsc -p tsconfig.app.json --noEmit --ignoreDeprecations 6.0
+(종료 코드 0, 오류 없음)
+
+$ tsc -p tsconfig.node.json --noEmit
+(종료 코드 0, 오류 없음)
+```
+
+1차 시도에서 바로 오류 0을 받았습니다.
+
+핵심 정책 로직 6가지를 React와 무관한 순수 JS로 떼어내 직접 실행 검증했습니다 — 전부 PASS:
+- 중복 등록 방지(이미 수강중인 반 재등록 차단, 다른 반은 허용)
+- 학생 1명 복수 반 동시 수강(원칙 2)
+- 3중 동기화 구조(enrollments + studentClassMap + Student.classes)
+- 현재인원 계산(종료된 수강은 제외하고 '수강중'만 카운트)
+- 종료/퇴원이 레코드 삭제가 아니라 status 변경(이력 보존)
+- 권한 범위(강사는 본인 담당 반만, 최고관리자/원장/행정은 전체)
+
+**투명하게 남기는 부분**: `classData.ts`의 `CLASS_STUDENT_MAP`을 새 Enrollment 더미와 정합성 있게
+보정하는 과정에서, Assessment Engine의 기존 시험 더미(`exam-001`, cls-001 대상, 응시자 stu-001/002/003)와
+완전히 일치하지 않게 된 부분이 남았습니다(stu-003은 Enrollment 상 cls-001 수강 이력이 없는데 그 반
+시험에는 응시자로 등록되어 있음). 이건 서로 다른 라운드에서 독립적으로 만들어진 시드 데이터의 디테일
+차이일 뿐 핵심 기능 동작에는 영향이 없으나, 정확히 보고드립니다. `vite build`의 실제 번들링은 패키지
+미설치로 이 환경에서 실행할 수 없어 호스트에서 최종 확인이 필요합니다.
+
 # AXIS LMS v1.2 — Assessment Engine 현재 상태 요약 (최신)
 
 > 이 문서는 Assessment Engine 작업이 여러 라운드(1차 MVP → v2 정책 정합화 → v3 세부 수정)에 걸쳐

@@ -1,6 +1,23 @@
+# AXIS LMS v1.2 baseline - .gitignore
+
+# 의존성 (npm install로 재생성됨)
 node_modules/
+
+# 빌드 산출물 (npm run build로 재생성됨)
 dist/
+
+# TypeScript 빌드 캐시
+*.tsbuildinfo
+
+# 환경 변수
 .env
 .env.local
+.env.*.local
+
+# 에디터/OS
 .DS_Store
 .vscode/
+.idea/
+
+# 로그
+npm-debug.log*
