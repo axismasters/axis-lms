@@ -9,6 +9,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { StudentProvider, useStudents } from "./contexts/StudentContext";
 import { ClassProvider } from "./contexts/ClassContext";
+import { EnrollmentProvider } from "./contexts/EnrollmentContext";
 import { AttendanceProvider } from "./contexts/AttendanceContext";
 import { AssessmentProvider } from "./contexts/AssessmentContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -133,16 +134,18 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <StudentProvider>
           <ClassProvider>
-            <AttendanceProvider>
-              <AssessmentProvider>
-                <AuthBoundary>
-                  <TooltipProvider>
-                    <Toaster position="top-right" richColors />
-                    <Router />
-                  </TooltipProvider>
-                </AuthBoundary>
-              </AssessmentProvider>
-            </AttendanceProvider>
+            <EnrollmentProvider>
+              <AttendanceProvider>
+                <AssessmentProvider>
+                  <AuthBoundary>
+                    <TooltipProvider>
+                      <Toaster position="top-right" richColors />
+                      <Router />
+                    </TooltipProvider>
+                  </AuthBoundary>
+                </AssessmentProvider>
+              </AttendanceProvider>
+            </EnrollmentProvider>
           </ClassProvider>
         </StudentProvider>
       </ThemeProvider>

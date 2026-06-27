@@ -19,6 +19,8 @@ import { useStudents } from '@/contexts/StudentContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
+import { useEnrollment } from '@/contexts/EnrollmentContext';
+import EnrollmentFormModal from '@/components/EnrollmentFormModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { isBackOfficeType } from '@/lib/rbac';
 import { STATUS_CONFIG, AttendanceStatus } from '@/lib/attendanceData';
@@ -547,77 +549,100 @@ function GuardianFamilyTab({ student, onOpenStudent }: { student: Student; onOpe
 // 3) 수강현황 탭 — 실제 반 데이터 연결, 추가(시작일 필수)/종료(모달)
 // ════════════════════════════════════════════════════════════
 function EnrollmentTab({ student }: { student: Student }) {
-  const { assignClass, removeFromClass } = useStudents();
-  const { classes, getClass } = useClasses();
-  const { can } = useAuth();
-  const canEdit = can('student.update'); // 수강반 추가/종료는 학생 정보 수정 범주
-  const active = getActiveClasses(student);
-  const past = getPastClasses(student);
+  const { can, currentUser } = useAuth();
+  const { getClass } = useClasses();
+  const { getEnrollmentsByStudent, endEnrollment, withdrawEnrollment, updateEnrollmentMemo } = useEnrollment();
+  const canEdit = can('student.update'); // 메모 확인/수정은 기존과 동일한 권한 기준 유지(학생 정보 수정 범주)
+  // AXIS 정책: 수강 등록/종료/퇴원은 Finance Engine의 청구/정산 기준이 되므로, student.update 권한만으로는
+  // 부족하다. 최고관리자/원장/행정 계열만 가능하고, 강사는 조회만 가능하며 등록/종료/퇴원 버튼 자체를
+  // 표시하지 않는다(disabled가 아니라 미노출). 새 권한키를 추가하지 않고 currentUser.accountType만으로 판별한다.
+  const canManageEnrollment =
+    currentUser.accountType === 'SUPER_ADMIN' ||
+    currentUser.accountType === 'DIRECTOR' ||
+    currentUser.accountType === 'STAFF';
 
   const today = new Date().toISOString().split('T')[0];
-  const [addId, setAddId] = useState('');
-  const [addStart, setAddStart] = useState(today);
-  const [endModal, setEndModal] = useState<{ classId: string; name: string } | null>(null);
+  const allEnrollments = getEnrollmentsByStudent(student.id);
+  const active = allEnrollments.filter((e) => e.status === '수강중');
+  const past = allEnrollments.filter((e) => e.status !== '수강중');
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [endModal, setEndModal] = useState<{ enrollmentId: string; className: string; mode: '종료' | '퇴원' } | null>(null);
   const [endDate, setEndDate] = useState(today);
-  const [endReason, setEndReason] = useState('');
+  const [endMemo, setEndMemo] = useState('');
+  const [memoModal, setMemoModal] = useState<{ enrollmentId: string; className: string } | null>(null);
+  const [memoInput, setMemoInput] = useState('');
 
-  // 추가 가능 반: 운영중/개설예정 중, 현재 수강중이 아닌 반 (실제 반 데이터)
-  const available = classes.filter((c) => c.status !== '종강' && !active.some((a) => a.id === c.id));
-
-  const doAdd = () => {
-    if (!canEdit) { toast.error('수강반 추가 권한(student.update)이 없습니다.'); return; }
-    if (!addId) { toast.error('추가할 반을 선택하세요.'); return; }
-    if (!addStart) { toast.error('수강 시작일을 입력하세요. (출결·청구·시험 응시 기준)'); return; }
-    const klass = getClass(addId);
-    if (!klass) { toast.error('반 정보를 찾을 수 없습니다.'); return; }
-    const enrollment: ClassInfo = {
-      id: klass.id, name: klass.name, subject: klass.subject, teacher: klass.teacher,
-      schedule: timeSlotsToSchedule(klass.timeSlots), startDate: addStart, status: '수강중',
-    };
-    assignClass(student.id, enrollment);
-    toast.success(`${klass.name} 수강이 시작일 ${addStart}(으)로 추가되었습니다.`);
-    setAddId(''); setAddStart(today);
-  };
-
-  const openEnd = (classId: string, name: string) => {
-    if (!canEdit) { toast.error('수강 종료 권한(student.update)이 없습니다.'); return; }
-    setEndModal({ classId, name }); setEndDate(today); setEndReason('');
+  const openEnd = (enrollmentId: string, className: string, mode: '종료' | '퇴원') => {
+    if (!canManageEnrollment) { toast.error(`수강 ${mode} 처리는 최고관리자/원장/행정만 가능합니다.`); return; }
+    setEndModal({ enrollmentId, className, mode }); setEndDate(today); setEndMemo('');
   };
   const confirmEnd = () => {
     if (!endModal) return;
-    if (!endDate) { toast.error('수강 종료일은 필수입니다.'); return; }
-    removeFromClass(student.id, endModal.classId, endDate, endReason.trim() || undefined);
-    toast.success(`${endModal.name} 수강이 ${endDate}자로 종료 처리되었습니다.`);
+    if (!endDate) { toast.error('종료일은 필수입니다.'); return; }
+    if (endModal.mode === '종료') endEnrollment(endModal.enrollmentId, endDate, endMemo.trim() || undefined);
+    else withdrawEnrollment(endModal.enrollmentId, endDate, endMemo.trim() || undefined);
+    toast.success(`${endModal.className} 수강이 ${endDate}자로 ${endModal.mode} 처리되었습니다.`);
     setEndModal(null);
+  };
+
+  const openMemo = (enrollmentId: string, className: string, currentMemo?: string) => {
+    setMemoModal({ enrollmentId, className }); setMemoInput(currentMemo ?? '');
+  };
+  const saveMemo = () => {
+    if (!memoModal) return;
+    if (!canEdit) { toast.error('메모 수정 권한(student.update)이 없습니다.'); return; }
+    updateEnrollmentMemo(memoModal.enrollmentId, memoInput.trim());
+    toast.success('메모가 저장되었습니다.');
+    setMemoModal(null);
   };
 
   return (
     <div>
-      <Area title="현재 수강반" desc="학생 1명은 여러 반을 동시에 수강할 수 있습니다. 반유형·요일·시간·강의실은 반관리(ClassContext)에서 가져옵니다.">
+      <Area
+        title="현재 수강반"
+        desc="학생 1명은 여러 반을 동시에 수강할 수 있습니다. 반유형·요일·시간은 반관리(ClassContext)에서 가져옵니다."
+        action={canManageEnrollment ? (
+          <button onClick={() => setFormOpen(true)} className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+            <Plus size={12} /> 반 등록
+          </button>
+        ) : undefined}
+      >
         {active.length === 0 ? (
           <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>수강 중인 반이 없습니다.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{ minWidth: 820 }}>
+            <table className="w-full text-sm" style={{ minWidth: 900 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
-                  {['반명', '반유형', '담당강사', '수업요일', '수업시간', '강의실', '수강 시작일', '상태'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12 }}>{h}</th>)}
+                  {['반명', '반유형', '담당강사', '수업요일', '수업시간', '수강 시작일', '수강료', '관리'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12 }}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
-                {active.map((c) => {
-                  const v: ClassView = resolveClassView(c, getClass(c.id));
+                {active.map((e) => {
+                  const klass = getClass(e.classId);
+                  const v: ClassView = resolveClassView({ id: e.classId, name: '', subject: '', teacher: '', schedule: '', startDate: e.startDate, status: '수강중' }, klass);
                   return (
-                    <tr key={c.id} style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
+                    <tr key={e.id} style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
                       <td className="px-2.5 py-2 font-medium whitespace-nowrap" style={{ color: 'oklch(0.22 0.02 250)' }}>{v.name}</td>
                       <td className="px-2.5 py-2 whitespace-nowrap"><span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.005 250)', color: 'oklch(0.45 0.015 250)' }}>{v.category}</span></td>
                       <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{v.teacher}</td>
                       <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{v.days}</td>
                       <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{v.time}</td>
-                      <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{v.room}</td>
-                      <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>{formatDate(c.startDate)}</td>
+                      <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>{formatDate(e.startDate)}</td>
+                      <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>{e.tuitionAmount ? `${e.tuitionAmount.toLocaleString()}원` : '-'}</td>
                       <td className="px-2.5 py-2">
-                        <button onClick={() => openEnd(c.id, v.name)} disabled={!canEdit} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.5 0.12 27)' }}>수강 종료</button>
+                        <div className="flex items-center gap-1">
+                          {canManageEnrollment && (
+                            <>
+                              <button onClick={() => openEnd(e.id, v.name, '종료')} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-rose-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.5 0.12 27)' }}>수강 종료</button>
+                              <button onClick={() => openEnd(e.id, v.name, '퇴원')} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-rose-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.5 0.12 27)' }}>퇴원 처리</button>
+                            </>
+                          )}
+                          <button onClick={() => openMemo(e.id, v.name, e.memo)} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.45 0.015 250)' }}>
+                            <StickyNote size={11} /> 메모{e.memo ? '' : ' 추가'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -628,64 +653,78 @@ function EnrollmentTab({ student }: { student: Student }) {
         )}
       </Area>
 
-      <div className="grid lg:grid-cols-2 gap-3">
-        <Area title="수강반 추가" desc="기존에 개설된 반을 선택하고 수강 시작일을 입력합니다.">
-          <div className="space-y-2">
-            <select value={addId} onChange={(e) => setAddId(e.target.value)} className="w-full text-sm px-2.5 py-2 rounded-md border" style={{ borderColor: 'oklch(0.9 0.008 250)' }}>
-              <option value="">반 선택…</option>
-              {available.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.teacher} · {c.subject})</option>)}
-            </select>
-            <div className="flex items-center gap-2">
-              <label className="text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>수강 시작일<span style={{ color: 'oklch(0.55 0.2 27)' }}> *</span></label>
-              <input type="date" value={addStart} onChange={(e) => setAddStart(e.target.value)} className="flex-1 text-sm px-2.5 py-2 rounded-md border tabular-nums" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
-              <button onClick={doAdd} disabled={!canEdit} className="inline-flex items-center gap-1 px-3 py-2 rounded-md text-sm text-white disabled:opacity-40 disabled:cursor-not-allowed" style={{ background: 'oklch(0.511 0.262 276.966)' }}><Plus size={14} /> 추가</button>
-            </div>
-            <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 수강 시작일은 출결 대상·재무 청구·시험 응시 대상 판단 기준입니다.</p>
-            <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><ArrowRightLeft size={11} /> 반 변경은 기존 반 <b>수강 종료</b> 후 새 반 추가 방식만 사용합니다.</p>
-          </div>
-        </Area>
-
-        <Area title="과거 수강이력">
-          {past.length === 0 ? (
-            <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>과거 수강이력이 없습니다.</p>
-          ) : past.map((c) => {
-            const v = resolveClassView(c, getClass(c.id));
-            return (
-              <div key={c.id} className="py-2" style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>{v.name}</div>
-                  <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.005 250)', color: 'oklch(0.45 0.015 250)' }}>{c.status}</span>
-                </div>
-                <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{v.teacher} · {formatDate(c.startDate)} ~ {c.endDate ? formatDate(c.endDate) : '-'}</div>
-                {c.endReason && <div className="text-xs mt-0.5" style={{ color: 'oklch(0.5 0.05 27)' }}>종료 사유: {c.endReason}</div>}
+      <Area title="과거 수강이력">
+        {past.length === 0 ? (
+          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>과거 수강이력이 없습니다.</p>
+        ) : past.map((e) => {
+          const klass = getClass(e.classId);
+          const v = resolveClassView({ id: e.classId, name: '', subject: '', teacher: '', schedule: '', startDate: e.startDate, status: '수강완료' }, klass);
+          return (
+            <div key={e.id} className="py-2" style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
+              <div className="flex items-center justify-between">
+                <div className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>{v.name}</div>
+                <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.005 250)', color: 'oklch(0.45 0.015 250)' }}>{e.status}</span>
               </div>
-            );
-          })}
-        </Area>
-      </div>
+              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{v.teacher} · {formatDate(e.startDate)} ~ {e.endDate ? formatDate(e.endDate) : '-'}</div>
+              {e.memo && <div className="text-xs mt-0.5" style={{ color: 'oklch(0.5 0.05 27)' }}>메모: {e.memo}</div>}
+            </div>
+          );
+        })}
+      </Area>
 
-      {/* 수강 종료 모달 */}
+      {/* 반 등록 모달 */}
+      <EnrollmentFormModal open={formOpen} onClose={() => setFormOpen(false)} studentId={student.id} />
+
+      {/* 수강 종료/퇴원 모달 */}
       {endModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'oklch(0 0 0 / 0.4)' }} onClick={() => setEndModal(null)}>
           <div className="bg-white rounded-lg w-full max-w-md modal-enter" onClick={(e) => e.stopPropagation()} style={{ boxShadow: '0 20px 50px oklch(0 0 0 / 0.25)' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
-              <h3 className="text-sm font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>수강 종료 — {endModal.name}</h3>
+              <h3 className="text-sm font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>수강 {endModal.mode} — {endModal.className}</h3>
               <button onClick={() => setEndModal(null)}><X size={16} style={{ color: 'oklch(0.5 0.015 250)' }} /></button>
             </div>
             <div className="p-4 space-y-3">
               <label className="block">
-                <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>수강 종료일<span style={{ color: 'oklch(0.55 0.2 27)' }}> *</span></span>
+                <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{endModal.mode}일<span style={{ color: 'oklch(0.55 0.2 27)' }}> *</span></span>
                 <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1 w-full text-sm px-2.5 py-2 rounded-md border tabular-nums" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
               </label>
               <label className="block">
-                <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>종료 사유 (선택)</span>
-                <textarea value={endReason} onChange={(e) => setEndReason(e.target.value)} rows={3} placeholder="예: 반 변경, 개인 사정, 성적 향상으로 상위반 이동 등" className="mt-1 w-full text-sm px-2.5 py-2 rounded-md border resize-none" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
+                <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{endModal.mode} 사유 (선택)</span>
+                <textarea value={endMemo} onChange={(e) => setEndMemo(e.target.value)} rows={3} placeholder={endModal.mode === '종료' ? '예: 반 변경, 상위반 이동 등' : '예: 개인 사정으로 수강 중단'} className="mt-1 w-full text-sm px-2.5 py-2 rounded-md border resize-none" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
               </label>
-              <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 저장 시 해당 반은 종료 처리되고 종료일이 기록됩니다. 사유는 내부 이력으로만 보관됩니다.</p>
+              <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 저장 시 해당 수강은 {endModal.mode} 처리되고 {endModal.mode}일이 기록됩니다(삭제되지 않고 이력으로 보관됩니다).</p>
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setEndModal(null)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
-              <button onClick={confirmEnd} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: 'oklch(0.5 0.18 27)' }}>수강 종료</button>
+              <button onClick={confirmEnd} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: 'oklch(0.5 0.18 27)' }}>{endModal.mode}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 메모 확인/수정 모달 */}
+      {memoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'oklch(0 0 0 / 0.4)' }} onClick={() => setMemoModal(null)}>
+          <div className="bg-white rounded-lg w-full max-w-md modal-enter" onClick={(e) => e.stopPropagation()} style={{ boxShadow: '0 20px 50px oklch(0 0 0 / 0.25)' }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
+              <h3 className="text-sm font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>수강 메모 — {memoModal.className}</h3>
+              <button onClick={() => setMemoModal(null)}><X size={16} style={{ color: 'oklch(0.5 0.015 250)' }} /></button>
+            </div>
+            <div className="p-4 space-y-3">
+              <textarea
+                value={memoInput}
+                onChange={(e) => setMemoInput(e.target.value)}
+                rows={4}
+                placeholder="이 수강과 관련된 메모를 입력하세요"
+                disabled={!canEdit}
+                className="w-full text-sm px-2.5 py-2 rounded-md border resize-none disabled:bg-slate-50"
+                style={{ borderColor: 'oklch(0.9 0.008 250)' }}
+              />
+              {!canEdit && <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 읽기 전용입니다. 메모 수정은 student.update 권한이 필요합니다.</p>}
+            </div>
+            <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
+              <button onClick={() => setMemoModal(null)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>닫기</button>
+              {canEdit && <button onClick={saveMemo} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>저장</button>}
             </div>
           </div>
         </div>

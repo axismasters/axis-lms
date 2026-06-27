@@ -228,14 +228,17 @@ for (let h = 9; h <= 23; h++) {
 }
 
 // 수강생 - 반 매핑 (더미)
+// Enrollment Foundation(lib/enrollmentData.ts)의 활성 수강 더미와 일치시켰다 — 반에 수강 등록된
+// 학생만 출결체크/시험 대상자로 인식되어야 하므로, 두 더미가 서로 다른 학생을 가리키면 안 된다.
+// (기존 값에는 dummyData.ts에 존재하지 않는 학생 ID(stu-007/008)도 섞여 있었다 — 이번에 함께 정리)
 export const CLASS_STUDENT_MAP: Record<string, string[]> = {
-  'cls-001': ['stu-001', 'stu-002', 'stu-004', 'stu-008'],
-  'cls-002': ['stu-001', 'stu-003', 'stu-007'],
-  'cls-003': ['stu-003', 'stu-005'],
-  'cls-004': ['stu-002', 'stu-006'],
-  'cls-005': ['stu-003', 'stu-005'],
-  'cls-006': ['stu-004', 'stu-007', 'stu-008'],
-  'cls-007': ['stu-005'],
+  'cls-001': ['stu-001', 'stu-002'],
+  'cls-002': ['stu-001'],
+  'cls-003': ['stu-003'],
+  'cls-004': [],
+  'cls-005': [],
+  'cls-006': [],
+  'cls-007': [],
   'cls-008': [],
   'cls-009': [],
 };

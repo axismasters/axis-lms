@@ -4,7 +4,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import AdminLayout from '@/components/AdminLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { useClasses } from '@/contexts/ClassContext';
+import { useEnrollment } from '@/contexts/EnrollmentContext';
 import { ClassRoom, ClassStatus, SubjectType, TEACHERS, DAY_ORDER } from '@/lib/classData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,7 +79,9 @@ function CapacityBar({ enrolled, capacity }: { enrolled: number; capacity: numbe
 
 export default function ClassList() {
   const [, navigate] = useLocation();
+  const { canAccessClass } = useAuth();
   const { classes, deleteClass } = useClasses();
+  const { getActiveEnrollmentsByClass } = useEnrollment();
 
   const [search, setSearch] = useState('');
   const [filterSubject, setFilterSubject] = useState('all');
@@ -101,8 +105,21 @@ export default function ClassList() {
     setFormModal(prev => (prev.open && prev.editId ? prev : { open: true, editId: undefined }));
   }, [searchStr]);
 
+  // 권한 범위(F항목): 강사는 본인 담당 반만 본다. 최고관리자/원장/행정은 canAccessClass가
+  // 항상 true(ALL_ACADEMY)이므로 기존처럼 전체 반이 그대로 보인다.
+  const visibleClasses = useMemo(() => classes.filter((c) => canAccessClass(c.id)), [classes, canAccessClass]);
+
+  // 현재인원(E항목): ClassRoom.enrolledCount(하드코딩 필드) 대신, status가 '수강중'인 Enrollment 수로
+  // 계산한다. 매 렌더마다 함수 호출이 반복되지 않도록 반 id별로 한 번만 계산해 Map에 담아 재사용한다.
+  const currentCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    visibleClasses.forEach((c) => map.set(c.id, getActiveEnrollmentsByClass(c.id).length));
+    return map;
+  }, [visibleClasses, getActiveEnrollmentsByClass]);
+  const countOf = (classId: string) => currentCounts.get(classId) ?? 0;
+
   const filtered = useMemo(() => {
-    return classes.filter(c => {
+    return visibleClasses.filter(c => {
       if (search && !c.name.includes(search) && !c.teacher.includes(search)) return false;
       if (filterSubject !== 'all' && c.subject !== filterSubject) return false;
       if (filterTeacher !== 'all' && c.teacher !== filterTeacher) return false;
@@ -110,16 +127,16 @@ export default function ClassList() {
       if (filterLevel !== 'all' && c.level !== filterLevel) return false;
       return true;
     });
-  }, [classes, search, filterSubject, filterTeacher, filterStatus, filterLevel]);
+  }, [visibleClasses, search, filterSubject, filterTeacher, filterStatus, filterLevel]);
 
   // 요약 통계
   const stats = useMemo(() => ({
-    total: classes.length,
-    active: classes.filter(c => c.status === '운영중').length,
-    totalEnrolled: classes.reduce((s, c) => s + c.enrolledCount, 0),
-    totalCapacity: classes.reduce((s, c) => s + c.capacity, 0),
-    full: classes.filter(c => c.enrolledCount >= c.capacity && c.status === '운영중').length,
-  }), [classes]);
+    total: visibleClasses.length,
+    active: visibleClasses.filter(c => c.status === '운영중').length,
+    totalEnrolled: visibleClasses.reduce((s, c) => s + countOf(c.id), 0),
+    totalCapacity: visibleClasses.reduce((s, c) => s + c.capacity, 0),
+    full: visibleClasses.filter(c => countOf(c.id) >= c.capacity && c.status === '운영중').length,
+  }), [visibleClasses, currentCounts]);
 
   // 등록/수정 모달 닫기 — state를 초기화하고, ?new=1로 진입했던 URL이라면 /classes로 정리한다.
   // replace로 이동해 뒤로가기 시 모달이 다시 열리는 히스토리 엔트리가 남지 않도록 한다.
@@ -133,13 +150,20 @@ export default function ClassList() {
 
   const handleDelete = () => {
     if (!deleteTarget) return;
+    // AXIS 정책: 수강 이력은 삭제하지 않으며, 활성 수강생이 있는 반은 삭제할 수 없다.
+    // 먼저 수강 종료 또는 퇴원 처리(Enrollment status 변경)를 해야 currentCount가 0이 된다.
+    if (countOf(deleteTarget.id) > 0) {
+      toast.error('현재 수강생이 있는 반은 삭제할 수 없습니다. 먼저 수강 종료 또는 퇴원 처리를 해주세요.');
+      setDeleteTarget(null);
+      return;
+    }
     deleteClass(deleteTarget.id);
     setDeleteTarget(null);
     toast.success(`'${deleteTarget.name}' 반이 삭제되었습니다.`);
   };
 
-  const subjectList = Array.from(new Set(classes.map(c => c.subject)));
-  const levelList = Array.from(new Set(classes.map(c => c.level)));
+  const subjectList = Array.from(new Set(visibleClasses.map(c => c.subject)));
+  const levelList = Array.from(new Set(visibleClasses.map(c => c.level)));
 
   return (
       <AdminLayout breadcrumbs={[{ label: '수업관리' }, { label: '반 목록' }]}>
@@ -245,7 +269,8 @@ export default function ClassList() {
               {filtered.map(cls => {
                 const subjectColor = SUBJECT_COLORS[cls.subject] || SUBJECT_COLORS['기타'];
                 const statusStyle = STATUS_STYLE[cls.status];
-                const isFull = cls.enrolledCount >= cls.capacity;
+                const enrolledNow = countOf(cls.id);
+                const isFull = enrolledNow >= cls.capacity;
 
                 return (
                   <tr
@@ -308,7 +333,7 @@ export default function ClassList() {
                           <span className="text-xs font-medium" style={{ color: 'oklch(0.577 0.245 27.325)' }}>정원 마감</span>
                         </div>
                       )}
-                      <CapacityBar enrolled={cls.enrolledCount} capacity={cls.capacity} />
+                      <CapacityBar enrolled={enrolledNow} capacity={cls.capacity} />
                     </td>
 
                     {/* 강의실 */}
@@ -345,8 +370,9 @@ export default function ClassList() {
                         </button>
                         <button
                           onClick={() => setDeleteTarget(cls)}
-                          className="p-1.5 rounded transition-colors hover:bg-rose-50"
-                          title="삭제"
+                          disabled={enrolledNow > 0}
+                          className="p-1.5 rounded transition-colors hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                          title={enrolledNow > 0 ? '현재 수강생이 있는 반은 삭제할 수 없습니다. 먼저 수강 종료 또는 퇴원 처리를 해주세요.' : '삭제'}
                         >
                           <Trash2 size={14} style={{ color: 'oklch(0.577 0.245 27.325)' }} />
                         </button>
@@ -367,21 +393,29 @@ export default function ClassList() {
         onClose={closeFormModal}
       />
 
-      {/* 삭제 확인 */}
+      {/* 삭제 확인 — 활성 수강생이 있는 반은 삭제할 수 없다(AXIS 정책: 수강 이력은 삭제하지 않고
+          status 변경으로만 처리, Finance Engine이 Enrollment 기준으로 청구/정산을 해야 함).
+          버튼 자체가 enrolledNow > 0이면 비활성화되어 이 다이얼로그가 열리지 않지만, 방어적으로
+          여기서도 동일하게 막는다(ClassDetail.tsx와 동일한 패턴). */}
       <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>반 삭제</AlertDialogTitle>
             <AlertDialogDescription>
-              <strong>'{deleteTarget?.name}'</strong> 반을 삭제하시겠습니까?<br />
-              수강생 {deleteTarget?.enrolledCount}명의 수강 이력이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+              {deleteTarget && countOf(deleteTarget.id) > 0 ? (
+                '현재 수강생이 있는 반은 삭제할 수 없습니다. 먼저 수강 종료 또는 퇴원 처리를 해주세요.'
+              ) : (
+                <><strong>'{deleteTarget?.name}'</strong> 반을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} style={{ background: 'oklch(0.577 0.245 27.325)' }}>
-              삭제
-            </AlertDialogAction>
+            <AlertDialogCancel>{deleteTarget && countOf(deleteTarget.id) > 0 ? '확인' : '취소'}</AlertDialogCancel>
+            {(!deleteTarget || countOf(deleteTarget.id) === 0) && (
+              <AlertDialogAction onClick={handleDelete} style={{ background: 'oklch(0.577 0.245 27.325)' }}>
+                삭제
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
