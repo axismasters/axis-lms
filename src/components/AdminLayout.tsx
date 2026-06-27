@@ -5,7 +5,7 @@
 import { Link, useLocation } from 'wouter';
 import {
   Users, BookOpen, BarChart2, Settings, ChevronRight, CalendarCheck,
-  Building2, ShieldCheck, KeyRound, GraduationCap, Bell,
+  Building2, ShieldCheck, KeyRound, GraduationCap, Bell, Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,6 +55,19 @@ const NAV_ITEMS: NavItem[] = [
     path: '/scores',
     icon: <BarChart2 size={16} />,
     requires: 'assessment.view',
+  },
+  {
+    label: '재무관리',
+    path: '/finance',
+    icon: <Wallet size={16} />,
+    requires: 'finance.view', // SUPER_ADMIN/DIRECTOR/STAFF만 보유 — 부원장/실장/팀장/강사/학생/보호자는 메뉴 자체가 노출되지 않음
+    children: [
+      { label: '수납관리', path: '/finance/payments', requires: 'finance.view' },
+      { label: '환불관리', path: '/finance/refunds', requires: 'finance.view' },
+      { label: '미납관리', path: '/finance/unpaid', requires: 'finance.view' },
+      { label: '정산관리', path: '/finance/settlements', requires: 'finance.view' },
+      { label: '통계', path: '/finance/statistics', requires: 'finance.view' },
+    ],
   },
   {
     label: '시스템설정',

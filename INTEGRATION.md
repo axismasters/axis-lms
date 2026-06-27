@@ -1,3 +1,165 @@
+# AXIS LMS v1.2 — Finance Foundation v1
+
+> GitHub 최신 반영본(Attendance × Enrollment Integration v1) 기준으로 작업했습니다. 재무관리를
+> 학생 기준이 아니라 수강(Enrollment) 기준으로 관리하는 기본 Foundation을 구현했습니다. 기존
+> Student/Class/Enrollment/Attendance 구조는 전혀 건드리지 않고, 재무 관련 파일만 새로 추가했습니다.
+
+---
+
+## 1. 추가/수정 파일 목록
+
+| 파일 | 유형 |
+|---|---|
+| `src/lib/financeData.ts` | 신규 — Invoice/Payment/Refund/Settlement 타입, mock 데이터, 일할계산 함수(`calculateProratedAmount`), 권한 helper(`canManageFinance` 등) |
+| `src/contexts/FinanceContext.tsx` | 신규 — 청구/수납/환불/정산 CRUD(상태 변경 방식만, 삭제 함수 없음) |
+| `src/pages/FinancePayments.tsx` | 신규 — 수납관리(재무관리 기본 화면) |
+| `src/pages/FinanceRefunds.tsx` | 신규 — 환불관리(요청→승인/반려→완료) |
+| `src/pages/FinanceUnpaid.tsx` | 신규 — 미납관리(조회 전용, 알림 mock) |
+| `src/pages/FinanceSettlements.tsx` | 신규 — 정산관리(원장/최고관리자만 확정) |
+| `src/pages/FinanceStatistics.tsx` | 신규 — 통계(차트 라이브러리 없이 표+막대) |
+| `src/App.tsx` | 수정 — `FinanceProvider` 추가, 5개 라우트(`/finance/*`) 추가 |
+| `src/components/AdminLayout.tsx` | 수정 — "재무관리" 메뉴(하위 5개) 추가 |
+| `src/lib/rbac.ts` | 수정 — `finance.*` 권한의 직급별 기본값 정정(아래 4번 참고) |
+| `README.md` | 수정 — 디렉터리 구조/메뉴 표/안전장치에 Finance 관련 내용 반영 |
+
+`StudentDetail.tsx`, `ClassDetail.tsx`, `ClassList.tsx`, `EnrollmentContext.tsx`, `AttendanceContext.tsx`,
+`AttendanceCheck.tsx`, `AssessmentContext.tsx` 등 — **전혀 건드리지 않았습니다.** `diff -rq`로 위 11개
+파일 외 모든 파일이 1바이트도 다르지 않음을 확인했습니다.
+
+---
+
+## 2. Finance Engine이 Enrollment 기준으로 연결된 방식
+
+`Invoice`/`Payment`/`Refund` 전부 요청하신 그대로 `enrollmentId`(+ `studentId`/`classId`)를 필드로
+갖습니다. 화면에서는 학생을 기준으로 묻지 않고 항상 "이 수강(enrollment)에 대한 청구가 어떤 상태인가"를
+기준으로 동작합니다.
+
+mock 데이터를 Enrollment Foundation의 실제 `DUMMY_ENROLLMENTS`(`enr-001`~`004`, `enr-101`~`102`)와
+정확히 일치하도록 구성했습니다:
+
+- `enr-001`(stu-001/cls-001, 32만원)·`enr-002`(stu-001/cls-002, 28만원) — **같은 학생(stu-001)이
+  두 반을 동시 수강**하는 사례입니다. 2026년 6월(이번 달) 기준 `enr-001`의 청구(`inv-003`)는
+  `UNPAID`(미납)이고, `enr-002`의 청구(`inv-006`)는 `PAID`(완납)입니다. **같은 학생, 같은 달인데
+  수강(반)이 다르면 청구 상태가 완전히 분리된다**는 것을 mock 데이터 레벨에서 직접 보여줍니다.
+- `enr-004`(stu-003/cls-003, 25만원, 6/15 중도등록 가정) — 일할 계산이 적용된 `proratedAmount`로
+  청구가 만들어지고, 그중 일부만 수납되어 `PARTIAL`(부분납) 상태로 표시됩니다.
+- `enr-102`(stu-006/cls-001, 2024-01-15 중도퇴원 과거 이력) — 퇴원월 일할 계산이 적용된 과거 청구와,
+  그에 대한 환불 요청→승인→완료(`COMPLETED`)까지의 전체 환불 흐름을 보여주는 시나리오로 사용했습니다.
+
+---
+
+## 3. 일할 계산 방식
+
+요청하신 시그니처 그대로 구현했습니다.
+
+```ts
+calculateProratedAmount(monthlyAmount, startDate, endDate, billingMonth)
+```
+
+- `startDate`/`endDate` 둘 다 없으면(일반월) `monthlyAmount`를 그대로 반환합니다.
+- `startDate`만 있으면(중도등록) "시작일~월말"만 계산합니다.
+- `endDate`만 있으면(중도퇴원) "월초~종료일"만 계산합니다.
+- 계산식: `Math.round((monthlyAmount / 해당월총일수) * 실제수강일수)` — 원 단위 반올림.
+
+예시로 직접 검증했습니다(순수 JS로 동일 로직을 떼어내 실행):
+- 6월(30일) 10일 등록, 월 30만원 → **21만원**(21/30일 — "약 2/3 청구"와 정확히 일치)
+- 6월(30일) 10일 퇴원, 월 30만원 → **10만원**(10/30일 — "1~10일분 청구"와 정확히 일치)
+- 일반월(등록/퇴원 없음) → 월 수강료 그대로
+
+---
+
+## 4. 권한 기준
+
+### 발견한 정책 충돌과 정정
+
+`rbac.ts`를 분석하던 중, `finance.*` 권한키 자체는 1차 RBAC 작업 때부터 이미 정의되어 있었지만(`finance.view`,
+`finance.paymentCreate`, `finance.refundRequest`, `finance.refundApprove`, `finance.receiptIssue`,
+`finance.settlementConfirm`, `finance.settingUpdate`), **부원장(VICE_DIRECTOR)·실장(HEAD_MANAGER)·
+팀장(TEAM_LEAD)·보호자(GUARDIAN)에게도 일부 `finance.*` 권한이 기본값으로 부여되어 있었습니다.** 이번
+지시("부원장/실장/강사는 기본적으로 재무관리 접근 불가", "재무관리 접근 불가: TEACHER/STUDENT/GUARDIAN")와
+정면으로 충돌하는 부분이라, 이 네 직급의 `finance.*` 권한을 전부 제거해 정정했습니다(권한키 추가가
+아니라 기존 키의 직급별 부여 내역만 수정 — 구조 변경 없음).
+
+### 최종 권한 매핑(정정 후)
+
+| 직급(Position) | `finance.view` | `finance.paymentCreate` | `finance.refundRequest` | `finance.refundApprove` | `finance.receiptIssue` | `finance.settlementConfirm` |
+|---|---|---|---|---|---|---|
+| SUPER_ADMIN | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| DIRECTOR | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| VICE_DIRECTOR/HEAD_MANAGER/TEAM_LEAD | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| STAFF | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| TEACHER/STUDENT/GUARDIAN | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+### `canManageFinance` 등 helper
+
+요청하신 그대로 `financeData.ts`에 만들었고, 전부 기존 `AuthContext.can(key)`를 그대로 위임하는
+형태입니다(새 권한 체계를 만들지 않음):
+
+```ts
+canManageFinance(can)     // finance.view
+canCreatePayment(can)     // finance.paymentCreate
+canRequestRefund(can)     // finance.refundRequest
+canApproveRefund(can)     // finance.refundApprove
+canIssueReceipt(can)      // finance.receiptIssue
+canConfirmSettlement(can) // finance.settlementConfirm
+```
+
+각 화면의 진입 가드(`canManageFinance`)와 액션별 게이트(나머지 5개)에 일관되게 사용했습니다.
+
+---
+
+## 5. 빌드 통과 여부
+
+네트워크 차단으로 `npm install`은 이번에도 불가능했습니다. `npm run build`(`tsc -b && vite build`)의
+선행 단계인 `tsc -b`를 실제 사용된 모든 패키지의 최소 타입 스텁으로 이 환경에서 그대로 실행했습니다.
+
+```
+$ tsc -p tsconfig.app.json --noEmit --ignoreDeprecations 6.0
+(종료 코드 0, 오류 없음)
+
+$ tsc -p tsconfig.node.json --noEmit
+(종료 코드 0, 오류 없음)
+```
+
+**1차 시도에서 바로 오류 0건, 통과.** 핵심 로직(일할계산 3가지 시나리오, 권한 매핑 9개 직급)을
+React와 무관한 순수 JS로 직접 실행해 전부 PASS를 확인했습니다. `vite build`의 실제 번들링은 이
+컨테이너에서 패키지를 설치할 수 없어 실행하지 못했으며, 호스트에서 `npm run build`를 그대로
+실행해 최종 확인하시면 됩니다.
+
+---
+
+## 6. 남은 한계
+
+- **반유형(정규반/특강반) 분류가 휴리스틱합니다.** `ClassRoom`에 그런 구분 필드가 없어(기존 Class
+  구조를 건드리지 않기 위해 필드를 추가하지 않음), `financeData.ts`에 `cls-006`/`cls-008`(수능반/
+  파이널반)을 "특강반"으로, 나머지를 "정규반"으로 분류하는 보조 매핑만 두었습니다. 실제 운영
+  데이터와는 무관한 임시 분류이므로, 다음 단계에서 `ClassRoom`에 정식 필드를 추가하는 것을 검토할
+  필요가 있습니다.
+- **월별 Invoice 자동 생성 로직은 아직 없습니다.** "매월 1일에 해당 월 청구가 새로 발생"이라는
+  원칙은 mock 데이터로만 시연했고, 실제로 매월 1일에 활성 Enrollment마다 Invoice를 자동 생성하는
+  배치/스케줄 로직은 이번 Foundation 단계에 포함하지 않았습니다.
+- **미납 알림 발송 상태는 화면 로컬 state로만 관리됩니다.** `Invoice` 데이터 모델 자체에는 알림
+  필드를 추가하지 않아서, 페이지를 새로고침하면 "발송됨" 표시가 초기화됩니다(Foundation 단계의
+  의도된 단순화 — 실제 알림 연동 시점에 데이터 모델을 보강하면 됩니다).
+- **할인(`discountAmount`)은 항상 0으로 고정됩니다.** 필드 자체는 두었지만 실제로 할인을 적용하는
+  화면/로직은 만들지 않았습니다.
+- Settlement의 `totalBilled`/`totalPaid`/`totalUnpaid`/`totalRefunded`는 현재 mock 고정값이며,
+  Invoice/Payment/Refund 데이터로부터 자동 집계되지 않습니다(다음 단계에서 자동 집계로 전환 권장).
+
+---
+
+## 7. 다음 추천 개발 단계
+
+1. **월별 Invoice 자동 생성 배치** — `EnrollmentContext.getActiveEnrollmentsByStudent`/`getActiveEnrollmentsByClass`를
+   순회해 매월 1일 시점의 활성 수강마다 Invoice를 자동 생성하는 로직(중도등록은 이미 만든
+   `calculateProratedAmount`를 그대로 재사용 가능).
+2. **Settlement 자동 집계** — 현재 mock 고정값인 월별 합계를 실제 `Invoice`/`Payment`/`Refund`에서
+   동적으로 계산하도록 전환.
+3. **ClassRoom에 정식 반유형 필드 추가** — 정규반/특강반 구분을 Finance 도메인 밖(Class 구조)으로
+   끌어올려, 다른 엔진(통계, 수업관리)에서도 일관되게 사용할 수 있게 함.
+4. **실제 결제/알림 연동** — 이번 단계에서 의도적으로 제외한 PG/카카오페이·토스페이/세금계산서/
+   카카오·SMS API를 실제로 붙이는 단계(절대 이번 범위에 넣지 말라고 하신 부분).
+
 # AXIS LMS v1.2 — Attendance × Enrollment Integration v1
 
 > GitHub 최신 반영본(Enrollment Foundation v6) 기준으로 작업했습니다. 출결관리의 출결 대상자

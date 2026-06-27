@@ -169,27 +169,27 @@ const DIRECTOR_PERMS: PermissionKey[] = [
 ];
 
 // 부원장: 원장 직무 대부분을 위임받되, 시험 생성(assessment.create)·환불 승인·권한 매트릭스 조회는 기본값에서 제외(필요 시 권한설정에서 개별 부여)
+// Finance Foundation v1 확정 원칙: 재무관리는 SUPER_ADMIN/DIRECTOR/STAFF만 접근 가능하며, 부원장/실장/팀장은
+// 기본적으로 재무관리 접근 불가다(필요 시 권한설정에서 개별 부여로 예외 처리할 수 있으나 기본값은 미보유).
 const VICE_DIRECTOR_PERMS: PermissionKey[] = [
   'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
   'employee.view', 'employee.create', 'employee.update', 'employee.passwordReset',
   'class.view', 'class.create', 'class.update', 'class.assignTeacher',
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   'assessment.view', 'assessment.grade', 'assessment.resultView', 'assessment.resultCorrect',
-  'finance.view', 'finance.paymentCreate', 'finance.refundRequest', 'finance.receiptIssue',
   'system.passwordReset',
-  // 비포함: assessment.create/publish(원칙 4 — 최고관리자/원장 전용), employee.resign, finance.refundApprove/settlementConfirm/settingUpdate, system.permissionView/Update, system.logoUpdate
+  // 비포함: assessment.create/publish(원칙 4 — 최고관리자/원장 전용), employee.resign, 모든 finance.*(부원장 기본 미보유), system.permissionView/Update, system.logoUpdate
 ];
 
-// 실장: 운영 관리 중심 — 학생/출결/시험 운영 권한, 직원 관리·재무 승인은 제외
+// 실장: 운영 관리 중심 — 학생/출결/시험 운영 권한, 직원 관리·재무는 제외
 const HEAD_MANAGER_PERMS: PermissionKey[] = [
   'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
   'employee.view',
   'class.view', 'class.create', 'class.update',
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   'assessment.view', 'assessment.grade', 'assessment.resultView', 'assessment.resultCorrect',
-  'finance.view', 'finance.paymentCreate', 'finance.refundRequest', 'finance.receiptIssue',
   'system.passwordReset',
-  // 비포함: assessment.create/publish(원칙 4), employee.create/update/resign/passwordReset, class.assignTeacher, finance.refundApprove 이상, system.permissionView/Update, system.logoUpdate
+  // 비포함: assessment.create/publish(원칙 4), employee.create/update/resign/passwordReset, class.assignTeacher, 모든 finance.*(실장 기본 미보유), system.permissionView/Update, system.logoUpdate
 ];
 
 // 팀장: 실장보다 좁은 범위 — 학생/출결 운영, 시험 결과 조회 위주
@@ -198,8 +198,7 @@ const TEAM_LEAD_PERMS: PermissionKey[] = [
   'class.view',
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   'assessment.view', 'assessment.grade', 'assessment.resultView', 'assessment.resultCorrect',
-  'finance.view',
-  // 비포함: assessment.create/publish(원칙 4), student.create/withdraw, employee.*, finance.paymentCreate 이상, system.*
+  // 비포함: assessment.create/publish(원칙 4), student.create/withdraw, employee.*, 모든 finance.*(팀장 기본 미보유), system.*
 ];
 
 const STAFF_PERMS: PermissionKey[] = [
@@ -230,7 +229,8 @@ const STUDENT_PERMS: PermissionKey[] = [
 ];
 
 const GUARDIAN_PERMS: PermissionKey[] = [
-  'student.view', 'attendance.view', 'assessment.resultView', 'finance.view',
+  'student.view', 'attendance.view', 'assessment.resultView',
+  // 비포함: finance.view — 보호자는 재무관리 접근 불가(Finance Foundation v1 확정 원칙)
 ];
 
 /** 직급별 기본 권한 (단일 소스) */

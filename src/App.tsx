@@ -12,6 +12,7 @@ import { ClassProvider } from "./contexts/ClassContext";
 import { EnrollmentProvider } from "./contexts/EnrollmentContext";
 import { AttendanceProvider } from "./contexts/AttendanceContext";
 import { AssessmentProvider } from "./contexts/AssessmentContext";
+import { FinanceProvider } from "./contexts/FinanceContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import StudentList from "./pages/StudentList";
 import StudentNew from "./pages/StudentNew";
@@ -22,6 +23,11 @@ import AttendanceCheck from "./pages/AttendanceCheck";
 import AttendanceStatus from "./pages/AttendanceStatus";
 import AssessmentList from "./pages/AssessmentList";
 import AssessmentDetail from "./pages/AssessmentDetail";
+import FinancePayments from "./pages/FinancePayments";
+import FinanceRefunds from "./pages/FinanceRefunds";
+import FinanceUnpaid from "./pages/FinanceUnpaid";
+import FinanceSettlements from "./pages/FinanceSettlements";
+import FinanceStatistics from "./pages/FinanceStatistics";
 import AcademyInfoManagement from "./pages/settings/AcademyInfoManagement";
 import PermissionSettings from "./pages/settings/PermissionSettings";
 import PasswordResetManagement from "./pages/settings/PasswordResetManagement";
@@ -114,6 +120,15 @@ function Router() {
         <Route path="/scores" component={AssessmentList} />
         <Route path="/scores/:id" component={AssessmentDetail} />
 
+        {/* 재무관리 (Finance Foundation v1) — SUPER_ADMIN/DIRECTOR/STAFF만 접근 가능(각 페이지 내부에서
+            canManageFinance로 가드). 메뉴는 AdminLayout.tsx의 "재무관리" 하위 5개로 고정. */}
+        <Route path="/finance" component={() => <Redirect to="/finance/payments" />} />
+        <Route path="/finance/payments" component={FinancePayments} />
+        <Route path="/finance/refunds" component={FinanceRefunds} />
+        <Route path="/finance/unpaid" component={FinanceUnpaid} />
+        <Route path="/finance/settlements" component={FinanceSettlements} />
+        <Route path="/finance/statistics" component={FinanceStatistics} />
+
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -137,12 +152,14 @@ function App() {
             <EnrollmentProvider>
               <AttendanceProvider>
                 <AssessmentProvider>
-                  <AuthBoundary>
-                    <TooltipProvider>
-                      <Toaster position="top-right" richColors />
-                      <Router />
-                    </TooltipProvider>
-                  </AuthBoundary>
+                  <FinanceProvider>
+                    <AuthBoundary>
+                      <TooltipProvider>
+                        <Toaster position="top-right" richColors />
+                        <Router />
+                      </TooltipProvider>
+                    </AuthBoundary>
+                  </FinanceProvider>
                 </AssessmentProvider>
               </AttendanceProvider>
             </EnrollmentProvider>
