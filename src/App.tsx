@@ -10,8 +10,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { StudentProvider, useStudents } from "./contexts/StudentContext";
 import { ClassProvider } from "./contexts/ClassContext";
 import { AttendanceProvider } from "./contexts/AttendanceContext";
+import { AssessmentProvider } from "./contexts/AssessmentContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { isBackOfficeType } from "@/lib/rbac";
 import StudentList from "./pages/StudentList";
 import StudentNew from "./pages/StudentNew";
 import StudentDetail from "./pages/StudentDetail";
@@ -19,6 +19,8 @@ import ClassList from "./pages/ClassList";
 import ClassDetail from "./pages/ClassDetail";
 import AttendanceCheck from "./pages/AttendanceCheck";
 import AttendanceStatus from "./pages/AttendanceStatus";
+import AssessmentList from "./pages/AssessmentList";
+import AssessmentDetail from "./pages/AssessmentDetail";
 import AcademyInfoManagement from "./pages/settings/AcademyInfoManagement";
 import PermissionSettings from "./pages/settings/PermissionSettings";
 import PasswordResetManagement from "./pages/settings/PasswordResetManagement";
@@ -39,16 +41,24 @@ function PlaceholderPage({ title }: { title: string }) {
   );
 }
 
-// AXIS 확정 원칙 10 / 필수 수정 8:
+// AXIS 확정 원칙 10 / 필수 수정 8 (+ Attendance Engine 정책 수정):
 // 학생/보호자 화면은 별도 단계(향후 포털)이며, 현재 Admin Back Office에서 학생/보호자 계정이
 // 관리자 레이아웃으로 내부정보를 수정할 수 없어야 한다. FALLBACK_USER가 STUDENT이고 개발 테스트용
 // DEV 계정 전환(loginAs)으로 학생/보호자 계정이 AdminLayout 내부로 들어올 수 있는 구조는 유지하되,
-// Back Office 메뉴/수정 기능 진입은 isBackOfficeType(SUPER_ADMIN/DIRECTOR/STAFF 계열)만 허용한다.
+// Back Office "출입" 자체는 학생/보호자만 차단한다.
+//
+// 주의: isBackOfficeType()(rbac.ts)은 SUPER_ADMIN/DIRECTOR/STAFF만 true를 반환하도록 정의되어 있고,
+// 이 함수는 StudentDetail.tsx에서 "내부 직원급 운영메모 노출 여부" 등 별도 의미로도 쓰인다.
+// 그 함수를 그대로 이 게이트에 쓰면 TEACHER(강사)가 Back Office 자체에 들어오지 못해, 강사가 본인
+// 담당 반 출결을 처리해야 한다는 AXIS 확정 정책(출결체크: 담당강사 본인 반 처리 가능)과 모순된다.
+// 따라서 이 게이트는 "학생/보호자 여부"만 직접 판별하고, isBackOfficeType()은 변경하지 않는다
+// (StudentDetail.tsx 등 다른 화면의 기존 동작에 영향을 주지 않기 위함).
 // TODO(student-guardian-portal): 학생/보호자는 향후 별도 포털(Student/Guardian Portal)에서 처리하고,
 //                                이 Gate는 포털 분리가 완료되면 라우팅 단계(로그인 분기)로 옮길 것.
 function BackOfficeGate({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
-  if (!isBackOfficeType(currentUser.accountType)) {
+  const isPortalOnly = currentUser.accountType === 'STUDENT' || currentUser.accountType === 'GUARDIAN';
+  if (isPortalOnly) {
     return (
       <AdminLayout title="접근 제한" breadcrumbs={[{ label: '접근 제한' }]}>
         <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
@@ -97,7 +107,11 @@ function Router() {
         <Route path="/settings/password-reset" component={PasswordResetManagement} />
 
         {/* 미구현 플레이스홀더 */}
-        <Route path="/scores" component={() => <PlaceholderPage title="성적 관리" />} />
+        {/* 성적관리 (Assessment Engine) — 메뉴는 "성적 관리" 1개만 유지(하위 메뉴 추가 없음).
+            시험 등록은 ClassList의 ?new=1 패턴과 동일하게 목록 화면 내 모달로 처리한다. */}
+        <Route path="/scores/new" component={() => <Redirect to="/scores?new=1" />} />
+        <Route path="/scores" component={AssessmentList} />
+        <Route path="/scores/:id" component={AssessmentDetail} />
 
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
@@ -120,12 +134,14 @@ function App() {
         <StudentProvider>
           <ClassProvider>
             <AttendanceProvider>
-              <AuthBoundary>
-                <TooltipProvider>
-                  <Toaster position="top-right" richColors />
-                  <Router />
-                </TooltipProvider>
-              </AuthBoundary>
+              <AssessmentProvider>
+                <AuthBoundary>
+                  <TooltipProvider>
+                    <Toaster position="top-right" richColors />
+                    <Router />
+                  </TooltipProvider>
+                </AuthBoundary>
+              </AssessmentProvider>
             </AttendanceProvider>
           </ClassProvider>
         </StudentProvider>

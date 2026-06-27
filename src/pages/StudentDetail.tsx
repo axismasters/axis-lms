@@ -18,11 +18,13 @@ import { StatusBadge, GradeBadge, formatDate } from '@/components/StatusBadge';
 import { useStudents } from '@/contexts/StudentContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
 import { useClasses } from '@/contexts/ClassContext';
+import { useAssessment } from '@/contexts/AssessmentContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { isBackOfficeType } from '@/lib/rbac';
 import { STATUS_CONFIG, AttendanceStatus } from '@/lib/attendanceData';
 import { ClassRoom } from '@/lib/classData';
 import { Student, StudentStatus, ClassInfo, InternalScore, MockExamScore } from '@/lib/dummyData';
+import { getPublishedResultsForStudent, categoryLabel, StudentExamResult } from '@/lib/assessmentData';
 import {
   getActiveClasses, getPastClasses, resolveClassView, timeSlotsToSchedule, ClassView,
   getUnivDataStatus, getUnivChecklist, UNIV_STATUS_STYLE,
@@ -809,6 +811,7 @@ function MonthCalendar({ ym, records }: { ym: string; records: { date: string; s
 // ════════════════════════════════════════════════════════════
 function GradesTab({ student, initialGradeType }: { student: Student; initialGradeType: GradeType }) {
   const [gradeType, setGradeType] = useState<GradeType>(initialGradeType);
+  const { exams, submissions } = useAssessment();
 
   const mockFiltered = useMemo(() => {
     if (gradeType === '전국연합모의고사' || gradeType === '내신대비모의고사' || gradeType === '수능실전모의고사') {
@@ -816,6 +819,20 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
     }
     return [];
   }, [gradeType, student.mockExamScores]);
+
+  // Assessment Engine(시험관리)에서 이 학생에게 공개(또는 반영) 가능한 결과만 가져온다.
+  // getPublishedResultsForStudent()가 이미 "공개되지 않은 결과는 제외"를 보장하므로 여기서는
+  // 카테고리별 자동 분류만 한다 — 단원평가/인증평가/입학테스트는 대학추천 계산과 연결하지 않는다.
+  const assessmentResults = useMemo(
+    () => getPublishedResultsForStudent(exams, submissions, student.id),
+    [exams, submissions, student.id]
+  );
+  const mockSchoolResults = useMemo(() => assessmentResults.filter((r) => r.categoryId === 'mock-school'), [assessmentResults]);
+  const mockSuneungResults = useMemo(() => assessmentResults.filter((r) => r.categoryId === 'mock-suneung'), [assessmentResults]);
+  const schoolEvalResults = useMemo(
+    () => assessmentResults.filter((r) => r.categoryId === 'unit-eval' || r.categoryId === 'certification' || r.categoryId === 'entrance-test'),
+    [assessmentResults]
+  );
 
   const univ = getUnivDataStatus(student);
   const us = UNIV_STATUS_STYLE[univ];
@@ -839,6 +856,21 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
         <InternalScores scores={student.internalScores} />
       ) : (
         <MockScores title={gradeType} scores={mockFiltered} />
+      )}
+
+      {/* Assessment Engine(시험관리)에서 채점·공개된 결과 — 성적 종류에 따라 자동 분류해 표시한다. */}
+      {(gradeType === '전체' || gradeType === '내신대비모의고사') && mockSchoolResults.length > 0 && (
+        <AssessmentResultList title="내신대비모의고사 (시험관리)" results={mockSchoolResults} />
+      )}
+      {(gradeType === '전체' || gradeType === '수능실전모의고사') && mockSuneungResults.length > 0 && (
+        <AssessmentResultList title="수능실전모의고사 (시험관리)" results={mockSuneungResults} />
+      )}
+      {gradeType === '전체' && schoolEvalResults.length > 0 && (
+        <AssessmentResultList
+          title="교내 평가 (단원평가·인증평가·입학테스트)"
+          results={schoolEvalResults}
+          note="대학추천 계산에는 사용되지 않습니다."
+        />
       )}
 
       <Area title="성적 상세 보기" desc="문항 단위 분석은 시험관리 엔진(채점)과 연동됩니다.">
@@ -950,6 +982,27 @@ function MockScores({ title, scores }: { title: string; scores: MockExamScore[] 
           </div>
         </>
       )}
+    </Area>
+  );
+}
+
+// Assessment Engine(시험관리)에서 채점·공개된 결과를 보여주는 간단한 리스트.
+// MockExamScore처럼 과목별 세부 분석은 없고(시험관리 엔진은 문항 단위 총점 중심이므로),
+// 시험명·시험일·획득점수만 표시한다. note가 있으면(교내 평가류) 안내 문구를 함께 보여준다.
+function AssessmentResultList({ title, results, note }: { title: string; results: StudentExamResult[]; note?: string }) {
+  return (
+    <Area title={title} desc={note}>
+      <div className="space-y-1.5">
+        {results.map((r) => (
+          <div key={r.examId} className="flex items-center justify-between px-3 py-2 rounded-md" style={{ border: '1px solid oklch(0.93 0.008 250)' }}>
+            <div>
+              <div className="text-sm font-medium" style={{ color: 'oklch(0.22 0.02 250)' }}>{r.title}</div>
+              <div className="text-xs tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>{categoryLabel(r.categoryId)} · {formatDate(r.examDate)}</div>
+            </div>
+            <div className="text-sm font-semibold tabular-nums" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{r.earnedScore} / {r.totalPoints}점</div>
+          </div>
+        ))}
+      </div>
     </Area>
   );
 }

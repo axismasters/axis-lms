@@ -44,6 +44,8 @@ axis-lms-v1.2/
     │   ├── ClassDetail.tsx             # 반 상세
     │   ├── AttendanceCheck.tsx         # 출결체크
     │   ├── AttendanceStatus.tsx        # 출결현황
+    │   ├── AssessmentList.tsx          # 성적 관리: 시험 목록 (시험 등록 모달 포함)
+    │   ├── AssessmentDetail.tsx        # 성적 관리: 시험 상세 (기본정보/응시자목록/채점현황/결과분석 4탭)
     │   ├── NotFound.tsx                # 404
     │   └── settings/
     │       ├── PermissionSettings.tsx          # 직급별 권한설정
@@ -53,6 +55,7 @@ axis-lms-v1.2/
     ├── components/
     │   ├── AdminLayout.tsx       # Back Office 레이아웃 — 사이드바 메뉴, RBAC 메뉴 필터링
     │   ├── ClassFormModal.tsx    # 반 등록/수정 모달
+    │   ├── AssessmentFormModal.tsx # 시험 등록 모달 (기본정보/문항 구성 2탭, 문항 단위 혼합 채점 설정)
     │   ├── StatusBadge.tsx       # 상태 배지 공통 컴포넌트
     │   ├── ErrorBoundary.tsx     # 전역 에러 바운더리
     │   └── ui/                  # shadcn 스타일 최소 UI 프리미티브 (button, input, select, dialog, alert-dialog, sonner, tooltip 등)
@@ -62,6 +65,7 @@ axis-lms-v1.2/
     │   ├── StudentContext.tsx     # 학생 데이터 CRUD
     │   ├── ClassContext.tsx       # 반 데이터 CRUD
     │   ├── AttendanceContext.tsx  # 출결 세션/기록 관리
+    │   ├── AssessmentContext.tsx  # 시험 생성/채점/공개/정정 관리
     │   └── ThemeContext.tsx       # 테마 Provider (현재 light 고정 패스스루)
     │
     ├── lib/                      # 실제 데이터/타입 모듈 (모든 페이지가 `@/lib/...`로 import)
@@ -69,6 +73,7 @@ axis-lms-v1.2/
     │   ├── dummyData.ts           # 학생 더미 데이터 + Student/ClassInfo/Guardian 등 타입
     │   ├── classData.ts           # 반 더미 데이터 + ClassRoom 타입
     │   ├── attendanceData.ts      # 출결 더미 데이터 + AttendanceStatus 등 타입
+    │   ├── assessmentData.ts      # 시험 더미 데이터 + Exam/ExamSubmission 타입, 채점/공개 판정 파생 함수
     │   ├── studentDerived.ts      # 학생 화면에서 쓰는 파생 계산(수강현황, 재무, 모의고사 등)
     │   └── utils.ts               # `cn` 헬퍼(clsx + tailwind-merge)
     │
@@ -106,11 +111,14 @@ axis-lms-v1.2/
 | `/settings/academy` | `AcademyInfoManagement` | |
 | `/settings/permissions` | `PermissionSettings` | |
 | `/settings/password-reset` | `PasswordResetManagement` | |
-| `/scores` | 플레이스홀더 | "성적 관리" 미구현 안내 화면 |
+| `/scores` | `AssessmentList` | `?new=1` 쿼리로 시험 등록 모달 자동 오픈 |
+| `/scores/new` | → `/scores?new=1` 리다이렉트 | 구버전 URL 호환용 |
+| `/scores/:id` | `AssessmentDetail` | 기본정보/응시자목록/채점현황/결과분석 4탭 |
 | 그 외 | `NotFound` | |
 
-라우터 전체는 `BackOfficeGate`로 감싸져 있으며, `isBackOfficeType(currentUser.accountType)`이 아닌 계정
-(학생/보호자)은 모든 라우트 대신 접근 제한 안내만 표시됩니다.
+라우터 전체는 `BackOfficeGate`로 감싸져 있으며, 학생/보호자 계정(`STUDENT`/`GUARDIAN`)은 모든 라우트
+대신 접근 제한 안내만 표시됩니다(강사 등 그 외 계정은 Back Office에 들어올 수 있고, 화면/데이터 단위
+제한은 각 화면의 `canAccessClass()`/`canAccessExam()`/`can()` 등 RBAC로 처리됩니다).
 
 ---
 
@@ -144,6 +152,29 @@ axis-lms-v1.2/
 - 최고관리자 계정은 누구도 비밀번호를 초기화할 수 없음(`canResetPassword`에서 항상 차단).
 - 강사는 본인 담당 학생/반/시험 범위만 조회·관리 가능(`dataScope` + `canAccessStudent`/`canAccessClass`/`canAccessExam`).
 - 학생/보호자 계정은 Admin Back Office 자체에 접근할 수 없음(`BackOfficeGate`).
+- 반 단위 시험(`classId` 있음)은 전원 채점완료 시 자동으로 학생 성적조회에 반영되고, 학원 전체 시험
+  (`classId` 없음)만 명시적 공개(`assessment.publish`) 절차를 거칩니다. 두 경우 모두 미채점 응시자가
+  있으면 반영/공개되지 않습니다. 결석 처리된 학생은 성적 계산(평균/최고/최저, 성적조회 반영)에서 제외됩니다.
+
+---
+
+## Assessment Engine (성적관리)
+
+시험 종류는 `src/lib/assessmentData.ts`의 `EXAM_CATEGORIES` 배열(카탈로그) 구조로 관리되어 추후 무제한
+추가할 수 있습니다(기본값: 입학테스트/단원평가/인증평가/내신대비모의고사/수능실전모의고사). 문항은
+객관식·OX·단답형(자동채점)과 서술형·증명형·풀이형(수동채점)을 한 시험 안에 섞어 구성할 수 있습니다
+(문항 단위 혼합 채점). 채점현황 탭에서 자동채점 문항은 학생 답안을 입력하면 즉시 정답과 비교해
+채점되고, 수동채점 문항은 점수를 직접 입력합니다.
+
+시험 진행 상태는 "준비중/응시중/채점중" 같은 사용자 운영 상태로 노출하지 않고, 공개 여부
+(`publishedAt`)와 채점 완료 여부만으로 판단한 파생 단계(`getExamPhase` → `미채점 있음`/`채점 완료`/
+`공개 완료`)로 화면에 표시합니다.
+
+공개(또는 반영)된 시험 결과는 학생 상세의 성적조회 탭에 자동으로 나타납니다(`getPublishedResultsForStudent`).
+성적 종류에 따라 내신대비모의고사/수능실전모의고사 필터와 연동되고, 단원평가·인증평가·입학테스트는
+별도 "교내 평가" 영역에 표시되며 대학추천 데이터 판단(`getUnivDataStatus`)에는 사용되지 않습니다.
+공개완료(또는 반영) 이후의 점수 변경은 채점현황에서 직접 수정할 수 없고, 결과분석 탭의 "정정" 절차
+(사유 필수, 이력 기록)를 통해서만 가능합니다.
 
 ---
 
@@ -154,6 +185,11 @@ axis-lms-v1.2/
   `subject` 값을 그대로 사용합니다.
 - 직원(employee) 마스터 데이터 연동, 권한 복사/변경 이력 실제 구현, 학생·보호자 전용 포털 분리는
   아직 진행되지 않았습니다.
+- Assessment Engine은 관리자/강사용 답안 입력 MVP 수준입니다. 문제은행 연동, OMR, 학생 제출 포털,
+  실제 AI 분석, 대학추천 실제 계산, Rival/Emblem/IF 분석 본구현, Notification Engine 실제 API 연동,
+  재무관리 연결은 포함하지 않았습니다.
+- 학생 성적조회 탭에 반영되는 Assessment Engine 결과는 시험명·시험일·총점만 표시합니다(`MockExamScore`
+  처럼 과목별 등급·백분위 세부 분석은 제공하지 않습니다 — 시험관리 엔진은 문항 단위 총점 중심입니다).
 
 ---
 

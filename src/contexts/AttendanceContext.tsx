@@ -19,7 +19,7 @@ interface AttendanceContextType {
   initSession: (classId: string, date: string, studentIds: string[], createdBy: string) => AttendanceSession;
 
   // 개별 출결 수정
-  updateRecord: (sessionId: string, studentId: string, status: AttendanceStatus, reason?: string, note?: string) => void;
+  updateRecord: (sessionId: string, studentId: string, status: AttendanceStatus, reason?: string, note?: string, by?: string) => void;
 
   // 세션 잠금 (체크 완료)
   lockSession: (sessionId: string, checkedBy: string) => void;
@@ -87,30 +87,51 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
   };
 
   // 개별 출결 수정
+  // reason/note 매개변수 시맨틱: 매개변수를 생략하면(undefined) 기존 값을 유지하고,
+  // 빈 문자열('')로 명시하면 사유/메모를 지운다(undefined로 저장). 값이 있으면 그 값으로 교체한다.
+  // 단, status가 '출석'이면 reason/note는 매개변수 값과 무관하게 항상 지운다(출석은 사유 개념이 없음).
   const updateRecord = (
     sessionId: string,
     studentId: string,
     status: AttendanceStatus,
     reason?: string,
     note?: string,
+    by?: string,
   ) => {
     setSessions(prev => prev.map(sess => {
       if (sess.id !== sessionId) return sess;
       const now = new Date().toISOString();
-      const needNotify = NOTIFY_STATUSES.includes(status);
       return {
         ...sess,
         records: sess.records.map(rec => {
           if (rec.studentId !== studentId) return rec;
+
+          const isAttend = status === '출석';
+          const needNotify = NOTIFY_STATUSES.includes(status); // 결석/조퇴
+
+          // 사유/메모: 출석이면 무조건 정리. 그 외 상태는 생략=유지, 빈 문자열=지움, 값=교체.
+          const nextReason = isAttend ? undefined : (reason === undefined ? rec.reason : (reason || undefined));
+          const nextNote = isAttend ? undefined : (note === undefined ? rec.note : (note || undefined));
+
+          // 알림 관련 필드는 상태가 바뀔 때마다 항상 새로 결정한다(이전 상태의 값이 잔존하지 않도록).
+          //  - 출석: 알림 대상 아님 → 전부 정리
+          //  - 결석/조퇴: 자동 알림 발송 대상 → notified는 일단 false로 초기화하고, 실제 발송은
+          //    체크 완료 시(AttendanceCheck.tsx의 handleLock → sendNotification)에서 처리한다.
+          //  - 지각/보강출석/공결: 자동 알림 발송 대상이 아님 → 전부 정리
+          const notified = false;
+          const notifyChannel = needNotify ? '카카오알림톡' : undefined;
+          const notifyTime = undefined;
+
           return {
             ...rec,
             status,
-            reason: reason ?? rec.reason,
-            note: note ?? rec.note,
+            reason: nextReason,
+            note: nextNote,
+            notified,
+            notifyChannel,
+            notifyTime,
             updatedAt: now,
-            // 알림 대상 상태로 변경 시 미발송 상태로 초기화
-            notified: needNotify ? false : rec.notified,
-            notifyChannel: needNotify ? '카카오알림톡' : rec.notifyChannel,
+            updatedBy: by ?? rec.updatedBy,
           };
         }),
       };

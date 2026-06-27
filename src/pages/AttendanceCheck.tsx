@@ -4,12 +4,14 @@
 // 권한: 강사(본인 반만), 행정(전체 반)
 
 import { useState, useMemo, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 import AdminLayout from '@/components/AdminLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { AttendanceStatus, STATUS_CONFIG, NOTIFY_STATUSES } from '@/lib/attendanceData';
+import { POSITION_LABEL } from '@/lib/rbac';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -23,13 +25,18 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// 현재 로그인 사용자 시뮬레이션 (실제 구현 시 AuthContext에서 가져옴)
-type UserRole = '강사' | '행정';
-const CURRENT_USER = { name: '김민준', role: '강사' as UserRole, assignedClasses: ['cls-001', 'cls-003'] };
+// 로컬(한국) 날짜 기준 YYYY-MM-DD 포맷터.
+// toISOString()은 UTC 기준이라 한국 시간 새벽(0~9시)에는 날짜가 하루 밀려 나올 수 있어 사용하지 않는다.
+function formatLocalDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 // 오늘 날짜
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate(new Date());
 }
 
 // 날짜 포맷
@@ -82,17 +89,32 @@ function StatusSelector({
 
 export default function AttendanceCheck() {
   const [, navigate] = useLocation();
+  const searchStr = useSearch();
+  const { currentUser, can, canAccessClass } = useAuth();
   const { sessions, getSession, initSession, updateRecord, lockSession, unlockSession, sendNotification } = useAttendance();
-  const { classes } = useClasses();
+  const { classes, getClassStudents } = useClasses();
   const { students } = useStudents();
 
-  // 권한에 따른 반 목록
-  const availableClasses = CURRENT_USER.role === '행정'
-    ? classes.filter(c => c.status === '운영중')
-    : classes.filter(c => c.status === '운영중' && CURRENT_USER.assignedClasses.includes(c.id));
+  // AXIS 확정 정책: 담당강사는 본인 담당 반만, 행정/원장/최고관리자는 전체 반.
+  // canAccessClass()가 dataScope(ALL_ACADEMY/ASSIGNED_CLASSES)를 기준으로 이미 이 규칙을 구현하고 있다.
+  const availableClasses = classes.filter(c => c.status === '운영중' && canAccessClass(c.id));
+  const canViewAll = can('attendance.viewAll'); // 전체 반 범위 보유자(행정/원장/최고관리자) — 잠금 해제 등 운영 권한 판별용
 
-  const [selectedClassId, setSelectedClassId] = useState(availableClasses[0]?.id || '');
-  const [selectedDate, setSelectedDate] = useState(todayStr());
+  // /attendance/check?classId=...&date=... 로 진입 시(출결현황의 "관리" 링크) 해당 반/날짜를 초기값으로 사용.
+  const initialParams = useMemo(() => new URLSearchParams(searchStr), [searchStr]);
+  const [selectedClassId, setSelectedClassId] = useState(() => {
+    const fromQuery = initialParams.get('classId');
+    if (fromQuery && availableClasses.some(c => c.id === fromQuery)) return fromQuery;
+    return availableClasses[0]?.id || '';
+  });
+  const [selectedDate, setSelectedDate] = useState(() => initialParams.get('date') || todayStr());
+
+  // 권한이 없는 반이 선택되어 있으면(예: DEV 계정 전환) 접근 가능한 첫 반으로 보정
+  useEffect(() => {
+    if (selectedClassId && !availableClasses.some(c => c.id === selectedClassId)) {
+      setSelectedClassId(availableClasses[0]?.id || '');
+    }
+  }, [availableClasses, selectedClassId]);
 
   // 사유 입력 모달
   const [reasonModal, setReasonModal] = useState<{
@@ -107,7 +129,6 @@ export default function AttendanceCheck() {
   const [noteInput, setNoteInput] = useState('');
 
   const selectedClass = classes.find(c => c.id === selectedClassId);
-  const { getClassStudents } = useClasses();
   const enrolledIds = selectedClassId ? getClassStudents(selectedClassId) : [];
   const enrolledStudents = students.filter(s => enrolledIds.includes(s.id));
 
@@ -117,28 +138,21 @@ export default function AttendanceCheck() {
   // 세션 초기화 (전체 자동 출석)
   const handleInitSession = () => {
     if (!selectedClassId || enrolledStudents.length === 0) return;
-    initSession(selectedClassId, selectedDate, enrolledIds, CURRENT_USER.name);
+    initSession(selectedClassId, selectedDate, enrolledIds, currentUser.name);
     toast.success(`${enrolledStudents.length}명 전체 출석으로 초기화되었습니다.`);
   };
 
-  // 출결 상태 변경
+  // 출결 상태 변경 — 출석 외 5개 상태(결석/지각/조퇴/보강출석/공결)는 사유 입력 모달을 거친다.
+  // 결석만 사유가 필수이며, 나머지(지각/조퇴/보강출석/공결)는 선택 입력이다.
   const handleStatusChange = (sessionId: string, studentId: string, studentName: string, newStatus: AttendanceStatus, currentReason?: string) => {
-    // 결석은 사유 필수 → 모달 오픈
-    if (newStatus === '결석') {
+    if (newStatus !== '출석') {
       setReasonModal({ sessionId, studentId, studentName, status: newStatus, currentReason });
       setReasonInput(currentReason || '');
       setNoteInput('');
       return;
     }
-    // 조퇴는 사유 선택 → 모달 오픈
-    if (newStatus === '조퇴') {
-      setReasonModal({ sessionId, studentId, studentName, status: newStatus, currentReason });
-      setReasonInput(currentReason || '');
-      setNoteInput('');
-      return;
-    }
-    // 나머지는 바로 변경
-    updateRecord(sessionId, studentId, newStatus);
+    // 출석은 사유 개념이 없으므로 바로 변경
+    updateRecord(sessionId, studentId, newStatus, undefined, undefined, currentUser.name);
     toast.success(`${studentName} - ${newStatus} 처리되었습니다.`);
   };
 
@@ -149,7 +163,7 @@ export default function AttendanceCheck() {
       toast.error('결석 사유는 필수 입력입니다.');
       return;
     }
-    updateRecord(reasonModal.sessionId, reasonModal.studentId, reasonModal.status, reasonInput.trim() || undefined, noteInput.trim() || undefined);
+    updateRecord(reasonModal.sessionId, reasonModal.studentId, reasonModal.status, reasonInput.trim(), noteInput.trim(), currentUser.name);
     toast.success(`${reasonModal.studentName} - ${reasonModal.status} 처리되었습니다.`);
     setReasonModal(null);
     setReasonInput('');
@@ -159,7 +173,7 @@ export default function AttendanceCheck() {
   // 체크 완료 (잠금)
   const handleLock = () => {
     if (!currentSession) return;
-    lockSession(currentSession.id, CURRENT_USER.name);
+    lockSession(currentSession.id, currentUser.name);
     // 알림 발송 대상 자동 처리
     const notifyTargets = currentSession.records.filter(
       r => NOTIFY_STATUSES.includes(r.status) && !r.notified
@@ -172,9 +186,9 @@ export default function AttendanceCheck() {
     }
   };
 
-  // 잠금 해제 (행정만)
+  // 잠금 해제 (전체 반 범위 보유자만 — 행정/원장/최고관리자)
   const handleUnlock = () => {
-    if (!currentSession || CURRENT_USER.role !== '행정') return;
+    if (!currentSession || !canViewAll) return;
     unlockSession(currentSession.id);
     toast.info('출결 체크가 수정 가능 상태로 변경되었습니다.');
   };
@@ -197,17 +211,32 @@ export default function AttendanceCheck() {
     return { counts, total, attendRate };
   }, [currentSession, sessions]);
 
-  // 날짜 선택 최근 14일
+  // 날짜 선택 최근 14일 — 단, 출결현황의 "상세/수정" 링크(?date=...)로 들어온 날짜가
+  // 최근 14일 범위 밖이면 Select 표시가 비어 보일 수 있으므로, 그 날짜도 옵션에 포함시켜 보정한다.
   const dateOptions = useMemo(() => {
     const opts: string[] = [];
     const today = new Date();
     for (let i = 0; i < 14; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      opts.push(d.toISOString().slice(0, 10));
+      opts.push(formatLocalDate(d));
+    }
+    if (selectedDate && !opts.includes(selectedDate)) {
+      opts.push(selectedDate);
+      opts.sort((a, b) => b.localeCompare(a));
     }
     return opts;
-  }, []);
+  }, [selectedDate]);
+
+  if (!can('attendance.check')) {
+    return (
+      <AdminLayout breadcrumbs={[{ label: '출결관리' }, { label: '출결체크' }]}>
+        <div className="axis-card p-12 text-center">
+          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>출결체크 권한이 없습니다.</p>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout breadcrumbs={[{ label: '출결관리' }, { label: '출결체크' }]}>
@@ -216,12 +245,12 @@ export default function AttendanceCheck() {
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>출결체크</h1>
           <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-            {CURRENT_USER.role === '강사' ? `담당 반 ${availableClasses.length}개` : `전체 운영반 ${availableClasses.length}개`} · 전체 자동 출석 후 예외 학생만 수정
+            {canViewAll ? `전체 운영반 ${availableClasses.length}개` : `담당 반 ${availableClasses.length}개`} · 전체 자동 출석 후 예외 학생만 수정
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full" style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.38 0.18 250)' }}>
           <Users size={12} />
-          {CURRENT_USER.name} ({CURRENT_USER.role})
+          {currentUser.name} ({POSITION_LABEL[currentUser.position]})
         </div>
       </div>
 
@@ -328,7 +357,7 @@ export default function AttendanceCheck() {
                       style={{ background: 'oklch(0.94 0.08 160)', color: 'oklch(0.28 0.15 160)' }}>
                       <Lock size={11} /> 체크 완료 · {currentSession.checkedBy}
                     </div>
-                    {CURRENT_USER.role === '행정' && (
+                    {canViewAll && (
                       <Button variant="outline" size="sm" onClick={handleUnlock} className="h-8 text-xs gap-1.5">
                         <Unlock size={11} /> 수정 허용
                       </Button>
@@ -357,7 +386,7 @@ export default function AttendanceCheck() {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
-                  {['#', '학생명', '출결 상태', '사유', '알림', ''].map(h => (
+                  {['#', '학생명', '보호자 연락처', '출결 상태', '사유', '알림', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
                   ))}
                 </tr>
@@ -389,6 +418,11 @@ export default function AttendanceCheck() {
                         </div>
                       </td>
 
+                      {/* 보호자 연락처 */}
+                      <td className="px-4 py-3 text-xs tabular-nums" style={{ width: 130, color: 'oklch(0.5 0.015 250)' }}>
+                        {stu.guardians[0]?.phone ?? '-'}
+                      </td>
+
                       {/* 출결 상태 선택 */}
                       <td className="px-4 py-3" style={{ minWidth: 340 }}>
                         <StatusSelector
@@ -418,7 +452,7 @@ export default function AttendanceCheck() {
                             )}
                           </div>
                         ) : (
-                          (rec.status === '결석' || rec.status === '조퇴') && !locked ? (
+                          rec.status !== '출석' && !locked ? (
                             <button
                               onClick={() => {
                                 setReasonModal({ sessionId: currentSession.id, studentId: stu.id, studentName: stu.name, status: rec.status });
@@ -426,10 +460,10 @@ export default function AttendanceCheck() {
                                 setNoteInput('');
                               }}
                               className="text-xs flex items-center gap-1"
-                              style={{ color: rec.status === '결석' ? 'oklch(0.577 0.245 27.325)' : 'oklch(0.45 0.14 30)' }}
+                              style={{ color: rec.status === '결석' ? 'oklch(0.577 0.245 27.325)' : 'oklch(0.55 0.015 250)' }}
                             >
                               <MessageSquare size={11} />
-                              {rec.status === '결석' ? '사유 입력 (필수)' : '사유 입력'}
+                              {rec.status === '결석' ? '사유 입력 (필수)' : '사유 입력 (선택)'}
                             </button>
                           ) : (
                             <span className="text-xs" style={{ color: 'oklch(0.75 0.01 250)' }}>-</span>

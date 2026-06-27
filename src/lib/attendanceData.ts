@@ -23,8 +23,9 @@ export interface AttendanceRecord {
   notified: boolean;      // 알림 발송 여부
   notifyChannel?: NotifyChannel;
   notifyTime?: string;    // HH:MM
-  createdBy: string;      // '강사' | '행정'
+  createdBy: string;      // 세션을 시작한 처리자(전체 출석 초기화 시점)
   createdAt: string;
+  updatedBy?: string;     // 이 레코드의 상태를 마지막으로 변경(저장)한 처리자 — 결석/지각 등 개별 수정 시 기록
   updatedAt?: string;
 }
 
@@ -43,6 +44,15 @@ export interface AttendanceSession {
 export const NOTIFY_STATUSES: AttendanceStatus[] = ['결석', '조퇴'];
 // 알림 미발송 상태
 export const NO_NOTIFY_STATUSES: AttendanceStatus[] = ['지각', '보강출석', '공결'];
+
+// 알림상태 표시 라벨 — 출결현황 목록 등에서 사용.
+// 정책: 결석/조퇴 = 발송됨(발송 처리 후)/미발송(아직 처리 전), 지각/보강출석/공결 = 항상 미발송,
+//      출석 = 알림 발송 대상이 아니므로 "해당없음".
+export function notificationStatusLabel(status: AttendanceStatus, notified: boolean): '발송됨' | '미발송' | '해당없음' {
+  if (status === '출석') return '해당없음';
+  if (NOTIFY_STATUSES.includes(status)) return notified ? '발송됨' : '미발송';
+  return '미발송'; // 지각, 보강출석, 공결 — 정책상 자동 발송 대상이 아님(항상 미발송으로 표시)
+}
 
 // 상태별 스타일
 export const STATUS_CONFIG: Record<AttendanceStatus, {
@@ -101,6 +111,15 @@ function makeId(prefix: string, n: number) {
   return `${prefix}-${String(n).padStart(3, '0')}`;
 }
 
+// 로컬(한국) 날짜 기준 YYYY-MM-DD 포맷터.
+// toISOString()은 UTC 기준이라 한국 시간 새벽(0~9시)에는 날짜가 하루 밀려 나올 수 있어 사용하지 않는다.
+function formatLocalDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 // 날짜 범위 생성 (최근 30일 중 수업일만)
 function getRecentDates(daysBack: number, count: number): string[] {
   const dates: string[] = [];
@@ -110,7 +129,7 @@ function getRecentDates(daysBack: number, count: number): string[] {
     d.setDate(d.getDate() - i);
     const dow = d.getDay(); // 0=일, 1=월 ...
     if (dow !== 0 && dow !== 6) { // 평일만
-      dates.push(d.toISOString().slice(0, 10));
+      dates.push(formatLocalDate(d));
     }
   }
   return dates;
