@@ -193,11 +193,13 @@ axis-lms-v1.2/
   재무관리 연결은 포함하지 않았습니다.
 - 학생 성적조회 탭에 반영되는 Assessment Engine 결과는 시험명·시험일·총점만 표시합니다(`MockExamScore`
   처럼 과목별 등급·백분위 세부 분석은 제공하지 않습니다 — 시험관리 엔진은 문항 단위 총점 중심입니다).
-- Enrollment Foundation 도입 후에도 학생-반 연결은 여전히 세 곳에 동기적으로 존재합니다:
-  `EnrollmentContext`(신규, Finance Engine 단일 진실 공급원), `ClassContext.studentClassMap`(Attendance/
-  Assessment Engine이 참조), `Student.classes`(StudentList 필터/배지, 재무탭, 강사 권한범위 계산이 참조).
-  `EnrollmentContext`의 등록/종료/퇴원 함수가 세 곳을 함께 갱신해 동기화를 보장하지만, 완전한 단일화는
-  Finance Engine 본체 단계에서 검토할 수 있습니다.
+- Enrollment Foundation 도입 후 학생-반 연결은 세 곳에 동기적으로 존재합니다: `EnrollmentContext`
+  (신규, Finance Engine 단일 진실 공급원이자 Attendance Engine의 출결 대상자 산출 기준),
+  `ClassContext.studentClassMap`(Assessment Engine의 시험 응시 대상자 산출이 참조), `Student.classes`
+  (StudentList 필터/배지, 재무탭, 강사 권한범위 계산이 참조). `EnrollmentContext`의 등록/종료/퇴원
+  함수가 세 곳을 함께 갱신해 동기화를 보장하지만, 완전한 단일화는 Finance Engine 본체 단계에서
+  검토할 수 있습니다. (Attendance × Enrollment Integration v1부터 `AttendanceCheck.tsx`는
+  `getActiveEnrollmentsByClass()`를 직접 사용하도록 전환되었습니다 — `studentClassMap`을 거치지 않습니다.)
 - `AssessmentEngine`의 더미 시험(`exam-001`, cls-001 대상)의 응시자 더미(stu-001/002/003)와 이번에
   정리한 `CLASS_STUDENT_MAP`/`Enrollment` 더미(cls-001 수강생: stu-001/002)가 완전히 일치하지는 않습니다
   (stu-003은 Enrollment 상 cls-001 수강 이력이 없는데 그 반 시험에는 응시자로 들어가 있음). 서로 다른

@@ -2,6 +2,12 @@
 // Design: Structured Authority
 // 흐름: 반 선택 → 날짜 선택 → 전체 자동 출석 초기화 → 예외 학생만 수정 → 체크 완료(잠금)
 // 권한: 강사(본인 반만), 행정(전체 반)
+//
+// Attendance × Enrollment Integration v1: 출결 대상자는 ClassContext.studentClassMap(단순 학생 목록)이
+// 아니라 EnrollmentContext.getActiveEnrollmentsByClass(classId)(현재 활성 수강 중인 학생)을 기준으로
+// 산출한다. 수강 종료/퇴원 처리(Enrollment status 변경)된 학생은 새로 시작하는 출결 체크 대상에서
+// 자동으로 빠진다(AXIS 확정 정책 4·5). 이미 생성된 과거 세션의 records는 이 변경과 무관하게 그대로
+// 보존된다(initSession 시점에만 대상자를 산출하므로, 과거 세션 데이터 자체를 다시 계산하지 않는다).
 
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
@@ -10,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useStudents } from '@/contexts/StudentContext';
+import { useEnrollment } from '@/contexts/EnrollmentContext';
 import { AttendanceStatus, STATUS_CONFIG, NOTIFY_STATUSES } from '@/lib/attendanceData';
 import { POSITION_LABEL } from '@/lib/rbac';
 import { Button } from '@/components/ui/button';
@@ -92,8 +99,9 @@ export default function AttendanceCheck() {
   const searchStr = useSearch();
   const { currentUser, can, canAccessClass } = useAuth();
   const { sessions, getSession, initSession, updateRecord, lockSession, unlockSession, sendNotification } = useAttendance();
-  const { classes, getClassStudents } = useClasses();
+  const { classes } = useClasses();
   const { students } = useStudents();
+  const { getActiveEnrollmentsByClass } = useEnrollment();
 
   // AXIS 확정 정책: 담당강사는 본인 담당 반만, 행정/원장/최고관리자는 전체 반.
   // canAccessClass()가 dataScope(ALL_ACADEMY/ASSIGNED_CLASSES)를 기준으로 이미 이 규칙을 구현하고 있다.
@@ -129,7 +137,10 @@ export default function AttendanceCheck() {
   const [noteInput, setNoteInput] = useState('');
 
   const selectedClass = classes.find(c => c.id === selectedClassId);
-  const enrolledIds = selectedClassId ? getClassStudents(selectedClassId) : [];
+  // 출결 대상자 = 해당 반에 현재 활성 수강 중(status === '수강중')인 학생만 — 수강 종료/퇴원 학생은
+  // getActiveEnrollmentsByClass()가 자동으로 제외하므로 별도 필터링이 필요 없다(AXIS 확정 정책 4·5).
+  const activeEnrollments = selectedClassId ? getActiveEnrollmentsByClass(selectedClassId) : [];
+  const enrolledIds = activeEnrollments.map(e => e.studentId);
   const enrolledStudents = students.filter(s => enrolledIds.includes(s.id));
 
   // 현재 세션
@@ -299,6 +310,12 @@ export default function AttendanceCheck() {
               {selectedClass.teacher} · {selectedClass.subject} · {selectedClass.level}
             </div>
           )}
+
+          {selectedClassId && (
+            <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: 'oklch(0.94 0.08 160)', color: 'oklch(0.28 0.15 160)' }}>
+              <Users size={11} /> 현재 출결 대상자 {enrolledIds.length}명
+            </div>
+          )}
         </div>
       </div>
 
@@ -313,7 +330,7 @@ export default function AttendanceCheck() {
             '출결 시작' 버튼을 누르면 수강생 {enrolledStudents.length}명이 전체 출석으로 초기화됩니다.
           </p>
           {enrolledStudents.length === 0 ? (
-            <p className="text-xs" style={{ color: 'oklch(0.577 0.245 27.325)' }}>수강생이 없습니다. 반 상세에서 수강생을 추가해주세요.</p>
+            <p className="text-xs" style={{ color: 'oklch(0.577 0.245 27.325)' }}>현재 활성 수강생이 없는 반입니다. 수강등록을 먼저 진행해주세요.</p>
           ) : (
             <Button onClick={handleInitSession} className="gap-2" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
               <CheckCircle2 size={15} />
@@ -515,7 +532,7 @@ export default function AttendanceCheck() {
 
             {enrolledStudents.length === 0 && (
               <div className="text-center py-10 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
-                수강생이 없습니다.
+                현재 활성 수강생이 없는 반입니다. 수강등록을 먼저 진행해주세요.
               </div>
             )}
           </div>

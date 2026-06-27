@@ -1,3 +1,126 @@
+# AXIS LMS v1.2 — Attendance × Enrollment Integration v1
+
+> GitHub 최신 반영본(Enrollment Foundation v6) 기준으로 작업했습니다. 출결관리의 출결 대상자
+> 산출 기준을 "단순 학생 목록"에서 "현재 활성 수강 중인 학생"으로 전환했습니다. 전체 구조를
+> 갈아엎지 않고, `AttendanceCheck.tsx` 1개 파일만 부분 수정(`str_replace`)했습니다.
+
+---
+
+## 1. 수정 파일 목록
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/AttendanceCheck.tsx` | 출결 대상자 산출을 `ClassContext.getClassStudents()`에서 `EnrollmentContext.getActiveEnrollmentsByClass()`로 전환, "현재 출결 대상자 N명" 표시 추가, 활성 수강생 없는 반 안내 문구 교체 |
+| `README.md` | "알려진 제약" 섹션의 서술을 이번 전환에 맞게 1줄 갱신(Attendance Engine이 이제 `studentClassMap`이 아니라 `EnrollmentContext`를 직접 참조한다는 사실 반영) |
+
+`AttendanceContext.tsx`, `AttendanceStatus.tsx`, `ClassContext.tsx`, `EnrollmentContext.tsx`,
+`ClassDetail.tsx`, `ClassList.tsx`, `StudentDetail.tsx`, `AssessmentFormModal.tsx`,
+`assessmentData.ts` 등 — **전혀 건드리지 않았습니다.** `diff -rq`로 `src/` 전체에서 위 1개 파일 외
+모든 파일이 1바이트도 다르지 않음을 확인했습니다.
+
+---
+
+## 2. 출결 대상자를 Enrollment 기반으로 바꾼 방식
+
+### 사전 분석에서 확인한 사실
+
+- `AttendanceContext.tsx`(`initSession(classId, date, studentIds, createdBy)`)는 이미 `studentIds: string[]`를
+  매개변수로만 받는 구조라, **호출부가 그 배열을 어떤 출처로 만들든 Context 자체는 전혀 손댈 필요가
+  없었습니다.** 즉 이번 통합은 "출결 대상자 배열을 만드는 한 줄"만 바꾸면 되는 작업이었습니다.
+- `AttendanceStatus.tsx`(출결현황 조회 화면)는 이미 `sessions`(과거에 생성된 기록)를 그대로 순회하고
+  `canAccessClass()`로만 권한 필터링할 뿐, `studentClassMap`이나 활성 수강 여부를 전혀 참조하지
+  않았습니다. **즉 "과거 기록은 현재 활성 수강 여부와 무관하게 조회 가능"이라는 요구사항(6번)을
+  이미 만족하고 있어서, 이 파일은 수정하지 않았습니다.**
+- `ClassDetail.tsx`의 "현재 수강생 수"는 직전 Enrollment Foundation 작업에서 이미
+  `getActiveEnrollmentsByClass(cls.id).length`로 계산하도록 바뀌어 있었습니다. 이번에
+  `AttendanceCheck.tsx`도 **정확히 같은 함수**를 쓰게 되어, 두 화면의 인원 수가 항상 자동으로
+  일치합니다(7번 요구사항 — 별도 동기화 로직 없이 같은 데이터 소스를 공유하는 것만으로 해결).
+
+### 실제 변경
+
+```ts
+// 변경 전
+const { classes, getClassStudents } = useClasses();
+...
+const enrolledIds = selectedClassId ? getClassStudents(selectedClassId) : [];
+
+// 변경 후
+const { classes } = useClasses();
+const { getActiveEnrollmentsByClass } = useEnrollment();
+...
+const activeEnrollments = selectedClassId ? getActiveEnrollmentsByClass(selectedClassId) : [];
+const enrolledIds = activeEnrollments.map(e => e.studentId);
+```
+
+`getActiveEnrollmentsByClass()`는 `Enrollment.status === '수강중'`(이 프로젝트의 "활성 수강" 상태)인
+레코드만 반환하므로, 수강 종료(`'종료'`)·퇴원(`'퇴원'`) 처리된 학생은 별도 필터링 없이 자동으로
+제외됩니다. 세션 초기화(`handleInitSession` → `initSession`)는 이 `enrolledIds`를 그대로 넘기므로,
+**새로 시작하는 출결 체크의 대상자만** 바뀌고, 이미 생성된 세션의 `records`(과거 출결 기록)는
+전혀 다시 계산되거나 건드려지지 않습니다.
+
+### UI 보강
+
+- 반/날짜 선택 카드에 **"현재 출결 대상자 N명"** 칩을 추가했습니다(`enrolledIds.length` 그대로 표시).
+- "수강생이 없습니다" 안내를 요청하신 정확한 문구로 교체했습니다: **"현재 활성 수강생이 없는 반입니다.
+  수강등록을 먼저 진행해주세요."** (세션 시작 전 안내와, 세션 시작 후 빈 목록 안내 2곳 모두 통일)
+
+### 권한
+
+`canAccessClass()`, `can('attendance.check')`, `can('attendance.viewAll')` 등 기존 권한 체크는 1줄도
+건드리지 않았습니다. 담당강사는 본인 담당 반만, 행정/원장/최고관리자는 전체 반을 보는 기존 동작이
+그대로 유지됩니다(애초에 "어떤 반을 볼 수 있는가"와 "그 반의 누가 출결 대상인가"는 서로 다른 축의
+권한이라, 이번 작업은 후자만 다뤘습니다).
+
+---
+
+## 3. 빌드 통과 여부
+
+네트워크 차단으로 `npm install`은 이번에도 불가능했습니다. `npm run build`(`tsc -b && vite build`)의
+선행 단계인 `tsc -b`를, 실제 사용된 모든 패키지의 최소 타입 스텁을 직접 작성해 이 환경에서 그대로
+실행했습니다.
+
+```
+$ tsc -p tsconfig.app.json --noEmit --ignoreDeprecations 6.0
+(종료 코드 0, 오류 없음)
+
+$ tsc -p tsconfig.node.json --noEmit
+(종료 코드 0, 오류 없음)
+```
+
+**`tsc -b` 기준으로 오류 0건, 통과.** 핵심 정책 로직(활성 수강생만 대상자 산출, 종료/퇴원 학생 제외,
+과거 세션 미접촉, 빈 반 처리, 권한 분기)을 React와 무관한 순수 JS로 떼어내 직접 실행해 전부 PASS를
+확인했습니다. `vite build`의 실제 번들링은 이 컨테이너에서 패키지를 설치할 수 없어 실행하지 못했으며,
+호스트에서 `npm run build`를 그대로 실행해 최종 확인하시면 됩니다.
+
+---
+
+## 4. 남은 한계
+
+- **세 곳 동기화 구조가 그대로 유지됩니다.** `EnrollmentContext`(Attendance Engine이 참조),
+  `ClassContext.studentClassMap`(Assessment Engine이 참조), `Student.classes`(StudentList/재무탭/강사
+  권한범위가 참조) — 이번 작업으로 Attendance Engine은 `EnrollmentContext`를 직접 보게 되었지만,
+  Assessment Engine은 여전히 `studentClassMap`을 참조합니다. `EnrollmentContext`의 등록/종료/퇴원
+  함수가 세 곳을 함께 갱신해주므로 실제로는 항상 일치하지만, 근본적인 단일화는 아직 아닙니다.
+- 출결 세션이 이미 시작된 상태에서 그 사이에 학생이 종료/퇴원 처리되는 경우, 그 세션의 `records`에는
+  계속 남아 있습니다(과거 기록 보존 정책상 의도된 동작입니다 — 다만 "이미 시작된 당일 세션에서도
+  바로 제외해야 하는가"는 이번 요청 범위 밖이라 다루지 않았습니다. 현재는 "다음에 새로 `initSession`을
+  호출하는 시점"부터만 제외됩니다).
+- 알림(카카오 발송)은 여전히 mock 상태 그대로입니다(이번 작업에서 의도적으로 손대지 않음 — 절대 하지
+  말 것 5번).
+
+---
+
+## 5. 다음 추천 개발 단계
+
+1. **Finance Engine 본체** — `EnrollmentContext`가 이미 `tuitionAmount`/`getActiveEnrollmentsByStudent`
+   등 준비를 마쳤으므로, 다음 단계로 진행하기 가장 자연스러운 영역입니다.
+2. **세 곳 동기화의 점진적 단일화** — Assessment Engine의 시험 대상자 산출도 `studentClassMap` 대신
+   `EnrollmentContext`를 직접 참조하도록 전환하면(이번 Attendance Engine과 동일한 패턴), 학생-반
+   연결의 단일 진실 공급원을 `EnrollmentContext` 하나로 좁힐 수 있습니다.
+3. **당일 세션 중 종료/퇴원 처리 시 동작 정책 결정** — 현재는 "다음 세션부터 제외"이며, 이미 시작된
+   세션은 그대로 둡니다. 운영상 "즉시 제외해야 하는지"를 AXIS 측에서 확정하면 후속 작업으로 반영할
+   수 있습니다.
+
 # AXIS LMS v1.2 — Enrollment Foundation v6 (GitHub 반영 전 최종 점검)
 
 > v5 검토에서 발견된 정책 위험 2건(ClassList.tsx 삭제 차단 누락, 수강 등록/종료/퇴원 권한 기준)을
