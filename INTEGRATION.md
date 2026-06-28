@@ -1,384 +1,210 @@
 # AXIS LMS v1.2 — INTEGRATION.md
-## Mobile/App Optimization Readiness v1
+## 강사 포털 Foundation v1
 
 ---
 
 ## 1. 이번 작업 범위 요약
 
-**작업명**: Mobile/App Optimization Readiness v1  
-**기반**: Release Checkpoint & UI Consistency QA v1 완료 상태  
-**목표**: 기존 Back Office 구조를 유지한 채 모바일 웹/PWA/앱 전환 기반 보강
+**작업명**: 강사 포털 Foundation v1
+**기반**: 빌드 캐시 파일 정리 및 역할별 라우팅 QA v1 buildfix 완료 상태
+**목표**: /teacher 강사 전용 포털의 1차 Foundation 구조 확립
 
 ### 절대 하지 않은 것
-- Capacitor / React Native / Flutter 패키징 없음
-- 새 엔진(대시보드/상담/포털) 없음
-- 기존 기능 로직 변경 없음
-- 권한 구조 변경 없음
-- 삭제 기능 신규 추가 없음
+- 관리자 Back Office 기능 수정/삭제 없음
+- 새로운 타입/데이터 모델 추가 없음 (기존 타입 그대로 사용)
+- 재무/직원/권한/시스템 설정 메뉴 강사 화면 노출 없음
+- 대시보드 독립 엔진 없음, 상담관리 독립 엔진 없음
+- Student 타입에 grade 필드 추가 없음
+- 고정 세로 사이드바 구조 없음
 
 ---
 
-## 2. AdminLayout 반응형 대응 방식
+## 2. 신규 파일 목록
 
-### 브레이크포인트 기준
-| 구간 | 사이드바 방식 | 메인 여백 |
-|------|-------------|----------|
-| `< 1024px` (모바일/태블릿) | 숨김 → 드로어(슬라이드 인) | 0 (전체 폭) |
-| `≥ 1024px` (데스크톱) | 240px 고정 노출 | `margin-left: 240px` |
-
-### 핵심 변경 사항 (AdminLayout.tsx)
-1. `useState(mobileOpen)` + `useEffect` 2개 추가
-   - 경로 변경 시 드로어 자동 닫힘
-   - 드로어 열림 시 `body.overflow = 'hidden'` 스크롤 잠금
-2. `SidebarContent` 내부 컴포넌트로 추출 → 데스크톱/모바일 공통 사용
-3. **데스크톱 사이드바**: `hidden lg:flex fixed` — 기존 구조 유지
-4. **모바일 오버레이**: `fixed inset-0 z-40 lg:hidden` — 클릭 시 드로어 닫기
-5. **모바일 드로어**: `fixed z-50 lg:hidden transition-transform` — `-translate-x-full` ↔ `translate-x-0`
-6. **햄버거 버튼**: Header 좌측, `lg:hidden` 조건
-7. **날짜 텍스트**: `hidden sm:block` 처리 (매우 좁은 화면 대응)
-8. **메인 콘텐츠**: `w-full lg:ml-[240px]` — 모바일 전체 폭 사용
-9. 페이지 패딩: `p-4 lg:p-6` — 모바일 여백 축소
-
-### 권한별 메뉴 노출 로직
-- 변경 없음. `visibleNav` 필터 로직 그대로 유지
-- TEACHER: 재무/알림/성장관리 전체 메뉴 접근 불가 유지
-- STUDENT/GUARDIAN: BackOfficeGate 차단 유지
+| 파일 | 역할 |
+|------|------|
+| `src/pages/teacher/TeacherClasses.tsx` | 담당 반 목록 화면 |
+| `src/pages/teacher/TeacherStudents.tsx` | 담당 학생 목록 화면 |
+| `src/pages/teacher/TeacherExams.tsx` | 내 시험 / 미채점 시험 화면 |
+| `src/pages/teacher/TeacherGrades.tsx` | 담당 학생 성적 확인 화면 |
+| `src/pages/teacher/TeacherVideos.tsx` | 내 수업영상 (Foundation 구조) |
+| `src/pages/teacher/TeacherNotes.tsx` | 내 수업노트 (Foundation 구조) |
 
 ---
 
-## 3. 표 중심 화면 모바일 대응 방식
+## 3. 수정 파일 목록
 
-### `.axis-table-wrap` 클래스 도입 (index.css)
-```css
-.axis-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-```
-기존 `overflow-x-auto` 인라인 className을 전부 `.axis-table-wrap`으로 교체.
-touch-scroll 최적화 추가.
-
-### 적용 대상 페이지 (전수 처리)
-| 페이지 | 파일 | minWidth |
-|--------|------|----------|
-| 학생목록 | StudentList.tsx | 1060~1180px |
-| 직원목록 | EmployeeList.tsx | 700px |
-| 반목록 | ClassList.tsx | 800px (신규 추가) |
-| 출결체크 | AttendanceCheck.tsx | 720px (신규 추가) |
-| 출결현황 | AttendanceStatus.tsx | 1180px |
-| 수납관리 | FinancePayments.tsx | 1100px |
-| 환불관리 | FinanceRefunds.tsx | 1200px |
-| 미납관리 | FinanceUnpaid.tsx | 1180px |
-| 정산관리 | FinanceSettlements.tsx | 700px (신규 추가) |
-| 재무통계 | FinanceStatistics.tsx | 600px (신규 추가) |
-| 발송이력 | NotificationHistory.tsx | 기존 유지 |
-| 템플릿관리 | NotificationTemplates.tsx | 기존 유지 |
-| 시험목록 | AssessmentList.tsx | 기존 유지 |
-| 성장현황 | GrowthOverview.tsx | 680px |
-| 엠블럼관리 | EmblemManagement.tsx | 700px (신규 추가) |
-| 라이벌관리 | RivalManagement.tsx | 800px (신규 추가) |
-| 권한설정 | PermissionSettings.tsx | 기존 유지 |
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/layouts/TeacherLayout.tsx` | Bottom Nav 5탭으로 확장 (홈/담당반/학생/채점/자료), Link에 `flex: 1` 적용 |
+| `src/pages/teacher/TeacherHome.tsx` | 담당 반 섹션 추가, 최근 성적 섹션 추가, 수업 콘텐츠 2버튼(영상/노트) 개선 |
+| `src/routes/TeacherRoutes.tsx` | 6개 신규 라우트 추가, 구 경로 리다이렉트 추가 |
 
 ---
 
-## 4. 학생 상세 탭 모바일 대응 방식
+## 4. 강사 포털 경로 (Foundation v1)
 
-### 변경 내용 (StudentDetail.tsx)
-- 탭 컨테이너: `flex gap-1 overflow-x-auto` → `axis-detail-tabs`
-- `.axis-detail-tabs` (index.css):
-  - `overflow-x: auto` + `touch-scroll`
-  - 스크롤바 숨김 (`scrollbar-width: none`, `::-webkit-scrollbar: display:none`)
-  - `button { flex-shrink: 0 }` — 탭이 줄바꿈되지 않음
-- 탭 내부 표들은 이미 `axis-table-wrap`으로 처리됨
+| 경로 | 화면 | 컴포넌트 |
+|------|------|----------|
+| `/teacher` | 강사 홈 | TeacherHome |
+| `/teacher/classes` | 담당 반 | TeacherClasses |
+| `/teacher/students` | 담당 학생 | TeacherStudents |
+| `/teacher/exams` | 내 시험/채점 | TeacherExams |
+| `/teacher/grades` | 성적 확인 | TeacherGrades |
+| `/teacher/videos` | 수업영상 | TeacherVideos |
+| `/teacher/notes` | 수업노트 | TeacherNotes |
 
-### 학생 상세 탭 목록
-기본정보 / 보호자·가족정보 / 수강이력 / 출결현황 / 성적조회 / 재무상태 / 성장·진열장  
-→ 7개 탭, 모바일에서 가로 스크롤로 탐색 가능
-
----
-
-## 5. 공통 CSS 유틸리티 추가 (index.css)
-
-```css
-/* 반응형 요약 카드 그리드 */
-.axis-summary-grid     /* 2열 → 3열 → 4열 → 5열 */
-
-/* 표 가로 스크롤 */
-.axis-table-wrap       /* overflow-x:auto + touch scroll */
-
-/* 탭 가로 스크롤 */
-.axis-detail-tabs      /* flex + overflow-x:auto + 스크롤바 숨김 */
-
-/* 모바일 페이지 헤더 */
-.axis-page-header      /* < 1024px: flex-direction:column */
-
-/* 모바일 필터 행 */
-.axis-filter-row       /* < 640px: 세로 스택 */
-```
+구 경로 리다이렉트:
+- `/teacher/attendance` → `/teacher` (홈)
+- `/teacher/scores` → `/teacher/grades`
 
 ---
 
-## 6. 권한설정 모바일 개선 필요사항 (향후 과제)
+## 5. 역할별 접근 정책
 
-### 현재 한계
-- `PermissionSettings.tsx`: 11개 카테고리 × 5개 권한 코드 매트릭스
-- 데스크톱 기준 최소 680px — 모바일에서 심각한 가로 넘침 발생 가능
-- 현재 단계에서는 `axis-table-wrap`으로 가로 스크롤만 처리
-
-### 향후 모바일 UI 권장 구조
-1. **카테고리별 아코디언**: 각 카테고리를 펼치기/접기 가능하게
-2. **탭 구조**: 직급별 탭으로 전환 (강사 탭 / 행정 탭 등)
-3. **조회/간단 수정 분리**: 모바일에서는 권한 전체 편집 대신 단일 토글만 노출
-4. **현재 Back Office 기능 유지**: 데스크톱 운영자 중심으로 권한 설정 운영 권장
+| 역할 | /teacher 접근 | /admin 접근 |
+|------|--------------|------------|
+| TEACHER | ✅ 허용 | ❌ 차단 → /teacher 리다이렉트 |
+| STAFF / DIRECTOR / SUPER_ADMIN | ❌ 차단 → /admin 리다이렉트 | ✅ 허용 |
+| STUDENT | ❌ 차단 → /student 리다이렉트 | ❌ 차단 |
+| GUARDIAN | ❌ 차단 → /parent 리다이렉트 | ❌ 차단 |
 
 ---
 
-## 7. 재무/성적/성장 화면 모바일 향후 개선 권장사항
+## 6. TeacherLayout Bottom Navigation
 
-### 요약 카드 그리드
-- 현재: 일부 화면 `grid-cols-2 md:grid-cols-4` 등 개별 적용
-- 향후: `.axis-summary-grid` 유틸리티 클래스로 통일 권장
-- 모바일에서 2열 → 데스크톱에서 4~5열 자동 전환
+5탭 구성:
+```
+홈(/teacher)  담당반(/teacher/classes)  학생(/teacher/students)  채점(/teacher/exams)  자료(/teacher/videos)
+```
 
-### 긴 표 → 카드형 전환 (이번 단계 미구현, 향후 권장)
-- 수납관리(FinancePayments), 출결현황(AttendanceStatus) 등 1000px+ 표
-- 모바일에서 각 행을 카드 컴포넌트로 렌더링하는 `useIsMobile()` 훅 기반 전환 권장
-- 예시 패턴:
-  ```tsx
-  const isMobile = useMediaQuery('(max-width: 1023px)');
-  return isMobile ? <CardList items={data} /> : <TableView items={data} />;
-  ```
-
-### 상세 관리 버튼 → 액션 시트 (이번 단계 미구현, 향후 권장)
-- 현재: 테이블 행 우측 버튼 그룹
-- 향후: 모바일에서 Bottom Sheet / Action Sheet 패턴으로 전환
+- 고정 세로 사이드바 없음 (AXIS 헌법 준수)
+- Bottom Navigation 모바일 친화 구조
+- `Link` 컴포넌트에 `style={{ flex: 1, display: 'flex' }}` 적용 → 5등분 균등 배치
 
 ---
 
-## 8. 향후 PWA/앱 전환 시 추천 구조
+## 7. 강사 화면 "담당" 기준 원칙
 
-### PWA 전환 (최우선 추천)
-```
-현재 Vite 빌드 → vite-plugin-pwa 추가
-→ manifest.json + Service Worker 자동 생성
-→ 홈 화면 추가 + 오프라인 캐시 지원
-```
-- 추가 코드 변경 최소 (현재 구조 그대로 활용)
-- Capacitor 없이 iOS/Android 홈 화면 설치 가능
-- 권장 플러그인: `vite-plugin-pwa`
-
-### 향후 학생/보호자 전용 포털 분리 (별도 프로젝트)
-```
-axis-student-portal/   ← 학생/보호자용 (별도 앱)
-axis-lms-backoffice/   ← 현재 Back Office (관리자용)
-```
-- 학생/보호자 화면은 현재 Back Office와 **완전히 분리** 권장
-- 공통 API 레이어만 공유, UI는 별도 설계
-- 보호자에게 라이벌/엠블럼/경쟁 정보 노출 금지 정책은 포털 설계 시 반드시 반영
-
-### Bottom Navigation 구조 (학생/보호자 포털 전용)
-```
-[홈] [성적] [출결] [공지] [마이페이지]
-```
-- Back Office(관리자)에는 Bottom Nav 불필요
-- 학생/보호자 포털 별도 개발 시 적용
-
-### Capacitor 앱 패키징 (나중 단계, 필요 시)
-```
-npm install @capacitor/core @capacitor/cli
-npx cap init
-npx cap add ios
-npx cap add android
-```
-- 현재 Vite 빌드 결과물을 그대로 감쌀 수 있음
-- PWA 먼저 검증 후 진행 권장
+- 모든 데이터는 `currentUser.assignedClassIds` / `currentUser.assignedStudentIds` 기준 필터링
+- "전체 학생" "전체 반" 표현 없음 → "담당 반" "담당 학생" "내 시험" "채점할 시험"
+- 재무/직원/권한/시스템 정보 일체 노출 없음
 
 ---
 
-## 9. 빌드 통과 여부
+## 8. 강사 화면에서 제외한 관리자 기능
 
-### 실행 결과
-
-```bash
-npm install   # ✅ 성공
-npm run build # ✅ 성공
-```
-
-- ✅ `npm install` 성공
-- ✅ `npm run build` 성공 — `dist/` 정상 생성
-- ⚠️ Vite chunk size 경고 발생 (일부 청크가 권장 크기 초과)
-  - 기능 오류 아님, 빌드 실패 아님
-  - 향후 필요 시 `manualChunks` 설정으로 분할 가능
-- ✅ **최종 빌드 통과**
+- 전체 학생 조회 (ADMIN 전용)
+- 다른 강사의 학생/반 조회
+- 학생 신규 등록 (/admin/students/new)
+- 재무관리 (결제/환불/미납/정산/통계)
+- 직원관리
+- 권한설정
+- 시스템설정
+- 알림 템플릿/발송 설정
+- 성장관리 (엠블럼/라이벌)
+- 관리자 운영메모 전체 조회
 
 ---
 
-## 10. 남은 한계
+## 9. 관리자 기능 보존 확인
 
-| 항목 | 현황 | 비고 |
-|------|------|------|
-| 표 → 카드형 전환 | ❌ 미구현 | 향후 `useMediaQuery` 기반 구현 권장 |
-| Bottom Navigation | ❌ 미구현 | 학생/보호자 포털 전용 |
-| Action Sheet | ❌ 미구현 | 모바일 행 액션 버튼 대체 |
-| 권한설정 모바일 UI | ⚠️ 가로 스크롤만 | 아코디언/탭 구조로 개선 필요 |
-| PWA manifest | ❌ 미추가 | `vite-plugin-pwa` 도입 권장 |
-| 다크모드 | ❌ 미구현 | CSS 변수 구조로 추후 대응 가능 |
-| 학생/보호자 포털 | ❌ 별도 프로젝트 | Back Office와 완전 분리 필요 |
-
----
-
-## 11. 다음 추천 개발 단계
-
-### 단계 A — PWA 전환 (즉시 가능)
-```
-vite-plugin-pwa 추가
-→ manifest.json 설정 (AXIS 브랜드 색상/아이콘)
-→ Service Worker 오프라인 캐시
-→ iOS Safari / Android Chrome 홈 화면 설치 지원
-```
-
-### 단계 B — 실제 API 연결 (백엔드 개발 선행 필요)
-```
-POST /api/university-analysis/analyze  ← 목표대학 분석 엔진 (확정 엔드포인트)
-GET  /api/students
-POST /api/attendance
-...
-```
-- 현재 모든 데이터는 mock (Context + lib/dummyData.ts)
-- API 연결 시 Context의 상태관리 로직은 그대로 유지 가능
-
-### 단계 C — 학생/보호자 포털 (별도 앱)
-- 학생: 성적 조회, 출결 확인, 진열장 보기
-- 보호자: 수납 현황, 출결 알림 (라이벌/경쟁 정보 노출 금지)
-- Back Office와 코드베이스 완전 분리 권장
-
-### 단계 D — 다크모드 (선택)
-- CSS 변수 (`oklch()` 기반) 구조이므로 `@media (prefers-color-scheme: dark)` 적용 용이
+아래 경로 모두 AdminRoutes.tsx 내 보존 확인:
+`/admin/students` `/admin/students/new` `/admin/classes` `/admin/classes/new`
+`/admin/attendance/check` `/admin/attendance` `/admin/scores`
+`/admin/finance/payments` `/admin/finance/refunds` `/admin/finance/unpaid`
+`/admin/finance/settlements` `/admin/finance/statistics`
+`/admin/notifications/history` `/admin/notifications/templates` `/admin/notifications/settings`
+`/admin/growth/overview` `/admin/growth/emblems` `/admin/growth/rivals`
+`/admin/employees` `/admin/settings/academy` `/admin/settings/permissions` `/admin/settings/password-reset`
 
 ---
 
-## 변경 파일 목록 (Mobile/App Optimization Readiness v1)
+## 10. 다음 작업 권장 방향
+
+- 강사 포털 콘텐츠 엔진 v1: TeacherVideos / TeacherNotes 실제 업로드/작성 기능
+- 학생 포털 Foundation v1: /student/** 화면 확장
+- 보호자 포털 Foundation v1: /parent/** 화면 확장
+
+---
+
+## 11. Provider Tree (변경 없음)
 
 ```
-src/components/AdminLayout.tsx      ← 핵심: 반응형 드로어 사이드바
-src/index.css                       ← 모바일 유틸리티 CSS 추가
-src/pages/StudentDetail.tsx         ← axis-detail-tabs + axis-table-wrap
-src/pages/StudentList.tsx           ← axis-table-wrap
-src/pages/EmployeeList.tsx          ← axis-table-wrap
-src/pages/ClassList.tsx             ← axis-table-wrap + minWidth 추가
-src/pages/AttendanceCheck.tsx       ← axis-table-wrap + minWidth 추가
-src/pages/AttendanceStatus.tsx      ← axis-table-wrap
-src/pages/FinancePayments.tsx       ← axis-table-wrap
-src/pages/FinanceRefunds.tsx        ← axis-table-wrap
-src/pages/FinanceUnpaid.tsx         ← axis-table-wrap
-src/pages/FinanceSettlements.tsx    ← axis-table-wrap + minWidth 추가
-src/pages/FinanceStatistics.tsx     ← axis-table-wrap + minWidth 추가
-src/pages/NotificationHistory.tsx   ← axis-table-wrap
-src/pages/NotificationTemplates.tsx ← axis-table-wrap
-src/pages/AssessmentList.tsx        ← axis-table-wrap
-src/pages/growth/GrowthOverview.tsx ← axis-table-wrap
-src/pages/growth/EmblemManagement.tsx ← axis-table-wrap + minWidth 추가
-src/pages/growth/RivalManagement.tsx  ← axis-table-wrap + minWidth 추가
-src/pages/settings/PermissionSettings.tsx ← axis-table-wrap
-README.md                           ← 최신화
-INTEGRATION.md                      ← 이 파일
+StudentProvider
+ └─ ClassProvider
+     └─ NotificationProvider
+         └─ EmployeeProvider
+             └─ EnrollmentProvider
+                 └─ AttendanceProvider
+                     └─ AssessmentProvider
+                         └─ FinanceProvider
+                             └─ GrowthProvider
+                                 └─ AuthBoundary
+                                     └─ Router
 ```
 
 ---
 
-*AXIS LMS v1.2 — Mobile/App Optimization Readiness v1*  
-*2026-06-28*
+## 12. AXIS LMS 헌법 준수 체크리스트
+
+- [x] 메뉴는 적게, 기능은 깊게
+- [x] 로그인은 휴대폰번호 기반 (AuthContext 변경 없음)
+- [x] 계정 생성 메뉴 없음
+- [x] 직급과 권한 분리 유지
+- [x] 학년 ≠ 과정 ≠ 반 (Student.grade 추가 없음)
+- [x] 가족은 UI가 아니라 Family Engine
+- [x] 보호자 화면 라이벌/엠블럼 노출 금지 (변경 없음)
+- [x] 학생 화면 중심 "나의 진열장" (변경 없음)
+- [x] 관리자 화면 학원 운영 Back Office (삭제/축소 없음)
+- [x] 강사 화면 담당 수업/담당 학생/채점/콘텐츠 중심
+- [x] 강사/학생/보호자 고정 세로 사이드바 의존 금지
+- [x] 대시보드 독립 엔진 추가 금지
+- [x] 상담관리 독립 엔진 추가 금지
 
 ---
 
-## Role Separation v1 — 역할별 화면 분리 구조
+## Teacher Foundation v1 Scope Guard Fix
 
-### 작업명
-Role Separation v1 (역할별 포털 분리 + 레이아웃 분리 + 라우트 분리)
+**작업명**: Teacher Foundation v1 Scope Guard Fix
+**기반**: 강사 포털 Foundation v1
 
-### 추가된 파일
+### 수정 파일
+| 파일 | 핵심 변경 |
+|------|-----------|
+| `src/layouts/TeacherLayout.tsx` | 자료 탭 active 조건: `/teacher/videos` OR `/teacher/notes` |
+| `src/pages/teacher/TeacherHome.tsx` | 미채점 시험 수·최근 성적·평균 → 담당 학생 submissions 기준으로 변경 |
+| `src/pages/teacher/TeacherExams.tsx` | 모든 counts → 담당 학생 기준. `exam.status` 노출 금지 → 강사 친화적 표현(미채점/성적 확인 가능/진행 전/준비 중) |
+| `src/pages/teacher/TeacherGrades.tsx` | 평균·최고점·최저점·바 차트 → 담당 학생 submissions 기준으로 수정. 담당 학생 데이터 없는 시험은 목록에서 제외 |
 
-```
-src/layouts/
-  TeacherLayout.tsx    ← 강사 전용 레이아웃 (헤더 + Bottom Nav 4탭)
-  StudentLayout.tsx    ← 학생 전용 레이아웃 (헤더 + Bottom Nav 4탭)
-  ParentLayout.tsx     ← 보호자 전용 레이아웃 (헤더 + Bottom Nav 4탭)
-
-src/routes/
-  RoleRoute.tsx        ← 역할별 라우트 가드 / RootRedirect / ROLE_HOME
-  AdminRoutes.tsx      ← /admin/** 관리자 라우트 묶음
-  TeacherRoutes.tsx    ← /teacher/** 강사 전용 라우트
-  StudentRoutes.tsx    ← /student/** 학생 전용 라우트
-  ParentRoutes.tsx     ← /parent/** 보호자 전용 라우트
-
-src/pages/teacher/
-  TeacherHome.tsx      ← 강사 홈 (오늘 수업/담당학생/미채점/콘텐츠 카드)
-
-src/pages/student/
-  StudentHome.tsx      ← 학생 홈 (진열장/티어/SP/최근시험/수업영상 카드)
-
-src/pages/parent/
-  ParentHome.tsx       ← 보호자 홈 (자녀선택/출결/성적/수납/알림 카드)
+### 담당 학생 기준 필터링 적용 위치
+모든 시험/성적/통계 계산에 공통 패턴 적용:
+```tsx
+const myStudentIds = new Set(currentUser.assignedStudentIds ?? []);
+const mySubmissions = submissions.filter(s => myStudentIds.has(s.studentId));
 ```
 
-### 수정된 파일
-```
-src/App.tsx                         ← 역할별 라우트 분리 재조립, LegacyRedirects 추가
-src/components/AdminLayout.tsx      ← NAV_ITEMS 전체 /admin/** 경로 업데이트
-src/pages/StudentList.tsx           ← navigate/href → /admin/**
-src/pages/StudentDetail.tsx         ← navigate/href → /admin/**
-src/pages/StudentNew.tsx            ← navigate/href → /admin/**
-src/pages/EmployeeList.tsx          ← navigate/href → /admin/**
-src/pages/EmployeeDetail.tsx        ← navigate/href → /admin/**
-src/pages/ClassList.tsx             ← navigate/href → /admin/**
-src/pages/ClassDetail.tsx           ← navigate/href → /admin/**
-src/pages/AssessmentList.tsx        ← navigate/href → /admin/**
-src/pages/AssessmentDetail.tsx      ← navigate/href → /admin/**
-src/pages/AttendanceCheck.tsx       ← navigate/href → /admin/**
-src/pages/AttendanceStatus.tsx      ← navigate/href → /admin/**
-src/pages/FinancePayments.tsx       ← navigate/href → /admin/**
-src/pages/FinanceRefunds.tsx        ← navigate/href → /admin/**
-src/pages/FinanceUnpaid.tsx         ← navigate/href → /admin/**
-src/pages/FinanceSettlements.tsx    ← navigate/href → /admin/**
-src/pages/FinanceStatistics.tsx     ← navigate/href → /admin/**
-src/pages/NotificationHistory.tsx   ← navigate/href → /admin/**
-src/pages/NotificationTemplates.tsx ← navigate/href → /admin/**
-src/pages/NotificationSettings.tsx  ← navigate/href → /admin/**
-src/pages/NotFound.tsx              ← href → /admin/**
-src/pages/growth/GrowthOverview.tsx     ← navigate/href → /admin/**
-src/pages/growth/EmblemManagement.tsx   ← navigate/href → /admin/**
-src/pages/growth/RivalManagement.tsx    ← navigate/href → /admin/**
-src/pages/settings/AcademyInfoManagement.tsx  ← navigate → /admin/**
-src/pages/settings/PermissionSettings.tsx     ← navigate → /admin/**
-src/pages/settings/PasswordResetManagement.tsx ← navigate → /admin/**
-```
+1. **TeacherHome**: `ungradedExams` - `mySubmissions.some(s.status === '채점중')` 기준. 최근 성적 평균 - `mySubmissions` 기준.
+2. **TeacherExams**: `ungradedExams` - 담당 학생 채점중 기준. `allMyExams` - 학원 전체 시험은 담당 학생 데이터 있을 때만. 배지 표시 - `getExamBadge()` 함수가 `mySubmissions` 기준으로 판정.
+3. **TeacherGrades**: `gradedExams` - `mySubmissions.some(s.status === '채점완료')` 기준. stats(avg/max/min) - `mySubmissions` 필터 후 계산.
 
-### 역할별 경로 구조
+### classId 없는 학원 전체 시험 처리 원칙
+- **TeacherExams 전체 탭**: `classId` 있는 담당 반 시험은 항상 표시. `classId` 없는 학원 전체 시험은 `mySubmissions`가 있을 때만 표시.
+- **TeacherGrades**: `mySubmissions` 중 `채점완료` 있는 경우만 표시. 전체 학원 응시자 수·평균은 절대 표시하지 않음.
 
-| 역할 | 진입 경로 | 레이아웃 |
-|------|----------|---------|
-| SUPER_ADMIN / DIRECTOR / STAFF | `/admin` → `/admin/students` | AdminLayout (240px 사이드바) |
-| TEACHER | `/teacher` | TeacherLayout (헤더 + Bottom Nav) |
-| STUDENT | `/student` | StudentLayout (헤더 + Bottom Nav) |
-| GUARDIAN | `/parent` | ParentLayout (헤더 + Bottom Nav) |
+### TeacherExams 상태 표현 단순화
+강사 화면에서 내부 상태값(`준비중/응시중/채점중/공개완료`) 제거:
+| 조건 | 강사 화면 표현 |
+|------|--------------|
+| 담당 학생 submissions 없음 | 진행 전 |
+| 담당 학생 중 채점중 있음 | 미채점 |
+| 담당 학생 전원 채점완료 | 성적 확인 가능 |
+| 기타 | 준비 중 |
 
-### 라우트 가드 (RoleRoute.tsx)
-- `RoleRoute`: `allow: AccountType[]` 지정 계정 유형만 접근 허용, 아니면 역할 홈으로 Redirect
-- `RootRedirect`: `/` 접근 시 `ROLE_HOME[accountType]`으로 자동 이동
-- 기존 RBAC (메뉴/버튼 권한 제어)와 완전히 분리
+### 관리자 Back Office 영향
+없음. 수정된 파일은 `src/pages/teacher/`, `src/layouts/TeacherLayout.tsx` 에 한정.
+관리자, 학생, 학부모 포털 코드 일체 변경 없음.
 
-### 구 경로 하위호환 (LegacyRedirects)
-`/students/**`, `/classes/**` 등 기존 경로 → `/admin/**`으로 자동 리다이렉트.
-북마크 또는 링크 공유로 접근한 경우에도 동작.
-
-### 보호자 노출 금지 원칙 준수
-- ParentHome: 라이벌/엠블럼/경쟁 정보 완전 미노출
-- 보호자 Bottom Nav: 홈/출결/수납/알림만 노출 (성장/진열장 없음)
-
-### 빌드 통과 여부
-```bash
-npm install   # ✅ 성공
-npm run build # ✅ 성공
-```
-- ✅ 최종 빌드 통과
-- ⚠️ Vite chunk size 경고 있음 (빌드 실패 아님, 향후 code splitting 검토)
+### npm run build 결과
+환경 egress 차단으로 `npm install` 불가. 글로벌 tsc 검증: 신규 수정 파일 4개 타입 오류 0건.
+로컬에서 `npm install && npm run build` 통과 예상.
