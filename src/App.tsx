@@ -160,22 +160,25 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <StudentProvider>
           <ClassProvider>
-            <EnrollmentProvider>
-              <AttendanceProvider>
-                <AssessmentProvider>
-                  <FinanceProvider>
-                    <NotificationProvider>
+            {/* NotificationProvider를 Enrollment/Attendance/Finance보다 위에 배치:
+                세 Provider의 이벤트 핸들러에서 useNotification()을 직접 호출하기 위함.
+                NotificationContext 자체는 다른 Context에 의존하지 않으므로 순환 없음. */}
+            <NotificationProvider>
+              <EnrollmentProvider>
+                <AttendanceProvider>
+                  <AssessmentProvider>
+                    <FinanceProvider>
                       <AuthBoundary>
                         <TooltipProvider>
                           <Toaster position="top-right" richColors />
                           <Router />
                         </TooltipProvider>
                       </AuthBoundary>
-                    </NotificationProvider>
-                  </FinanceProvider>
-                </AssessmentProvider>
-              </AttendanceProvider>
-            </EnrollmentProvider>
+                    </FinanceProvider>
+                  </AssessmentProvider>
+                </AttendanceProvider>
+              </EnrollmentProvider>
+            </NotificationProvider>
           </ClassProvider>
         </StudentProvider>
       </ThemeProvider>

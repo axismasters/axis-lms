@@ -2,6 +2,7 @@
 // 미납(UNPAID) 또는 부분납(PARTIAL)인 청구만 모아서 보여주는 조회 중심 화면. 알림 발송은 실제
 // 카카오/SMS 연동 없이 mock 처리만 한다(이 화면에서 "발송 여부"를 로컬로만 표시 — Invoice 데이터
 // 모델 자체에는 알림 필드를 추가하지 않았다, Foundation 단계의 최소 범위를 지키기 위함).
+// v2: handleNotify에서 NotificationContext.createNotificationFromEvent 호출 추가.
 
 import { useState, useMemo } from 'react';
 import AdminLayout from '@/components/AdminLayout';
@@ -9,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useClasses } from '@/contexts/ClassContext';
+import { useNotification } from '@/contexts/NotificationContext';
 import { canManageFinance, daysOverdue } from '@/lib/financeData';
 import { toast } from 'sonner';
 import { Send, AlertTriangle } from 'lucide-react';
@@ -24,6 +26,7 @@ export default function FinanceUnpaid() {
   const [notifiedIds, setNotifiedIds] = useState<Set<string>>(new Set());
 
   const studentMap = useMemo(() => new Map(students.map(s => [s.id, s])), [students]);
+  const { createNotificationFromEvent } = useNotification();
 
   if (!canManageFinance(can)) {
     return (
@@ -57,8 +60,28 @@ export default function FinanceUnpaid() {
     return { totalUnpaid, studentCount, count, over7, over30 };
   }, [unpaidList]);
 
-  const handleNotify = (invoiceId: string, studentName: string) => {
+  const handleNotify = (invoiceId: string, studentId: string, studentName: string) => {
     setNotifiedIds(prev => new Set(prev).add(invoiceId));
+    const inv = invoices.find(i => i.id === invoiceId);
+    const stu = studentMap.get(studentId);
+    const guardian = stu?.guardians?.[0];
+    // NotificationContext에 FINANCE_UNPAID_REMINDER 이력 생성
+    createNotificationFromEvent('FINANCE_UNPAID_REMINDER', {
+      studentId,
+      studentName,
+      guardianName: guardian?.name,
+      guardianPhone: guardian?.phone,
+      relatedEntityType: 'FINANCE',
+      relatedEntityId: invoiceId,
+      requestedBy: '시스템',
+      vars: {
+        학생명: studentName,
+        보호자명: guardian?.name,
+        청구월: inv?.billingMonth,
+        미납금액: inv ? String(inv.finalAmount) : '',
+        납부기한: inv?.dueDate,
+      },
+    });
     toast.success(`${studentName} 보호자에게 미납 안내를 발송했습니다(mock — 실제 카카오/SMS 연동 없음).`);
   };
 
@@ -132,7 +155,7 @@ export default function FinanceUnpaid() {
                         {notified ? '발송됨(mock)' : '미발송'}
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <button onClick={() => handleNotify(inv.id, stu?.name ?? '')} disabled={notified} className="flex items-center gap-1 text-xs hover:underline disabled:opacity-40 disabled:cursor-not-allowed" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                        <button onClick={() => handleNotify(inv.id, inv.studentId, stu?.name ?? '')} disabled={notified} className="flex items-center gap-1 text-xs hover:underline disabled:opacity-40 disabled:cursor-not-allowed" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
                           <Send size={11} /> {notified ? '발송완료' : '알림 발송'}
                         </button>
                       </td>

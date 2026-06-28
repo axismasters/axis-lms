@@ -28,6 +28,8 @@ import {
   generateMonthlyInvoices, generateReceiptNumber, currentBillingMonth,
 } from '@/lib/financeData';
 import { useEnrollment } from '@/contexts/EnrollmentContext';
+import { useNotification } from '@/contexts/NotificationContext';
+import { useStudents } from '@/contexts/StudentContext';
 
 interface AddPaymentInput {
   invoiceId: string;
@@ -84,11 +86,24 @@ const FinanceContext = createContext<FinanceContextType | null>(null);
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
   const { enrollments } = useEnrollment();
+  const { createNotificationFromEvent } = useNotification();
+  const { students } = useStudents();
   const [invoices, setInvoices] = useState<Invoice[]>(DUMMY_INVOICES);
   const [payments, setPayments] = useState<Payment[]>(DUMMY_PAYMENTS);
   const [refunds, setRefunds] = useState<Refund[]>(DUMMY_REFUNDS);
   const [settlements, setSettlements] = useState<Settlement[]>(DUMMY_SETTLEMENTS);
   const [receipts, setReceipts] = useState<Receipt[]>(DUMMY_RECEIPTS);
+
+  // 학생 정보 조회 헬퍼 (알림 이력 생성용)
+  const getStudentInfoForNotif = useCallback((studentId: string) => {
+    const student = students.find((s) => s.id === studentId);
+    const guardian = student?.guardians?.[0];
+    return {
+      studentName: student?.name,
+      guardianName: guardian?.name,
+      guardianPhone: guardian?.phone,
+    };
+  }, [students]);
 
   // 매월 1일 자동 청구서 생성(구조) — enrollments가 바뀔 때마다(신규 등록/종료/퇴원) 이번 달 청구서가
   // 누락된 활성 수강을 idempotent하게 채워 넣는다. 실제 서비스에서는 서버 스케줄러가 매월 1일 00시에
@@ -213,6 +228,24 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       memo: input.memo,
     };
     setRefunds(prev => [...prev, newRefund]);
+
+    // 알림 이력 생성 — FINANCE_REFUND_REQUESTED
+    const rInfo = getStudentInfoForNotif(invoice.studentId);
+    createNotificationFromEvent('FINANCE_REFUND_REQUESTED', {
+      studentId: invoice.studentId,
+      studentName: rInfo.studentName,
+      guardianName: rInfo.guardianName,
+      guardianPhone: rInfo.guardianPhone,
+      relatedEntityType: 'FINANCE',
+      relatedEntityId: newRefund.id,
+      requestedBy: input.requestedBy,
+      vars: {
+        학생명: rInfo.studentName,
+        보호자명: rInfo.guardianName,
+        환불금액: input.requestedAmount.toLocaleString(),
+      },
+    });
+
     return { ok: true, refund: newRefund };
   }, [invoices, payments, refunds]);
 
@@ -233,19 +266,77 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setRefunds(prev => prev.map(r => (r.id === refundId
       ? { ...r, status: 'APPROVED', approvedAmount, approvedBy, approvedAt: new Date().toISOString() }
       : r)));
+
+    // 알림 이력 생성 — FINANCE_REFUND_APPROVED
+    const aInfo = getStudentInfoForNotif(refund.studentId);
+    createNotificationFromEvent('FINANCE_REFUND_APPROVED', {
+      studentId: refund.studentId,
+      studentName: aInfo.studentName,
+      guardianName: aInfo.guardianName,
+      guardianPhone: aInfo.guardianPhone,
+      relatedEntityType: 'FINANCE',
+      relatedEntityId: refundId,
+      requestedBy: approvedBy,
+      vars: {
+        학생명: aInfo.studentName,
+        보호자명: aInfo.guardianName,
+        환불금액: approvedAmount.toLocaleString(),
+      },
+    });
+
     return { ok: true };
   }, [refunds, payments]);
 
   const rejectRefund = useCallback((refundId: string, approvedBy: string) => {
+    const refund = refunds.find(r => r.id === refundId);
     setRefunds(prev => prev.map(r => (r.id === refundId
       ? { ...r, status: 'REJECTED', approvedBy, approvedAt: new Date().toISOString() }
       : r)));
-  }, []);
+
+    // 알림 이력 생성 — FINANCE_REFUND_REJECTED
+    if (refund) {
+      const rjInfo = getStudentInfoForNotif(refund.studentId);
+      createNotificationFromEvent('FINANCE_REFUND_REJECTED', {
+        studentId: refund.studentId,
+        studentName: rjInfo.studentName,
+        guardianName: rjInfo.guardianName,
+        guardianPhone: rjInfo.guardianPhone,
+        relatedEntityType: 'FINANCE',
+        relatedEntityId: refundId,
+        requestedBy: approvedBy,
+        vars: {
+          학생명: rjInfo.studentName,
+          보호자명: rjInfo.guardianName,
+          환불금액: refund.requestedAmount.toLocaleString(),
+        },
+      });
+    }
+  }, [refunds, getStudentInfoForNotif, createNotificationFromEvent]);
 
   // 환불 완료 처리 — 실제 계좌 환불/PG 취소 연동 없이 상태만 COMPLETED로 변경(mock).
   const completeRefund = useCallback((refundId: string) => {
+    const refund = refunds.find(r => r.id === refundId);
     setRefunds(prev => prev.map(r => (r.id === refundId ? { ...r, status: 'COMPLETED' } : r)));
-  }, []);
+
+    // 알림 이력 생성 — FINANCE_REFUND_COMPLETED
+    if (refund) {
+      const cInfo = getStudentInfoForNotif(refund.studentId);
+      createNotificationFromEvent('FINANCE_REFUND_COMPLETED', {
+        studentId: refund.studentId,
+        studentName: cInfo.studentName,
+        guardianName: cInfo.guardianName,
+        guardianPhone: cInfo.guardianPhone,
+        relatedEntityType: 'FINANCE',
+        relatedEntityId: refundId,
+        requestedBy: '시스템',
+        vars: {
+          학생명: cInfo.studentName,
+          보호자명: cInfo.guardianName,
+          환불금액: (refund.approvedAmount ?? refund.requestedAmount).toLocaleString(),
+        },
+      });
+    }
+  }, [refunds, getStudentInfoForNotif, createNotificationFromEvent]);
 
   // 정산 확정 — 원장/최고관리자만(화면에서 canConfirmSettlement로 게이트). 확정 후 되돌리기는 제공하지
   // 않으며, 이미 CONFIRMED인 정산은 다시 확정할 수 없다(AXIS 확정 원칙).

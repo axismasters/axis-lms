@@ -27,6 +27,7 @@ import {
 import { useClasses } from '@/contexts/ClassContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { timeSlotsToSchedule } from '@/lib/studentDerived';
+import { useNotification } from '@/contexts/NotificationContext';
 
 interface AddEnrollmentInput {
   studentId: string;
@@ -58,7 +59,19 @@ const EnrollmentContext = createContext<EnrollmentContextType | null>(null);
 export function EnrollmentProvider({ children }: { children: ReactNode }) {
   const [enrollments, setEnrollments] = useState<Enrollment[]>(DUMMY_ENROLLMENTS);
   const { getClass, addStudentToClass, removeStudentFromClass } = useClasses();
-  const { assignClass, removeFromClass } = useStudents();
+  const { assignClass, removeFromClass, students } = useStudents();
+  const { createNotificationFromEvent } = useNotification();
+
+  // 학생 정보 조회 헬퍼 (알림 이력 생성용)
+  const getStudentInfo = useCallback((studentId: string) => {
+    const student = students.find((s) => s.id === studentId);
+    const guardian = student?.guardians?.[0];
+    return {
+      studentName: student?.name,
+      guardianName: guardian?.name,
+      guardianPhone: guardian?.phone,
+    };
+  }, [students]);
 
   const addEnrollment = useCallback((input: AddEnrollmentInput): { ok: boolean; reason?: string; enrollment?: Enrollment } => {
     if (isStudentActivelyEnrolled(enrollments, input.studentId, input.classId)) {
@@ -83,12 +96,10 @@ export function EnrollmentProvider({ children }: { children: ReactNode }) {
     };
     setEnrollments((prev) => [...prev, newEnrollment]);
 
-    // 동기화 1: ClassContext의 studentClassMap/enrolledCount — Attendance/Assessment Engine이
-    // getClassStudents()로 직접 참조하므로, 새 수강생이 즉시 출결·시험 대상자로 인식되어야 한다.
+    // 동기화 1: ClassContext의 studentClassMap/enrolledCount
     addStudentToClass(input.classId, input.studentId);
 
-    // 동기화 2: StudentContext의 Student.classes(임베디드) — StudentList 필터/배지, 재무탭
-    // (getFinance), 강사 권한 범위 계산(studentIdsInClasses)이 이 필드를 참조한다.
+    // 동기화 2: StudentContext의 Student.classes(임베디드)
     assignClass(input.studentId, {
       id: klass.id,
       name: klass.name,
@@ -99,8 +110,27 @@ export function EnrollmentProvider({ children }: { children: ReactNode }) {
       status: '수강중',
     });
 
+    // 알림 이력 생성 — ENROLLMENT_CREATED
+    const info = getStudentInfo(input.studentId);
+    createNotificationFromEvent('ENROLLMENT_CREATED', {
+      studentId: input.studentId,
+      studentName: info.studentName,
+      guardianName: info.guardianName,
+      guardianPhone: info.guardianPhone,
+      className: klass.name,
+      relatedEntityType: 'ENROLLMENT',
+      relatedEntityId: newEnrollment.id,
+      requestedBy: '시스템',
+      vars: {
+        반명: klass.name,
+        수강시작일: input.startDate,
+        학생명: info.studentName,
+        보호자명: info.guardianName,
+      },
+    });
+
     return { ok: true, enrollment: newEnrollment };
-  }, [enrollments, getClass, addStudentToClass, assignClass]);
+  }, [enrollments, getClass, addStudentToClass, assignClass, getStudentInfo, createNotificationFromEvent]);
 
   const finishEnrollment = useCallback((enrollmentId: string, status: EnrollmentStatus, endDate: string, memo?: string) => {
     const target = enrollments.find((e) => e.id === enrollmentId);
@@ -112,11 +142,32 @@ export function EnrollmentProvider({ children }: { children: ReactNode }) {
         : e
     ));
 
-    // 동기화 1: studentClassMap에서 제거 — 더 이상 그 반의 출결·시험 대상이 아니다.
+    // 동기화 1: studentClassMap에서 제거
     removeStudentFromClass(target.classId, target.studentId);
     // 동기화 2: Student.classes의 해당 항목을 종료 상태로 갱신.
     removeFromClass(target.studentId, target.classId, endDate, memo);
-  }, [enrollments, removeStudentFromClass, removeFromClass]);
+
+    // 알림 이력 생성
+    const klass = getClass(target.classId);
+    const info = getStudentInfo(target.studentId);
+    const notifType = status === '종료' ? 'ENROLLMENT_ENDED' as const : 'ENROLLMENT_WITHDRAWN' as const;
+    createNotificationFromEvent(notifType, {
+      studentId: target.studentId,
+      studentName: info.studentName,
+      guardianName: info.guardianName,
+      guardianPhone: info.guardianPhone,
+      className: klass?.name,
+      relatedEntityType: 'ENROLLMENT',
+      relatedEntityId: enrollmentId,
+      requestedBy: '시스템',
+      vars: {
+        반명: klass?.name,
+        종료일: endDate,
+        학생명: info.studentName,
+        보호자명: info.guardianName,
+      },
+    });
+  }, [enrollments, removeStudentFromClass, removeFromClass, getClass, getStudentInfo, createNotificationFromEvent]);
 
   const endEnrollment = useCallback((enrollmentId: string, endDate: string, memo?: string) => {
     finishEnrollment(enrollmentId, '종료', endDate, memo);

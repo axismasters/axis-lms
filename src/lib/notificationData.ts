@@ -11,8 +11,11 @@
 // 알림 유형 (NotificationType)
 // ────────────────────────────────────────────────────────────
 export type NotificationType =
-  | 'ATTENDANCE_ABSENCE'        // 결석 알림
-  | 'ATTENDANCE_EARLY_LEAVE'    // 조퇴 알림
+  | 'ATTENDANCE_ABSENCE'        // 결석 알림 (자동발송 ON)
+  | 'ATTENDANCE_EARLY_LEAVE'    // 조퇴 알림 (자동발송 ON)
+  | 'ATTENDANCE_LATE'           // 지각 알림 (설정 표시용, 자동발송 OFF)
+  | 'ATTENDANCE_MAKEUP'         // 보강출석 알림 (설정 표시용, 자동발송 OFF)
+  | 'ATTENDANCE_OFFICIAL'       // 공결 알림 (설정 표시용, 자동발송 OFF)
   | 'ENROLLMENT_CREATED'        // 수강 등록
   | 'ENROLLMENT_ENDED'          // 수강 종료
   | 'ENROLLMENT_WITHDRAWN'      // 퇴원 처리
@@ -28,6 +31,9 @@ export type NotificationType =
 export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
   ATTENDANCE_ABSENCE: '결석 알림',
   ATTENDANCE_EARLY_LEAVE: '조퇴 알림',
+  ATTENDANCE_LATE: '지각 알림',
+  ATTENDANCE_MAKEUP: '보강출석 알림',
+  ATTENDANCE_OFFICIAL: '공결 알림',
   ENROLLMENT_CREATED: '수강 등록 안내',
   ENROLLMENT_ENDED: '수강 종료 안내',
   ENROLLMENT_WITHDRAWN: '퇴원 처리 안내',
@@ -44,6 +50,9 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
 export const NOTIFICATION_TYPE_CATEGORY: Record<NotificationType, string> = {
   ATTENDANCE_ABSENCE: '출결',
   ATTENDANCE_EARLY_LEAVE: '출결',
+  ATTENDANCE_LATE: '출결',
+  ATTENDANCE_MAKEUP: '출결',
+  ATTENDANCE_OFFICIAL: '출결',
   ENROLLMENT_CREATED: '수강',
   ENROLLMENT_ENDED: '수강',
   ENROLLMENT_WITHDRAWN: '수강',
@@ -310,6 +319,46 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSetting[] = [
     sendToStaff: false,
     autoSend: false,
     fallbackSmsEnabled: false,
+  },
+  // ── 자동발송 OFF 항목 (명시적 표기) ──────────────────────────────────────
+  {
+    id: 'ns-013',
+    eventType: 'ATTENDANCE_LATE',
+    eventName: '지각 알림',
+    enabled: false,
+    defaultChannel: 'KAKAO',
+    sendToStudent: false,
+    sendToGuardian: false,
+    sendToStaff: false,
+    autoSend: false,
+    fallbackSmsEnabled: false,
+    memo: '지각은 자동발송 대상이 아닙니다. (AXIS 확정 정책)',
+  },
+  {
+    id: 'ns-014',
+    eventType: 'ATTENDANCE_MAKEUP',
+    eventName: '보강출석 알림',
+    enabled: false,
+    defaultChannel: 'KAKAO',
+    sendToStudent: false,
+    sendToGuardian: false,
+    sendToStaff: false,
+    autoSend: false,
+    fallbackSmsEnabled: false,
+    memo: '보강출석은 자동발송 대상이 아닙니다. (AXIS 확정 정책)',
+  },
+  {
+    id: 'ns-015',
+    eventType: 'ATTENDANCE_OFFICIAL',
+    eventName: '공결 알림',
+    enabled: false,
+    defaultChannel: 'KAKAO',
+    sendToStudent: false,
+    sendToGuardian: false,
+    sendToStaff: false,
+    autoSend: false,
+    fallbackSmsEnabled: false,
+    memo: '공결은 자동발송 대상이 아닙니다. (AXIS 확정 정책)',
   },
 ];
 
@@ -660,4 +709,40 @@ export function canManageNotificationTemplates(accountType: string): boolean {
 
 export function canManageNotificationSettings(accountType: string): boolean {
   return ['SUPER_ADMIN', 'DIRECTOR'].includes(accountType);
+}
+
+// ────────────────────────────────────────────────────────────
+// 이벤트 기반 알림 생성 헬퍼
+// ────────────────────────────────────────────────────────────
+
+/** 이벤트로부터 알림 생성 시 사용하는 변수 맵 */
+export interface NotificationVars {
+  학생명?: string;
+  보호자명?: string;
+  반명?: string;
+  날짜?: string;
+  출결상태?: string;
+  청구월?: string;
+  청구금액?: string;
+  미납금액?: string;
+  환불금액?: string;
+  납부기한?: string;
+  수강시작일?: string;
+  종료일?: string;
+  시험명?: string;
+  학원연락처?: string;
+  [key: string]: string | undefined;
+}
+
+/** 템플릿 content에서 {{변수}} 치환 */
+export function buildNotificationContent(template: string, vars: NotificationVars): string {
+  return template.replace(/\{\{([^}]+)\}\}/g, (_, key) => vars[key.trim()] ?? `{{${key.trim()}}}`);
+}
+
+/** 알림 설정 조회 */
+export function getNotificationSettingByType(
+  settings: NotificationSetting[],
+  eventType: NotificationType,
+): NotificationSetting | undefined {
+  return settings.find((s) => s.eventType === eventType);
 }

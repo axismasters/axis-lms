@@ -214,3 +214,128 @@ tsconfig.app.json(23,27): error TS5103: Invalid value for '--ignoreDeprecations'
 - 발송이력 삭제 없음, 템플릿 삭제 없음 (비활성만) ✅
 - 실제 카카오/SMS/LMS API 미연동 ✅
 - 기존 엔진(학생/반/수강/출결/재무) 코드 변경 없음 ✅
+
+---
+
+## [Round] Notification Engine v2 — Event Integration (2026-06-28)
+
+### 수정된 파일
+
+| 파일 | 변경 내용 |
+|---|---|
+| `src/lib/notificationData.ts` | NotificationType 3종 추가(LATE/MAKEUP/OFFICIAL), 알림설정 3개 추가, NotificationVars/buildNotificationContent/getNotificationSettingByType 추가 |
+| `src/contexts/NotificationContext.tsx` | createNotificationFromEvent / getNotificationSetting / buildContent 추가, NotificationEventPayload 타입 추가 |
+| `src/contexts/AttendanceContext.tsx` | useNotification 연결, updateRecord에 결석/조퇴 시 자동 알림 이력 생성 |
+| `src/contexts/EnrollmentContext.tsx` | useNotification 연결, addEnrollment/finishEnrollment에 알림 이력 생성 |
+| `src/contexts/FinanceContext.tsx` | useNotification 연결, requestRefund/approveRefund/rejectRefund/completeRefund에 알림 이력 생성 |
+| `src/pages/FinanceUnpaid.tsx` | useNotification 연결, handleNotify에 FINANCE_UNPAID_REMINDER 이력 생성 |
+| `src/App.tsx` | NotificationProvider를 EnrollmentProvider 위로 이동 (Provider 트리 재배치) |
+| `README.md` | 알림관리 v2 기준으로 전체 갱신 |
+
+---
+
+### Provider 트리 변경 (핵심)
+
+**변경 전:**
+```
+StudentProvider > ClassProvider > EnrollmentProvider > ... > FinanceProvider > NotificationProvider > AuthBoundary
+```
+
+**변경 후:**
+```
+StudentProvider > ClassProvider > NotificationProvider > EnrollmentProvider > AttendanceProvider > AssessmentProvider > FinanceProvider > AuthBoundary
+```
+
+이유: NotificationProvider가 아래에 있으면 Enrollment/Attendance/Finance Context에서 useNotification()을 호출할 수 없음. NotificationContext는 다른 Context에 의존하지 않으므로 순환 없음.
+
+---
+
+### 출결 이벤트 연결 방식
+
+- `AttendanceContext.updateRecord()`에서 status가 `결석`/`조퇴`일 때 호출
+- `shouldAutoSend(ATTENDANCE_ABSENCE / ATTENDANCE_EARLY_LEAVE)` 확인 → enabled=true & autoSend=true인 경우만 이력 생성
+- 지각/보강출석/공결은 이력 생성 로직 자체가 없음 (AXIS 확정 정책)
+- 수신자: 보호자 (sendToGuardian=true인 경우)
+- 학생 정보(이름/보호자폰)는 `useStudents`에서 조회, 반 이름은 `useClasses`에서 조회
+
+---
+
+### 수강 이벤트 연결 방식
+
+- `EnrollmentContext.addEnrollment()` → ENROLLMENT_CREATED
+- `EnrollmentContext.finishEnrollment()` → 상태가 `종료`면 ENROLLMENT_ENDED, `퇴원`이면 ENROLLMENT_WITHDRAWN
+- 알림설정의 `enabled=true`인 경우만 이력 생성 (autoSend 무관 — 수강이벤트는 수동 트리거)
+- 수신자: sendToStudent / sendToGuardian 설정 따름
+
+---
+
+### 재무 이벤트 연결 방식
+
+| 이벤트 | 트리거 함수 | 알림 타입 |
+|---|---|---|
+| 환불 요청 | `requestRefund()` | FINANCE_REFUND_REQUESTED |
+| 환불 승인 | `approveRefund()` | FINANCE_REFUND_APPROVED |
+| 환불 반려 | `rejectRefund()` | FINANCE_REFUND_REJECTED |
+| 환불 완료 | `completeRefund()` | FINANCE_REFUND_COMPLETED |
+| 미납 안내 | `FinanceUnpaid.handleNotify()` | FINANCE_UNPAID_REMINDER |
+
+※ FINANCE_INVOICE_ISSUED: 청구서는 자동 생성(useEffect)이므로 대량 스팸 방지를 위해 이번 단계에서 자동 이력 생성 제외. 향후 "청구서 발행 알림" 버튼으로 개별 발송 추가 권장.
+
+---
+
+### 알림설정 기본값 (v2 기준, 15개)
+
+| eventType | 활성 | 자동발송 | 학생 | 보호자 |
+|---|---|---|---|---|
+| ATTENDANCE_ABSENCE | ON | ON | OFF | ON |
+| ATTENDANCE_EARLY_LEAVE | ON | ON | OFF | ON |
+| ATTENDANCE_LATE | **OFF** | OFF | OFF | OFF |
+| ATTENDANCE_MAKEUP | **OFF** | OFF | OFF | OFF |
+| ATTENDANCE_OFFICIAL | **OFF** | OFF | OFF | OFF |
+| ENROLLMENT_CREATED | ON | OFF | ON | ON |
+| ENROLLMENT_ENDED | ON | OFF | ON | ON |
+| ENROLLMENT_WITHDRAWN | ON | OFF | ON | ON |
+| FINANCE_INVOICE_ISSUED | ON | OFF | OFF | ON |
+| FINANCE_UNPAID_REMINDER | ON | OFF | OFF | ON |
+| FINANCE_REFUND_REQUESTED | ON | OFF | OFF | ON |
+| FINANCE_REFUND_APPROVED | ON | OFF | OFF | ON |
+| FINANCE_REFUND_REJECTED | ON | OFF | OFF | ON |
+| FINANCE_REFUND_COMPLETED | ON | OFF | OFF | ON |
+| ASSESSMENT_RESULT_PUBLISHED | ON | OFF | ON | OFF |
+
+---
+
+### 실제 API 미연동 범위
+
+- 카카오 알림톡 API: 미연동 (mock 이력만 생성)
+- SMS/LMS API: 미연동
+- 결제 링크/PG/카드사 연동: 없음
+- 모든 발송은 NotificationMessage status='SENT'로 mock 처리
+
+---
+
+### TypeScript 검사
+
+- `npx tsc --noEmit`: **Exit 0** ✅
+- `ignoreDeprecations` 없음 ✅
+- 기존 엔진(학생/반/수강/출결/재무) 코드 동작 유지 ✅
+
+---
+
+### 남은 한계
+
+1. **FINANCE_INVOICE_ISSUED 자동 이력**: 청구서 자동 생성 시 스팸 방지를 위해 제외. 개별 발송 버튼 추가 권장.
+2. **수동발송 수신자 검색**: 현재 직접 입력 방식. StudentContext 연동으로 개선 가능.
+3. **청구서 발행 알림 트리거**: 미납 안내와 동일하게 각 청구서 행에 "발행 안내 발송" 버튼 추가 권장.
+4. **알림 예약 발송**: 구조 미포함.
+5. **성적공개 알림 연동**: AssessmentContext.publishExamResult()에 createNotificationFromEvent 추가 권장.
+
+---
+
+### 다음 추천 개발 단계
+
+1. 성적공개 알림 연동 (AssessmentContext)
+2. 청구서 발행 알림 버튼 (FinancePayments.tsx)
+3. 수동발송 수신자 검색 (StudentContext 연동)
+4. 알림 예약 발송 기능
+5. 실제 카카오 알림톡 API 연동 (외부 계약 후)

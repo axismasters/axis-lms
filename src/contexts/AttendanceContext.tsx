@@ -1,11 +1,15 @@
-// AXIS LMS v1.2 - AttendanceContext
+// AXIS LMS v1.2 - AttendanceContext (v2 - Notification Integration)
 // 출결 상태 관리: 세션 조회, 출결 기록 생성/수정, 알림 발송 시뮬레이션
+// v2: 결석/조퇴 저장 시 NotificationContext.createNotificationFromEvent 자동 호출
 
 import { createContext, useContext, useState, ReactNode } from 'react';
 import {
   AttendanceSession, AttendanceRecord, AttendanceStatus,
   NOTIFY_STATUSES, DUMMY_SESSIONS,
 } from '@/lib/attendanceData';
+import { useNotification } from '@/contexts/NotificationContext';
+import { useStudents } from '@/contexts/StudentContext';
+import { useClasses } from '@/contexts/ClassContext';
 
 interface AttendanceContextType {
   sessions: AttendanceSession[];
@@ -47,6 +51,9 @@ const AttendanceContext = createContext<AttendanceContextType | null>(null);
 
 export function AttendanceProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<AttendanceSession[]>(DUMMY_SESSIONS);
+  const { createNotificationFromEvent, shouldAutoSend } = useNotification();
+  const { students } = useStudents();
+  const { classes } = useClasses();
 
   const getSession = (classId: string, date: string) =>
     sessions.find(s => s.classId === classId && s.date === date);
@@ -98,6 +105,36 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
     note?: string,
     by?: string,
   ) => {
+    // 알림 이력 생성 — 결석/조퇴이고 해당 이벤트가 enabled인 경우에만
+    const notifType = status === '결석' ? 'ATTENDANCE_ABSENCE' as const
+      : status === '조퇴' ? 'ATTENDANCE_EARLY_LEAVE' as const
+      : null;
+
+    if (notifType && shouldAutoSend(notifType)) {
+      const session = sessions.find((s) => s.id === sessionId);
+      const student = students.find((s) => s.id === studentId);
+      const klass = session ? classes.find((c) => c.id === session.classId) : undefined;
+      const guardian = student?.guardians?.[0];
+
+      createNotificationFromEvent(notifType, {
+        studentId,
+        studentName: student?.name,
+        guardianName: guardian?.name,
+        guardianPhone: guardian?.phone,
+        className: klass?.name,
+        relatedEntityType: 'ATTENDANCE',
+        relatedEntityId: sessionId,
+        requestedBy: by ?? '시스템',
+        vars: {
+          날짜: session?.date ?? new Date().toISOString().slice(0, 10),
+          출결상태: status,
+          반명: klass?.name,
+          학생명: student?.name,
+          보호자명: guardian?.name,
+        },
+      });
+    }
+
     setSessions(prev => prev.map(sess => {
       if (sess.id !== sessionId) return sess;
       const now = new Date().toISOString();
@@ -114,10 +151,6 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
           const nextNote = isAttend ? undefined : (note === undefined ? rec.note : (note || undefined));
 
           // 알림 관련 필드는 상태가 바뀔 때마다 항상 새로 결정한다(이전 상태의 값이 잔존하지 않도록).
-          //  - 출석: 알림 대상 아님 → 전부 정리
-          //  - 결석/조퇴: 자동 알림 발송 대상 → notified는 일단 false로 초기화하고, 실제 발송은
-          //    체크 완료 시(AttendanceCheck.tsx의 handleLock → sendNotification)에서 처리한다.
-          //  - 지각/보강출석/공결: 자동 알림 발송 대상이 아님 → 전부 정리
           const notified = false;
           const notifyChannel = needNotify ? '카카오알림톡' : undefined;
           const notifyTime = undefined;
