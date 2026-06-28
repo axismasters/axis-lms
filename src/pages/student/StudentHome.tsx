@@ -131,7 +131,7 @@ export default function StudentHome() {
                   <div key={sub.id} className="axis-card p-4 flex items-center justify-between">
                     <div>
                       <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</div>
-                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{exam.subject ?? '과목 미지정'} · {exam.examDate}</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{exam.subject} · {exam.examDate}</div>
                     </div>
                     <div className="text-right">
                       <div className="font-bold tabular-nums" style={{

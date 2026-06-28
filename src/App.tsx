@@ -87,39 +87,40 @@ function Router() {
       <Route path="/" component={RootRedirect} />
 
       {/* 관리자 포털 (/admin/**) */}
-      <Route path="/admin/:rest*" component={AdminRoutes} />
+      <Route path="/admin" component={AdminRoutes} />
+      <Route path="/admin/*" component={AdminRoutes} />
 
       {/* 강사 포털 (/teacher/**) */}
-      <Route path="/teacher/:rest*" component={TeacherRoutes} />
       <Route path="/teacher" component={TeacherRoutes} />
+      <Route path="/teacher/*" component={TeacherRoutes} />
 
       {/* 학생 포털 (/student/**) */}
-      <Route path="/student/:rest*" component={StudentRoutes} />
       <Route path="/student" component={StudentRoutes} />
+      <Route path="/student/*" component={StudentRoutes} />
 
       {/* 보호자 포털 (/parent/**) */}
-      <Route path="/parent/:rest*" component={ParentRoutes} />
       <Route path="/parent" component={ParentRoutes} />
+      <Route path="/parent/*" component={ParentRoutes} />
 
       {/* 구 경로 하위호환 리다이렉트 */}
-      <Route path="/students/:rest*" component={LegacyRedirects} />
-      <Route path="/students"        component={LegacyRedirects} />
-      <Route path="/employees/:rest*" component={LegacyRedirects} />
-      <Route path="/employees"       component={LegacyRedirects} />
-      <Route path="/classes/:rest*"  component={LegacyRedirects} />
-      <Route path="/classes"         component={LegacyRedirects} />
-      <Route path="/attendance/:rest*" component={LegacyRedirects} />
-      <Route path="/attendance"      component={LegacyRedirects} />
-      <Route path="/scores/:rest*"   component={LegacyRedirects} />
-      <Route path="/scores"          component={LegacyRedirects} />
-      <Route path="/finance/:rest*"  component={LegacyRedirects} />
-      <Route path="/finance"         component={LegacyRedirects} />
-      <Route path="/notifications/:rest*" component={LegacyRedirects} />
-      <Route path="/notifications"   component={LegacyRedirects} />
-      <Route path="/growth/:rest*"   component={LegacyRedirects} />
-      <Route path="/growth"          component={LegacyRedirects} />
-      <Route path="/settings/:rest*" component={LegacyRedirects} />
-      <Route path="/settings"        component={LegacyRedirects} />
+      <Route path="/students/*"       component={LegacyRedirects} />
+      <Route path="/students"         component={LegacyRedirects} />
+      <Route path="/employees/*"      component={LegacyRedirects} />
+      <Route path="/employees"        component={LegacyRedirects} />
+      <Route path="/classes/*"        component={LegacyRedirects} />
+      <Route path="/classes"          component={LegacyRedirects} />
+      <Route path="/attendance/*"     component={LegacyRedirects} />
+      <Route path="/attendance"       component={LegacyRedirects} />
+      <Route path="/scores/*"         component={LegacyRedirects} />
+      <Route path="/scores"           component={LegacyRedirects} />
+      <Route path="/finance/*"        component={LegacyRedirects} />
+      <Route path="/finance"          component={LegacyRedirects} />
+      <Route path="/notifications/*"  component={LegacyRedirects} />
+      <Route path="/notifications"    component={LegacyRedirects} />
+      <Route path="/growth/*"         component={LegacyRedirects} />
+      <Route path="/growth"           component={LegacyRedirects} />
+      <Route path="/settings/*"       component={LegacyRedirects} />
+      <Route path="/settings"         component={LegacyRedirects} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

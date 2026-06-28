@@ -41,9 +41,6 @@ export default function ParentHome() {
     .slice(-3)
     .reverse();
 
-  const gradeLabel = (student: typeof child) =>
-    student?.mockExamScores?.[0]?.grade ?? student?.classes?.[0]?.name ?? '학년 정보 없음';
-
   // 더미 알림 목록
   const dummyNotices = [
     { id: 1, text: '3월 수강료 청구서가 발행되었습니다.', time: '어제' },
@@ -71,7 +68,7 @@ export default function ParentHome() {
               <div>
                 <div className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{child?.name}</div>
                 <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                  {gradeLabel(child)} · {child?.status}
+                  {child?.status}
                 </div>
               </div>
             </div>
@@ -84,7 +81,7 @@ export default function ParentHome() {
                 style={{ border: '1px solid oklch(0.9 0.008 250)', background: 'white', color: 'oklch(0.2 0.02 250)' }}
               >
                 {myChildren.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name} ({gradeLabel(c)})</option>
+                  <option key={c.id} value={c.id}>{c.name} ({c.status})</option>
                 ))}
               </select>
               <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -138,7 +135,7 @@ export default function ParentHome() {
                       <div key={sub.id} className="axis-card p-4 flex items-center justify-between">
                         <div>
                           <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</div>
-                          <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{exam.subject ?? '과목 미지정'} · {exam.examDate}</div>
+                          <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{exam.subject} · {exam.examDate}</div>
                         </div>
                         <div className="text-right">
                           <div className="font-bold tabular-nums" style={{

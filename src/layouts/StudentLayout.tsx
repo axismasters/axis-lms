@@ -47,7 +47,6 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="hidden sm:block"><DevRoleSwitcher compact /></div>
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
             style={{ background: 'oklch(0.6 0.15 60)' }}
@@ -64,6 +63,9 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
       <main className="flex-1 pb-20">
         {children}
       </main>
+
+      {/* ⚠ DEV ONLY: 역할 전환기 — 운영 배포 전 제거 */}
+      <DevRoleSwitcher />
 
       {/* Bottom Navigation */}
       <nav

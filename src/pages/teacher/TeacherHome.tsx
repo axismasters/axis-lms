@@ -28,7 +28,7 @@ export default function TeacherHome() {
   const ungradedExams = exams.filter(
     (e) =>
       e.status === '채점중' &&
-      (currentUser.assignedClassIds.includes(e.classId ?? '') || !e.classId)
+      (currentUser.assignedClassIds.includes(e.classId ?? '') || e.classId === null)
   );
 
   return (
@@ -142,7 +142,7 @@ export default function TeacherHome() {
                   <div key={exam.id} className="axis-card p-4 flex items-center justify-between">
                     <div>
                       <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</div>
-                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{exam.subject ?? '과목 미지정'} · {exam.examDate}</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{exam.subject} · {exam.examDate}</div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <AlertCircle size={14} style={{ color: 'oklch(0.577 0.245 27.325)' }} />
