@@ -16,6 +16,7 @@ import { FinanceProvider } from "./contexts/FinanceContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { GrowthProvider } from "./contexts/GrowthContext";
+import { EmployeeProvider } from "./contexts/EmployeeContext";
 import StudentList from "./pages/StudentList";
 import StudentNew from "./pages/StudentNew";
 import StudentDetail from "./pages/StudentDetail";
@@ -39,6 +40,8 @@ import PasswordResetManagement from "./pages/settings/PasswordResetManagement";
 import GrowthOverview from "./pages/growth/GrowthOverview";
 import EmblemManagement from "./pages/growth/EmblemManagement";
 import RivalManagement from "./pages/growth/RivalManagement";
+import EmployeeList from "./pages/EmployeeList";
+import EmployeeDetail from "./pages/EmployeeDetail";
 import AdminLayout from "./components/AdminLayout";
 
 // 미구현 페이지 플레이스홀더
@@ -100,6 +103,13 @@ function Router() {
         <Route path="/students" component={StudentList} />
         <Route path="/students/new" component={StudentNew} />
         <Route path="/students/:id" component={StudentDetail} />
+
+        {/* 직원관리 (HR & RBAC Stabilization v1)
+            employee.view 권한 보유 시 메뉴 노출. 직원 등록은 ?new=1 쿼리로 모달 진입.
+            계정 생성 메뉴 없음. 조교 직급 없음. */}
+        <Route path="/employees/new" component={() => <Redirect to="/employees?new=1" />} />
+        <Route path="/employees" component={EmployeeList} />
+        <Route path="/employees/:id" component={EmployeeDetail} />
 
         {/* 수업관리 (반 관리) */}
         {/* AXIS 확정 구조상 수업관리 메뉴(AdminLayout)의 "반 등록"은 /classes?new=1로 진입한다.
@@ -178,22 +188,24 @@ function App() {
                 세 Provider의 이벤트 핸들러에서 useNotification()을 직접 호출하기 위함.
                 NotificationContext 자체는 다른 Context에 의존하지 않으므로 순환 없음. */}
             <NotificationProvider>
-              <EnrollmentProvider>
-                <AttendanceProvider>
-                  <AssessmentProvider>
-                    <FinanceProvider>
-                      <GrowthProvider>
-                        <AuthBoundary>
-                          <TooltipProvider>
-                            <Toaster position="top-right" richColors />
-                            <Router />
-                          </TooltipProvider>
-                        </AuthBoundary>
-                      </GrowthProvider>
-                    </FinanceProvider>
-                  </AssessmentProvider>
-                </AttendanceProvider>
-              </EnrollmentProvider>
+              <EmployeeProvider>
+                <EnrollmentProvider>
+                  <AttendanceProvider>
+                    <AssessmentProvider>
+                      <FinanceProvider>
+                        <GrowthProvider>
+                          <AuthBoundary>
+                            <TooltipProvider>
+                              <Toaster position="top-right" richColors />
+                              <Router />
+                            </TooltipProvider>
+                          </AuthBoundary>
+                        </GrowthProvider>
+                      </FinanceProvider>
+                    </AssessmentProvider>
+                  </AttendanceProvider>
+                </EnrollmentProvider>
+              </EmployeeProvider>
             </NotificationProvider>
           </ClassProvider>
         </StudentProvider>

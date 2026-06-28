@@ -5,7 +5,7 @@
 import { Link, useLocation } from 'wouter';
 import {
   Users, BookOpen, BarChart2, Settings, ChevronRight, CalendarCheck,
-  Building2, ShieldCheck, KeyRound, GraduationCap, Bell, Wallet, Trophy,
+  Building2, ShieldCheck, KeyRound, GraduationCap, Bell, Wallet, Trophy, Briefcase,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +30,16 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { label: '학생 등록', path: '/students/new', requires: 'student.create' },
       { label: '학생 목록', path: '/students', requires: 'student.view' },
+    ],
+  },
+  {
+    label: '직원관리',
+    path: '/employees',
+    icon: <Briefcase size={16} />,
+    requires: 'employee.view',
+    children: [
+      { label: '직원 등록', path: '/employees?new=1', requires: 'employee.create' },
+      { label: '직원 목록', path: '/employees', requires: 'employee.view' },
     ],
   },
   {
@@ -139,6 +149,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
 
   const isActive = (path: string) => {
     if (path === '/students') return location === '/students' || location.startsWith('/students/');
+    if (path === '/employees') return location === '/employees' || location.startsWith('/employees/');
     if (path === '/classes') return location === '/classes' || location.startsWith('/classes/');
     if (path === '/attendance') return location === '/attendance' || location.startsWith('/attendance/');
     if (path === '/settings') return location.startsWith('/settings');

@@ -42,6 +42,8 @@ export const PERMISSION_KEYS = [
   'employee.view', 'employee.create', 'employee.update', 'employee.resign', 'employee.passwordReset',
   // 반
   'class.view', 'class.create', 'class.update', 'class.assignTeacher',
+  // 수강관리 (enrollment)
+  'enrollment.view', 'enrollment.create', 'enrollment.update', 'enrollment.end', 'enrollment.withdraw',
   // 출결
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   // 평가/시험
@@ -50,6 +52,8 @@ export const PERMISSION_KEYS = [
   'finance.view', 'finance.paymentCreate', 'finance.refundRequest', 'finance.refundApprove', 'finance.receiptIssue', 'finance.settlementConfirm', 'finance.settingUpdate',
   // 알림
   'notification.view', 'notification.send', 'notification.templateManage', 'notification.settingManage',
+  // 성장관리 (growth)
+  'growth.view', 'growth.studentView', 'growth.awardSP', 'growth.awardEmblem', 'growth.emblemManage', 'growth.rivalView', 'growth.rivalManage',
   // 시스템
   'system.logoUpdate', 'system.permissionView', 'system.permissionUpdate', 'system.passwordReset',
 ] as const;
@@ -163,11 +167,15 @@ const DIRECTOR_PERMS: PermissionKey[] = [
   'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
   'employee.view', 'employee.create', 'employee.update', 'employee.resign', 'employee.passwordReset',
   'class.view', 'class.create', 'class.update', 'class.assignTeacher',
+  // 수강관리 — 원장은 전체 가능
+  'enrollment.view', 'enrollment.create', 'enrollment.update', 'enrollment.end', 'enrollment.withdraw',
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   'assessment.view', 'assessment.create', 'assessment.grade', 'assessment.publish', 'assessment.resultView', 'assessment.resultCorrect',
   'finance.view', 'finance.paymentCreate', 'finance.refundRequest', 'finance.refundApprove', 'finance.receiptIssue', 'finance.settlementConfirm', 'finance.settingUpdate',
   // 알림
   'notification.view', 'notification.send', 'notification.templateManage', 'notification.settingManage',
+  // 성장관리 — 원장은 전체 가능
+  'growth.view', 'growth.studentView', 'growth.awardSP', 'growth.awardEmblem', 'growth.emblemManage', 'growth.rivalView', 'growth.rivalManage',
   // 시스템
   'system.logoUpdate', 'system.permissionView', 'system.passwordReset',
   // 비포함: system.permissionUpdate (권한 매트릭스 편집은 최고관리자 전용)
@@ -180,10 +188,16 @@ const VICE_DIRECTOR_PERMS: PermissionKey[] = [
   'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
   'employee.view', 'employee.create', 'employee.update', 'employee.passwordReset',
   'class.view', 'class.create', 'class.update', 'class.assignTeacher',
+  // 수강관리 — 부원장: 조회/등록/수정/종료 가능, 퇴원은 보수적 제외(필요 시 권한설정에서 부여)
+  'enrollment.view', 'enrollment.create', 'enrollment.update', 'enrollment.end',
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   'assessment.view', 'assessment.grade', 'assessment.resultView', 'assessment.resultCorrect',
+  // 성장관리 — 부원장: 조회/학생조회 기본 부여. 엠블럼정책/라이벌관리는 원장급 이상만
+  'growth.view', 'growth.studentView', 'growth.rivalView',
   'system.passwordReset',
-  // 비포함: assessment.create/publish(원칙 4 — 최고관리자/원장 전용), employee.resign, 모든 finance.*(부원장 기본 미보유), system.permissionView/Update, system.logoUpdate
+  // 비포함: assessment.create/publish(원칙 4), employee.resign, 모든 finance.*(부원장 기본 미보유),
+  //         system.permissionView/Update, system.logoUpdate, growth.awardSP, growth.awardEmblem,
+  //         growth.emblemManage, growth.rivalManage
 ];
 
 // 실장: 운영 관리 중심 — 학생/출결/시험 운영 권한, 직원 관리·재무는 제외
@@ -191,30 +205,45 @@ const HEAD_MANAGER_PERMS: PermissionKey[] = [
   'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
   'employee.view',
   'class.view', 'class.create', 'class.update',
+  // 수강관리 — 실장: 조회/수정 가능 (등록/종료/퇴원은 보수적 제외)
+  'enrollment.view', 'enrollment.update',
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   'assessment.view', 'assessment.grade', 'assessment.resultView', 'assessment.resultCorrect',
+  // 성장관리 — 실장: 학생 성장탭 조회만 (메뉴 접근 보수적 제외)
+  'growth.studentView',
   'system.passwordReset',
-  // 비포함: assessment.create/publish(원칙 4), employee.create/update/resign/passwordReset, class.assignTeacher, 모든 finance.*(실장 기본 미보유), system.permissionView/Update, system.logoUpdate
+  // 비포함: assessment.create/publish(원칙 4), employee.create/update/resign/passwordReset,
+  //         class.assignTeacher, 모든 finance.*(실장 기본 미보유), system.permissionView/Update, system.logoUpdate,
+  //         growth.view, growth.awardSP, growth.awardEmblem, growth.emblemManage, growth.rivalView, growth.rivalManage
 ];
 
 // 팀장: 실장보다 좁은 범위 — 학생/출결 운영, 시험 결과 조회 위주
 const TEAM_LEAD_PERMS: PermissionKey[] = [
   'student.view', 'student.update', 'student.passwordReset',
   'class.view',
+  // 수강관리 — 팀장: 조회만
+  'enrollment.view',
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   'assessment.view', 'assessment.grade', 'assessment.resultView', 'assessment.resultCorrect',
-  // 비포함: assessment.create/publish(원칙 4), student.create/withdraw, employee.*, 모든 finance.*(팀장 기본 미보유), system.*
+  // 성장관리 — 팀장: 기본 미보유(필요 시 권한설정에서 부여)
+  // 비포함: assessment.create/publish(원칙 4), student.create/withdraw, employee.*,
+  //         모든 finance.*(팀장 기본 미보유), system.*, 모든 growth.*
 ];
 
 const STAFF_PERMS: PermissionKey[] = [
   'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
   'employee.view',
   'class.view',
+  // 수강관리 — 행정: 전체 가능
+  'enrollment.view', 'enrollment.create', 'enrollment.update', 'enrollment.end', 'enrollment.withdraw',
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   'assessment.view', 'assessment.grade', 'assessment.resultView',
   'finance.view', 'finance.paymentCreate', 'finance.refundRequest', 'finance.receiptIssue',
   // 알림 — STAFF는 발송이력 조회+수동발송+템플릿 조회 가능. 템플릿 수정/설정 변경은 SUPER_ADMIN/DIRECTOR 전용.
   'notification.view', 'notification.send',
+  // 성장관리 — STAFF: 조회/학생탭/SP지급/엠블럼지급/라이벌조회 가능. 정책관리/라이벌관리는 원장급 이상만.
+  'growth.view', 'growth.studentView', 'growth.awardSP', 'growth.awardEmblem', 'growth.rivalView',
+  // 비포함: growth.emblemManage, growth.rivalManage (원장급 이상)
   'system.passwordReset', 'system.permissionView',
   // 비포함: finance.refundApprove/settlementConfirm/settingUpdate, assessment.create/publish(원칙 4), system.permissionUpdate/logoUpdate
 ];
@@ -224,10 +253,15 @@ const STAFF_PERMS: PermissionKey[] = [
 const TEACHER_PERMS: PermissionKey[] = [
   'student.view', 'student.update', 'student.passwordReset',
   'class.view',
+  // 수강관리 — 강사: 담당 학생/반 범위에서 조회만 (등록/종료/퇴원 불가, dataScope로 범위 제한)
+  'enrollment.view',
   'attendance.view', 'attendance.check', 'attendance.update', // 본인 반 (viewAll 없음)
   'assessment.view', 'assessment.grade', 'assessment.resultView', 'assessment.resultCorrect',
-  // 비포함: assessment.create, assessment.publish — 시험 생성/발행 권한은 최고관리자·원장만(원칙 4)
+  // 성장관리 — 강사: 담당 학생 상세 성장/진열장 탭만 (growth.view 메뉴 접근 불가, 수동 지급 불가)
+  'growth.studentView',
+  // 비포함: assessment.create/publish (원칙 4)
   // 비포함: 모든 finance.*, attendance.viewAll
+  // 비포함: growth.view, growth.awardSP, growth.awardEmblem, growth.emblemManage, growth.rivalView, growth.rivalManage
 ];
 
 // 학생/보호자: 현재 Admin Back Office 운영 권한그룹이 아니라 향후 포털용 조회 권한으로만 존재(원칙 10).

@@ -1,7 +1,9 @@
 // AXIS LMS v1.2 - 시스템설정 > 비밀번호 초기화 관리
-// 메뉴 클릭 시 즉시 초기화하지 않고, 반드시 "계정 검색" 화면으로 진입한다.
-// 검색 → 결과 목록 → 행별 "비밀번호 초기화" 버튼 → 확인 모달 → 1건 실행.
+// HR & RBAC Stabilization v1
+//
+// 계정 검색 → 결과 목록 → 행별 "비밀번호 초기화" 버튼 → 확인 모달 → 1건 실행.
 // ⛔ 전체/모든 학생/모든 직원/선택 전체 초기화, 계정 직접 생성, 최고관리자 초기화 — 모두 제공하지 않는다.
+// 직원 계정은 EmployeeContext에서 가져온다 (DEV_USERS 의존 제거).
 
 import { useMemo, useState } from 'react';
 import { KeyRound, Search, Info, X } from 'lucide-react';
@@ -9,23 +11,24 @@ import { toast } from 'sonner';
 import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
-import { AccountType, ACCOUNT_TYPE_LABEL, AccountStatus, Position, POSITION_LABEL } from '@/lib/rbac';
+import { useEmployees } from '@/contexts/EmployeeContext';
+import { AccountType, ACCOUNT_TYPE_LABEL, AccountStatus, POSITION_LABEL } from '@/lib/rbac';
 
 interface AccountRow {
-  accountId: string;       // canResetPassword 판별용 식별자
+  accountId: string;
   name: string;
   accountType: AccountType;
-  position: Position | string; // 직원/최고관리자/원장 계열은 Position, 보호자 행은 라벨 문자열('보호자')
+  position: string;
   phone: string;
   status: AccountStatus;
-  studentId?: string;      // accountType==='STUDENT'일 때 canAccessStudent 판별용
+  studentId?: string;
 }
 
 export default function PasswordResetManagement() {
-  const { can, canResetPassword, devUsers } = useAuth();
+  const { can, canResetPassword } = useAuth();
   const { students } = useStudents();
+  const { employees } = useEmployees();
 
-  // student.passwordReset 또는 system.passwordReset 둘 중 하나라도 없으면 화면 자체를 막는다.
   const hasAccess = can('student.passwordReset') || can('employee.passwordReset') || can('system.passwordReset');
 
   const [searched, setSearched] = useState(false);
@@ -34,23 +37,35 @@ export default function PasswordResetManagement() {
   const [qType, setQType] = useState<AccountType | '전체'>('전체');
   const [qPosition, setQPosition] = useState('전체');
   const [qStatus, setQStatus] = useState<AccountStatus | '전체'>('전체');
-
   const [confirmTarget, setConfirmTarget] = useState<AccountRow | null>(null);
 
-  // 검색 대상 계정 풀: 학생 계정(Student) + 보호자 계정(Student.guardians에서 파생, 휴대폰번호로 dedupe) + 직원/원장 등 비학생 계정(DEV_USERS — 실제 직원 마스터 연동 전 임시)
+  // 검색 대상 계정 풀
   const allAccounts: AccountRow[] = useMemo(() => {
+    // 직원 계정 — EmployeeContext 기반
+    const staffAccounts: AccountRow[] = employees.map((emp) => ({
+      accountId: emp.accountId,
+      name: emp.name,
+      accountType: (emp.position === 'SUPER_ADMIN' ? 'SUPER_ADMIN'
+        : emp.position === 'DIRECTOR' ? 'DIRECTOR'
+        : emp.position === 'TEACHER' ? 'TEACHER'
+        : 'STAFF') as AccountType,
+      position: POSITION_LABEL[emp.position],
+      phone: emp.phone,
+      status: emp.accountStatus,
+    }));
+
+    // 학생 계정
     const studentAccounts: AccountRow[] = students.map((s) => ({
       accountId: `student-account-${s.id}`,
       name: s.name,
-      accountType: 'STUDENT',
+      accountType: 'STUDENT' as AccountType,
       position: '학생',
       phone: s.phone,
-      status: s.status === '퇴원' ? '비활성' : '활성',
+      status: (s.status === '퇴원' ? '비활성' : '활성') as AccountStatus,
       studentId: s.id,
     }));
 
-    // 보호자 계정: 학생의 guardians를 훑어 휴대폰번호 기준으로 dedupe(동일 번호 보호자는 1개 계정으로 묶음).
-    // AXIS 확정 원칙 5: PasswordResetManagement의 계정유형 필터에 GUARDIAN이 있으므로 실제 검색 대상에도 포함해야 한다.
+    // 보호자 계정: 학생의 guardians를 훑어 휴대폰번호 기준으로 dedupe
     const guardianByPhone = new Map<string, AccountRow>();
     students.forEach((s) => {
       s.guardians.forEach((g) => {
@@ -60,7 +75,7 @@ export default function PasswordResetManagement() {
           guardianByPhone.set(normalizedPhone, {
             accountId: `guardian-account-${normalizedPhone}`,
             name: g.name,
-            accountType: 'GUARDIAN',
+            accountType: 'GUARDIAN' as AccountType,
             position: '보호자',
             phone: g.phone,
             status: '활성',
@@ -70,13 +85,8 @@ export default function PasswordResetManagement() {
     });
     const guardianAccounts: AccountRow[] = Array.from(guardianByPhone.values());
 
-    const staffAccounts: AccountRow[] = devUsers
-      .filter((u) => u.accountType !== 'STUDENT' && u.accountType !== 'GUARDIAN')
-      .map((u) => ({
-        accountId: u.id, name: u.name, accountType: u.accountType, position: POSITION_LABEL[u.position], phone: u.phone, status: u.status,
-      }));
     return [...staffAccounts, ...guardianAccounts, ...studentAccounts];
-  }, [students, devUsers]);
+  }, [employees, students]);
 
   const positionOptions = useMemo(() => Array.from(new Set(allAccounts.map((a) => a.position))), [allAccounts]);
 
@@ -141,7 +151,9 @@ export default function PasswordResetManagement() {
             <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>계정유형</span>
             <select className={selectCls} style={selectStyle} value={qType} onChange={(e) => setQType(e.target.value as AccountType | '전체')}>
               <option value="전체">전체</option>
-              {(['SUPER_ADMIN', 'DIRECTOR', 'STAFF', 'TEACHER', 'STUDENT', 'GUARDIAN'] as AccountType[]).map((t) => <option key={t} value={t}>{ACCOUNT_TYPE_LABEL[t]}</option>)}
+              {(['SUPER_ADMIN', 'DIRECTOR', 'STAFF', 'TEACHER', 'STUDENT', 'GUARDIAN'] as AccountType[]).map((t) => (
+                <option key={t} value={t}>{ACCOUNT_TYPE_LABEL[t]}</option>
+              ))}
             </select>
           </label>
           <label className="flex flex-col gap-1">
@@ -213,10 +225,10 @@ export default function PasswordResetManagement() {
       )}
 
       <p className="text-xs mt-3 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
-        <Info size={11} /> 직원 계정 데이터는 별도 직원관리 모듈 연동 전 임시 데모 계정을 사용합니다. (TODO: employee 마스터 데이터 연동) 보호자 계정은 학생의 보호자 정보에서 휴대폰번호 기준으로 자동 집계됩니다(동일 번호는 1개 계정으로 병합).
+        <Info size={11} /> 직원 계정은 직원관리(EmployeeContext) 기반입니다. 보호자 계정은 학생의 보호자 정보에서 자동 집계됩니다.
       </p>
 
-      {/* 확인 모달 — 1건만 처리, 일괄 옵션 없음 */}
+      {/* 확인 모달 — 1건만 처리 */}
       {confirmTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'oklch(0 0 0 / 0.4)' }} onClick={() => setConfirmTarget(null)}>
           <div className="bg-white rounded-lg w-full max-w-sm modal-enter" onClick={(e) => e.stopPropagation()} style={{ boxShadow: '0 20px 50px oklch(0 0 0 / 0.25)' }}>
