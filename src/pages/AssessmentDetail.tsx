@@ -95,13 +95,17 @@ export default function AssessmentDetail() {
   //     성적조회에 반영되며, 그 이후의 수정은 정정 처리로만 가능하다.
   const locked = needsPublishAction ? phase === '공개 완료' : phase === '채점 완료';
 
+  // 성적 공개 확인 모달 상태
+  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+
   const handlePublish = () => {
     const result = publishExam(exam.id, currentUser.name);
     if (!result.ok) {
       toast.error(result.reason ?? '공개할 수 없습니다.');
       return;
     }
-    toast.success(`"${exam.title}" 시험 결과가 공개되었습니다.`);
+    toast.success(`"${exam.title}" 시험 결과가 공개되었습니다. 알림 이력이 생성되었습니다.`);
+    setPublishConfirmOpen(false);
   };
 
   const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
@@ -147,7 +151,7 @@ export default function AssessmentDetail() {
                 <CheckCircle2 size={11} /> 채점 완료 · 공개 대기
               </div>
               {canPublishPerm && (
-                <Button size="sm" onClick={handlePublish} className="h-8 text-xs gap-1.5" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+                <Button size="sm" onClick={() => setPublishConfirmOpen(true)} className="h-8 text-xs gap-1.5" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
                   <Unlock size={12} /> 성적 공개
                 </Button>
               )}
@@ -155,7 +159,7 @@ export default function AssessmentDetail() {
           ) : canPublishPerm ? (
             <Button
               size="sm"
-              onClick={handlePublish}
+              onClick={() => setPublishConfirmOpen(true)}
               disabled={!canPublish(exam.id)}
               className="h-8 text-xs gap-1.5"
               style={{ background: canPublish(exam.id) ? 'oklch(0.511 0.262 276.966)' : undefined }}
@@ -198,6 +202,29 @@ export default function AssessmentDetail() {
           {tab === 'analysis' && <AnalysisTab exam={exam} submissions={submissions} canCorrect={canCorrect} currentUserName={currentUser.name} locked={locked} />}
         </div>
       </div>
+
+      {/* 성적 공개 확인 모달 */}
+      <Dialog open={publishConfirmOpen} onOpenChange={(o) => !o && setPublishConfirmOpen(false)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="text-sm">성적 공개 확인</DialogTitle></DialogHeader>
+          <div className="py-2 space-y-3">
+            <p className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>
+              <b>{exam.title}</b> 시험 결과를 공개하시겠습니까?
+            </p>
+            <div className="rounded-lg p-3 text-xs" style={{ background: 'oklch(0.96 0.04 250)', color: 'oklch(0.38 0.18 250)' }}>
+              <p>• 공개 후 성적은 직접 수정할 수 없으며 정정 처리만 가능합니다.</p>
+              <p>• 공개 시 학생 알림 이력이 자동 생성됩니다. (mock)</p>
+              <p>• 실제 카카오/SMS 발송은 되지 않습니다.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setPublishConfirmOpen(false)} className="h-8 text-xs">취소</Button>
+            <Button size="sm" onClick={handlePublish} className="h-8 text-xs gap-1" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+              <Unlock size={11} /> 공개 확정
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
@@ -258,14 +285,15 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
       <table className="w-full text-sm">
         <thead>
           <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
-            {['학생명', '휴대폰번호', '응시상태', '획득점수', '관리'].map((h) => (
-              <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
+            {['학생명', '휴대폰번호', '응시상태', '획득점수', '채점상태', '공개여부', '관리'].map((h) => (
+              <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {submissions.map((sub) => {
             const stu = studentMap.get(sub.studentId);
+            const isVisible = isResultVisibleForStudent(exam, sub);
             return (
               <tr key={sub.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                 <td className="px-3 py-2.5 font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{stu?.name ?? '-'}</td>
@@ -273,6 +301,14 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
                 <td className="px-3 py-2.5"><SubmissionStatusBadge status={sub.status} /></td>
                 <td className="px-3 py-2.5 text-xs tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>
                   {sub.totalScore !== undefined ? `${sub.totalScore} / ${exam.totalScore}` : '-'}
+                </td>
+                <td className="px-3 py-2.5 text-xs" style={{ color: sub.status === '채점완료' ? 'oklch(0.35 0.15 145)' : 'oklch(0.55 0.015 250)' }}>
+                  {sub.status === '결석' ? '결석' : sub.status === '채점완료' ? '완료' : '미채점'}
+                </td>
+                <td className="px-3 py-2.5 text-xs">
+                  <span style={{ color: isVisible ? 'oklch(0.35 0.15 145)' : 'oklch(0.6 0.01 250)' }}>
+                    {isVisible ? '✓ 공개됨' : '비공개'}
+                  </span>
                 </td>
                 <td className="px-3 py-2.5">
                   {canGrade && !locked && (
@@ -436,6 +472,7 @@ function GradingTab({
 // ════════════════════════════════════════════════════════════
 function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }: { exam: Exam; submissions: ExamSubmission[]; canCorrect: boolean; currentUserName: string; locked: boolean }) {
   const { students } = useStudents();
+  const { classes } = useClasses();
   const { correctScore } = useAssessment();
   const studentMap = useMemo(() => new Map(students.map((s) => [s.id, s])), [students]);
 
@@ -444,6 +481,46 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
   const avg = scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : 0;
   const max = scores.length ? Math.max(...scores) : 0;
   const min = scores.length ? Math.min(...scores) : 0;
+
+  // 합격/기준 통과율 — 만점의 60% 이상을 "통과"로 간주(Foundation 기준, 추후 변경 가능)
+  const passMark = Math.round(exam.totalScore * 0.6);
+  const passCount = scores.filter((s) => s >= passMark).length;
+  const passRate = scores.length ? Math.round((passCount / scores.length) * 100) : 0;
+
+  // 점수 분포 — 10점 구간 버킷
+  const buckets = Array.from({ length: Math.ceil(exam.totalScore / 10) + 1 }, (_, i) => ({
+    label: `${i * 10}~${Math.min((i + 1) * 10 - 1, exam.totalScore)}`,
+    count: scores.filter((s) => s >= i * 10 && s < (i + 1) * 10).length,
+  })).filter((b) => b.count > 0 || b.label.startsWith('0'));
+
+  // 반별 평균 (학원 전체 시험의 경우)
+  const classByStudent = useMemo(() => {
+    const map = new Map<string, string>(); // studentId → classId
+    if (!exam.classId) {
+      // 학원 전체 시험: students.classes에서 현재 수강 반 매핑
+      students.forEach((stu) => {
+        const activeClass = stu.classes?.find((c) => c.status === '수강중');
+        if (activeClass) map.set(stu.id, activeClass.id);
+      });
+    }
+    return map;
+  }, [students, exam.classId]);
+
+  const classAvgStats = useMemo(() => {
+    if (exam.classId) return []; // 반 단위 시험은 반별 평균 불필요
+    const classScores = new Map<string, number[]>();
+    graded.forEach((sub) => {
+      const cid = classByStudent.get(sub.studentId);
+      if (!cid || sub.totalScore === undefined) return;
+      if (!classScores.has(cid)) classScores.set(cid, []);
+      classScores.get(cid)!.push(sub.totalScore);
+    });
+    return Array.from(classScores.entries()).map(([cid, sc]) => ({
+      className: classes.find((c) => c.id === cid)?.name ?? cid,
+      avg: Math.round((sc.reduce((a, b) => a + b, 0) / sc.length) * 10) / 10,
+      count: sc.length,
+    })).sort((a, b) => b.avg - a.avg);
+  }, [graded, classByStudent, classes, exam.classId]);
 
   // 문항별 정답률(자동채점 문항 한정 — 의미가 명확한 지표)
   const questionStats = exam.questions.filter((q) => isAutoGraded(q.type)).map((q) => {
@@ -475,13 +552,55 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-4 gap-3">
+      {/* 요약 카드 */}
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
         <Stat label="응시(채점) 인원" value={`${graded.length}명`} />
         <Stat label="평균" value={`${avg}점`} />
         <Stat label="최고점" value={`${max}점`} />
         <Stat label="최저점" value={`${min}점`} />
+        <Stat label="기준 통과" value={`${passCount}명`} />
+        <Stat label={`통과율 (≥${passMark}점)`} value={`${passRate}%`} />
       </div>
 
+      {/* 점수 분포 */}
+      {scores.length > 0 && (
+        <div>
+          <Label className="text-xs font-semibold mb-2 block">점수 분포</Label>
+          <div className="flex items-end gap-2 h-20">
+            {buckets.map((b) => {
+              const maxCount = Math.max(...buckets.map((bk) => bk.count), 1);
+              const heightPct = (b.count / maxCount) * 100;
+              return (
+                <div key={b.label} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="w-full rounded-t" style={{ height: `${Math.max(heightPct, 4)}%`, background: b.count > 0 ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.92 0.005 250)', minHeight: 4 }} />
+                  <span className="text-xs tabular-nums" style={{ color: 'oklch(0.55 0.01 250)', fontSize: 10 }}>{b.count}명</span>
+                  <span className="text-xs" style={{ color: 'oklch(0.65 0.01 250)', fontSize: 9 }}>{b.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 반별 평균 (학원 전체 시험) */}
+      {classAvgStats.length > 0 && (
+        <div>
+          <Label className="text-xs font-semibold mb-2 block">반별 평균</Label>
+          <div className="space-y-1.5">
+            {classAvgStats.map(({ className, avg: cAvg, count }) => (
+              <div key={className} className="flex items-center gap-3 text-xs">
+                <span className="w-36 flex-shrink-0 truncate" style={{ color: 'oklch(0.4 0.02 250)' }}>{className}</span>
+                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.round((cAvg / exam.totalScore) * 100)}%`, background: 'oklch(0.511 0.262 276.966)' }} />
+                </div>
+                <span className="w-24 text-right tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{cAvg}점 ({count}명)</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 문항별 정답률 */}
       {questionStats.length > 0 && (
         <div>
           <Label className="text-xs font-semibold mb-2 block">문항별 정답률 (자동채점 문항)</Label>
@@ -499,6 +618,27 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
         </div>
       )}
 
+      {/* IF 분석 플레이스홀더 — 계산실수 / 개념부족 / 시간부족 */}
+      <div>
+        <Label className="text-xs font-semibold mb-2 block">
+          IF 분석 <span className="font-normal" style={{ color: 'oklch(0.6 0.01 250)' }}>(준비 중 — 향후 문항별 오답 패턴 분석과 연동 예정)</span>
+        </Label>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: '계산 실수', desc: '정답 개념은 알지만 계산 과정에서 오류 발생', color: 'oklch(0.55 0.18 45)' },
+            { label: '개념 부족', desc: '관련 개념이나 공식의 이해 및 암기 부족', color: 'oklch(0.5 0.15 250)' },
+            { label: '시간 부족', desc: '풀이 시간 배분 실패로 인한 미완성 또는 공란', color: 'oklch(0.45 0.15 320)' },
+          ].map(({ label, desc, color }) => (
+            <div key={label} className="rounded-xl p-3 border" style={{ borderColor: 'oklch(0.92 0.01 250)' }}>
+              <div className="text-xs font-semibold mb-1" style={{ color }}>{label}</div>
+              <div className="text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>{desc}</div>
+              <div className="mt-2 text-xs italic" style={{ color: 'oklch(0.7 0.01 250)' }}>데이터 수집 준비 중</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 학생별 결과 */}
       <div>
         <Label className="text-xs font-semibold mb-2 block">
           학생별 결과 {locked && (

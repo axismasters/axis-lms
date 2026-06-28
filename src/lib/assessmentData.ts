@@ -56,6 +56,7 @@ export interface Exam {
   title: string;
   categoryId: string;     // EXAM_CATEGORIES 참조(string — 카탈로그가 늘어나도 타입 변경 불필요)
   classId?: string;       // 특정 반 대상이면 반 id, 비우면 학원 전체 대상
+  subject?: string;       // 과목명(예: '수학', '영어', '국어') — classId가 없는 학원 전체 시험에서 명시적으로 사용
   examDate: string;       // YYYY-MM-DD
   totalScore: number;     // 만점(문항 배점 합)
   questions: ExamQuestionDef[];
@@ -261,6 +262,7 @@ export const DUMMY_EXAMS: Exam[] = [
     title: '1학기 1차 단원평가 (수학)',
     categoryId: 'unit-eval',
     classId: 'cls-001',
+    subject: '수학',
     examDate: '2024-05-20',
     totalScore: exam1Questions.reduce((s, q) => s + q.points, 0),
     questions: exam1Questions,
@@ -273,6 +275,7 @@ export const DUMMY_EXAMS: Exam[] = [
     title: '2024 신입생 입학테스트',
     categoryId: 'entrance-test',
     classId: undefined,
+    subject: '수학',
     examDate: '2024-06-15',
     totalScore: exam2Questions.reduce((s, q) => s + q.points, 0),
     questions: exam2Questions,
@@ -285,6 +288,7 @@ export const DUMMY_EXAMS: Exam[] = [
     title: '6월 수능실전모의고사',
     categoryId: 'mock-suneung',
     classId: undefined,
+    subject: '수학',
     examDate: '2024-06-28',
     totalScore: exam3Questions.reduce((s, q) => s + q.points, 0),
     questions: exam3Questions,

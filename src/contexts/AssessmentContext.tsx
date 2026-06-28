@@ -25,6 +25,7 @@ interface NewExamInput {
   title: string;
   categoryId: string;
   classId?: string;
+  subject?: string;
   examDate: string;
   questions: ExamQuestionDef[];
   createdBy: string;
@@ -85,6 +86,7 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
       title: input.title,
       categoryId: input.categoryId,
       classId: input.classId,
+      subject: input.subject,
       examDate: input.examDate,
       totalScore,
       questions: input.questions,

@@ -420,3 +420,123 @@ StudentProvider > ClassProvider > NotificationProvider > EnrollmentProvider > At
 2. **반 단위 시험 성적공개 알림**: publishExam이 없는 반 단위 시험은 알림 이력 없음. 채점 완료 시점에 별도 hook 필요.
 3. **수동발송 수신자 검색**: 현재 직접 입력 방식 유지.
 4. **성적 점수 변수**: 현재 성적 공개 알림 템플릿에 점수(score) 변수 없음. 향후 추가 가능.
+
+---
+
+## [Round] Assessment Engine Foundation Review & Completion v1 (2026-06-28)
+
+### 수정된 파일
+
+| 파일 | 변경 내용 |
+|---|---|
+| `src/lib/assessmentData.ts` | Exam 타입에 `subject?: string` 필드 추가, DUMMY_EXAMS에 subject 값 추가 |
+| `src/contexts/AssessmentContext.tsx` | NewExamInput에 `subject?: string` 추가, addExam에 subject 전달 |
+| `src/pages/AssessmentList.tsx` | 과목 필터 추가, availableSubjects 추출, 테이블 컬럼 재구성(과목/응시채점인원/공개일), overflow-x-auto 적용 |
+| `src/pages/AssessmentDetail.tsx` | 성적 공개 확인 모달 추가(publishConfirmOpen), 응시자목록 탭에 채점상태/공개여부 컬럼 추가, 결과분석 탭에 점수분포/반별평균/IF분석 플레이스홀더/통과율 추가 |
+
+---
+
+### 시험관리 구조
+
+- 시험 종류 카탈로그(EXAM_CATEGORIES): 입학테스트/단원평가/인증평가/내신대비모의고사/수능실전모의고사
+- subject 필드: 과목명 (수학/영어/국어 등) — 필터 및 목록 표시용
+- 시험 대상: classId 있으면 반 단위 / 없으면 학원 전체
+- 시험 목록 컬럼: 시험명/종류/과목/대상/시험일/응시채점인원/진행상태/공개일/상세
+- 시험 목록 필터: 검색어/시험종류/대상반/과목/진행상태
+
+---
+
+### 채점 구조
+
+| 문항 유형 | 채점 방식 |
+|---|---|
+| 객관식, OX, 단답형 | 자동채점 (applyAutoGrading) |
+| 서술형, 증명형, 풀이형 | 수동채점 (GradingTab에서 직접 점수 입력) |
+
+- 미채점 = answers 중 score가 undefined인 항목이 있는 경우
+- 채점완료 = 모든 문항 score 확정 또는 결석 처리
+- 총점 = recalcTotalScore로 합산 (결석 시 undefined 유지)
+
+---
+
+### 성적 공개 구조
+
+1. 공개 버튼 클릭 → publishConfirmOpen=true → 확인 모달 표시
+2. 확인 모달에서 "공개 확정" 클릭 → publishExam(exam.id, currentUser.name)
+3. publishExam 내부:
+   - 전원 채점완료 확인
+   - exam.publishedAt, publishedBy 기록
+   - 응시자 순회 → createAssessmentPublishedNotification 호출
+4. 결과: 발송이력 화면에 ASSESSMENT_RESULT_PUBLISHED 이력 생성
+
+---
+
+### Notification 연동 방식
+
+- AssessmentContext.publishExam() → createAssessmentPublishedNotification (NotificationContext)
+- 기본 정책: 학생 ON, 보호자 OFF (ns-012 기준)
+- 학원 전체 시험(requiresPublishAction=true)만 공개 액션 / 알림 발송
+- 반 단위 시험: 별도 공개 액션 없음 → 알림 없음
+
+---
+
+### 학생 상세 성적조회 반영 방식
+
+- getPublishedResultsForStudent(exams, submissions, studentId) 함수로 필터링
+- 반 단위 시험: totalScore 확정 시 즉시 반영
+- 학원 전체 시험: publishedAt이 있을 때만 반영
+- 결석/미채점 항목은 반영 제외
+
+---
+
+### 결과분석 탭 구성
+
+| 섹션 | 내용 |
+|---|---|
+| 요약 카드 (6개) | 응시인원/평균/최고점/최저점/기준통과인원/통과율 |
+| 점수 분포 | 10점 구간 막대 차트 |
+| 반별 평균 | 학원 전체 시험에서만 표시 (students.classes 기준) |
+| 문항별 정답률 | 자동채점 문항만, 수평 바 차트 |
+| IF 분석 | 계산실수/개념부족/시간부족 플레이스홀더 (향후 연동 예정) |
+| 학생별 결과 | 총점/정정이력 + 정정 버튼 |
+
+---
+
+### 권한 기준
+
+| 권한 | 조건 |
+|---|---|
+| 시험 생성 (assessment.create) | SUPER_ADMIN, DIRECTOR |
+| 채점 (assessment.grade) | 위 + TEACHER (본인 반/배정 시험) |
+| 성적 공개 (assessment.publish) | SUPER_ADMIN, DIRECTOR |
+| 결과 조회 (assessment.view) | SUPER_ADMIN, DIRECTOR, STAFF, TEACHER(본인 담당) |
+| 정정 처리 (assessment.resultCorrect) | SUPER_ADMIN, DIRECTOR |
+
+강사는 학원 전체 시험 공개 권한(assessment.publish) 없음.
+
+---
+
+### TypeScript 검사
+
+- `npx tsc --noEmit`: **Exit 0** ✅
+
+---
+
+### 남은 한계
+
+1. **AssessmentFormModal에 subject 필드 없음** — 시험 생성 모달에 과목 입력 필드 추가 필요
+2. **반별 평균**: students.classes 기준으로 추출하므로 퇴원 학생 데이터가 포함될 수 있음 (정밀화 필요)
+3. **IF 분석**: 플레이스홀더만 제공. 실제 오답 패턴 분류는 별도 구현 필요
+4. **반 단위 시험 성적 공개 알림**: publishExam 호출 없음 → 알림 미생성. 별도 트리거 필요
+5. **학생 포털 성적 조회**: 현재 관리자 화면에만 구현. 학생 포털은 별도 단계
+6. **점수 분포 차트**: CSS 바 형태로 구현 (외부 차트 라이브러리 미사용)
+
+---
+
+### 다음 추천 개발 단계
+
+1. AssessmentFormModal에 subject 필드 추가
+2. 반 단위 시험 채점 완료 시 알림 구조 준비
+3. IF 분석 실제 데이터 연동 (오답 유형 분류)
+4. 문항별 풀이 시간 기록 구조 (시간 부족 분석용)
+5. 학생 포털 성적 조회 화면 (별도 단계)

@@ -40,6 +40,7 @@ export default function AssessmentList() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterClass, setFilterClass] = useState('all'); // 'all' | 'academy'(학원 전체 대상만) | classId
   const [filterPhase, setFilterPhase] = useState<ExamPhase | 'all'>('all');
+  const [filterSubject, setFilterSubject] = useState('all'); // 과목 필터
 
   const [formOpen, setFormOpen] = useState(false);
 
@@ -74,6 +75,12 @@ export default function AssessmentList() {
     return map;
   }, [visibleExams, getSubmissionsByExam]);
 
+  // 과목 목록 — visibleExams에서 고유 과목 추출
+  const availableSubjects = useMemo(() => {
+    const s = new Set(visibleExams.map(e => e.subject).filter(Boolean) as string[]);
+    return Array.from(s).sort();
+  }, [visibleExams]);
+
   const filtered = useMemo(() => {
     return visibleExams.filter((e) => {
       if (search && !e.title.includes(search)) return false;
@@ -81,9 +88,10 @@ export default function AssessmentList() {
       if (filterClass === 'academy' && e.classId) return false;
       if (filterClass !== 'all' && filterClass !== 'academy' && e.classId !== filterClass) return false;
       if (filterPhase !== 'all' && examPhases.get(e.id) !== filterPhase) return false;
+      if (filterSubject !== 'all' && e.subject !== filterSubject) return false;
       return true;
     }).sort((a, b) => b.examDate.localeCompare(a.examDate));
-  }, [visibleExams, search, filterCategory, filterClass, filterPhase, examPhases]);
+  }, [visibleExams, search, filterCategory, filterClass, filterPhase, filterSubject, examPhases]);
 
   // AXIS 확정 정책: 상태 카드 대신 파생 정보(전체/미채점 있음/채점 완료/공개 완료)로 보여준다.
   const stats = useMemo(() => ({
@@ -162,6 +170,15 @@ export default function AssessmentList() {
               {availableClasses.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
             </SelectContent>
           </Select>
+          {availableSubjects.length > 0 && (
+            <Select value={filterSubject} onValueChange={setFilterSubject}>
+              <SelectTrigger className="h-9 w-28 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">과목 전체</SelectItem>
+                {availableSubjects.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={filterPhase} onValueChange={(v) => setFilterPhase(v as ExamPhase | 'all')}>
             <SelectTrigger className="h-9 w-32 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -180,10 +197,11 @@ export default function AssessmentList() {
             조회 조건에 해당하는 시험이 없습니다.
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
-                {['시험명', '종류', '대상', '시험일', '문항/만점', '응시인원', '진행상태', ''].map((h) => (
+                {['시험명', '종류', '과목', '대상', '시험일', '응시/채점', '진행상태', '공개일', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
                 ))}
               </tr>
@@ -193,24 +211,30 @@ export default function AssessmentList() {
                 const phase = examPhases.get(exam.id) ?? '미채점 있음';
                 const cfg = PHASE_CONFIG[phase];
                 const cls = exam.classId ? getClass(exam.classId) : undefined;
-                const subCount = getSubmissionsByExam(exam.id).length;
+                const subs = getSubmissionsByExam(exam.id);
+                const gradedCnt = subs.filter((s) => s.status === '채점완료' || s.status === '결석').length;
                 return (
                   <tr key={exam.id} className="axis-table-row border-b cursor-pointer" style={{ borderColor: 'oklch(0.95 0.003 250)' }} onClick={() => navigate(`/scores/${exam.id}`)}>
                     <td className="px-4 py-3 font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</td>
-                    <td className="px-4 py-3 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{categoryLabel(exam.categoryId)}</td>
-                    <td className="px-4 py-3 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{cls ? cls.name : '학원 전체'}</td>
-                    <td className="px-4 py-3 text-xs tabular-nums" style={{ color: 'oklch(0.45 0.015 250)' }}>{exam.examDate}</td>
-                    <td className="px-4 py-3 text-xs tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>{exam.questions.length}문항 · {exam.totalScore}점</td>
-                    <td className="px-4 py-3 text-xs tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>
-                      <span className="inline-flex items-center gap-1"><Users size={11} /> {subCount}명</span>
+                    <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{categoryLabel(exam.categoryId)}</td>
+                    <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{exam.subject ?? '-'}</td>
+                    <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{cls ? cls.name : '학원 전체'}</td>
+                    <td className="px-4 py-3 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{exam.examDate}</td>
+                    <td className="px-4 py-3 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                      <span className="inline-flex items-center gap-1">
+                        <Users size={11} /> {gradedCnt}/{subs.length}명
+                      </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: cfg.bg, color: cfg.text, border: `1px solid ${cfg.border}` }}>
                         {phase === '공개 완료' && <Lock size={10} />}
                         {phase === '미채점 있음' && <AlertTriangle size={10} />}
                         {phase === '채점 완료' && <CheckCircle2 size={10} />}
                         {phase}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                      {exam.publishedAt ? exam.publishedAt.slice(0, 10) : '-'}
                     </td>
                     <td className="px-4 py-3">
                       <span className="flex items-center gap-0.5 text-xs" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
@@ -222,6 +246,7 @@ export default function AssessmentList() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
