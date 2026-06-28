@@ -123,7 +123,7 @@ export default function StudentDetail() {
       <AdminLayout title="학생 상세" breadcrumbs={[{ label: '학생관리', path: '/students' }, { label: '학생 상세' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>학생을 찾을 수 없습니다.</p>
-          <button onClick={() => navigate('/students')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.45 0.2 277)' }}>← 학생 목록으로</button>
+          <button onClick={() => navigate('/admin/students')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.45 0.2 277)' }}>← 학생 목록으로</button>
         </div>
       </AdminLayout>
     );
@@ -134,7 +134,7 @@ export default function StudentDetail() {
       <AdminLayout title="학생 상세" breadcrumbs={[{ label: '학생관리', path: '/students' }, { label: '학생 상세' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>이 학생 정보에 접근할 권한이 없습니다.</p>
-          <button onClick={() => navigate('/students')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.45 0.2 277)' }}>← 학생 목록으로</button>
+          <button onClick={() => navigate('/admin/students')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.45 0.2 277)' }}>← 학생 목록으로</button>
         </div>
       </AdminLayout>
     );
@@ -155,7 +155,7 @@ export default function StudentDetail() {
 
   return (
     <AdminLayout title={student.name} breadcrumbs={[{ label: '학생관리', path: '/students' }, { label: '학생 목록', path: '/students' }, { label: student.name }]}>
-      <button onClick={() => navigate('/students')} className="inline-flex items-center gap-1 text-xs mb-3 hover:underline" style={{ color: 'oklch(0.5 0.015 250)' }}>
+      <button onClick={() => navigate('/admin/students')} className="inline-flex items-center gap-1 text-xs mb-3 hover:underline" style={{ color: 'oklch(0.5 0.015 250)' }}>
         <ChevronLeft size={13} /> 학생 목록
       </button>
 
@@ -182,7 +182,7 @@ export default function StudentDetail() {
       </div>
 
       {tab === 'basic' && <BasicInfoTab student={student} />}
-      {tab === 'guardian' && <GuardianFamilyTab student={student} onOpenStudent={(id) => navigate(`/students/${id}?tab=guardian`)} />}
+      {tab === 'guardian' && <GuardianFamilyTab student={student} onOpenStudent={(id) => navigate(`/admin/students/${id}?tab=guardian`)} />}
       {tab === 'enrollment' && <EnrollmentTab student={student} />}
       {tab === 'attendance' && <AttendanceTab student={student} />}
       {tab === 'grades' && <GradesTab student={student} initialGradeType={initial.gradeType} />}

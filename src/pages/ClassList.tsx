@@ -144,7 +144,7 @@ export default function ClassList() {
     setFormModal({ open: false });
     const sp = new URLSearchParams(searchStr);
     if (sp.get('new') === '1') {
-      navigate('/classes', { replace: true });
+      navigate('/admin/classes', { replace: true });
     }
   };
 
@@ -278,7 +278,7 @@ export default function ClassList() {
                     key={cls.id}
                     className="axis-table-row border-b cursor-pointer"
                     style={{ borderColor: 'oklch(0.95 0.003 250)' }}
-                    onClick={() => navigate(`/classes/${cls.id}`)}
+                    onClick={() => navigate(`/admin/classes/${cls.id}`)}
                   >
                     {/* 반 이름 */}
                     <td className="px-4 py-3">
@@ -356,7 +356,7 @@ export default function ClassList() {
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => navigate(`/classes/${cls.id}`)}
+                          onClick={() => navigate(`/admin/classes/${cls.id}`)}
                           className="p-1.5 rounded transition-colors hover:bg-indigo-50"
                           title="상세보기"
                         >

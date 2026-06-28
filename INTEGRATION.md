@@ -288,3 +288,97 @@ INTEGRATION.md                      ← 이 파일
 
 *AXIS LMS v1.2 — Mobile/App Optimization Readiness v1*  
 *2026-06-28*
+
+---
+
+## Role Separation v1 — 역할별 화면 분리 구조
+
+### 작업명
+Role Separation v1 (역할별 포털 분리 + 레이아웃 분리 + 라우트 분리)
+
+### 추가된 파일
+
+```
+src/layouts/
+  TeacherLayout.tsx    ← 강사 전용 레이아웃 (헤더 + Bottom Nav 4탭)
+  StudentLayout.tsx    ← 학생 전용 레이아웃 (헤더 + Bottom Nav 4탭)
+  ParentLayout.tsx     ← 보호자 전용 레이아웃 (헤더 + Bottom Nav 4탭)
+
+src/routes/
+  RoleRoute.tsx        ← 역할별 라우트 가드 / RootRedirect / ROLE_HOME
+  AdminRoutes.tsx      ← /admin/** 관리자 라우트 묶음
+  TeacherRoutes.tsx    ← /teacher/** 강사 전용 라우트
+  StudentRoutes.tsx    ← /student/** 학생 전용 라우트
+  ParentRoutes.tsx     ← /parent/** 보호자 전용 라우트
+
+src/pages/teacher/
+  TeacherHome.tsx      ← 강사 홈 (오늘 수업/담당학생/미채점/콘텐츠 카드)
+
+src/pages/student/
+  StudentHome.tsx      ← 학생 홈 (진열장/티어/SP/최근시험/수업영상 카드)
+
+src/pages/parent/
+  ParentHome.tsx       ← 보호자 홈 (자녀선택/출결/성적/수납/알림 카드)
+```
+
+### 수정된 파일
+```
+src/App.tsx                         ← 역할별 라우트 분리 재조립, LegacyRedirects 추가
+src/components/AdminLayout.tsx      ← NAV_ITEMS 전체 /admin/** 경로 업데이트
+src/pages/StudentList.tsx           ← navigate/href → /admin/**
+src/pages/StudentDetail.tsx         ← navigate/href → /admin/**
+src/pages/StudentNew.tsx            ← navigate/href → /admin/**
+src/pages/EmployeeList.tsx          ← navigate/href → /admin/**
+src/pages/EmployeeDetail.tsx        ← navigate/href → /admin/**
+src/pages/ClassList.tsx             ← navigate/href → /admin/**
+src/pages/ClassDetail.tsx           ← navigate/href → /admin/**
+src/pages/AssessmentList.tsx        ← navigate/href → /admin/**
+src/pages/AssessmentDetail.tsx      ← navigate/href → /admin/**
+src/pages/AttendanceCheck.tsx       ← navigate/href → /admin/**
+src/pages/AttendanceStatus.tsx      ← navigate/href → /admin/**
+src/pages/FinancePayments.tsx       ← navigate/href → /admin/**
+src/pages/FinanceRefunds.tsx        ← navigate/href → /admin/**
+src/pages/FinanceUnpaid.tsx         ← navigate/href → /admin/**
+src/pages/FinanceSettlements.tsx    ← navigate/href → /admin/**
+src/pages/FinanceStatistics.tsx     ← navigate/href → /admin/**
+src/pages/NotificationHistory.tsx   ← navigate/href → /admin/**
+src/pages/NotificationTemplates.tsx ← navigate/href → /admin/**
+src/pages/NotificationSettings.tsx  ← navigate/href → /admin/**
+src/pages/NotFound.tsx              ← href → /admin/**
+src/pages/growth/GrowthOverview.tsx     ← navigate/href → /admin/**
+src/pages/growth/EmblemManagement.tsx   ← navigate/href → /admin/**
+src/pages/growth/RivalManagement.tsx    ← navigate/href → /admin/**
+src/pages/settings/AcademyInfoManagement.tsx  ← navigate → /admin/**
+src/pages/settings/PermissionSettings.tsx     ← navigate → /admin/**
+src/pages/settings/PasswordResetManagement.tsx ← navigate → /admin/**
+```
+
+### 역할별 경로 구조
+
+| 역할 | 진입 경로 | 레이아웃 |
+|------|----------|---------|
+| SUPER_ADMIN / DIRECTOR / STAFF | `/admin` → `/admin/students` | AdminLayout (240px 사이드바) |
+| TEACHER | `/teacher` | TeacherLayout (헤더 + Bottom Nav) |
+| STUDENT | `/student` | StudentLayout (헤더 + Bottom Nav) |
+| GUARDIAN | `/parent` | ParentLayout (헤더 + Bottom Nav) |
+
+### 라우트 가드 (RoleRoute.tsx)
+- `RoleRoute`: `allow: AccountType[]` 지정 계정 유형만 접근 허용, 아니면 역할 홈으로 Redirect
+- `RootRedirect`: `/` 접근 시 `ROLE_HOME[accountType]`으로 자동 이동
+- 기존 RBAC (메뉴/버튼 권한 제어)와 완전히 분리
+
+### 구 경로 하위호환 (LegacyRedirects)
+`/students/**`, `/classes/**` 등 기존 경로 → `/admin/**`으로 자동 리다이렉트.
+북마크 또는 링크 공유로 접근한 경우에도 동작.
+
+### 보호자 노출 금지 원칙 준수
+- ParentHome: 라이벌/엠블럼/경쟁 정보 완전 미노출
+- 보호자 Bottom Nav: 홈/출결/수납/알림만 노출 (성장/진열장 없음)
+
+### 빌드 통과 여부
+```bash
+npm install   # ✅ 성공
+npm run build # ✅ 성공
+```
+- ✅ 최종 빌드 통과
+- ⚠️ Vite chunk size 경고 있음 (빌드 실패 아님, 향후 code splitting 검토)

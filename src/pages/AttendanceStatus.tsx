@@ -201,7 +201,7 @@ export default function AttendanceStatusPage() {
             출결 이력 조회 화면입니다. 상태 변경은 출결체크에서 처리합니다.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate('/attendance/check')} className="h-8 text-xs gap-1.5">
+        <Button variant="outline" size="sm" onClick={() => navigate('/admin/attendance/check')} className="h-8 text-xs gap-1.5">
           <CalendarCheck size={12} /> 출결체크로 이동
         </Button>
       </div>
@@ -324,7 +324,7 @@ export default function AttendanceStatusPage() {
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{row.classType}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{row.classTime}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <button onClick={() => navigate(`/students/${row.studentId}?tab=attendance`)} className="text-xs font-medium hover:underline" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                        <button onClick={() => navigate(`/admin/students/${row.studentId}?tab=attendance`)} className="text-xs font-medium hover:underline" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
                           {row.studentName}
                         </button>
                       </td>

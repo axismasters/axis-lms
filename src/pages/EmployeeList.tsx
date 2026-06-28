@@ -98,7 +98,7 @@ export default function EmployeeList() {
   const showNewModal = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1';
   useEffect(() => {
     if (showNewModal && !canCreate) {
-      navigate('/employees');
+      navigate('/admin/employees');
       toast.error('직원 등록 권한이 없습니다.');
     }
   }, [showNewModal, canCreate, navigate]);
@@ -171,7 +171,7 @@ export default function EmployeeList() {
         </div>
         {canCreate && (
           <button
-            onClick={() => navigate('/employees?new=1')}
+            onClick={() => navigate('/admin/employees?new=1')}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-sm font-medium text-white"
             style={{ background: 'oklch(0.511 0.262 276.966)' }}>
             <UserPlus size={14} /> 직원 등록
@@ -263,7 +263,7 @@ export default function EmployeeList() {
                   <td className="px-3 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
                       <button
-                        onClick={() => navigate(`/employees/${emp.id}`)}
+                        onClick={() => navigate(`/admin/employees/${emp.id}`)}
                         className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-slate-50"
                         style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>
                         <ChevronRight size={11} /> 상세
@@ -294,8 +294,8 @@ export default function EmployeeList() {
       {showNewModal && canCreate && (
         <EmployeeFormModal
           mode="create"
-          onClose={() => navigate('/employees')}
-          onSaved={() => { toast.success('직원이 등록되었습니다.'); navigate('/employees'); }}
+          onClose={() => navigate('/admin/employees')}
+          onSaved={() => { toast.success('직원이 등록되었습니다.'); navigate('/admin/employees'); }}
         />
       )}
 

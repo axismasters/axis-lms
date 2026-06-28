@@ -161,7 +161,7 @@ export default function ClassDetail() {
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <BookOpen size={40} style={{ color: 'oklch(0.8 0.01 250)' }} />
           <p style={{ color: 'oklch(0.5 0.015 250)' }}>존재하지 않는 반입니다.</p>
-          <Button variant="outline" onClick={() => navigate('/classes')}>반 목록으로</Button>
+          <Button variant="outline" onClick={() => navigate('/admin/classes')}>반 목록으로</Button>
         </div>
       </AdminLayout>
     );
@@ -218,7 +218,7 @@ export default function ClassDetail() {
     }
     deleteClass(cls.id);
     toast.success(`'${cls.name}' 반이 삭제되었습니다.`);
-    navigate('/classes');
+    navigate('/admin/classes');
   };
 
   // 수강 종료/퇴원 — 완전 삭제가 아니라 Enrollment의 status를 변경하는 방식으로만 처리한다(B/D항목 공통 원칙).
@@ -420,7 +420,7 @@ export default function ClassDetail() {
                                 {stu.name[0]}
                               </div>
                               <button
-                                onClick={() => navigate(`/students/${stu.id}`)}
+                                onClick={() => navigate(`/admin/students/${stu.id}`)}
                                 className="font-medium hover:underline text-left"
                                 style={{ color: 'oklch(0.511 0.262 276.966)' }}
                               >
@@ -448,7 +448,7 @@ export default function ClassDetail() {
                           <td className="px-3 py-2.5">
                             <div className="flex items-center gap-1">
                               <button
-                                onClick={() => navigate(`/students/${stu.id}`)}
+                                onClick={() => navigate(`/admin/students/${stu.id}`)}
                                 className="p-1.5 rounded hover:bg-slate-100 transition-colors"
                                 title="학생 상세로 이동"
                               >

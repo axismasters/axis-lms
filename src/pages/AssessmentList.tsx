@@ -56,7 +56,7 @@ export default function AssessmentList() {
   const closeForm = () => {
     setFormOpen(false);
     const sp = new URLSearchParams(searchStr);
-    if (sp.get('new') === '1') navigate('/scores', { replace: true });
+    if (sp.get('new') === '1') navigate('/admin/scores', { replace: true });
   };
 
   // 강사는 본인 담당 반 대상 시험만 본다(canAccessExam — 학원 전체 대상 시험은 classId가 없어
@@ -214,7 +214,7 @@ export default function AssessmentList() {
                 const subs = getSubmissionsByExam(exam.id);
                 const gradedCnt = subs.filter((s) => s.status === '채점완료' || s.status === '결석').length;
                 return (
-                  <tr key={exam.id} className="axis-table-row border-b cursor-pointer" style={{ borderColor: 'oklch(0.95 0.003 250)' }} onClick={() => navigate(`/scores/${exam.id}`)}>
+                  <tr key={exam.id} className="axis-table-row border-b cursor-pointer" style={{ borderColor: 'oklch(0.95 0.003 250)' }} onClick={() => navigate(`/admin/scores/${exam.id}`)}>
                     <td className="px-4 py-3 font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</td>
                     <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{categoryLabel(exam.categoryId)}</td>
                     <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{exam.subject ?? '-'}</td>

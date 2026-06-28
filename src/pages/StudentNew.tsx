@@ -132,7 +132,7 @@ export default function StudentNew() {
     toast.success(`${name} 학생이 등록되었습니다.`, {
       description: '계정이 자동 생성되었습니다. 로그인: 휴대폰번호 기반',
     });
-    navigate(`/students/${newStudent.id}`);
+    navigate(`/admin/students/${newStudent.id}`);
   };
 
   const hasAnyFamilyMatch = guardians.some(g => g.familyMatch && g.familyMatch.length > 0);
@@ -378,7 +378,7 @@ export default function StudentNew() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/students')}
+              onClick={() => navigate('/admin/students')}
               className="h-9 px-5 text-sm"
             >
               취소

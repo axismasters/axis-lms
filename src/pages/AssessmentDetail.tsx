@@ -120,7 +120,7 @@ export default function AssessmentDetail() {
       {/* 헤더 */}
       <div className="flex items-start justify-between mb-4">
         <div>
-          <button onClick={() => navigate('/scores')} className="flex items-center gap-1 text-xs mb-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <button onClick={() => navigate('/admin/scores')} className="flex items-center gap-1 text-xs mb-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
             <ChevronLeft size={12} /> 성적관리로
           </button>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>{exam.title}</h1>

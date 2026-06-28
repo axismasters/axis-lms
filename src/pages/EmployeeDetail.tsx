@@ -71,7 +71,7 @@ export default function EmployeeDetail() {
       <AdminLayout title="직원 상세" breadcrumbs={[{ label: '직원관리', path: '/employees' }, { label: '직원 상세' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>직원을 찾을 수 없습니다.</p>
-          <button onClick={() => navigate('/employees')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.45 0.2 277)' }}>← 직원 목록</button>
+          <button onClick={() => navigate('/admin/employees')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.45 0.2 277)' }}>← 직원 목록</button>
         </div>
       </AdminLayout>
     );
@@ -131,7 +131,7 @@ export default function EmployeeDetail() {
       { label: '직원 목록', path: '/employees' },
       { label: emp.name },
     ]}>
-      <button onClick={() => navigate('/employees')} className="inline-flex items-center gap-1 text-xs mb-3 hover:underline" style={{ color: 'oklch(0.5 0.015 250)' }}>
+      <button onClick={() => navigate('/admin/employees')} className="inline-flex items-center gap-1 text-xs mb-3 hover:underline" style={{ color: 'oklch(0.5 0.015 250)' }}>
         <ChevronLeft size={13} /> 직원 목록
       </button>
 

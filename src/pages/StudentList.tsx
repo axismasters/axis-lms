@@ -69,7 +69,7 @@ function QuickActions({ studentId, showFinance }: { studentId: string; showFinan
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
 
-  const goto = (query: string) => { setOpen(false); navigate(`/students/${studentId}${query}`); };
+  const goto = (query: string) => { setOpen(false); navigate(`/admin/students/${studentId}${query}`); };
 
   const moreItems: { label: string; query: string }[] = [
     { label: '내신성적 조회', query: '?tab=grades&gradeType=naesin' },
@@ -185,7 +185,7 @@ export default function StudentList() {
           <p className="text-xs mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>학생을 등록하고 관리하세요</p>
         </div>
         {can('student.create') && (
-          <Link href="/students/new">
+          <Link href="/admin/students/new">
             <button className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
               <UserPlus size={15} /> 학생 등록
             </button>
@@ -268,7 +268,7 @@ export default function StudentList() {
                 const guardian = s.guardians[0];
                 const firstName = active.length ? (getClass(active[0].id)?.name ?? active[0].name) : '';
                 return (
-                  <tr key={s.id} className="axis-table-row cursor-pointer" style={{ borderBottom: '1px solid oklch(0.95 0.006 250)' }} onClick={() => navigate(`/students/${s.id}?tab=basic`)}>
+                  <tr key={s.id} className="axis-table-row cursor-pointer" style={{ borderBottom: '1px solid oklch(0.95 0.006 250)' }} onClick={() => navigate(`/admin/students/${s.id}?tab=basic`)}>
                     <td className="px-3 py-2.5 font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{s.name}</td>
                     <td className="px-3 py-2.5 tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{s.phone}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>

@@ -1,7 +1,7 @@
 // AXIS LMS v1.2 - Admin Back Office Layout
 // Design: Structured Authority - Slate-900 sidebar + Slate-50 main area
 // Mobile/App Optimization Readiness v1: 모바일 폭에서 collapsible sidebar 대응
-// 메뉴 노출은 RBAC(AuthContext.can)을 따른다. 시스템설정 하위: 학원정보관리 / 권한설정 / 비밀번호 초기화 관리.
+// Role Separation v1: 모든 관리자 경로 /admin/** 기준으로 업데이트.
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
@@ -26,93 +26,93 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   {
     label: '학생관리',
-    path: '/students',
+    path: '/admin/students',
     icon: <Users size={16} />,
     requires: 'student.view',
     children: [
-      { label: '학생 등록', path: '/students/new', requires: 'student.create' },
-      { label: '학생 목록', path: '/students', requires: 'student.view' },
+      { label: '학생 등록', path: '/admin/students/new', requires: 'student.create' },
+      { label: '학생 목록', path: '/admin/students', requires: 'student.view' },
     ],
   },
   {
     label: '직원관리',
-    path: '/employees',
+    path: '/admin/employees',
     icon: <Briefcase size={16} />,
     requires: 'employee.view',
     children: [
-      { label: '직원 등록', path: '/employees?new=1', requires: 'employee.create' },
-      { label: '직원 목록', path: '/employees', requires: 'employee.view' },
+      { label: '직원 등록', path: '/admin/employees?new=1', requires: 'employee.create' },
+      { label: '직원 목록', path: '/admin/employees', requires: 'employee.view' },
     ],
   },
   {
     label: '반관리',
-    path: '/classes',
+    path: '/admin/classes',
     icon: <BookOpen size={16} />,
     requires: 'class.view',
     children: [
-      { label: '반 등록', path: '/classes?new=1', requires: 'class.create' },
-      { label: '반 목록', path: '/classes', requires: 'class.view' },
+      { label: '반 등록', path: '/admin/classes?new=1', requires: 'class.create' },
+      { label: '반 목록', path: '/admin/classes', requires: 'class.view' },
     ],
   },
   {
     label: '출결관리',
-    path: '/attendance',
+    path: '/admin/attendance',
     icon: <CalendarCheck size={16} />,
     requires: 'attendance.view',
     children: [
-      { label: '출결체크', path: '/attendance/check', requires: 'attendance.check' },
-      { label: '출결현황', path: '/attendance', requires: 'attendance.view' },
+      { label: '출결체크', path: '/admin/attendance/check', requires: 'attendance.check' },
+      { label: '출결현황', path: '/admin/attendance', requires: 'attendance.view' },
     ],
   },
   {
     label: '성적관리',
-    path: '/scores',
+    path: '/admin/scores',
     icon: <BarChart2 size={16} />,
     requires: 'assessment.view',
   },
   {
     label: '재무관리',
-    path: '/finance',
+    path: '/admin/finance',
     icon: <Wallet size={16} />,
     requires: 'finance.view',
     children: [
-      { label: '수납관리', path: '/finance/payments', requires: 'finance.view' },
-      { label: '환불관리', path: '/finance/refunds', requires: 'finance.view' },
-      { label: '미납관리', path: '/finance/unpaid', requires: 'finance.view' },
-      { label: '정산관리', path: '/finance/settlements', requires: 'finance.view' },
-      { label: '통계', path: '/finance/statistics', requires: 'finance.view' },
+      { label: '수납관리', path: '/admin/finance/payments', requires: 'finance.view' },
+      { label: '환불관리', path: '/admin/finance/refunds', requires: 'finance.view' },
+      { label: '미납관리', path: '/admin/finance/unpaid', requires: 'finance.view' },
+      { label: '정산관리', path: '/admin/finance/settlements', requires: 'finance.view' },
+      { label: '통계', path: '/admin/finance/statistics', requires: 'finance.view' },
     ],
   },
   {
     label: '성장관리',
-    path: '/growth',
+    path: '/admin/growth',
     icon: <Trophy size={16} />,
     requiresFn: (_can, accountType) => canAccessGrowth(accountType as import('@/lib/rbac').AccountType),
     children: [
-      { label: '성장현황', path: '/growth/overview' },
-      { label: '엠블럼관리', path: '/growth/emblems' },
-      { label: '라이벌관리', path: '/growth/rivals' },
+      { label: '성장현황', path: '/admin/growth/overview' },
+      { label: '엠블럼관리', path: '/admin/growth/emblems' },
+      { label: '라이벌관리', path: '/admin/growth/rivals' },
     ],
   },
   {
     label: '알림관리',
-    path: '/notifications',
+    path: '/admin/notifications',
     icon: <Bell size={16} />,
     requires: 'notification.view',
     children: [
-      { label: '발송이력', path: '/notifications/history', requires: 'notification.view' },
-      { label: '템플릿관리', path: '/notifications/templates', requires: 'notification.view' },
-      { label: '알림설정', path: '/notifications/settings', requires: 'notification.view' },
+      { label: '발송이력', path: '/admin/notifications/history', requires: 'notification.view' },
+      { label: '템플릿관리', path: '/admin/notifications/templates', requires: 'notification.view' },
+      { label: '알림설정', path: '/admin/notifications/settings', requires: 'notification.view' },
     ],
   },
   {
     label: '시스템설정',
-    path: '/settings',
+    path: '/admin/settings',
     icon: <Settings size={16} />,
     children: [
-      { label: '학원정보관리', path: '/settings/academy', icon: <Building2 size={13} />, requires: 'system.logoUpdate' },
-      { label: '권한설정', path: '/settings/permissions', icon: <ShieldCheck size={13} />, requires: 'system.permissionView' },
-      { label: '비밀번호 초기화 관리', path: '/settings/password-reset', icon: <KeyRound size={13} />, requires: 'system.passwordReset' },
+      { label: '학원정보관리', path: '/admin/settings/academy', icon: <Building2 size={13} />, requires: 'system.logoUpdate' },
+      { label: '권한설정', path: '/admin/settings/permissions', icon: <ShieldCheck size={13} />, requires: 'system.permissionView' },
+      { label: '비밀번호 초기화 관리', path: '/admin/settings/password-reset', icon: <KeyRound size={13} />, requires: 'system.passwordReset' },
     ],
   },
 ];
@@ -128,18 +128,9 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
   const { can, currentUser, loginAs, devUsers } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // 모바일 폭에서 경로 변경 시 사이드바 자동 닫기
+  useEffect(() => { setMobileOpen(false); }, [location]);
   useEffect(() => {
-    setMobileOpen(false);
-  }, [location]);
-
-  // 모바일 오픈 시 body 스크롤 잠금
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
@@ -159,18 +150,17 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
     .filter((x): x is NavItem => x !== null);
 
   const isActive = (path: string) => {
-    if (path === '/students') return location === '/students' || location.startsWith('/students/');
-    if (path === '/employees') return location === '/employees' || location.startsWith('/employees/');
-    if (path === '/classes') return location === '/classes' || location.startsWith('/classes/');
-    if (path === '/attendance') return location === '/attendance' || location.startsWith('/attendance/');
-    if (path === '/settings') return location.startsWith('/settings');
-    if (path === '/growth') return location.startsWith('/growth');
+    if (path === '/admin/students') return location === '/admin/students' || location.startsWith('/admin/students/');
+    if (path === '/admin/employees') return location === '/admin/employees' || location.startsWith('/admin/employees/');
+    if (path === '/admin/classes') return location === '/admin/classes' || location.startsWith('/admin/classes/');
+    if (path === '/admin/attendance') return location === '/admin/attendance' || location.startsWith('/admin/attendance/');
+    if (path === '/admin/settings') return location.startsWith('/admin/settings');
+    if (path === '/admin/growth') return location.startsWith('/admin/growth');
     return location.startsWith(path);
   };
 
   const SidebarContent = () => (
     <>
-      {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'oklch(0.22 0.02 250)', minHeight: 56 }}>
         <div className="flex items-center justify-center rounded-md" style={{ width: 32, height: 32, background: 'oklch(0.511 0.262 276.966)' }}>
           <GraduationCap size={18} color="white" />
@@ -179,7 +169,6 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
           <div className="font-bold text-white text-sm tracking-wide">AXIS LMS</div>
           <div className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>v1.2 관리자</div>
         </div>
-        {/* 모바일: 닫기 버튼 */}
         <button
           className="lg:hidden flex items-center justify-center w-7 h-7 rounded-md transition-colors"
           style={{ color: 'oklch(0.6 0.015 250)' }}
@@ -190,37 +179,22 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
         </button>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 py-3 overflow-y-auto">
         <div className="px-3 mb-2">
-          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'oklch(0.45 0.015 250)' }}>
-            메뉴
-          </span>
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'oklch(0.45 0.015 250)' }}>메뉴</span>
         </div>
         {visibleNav.map((item) => (
           <div key={item.path}>
             <Link href={item.path}>
               <div
-                className={cn(
-                  'flex items-center gap-3 mx-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-150 cursor-pointer',
-                  isActive(item.path) ? 'text-white' : 'hover:text-white'
-                )}
+                className={cn('flex items-center gap-3 mx-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-150 cursor-pointer',
+                  isActive(item.path) ? 'text-white' : 'hover:text-white')}
                 style={{
                   background: isActive(item.path) ? 'oklch(0.511 0.262 276.966)' : 'transparent',
                   color: isActive(item.path) ? 'white' : 'oklch(0.7 0.015 250)',
                 }}
-                onMouseEnter={e => {
-                  if (!isActive(item.path)) {
-                    (e.currentTarget as HTMLElement).style.background = 'oklch(0.2 0.025 250)';
-                    (e.currentTarget as HTMLElement).style.color = 'white';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!isActive(item.path)) {
-                    (e.currentTarget as HTMLElement).style.background = 'transparent';
-                    (e.currentTarget as HTMLElement).style.color = 'oklch(0.7 0.015 250)';
-                  }
-                }}
+                onMouseEnter={e => { if (!isActive(item.path)) { (e.currentTarget as HTMLElement).style.background = 'oklch(0.2 0.025 250)'; (e.currentTarget as HTMLElement).style.color = 'white'; } }}
+                onMouseLeave={e => { if (!isActive(item.path)) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'oklch(0.7 0.015 250)'; } }}
               >
                 <span style={{ opacity: isActive(item.path) ? 1 : 0.7 }}>{item.icon}</span>
                 <span>{item.label}</span>
@@ -232,23 +206,11 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
                   <Link key={child.path} href={child.path}>
                     <div
                       className="flex items-center gap-2 px-3 py-2 rounded-md text-xs transition-all duration-150 cursor-pointer"
-                      style={{
-                        color: location === child.path ? 'white' : 'oklch(0.55 0.015 250)',
-                        background: location === child.path ? 'oklch(0.22 0.025 250)' : 'transparent',
-                      }}
-                      onMouseEnter={e => {
-                        if (location !== child.path) {
-                          (e.currentTarget as HTMLElement).style.color = 'oklch(0.85 0.01 250)';
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (location !== child.path) {
-                          (e.currentTarget as HTMLElement).style.color = 'oklch(0.55 0.015 250)';
-                        }
-                      }}
+                      style={{ color: location === child.path ? 'white' : 'oklch(0.55 0.015 250)', background: location === child.path ? 'oklch(0.22 0.025 250)' : 'transparent' }}
+                      onMouseEnter={e => { if (location !== child.path) { (e.currentTarget as HTMLElement).style.color = 'oklch(0.85 0.01 250)'; } }}
+                      onMouseLeave={e => { if (location !== child.path) { (e.currentTarget as HTMLElement).style.color = 'oklch(0.55 0.015 250)'; } }}
                     >
-                      <ChevronRight size={10} />
-                      {child.label}
+                      <ChevronRight size={10} />{child.label}
                     </div>
                   </Link>
                 ))}
@@ -258,7 +220,6 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
         ))}
       </nav>
 
-      {/* Footer */}
       <div className="px-5 py-4 border-t" style={{ borderColor: 'oklch(0.22 0.02 250)' }}>
         <div className="flex items-center gap-2 mb-2">
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
@@ -269,7 +230,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
             <div className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{POSITION_LABEL[currentUser.position]}</div>
           </div>
         </div>
-        {/* ⚠ DEV/TEST ONLY: 계정 전환 — 운영 배포 시 실제 로그인 세션으로 교체하고 이 셀렉터는 제거할 것. */}
+        {/* ⚠ DEV/TEST ONLY */}
         <label className="flex items-center gap-1.5 mt-1">
           <span className="text-xs px-1.5 py-0.5 rounded font-mono flex-shrink-0" style={{ background: 'oklch(0.7 0.18 80)', color: 'oklch(0.2 0.02 250)' }}>DEV</span>
           <select
@@ -287,49 +248,30 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
 
   return (
     <div className="flex min-h-screen" style={{ fontFamily: "'Pretendard', -apple-system, sans-serif", background: 'oklch(0.984 0.003 247)' }}>
-
-      {/* ── 데스크톱 사이드바 (lg 이상: 항상 노출) ── */}
       <aside className="axis-sidebar flex-col fixed left-0 top-0 h-full z-30 hidden lg:flex" style={{ width: 240 }}>
         <SidebarContent />
       </aside>
 
-      {/* ── 모바일 Overlay (lg 미만: mobileOpen일 때만 표시) ── */}
       {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 lg:hidden"
-          style={{ background: 'oklch(0 0 0 / 0.5)' }}
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
+        <div className="fixed inset-0 z-40 lg:hidden" style={{ background: 'oklch(0 0 0 / 0.5)' }}
+          onClick={() => setMobileOpen(false)} aria-hidden="true" />
       )}
 
-      {/* ── 모바일 사이드바 드로어 (lg 미만) ── */}
       <aside
-        className={cn(
-          'axis-sidebar flex flex-col fixed left-0 top-0 h-full z-50 lg:hidden transition-transform duration-300 ease-in-out',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-        style={{ width: 240 }}
-        aria-hidden={!mobileOpen}
+        className={cn('axis-sidebar flex flex-col fixed left-0 top-0 h-full z-50 lg:hidden transition-transform duration-300 ease-in-out',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full')}
+        style={{ width: 240 }} aria-hidden={!mobileOpen}
       >
         <SidebarContent />
       </aside>
 
-      {/* ── 메인 콘텐츠 ── */}
       <div className="axis-main flex flex-col w-full lg:ml-[240px]">
-        {/* Top Header */}
         <header className="bg-white border-b sticky top-0 z-20 flex items-center justify-between px-4 lg:px-6" style={{ height: 56, borderColor: 'oklch(0.9 0.008 250)' }}>
           <div className="flex items-center gap-3">
-            {/* 모바일 햄버거 버튼 */}
-            <button
-              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md transition-colors hover:bg-slate-100"
-              onClick={() => setMobileOpen(true)}
-              aria-label="메뉴 열기"
-            >
+            <button className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md transition-colors hover:bg-slate-100"
+              onClick={() => setMobileOpen(true)} aria-label="메뉴 열기">
               <Menu size={18} style={{ color: 'oklch(0.4 0.015 250)' }} />
             </button>
-
-            {/* 브레드크럼 / 타이틀 */}
             <div className="flex items-center gap-2 text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>
               {breadcrumbs ? (
                 breadcrumbs.map((b, i) => (
@@ -337,7 +279,8 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
                     {i > 0 && <ChevronRight size={12} />}
                     {b.path ? (
                       <Link href={b.path}>
-                        <span className="hover:text-primary cursor-pointer transition-colors" style={{ color: i === breadcrumbs.length - 1 ? 'oklch(0.2 0.02 250)' : undefined }}>
+                        <span className="hover:text-primary cursor-pointer transition-colors"
+                          style={{ color: i === breadcrumbs.length - 1 ? 'oklch(0.2 0.02 250)' : undefined }}>
                           {b.label}
                         </span>
                       </Link>
@@ -353,7 +296,6 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
               )}
             </div>
           </div>
-
           <div className="flex items-center gap-3">
             <button className="relative p-2 rounded-md transition-colors hover:bg-slate-100">
               <Bell size={16} style={{ color: 'oklch(0.5 0.015 250)' }} />
@@ -363,11 +305,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
             </div>
           </div>
         </header>
-
-        {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-6 page-enter">
-          {children}
-        </main>
+        <main className="flex-1 p-4 lg:p-6 page-enter">{children}</main>
       </div>
     </div>
   );
