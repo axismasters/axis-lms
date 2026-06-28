@@ -23,7 +23,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { useEnrollment } from '@/contexts/EnrollmentContext';
 import EnrollmentFormModal from '@/components/EnrollmentFormModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { isBackOfficeType, canViewStudentGrowth } from '@/lib/rbac';
+import { isBackOfficeType, canViewStudentGrowth, canAwardSP, canAwardEmblem } from '@/lib/rbac';
 import { STATUS_CONFIG, AttendanceStatus } from '@/lib/attendanceData';
 import { ClassRoom } from '@/lib/classData';
 import { Student, StudentStatus, ClassInfo, InternalScore, MockExamScore } from '@/lib/dummyData';
@@ -38,7 +38,7 @@ import { cn } from '@/lib/utils';
 import { useGrowth } from '@/contexts/GrowthContext';
 import {
   TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
-  CATEGORY_LABELS, StudentTier,
+  CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
 } from '@/lib/growthData';
 
 // ════════════════════════════════════════════════════════════
@@ -1205,20 +1205,56 @@ function countAttendance(sessions: { records: { studentId: string; date: string;
 // 성장/진열장 탭 (Growth Showcase Foundation v1)
 // 관리자 Back Office 전용. 보호자 화면 없음.
 // ════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════
+// 성장/진열장 탭 v2 (Growth Showcase v2)
+// SP 이력 + 수동 지급 + IF 힌트 + 진행 중 엠블럼 표시.
+// 관리자 Back Office 전용. 보호자 화면 없음.
+// ════════════════════════════════════════════════════════════
 function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; studentName: string }) {
   const growth = useGrowth();
   const { students } = useStudents();
-  const profile = growth.getProfile(studentId);
+  const { currentUser } = useAuth();
+  const canGrant       = canAwardSP(currentUser.accountType);
+  const canGrantEmblem = canAwardEmblem(currentUser.accountType);
+
+  const [spModal, setSpModal] = useState(false);
+  const [spAmount, setSpAmount] = useState('');
+  const [spReason, setSpReason] = useState('');
+  const [embModal, setEmbModal] = useState(false);
+  const [emblemId, setEmblemId] = useState('');
+
+  const profile        = growth.getProfile(studentId);
   const achievedEmblems = growth.getAchievedEmblems(studentId);
-  const recentEmblems = growth.getRecentEmblems(studentId, 5);
+  const recentEmblems  = growth.getRecentEmblems(studentId, 5);
+  const inProgressEmblems = growth.getStudentEmblems(studentId).filter(se => !se.achieved);
+  const recentSPLogs   = growth.getSPLogs(studentId, 5);
+  const repEmblems     = growth.getRepresentativeEmblems(studentId);
   const { currentRivalProfile, challengersCount, relation } = growth.getRivalInfo(studentId);
-  const repEmblems = (profile?.representativeEmblemIds ?? [])
-    .map(id => growth.getEmblemById(id))
-    .filter((e): e is NonNullable<typeof e> => !!e);
   const rivalStudentName = currentRivalProfile
     ? students.find(s => s.id === currentRivalProfile.studentId)?.name
     : undefined;
   const tier = (profile?.tier ?? 'UNRANKED') as StudentTier;
+  const activeEmblems  = growth.emblems.filter(e => e.active);
+
+  const handleSpSubmit = () => {
+    const amt = parseInt(spAmount);
+    if (isNaN(amt) || amt <= 0) { toast.error('SP는 양수여야 합니다.'); return; }
+    if (!spReason.trim()) { toast.error('지급 사유를 입력하세요.'); return; }
+    const res = growth.addStudentSP(studentId, amt, spReason, 'MANUAL', undefined, currentUser.name);
+    if (res.ok) { toast.success(`SP ${amt} 지급 완료`); setSpModal(false); setSpAmount(''); setSpReason(''); }
+    else toast.error(res.reason ?? '오류');
+  };
+
+  const handleEmblemSubmit = () => {
+    if (!emblemId) { toast.error('엠블럼을 선택하세요.'); return; }
+    const res = growth.awardEmblemMock(studentId, emblemId, 'MANUAL', undefined, currentUser.name);
+    if (res.ok) {
+      const emb = growth.getEmblemById(emblemId);
+      toast.success(`'${emb?.name}' 엠블럼 지급 완료`);
+      setEmbModal(false); setEmblemId('');
+    } else toast.error(res.reason ?? '오류');
+  };
 
   if (!profile) {
     return (
@@ -1236,16 +1272,33 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
 
   return (
     <div className="flex flex-col gap-4">
-      {/* 진열장 헤더 카드 */}
+      {/* 진열장 헤더 */}
       <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, oklch(0.15 0.02 250) 0%, oklch(0.22 0.03 260) 100%)' }}>
         <div className="flex items-start justify-between">
           <div>
             <div className="text-xs font-bold tracking-widest mb-1" style={{ color: '#C9A84C' }}>AXIS 진열장</div>
             <div className="text-xl font-bold text-white mb-2">{profile.nickname}</div>
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold"
-              style={{ background: TIER_COLORS[tier] + '30', color: TIER_COLORS[tier], border: `1px solid ${TIER_COLORS[tier]}60` }}>
-              ⚡ {TIER_LABELS[tier]}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-bold"
+                style={{ background: TIER_COLORS[tier] + '30', color: TIER_COLORS[tier], border: `1px solid ${TIER_COLORS[tier]}60` }}>
+                ⚡ {TIER_LABELS[tier]}
+              </span>
+              {/* 관리자 수동 지급 버튼 */}
+              {canGrant && (
+                <button onClick={() => { setSpModal(true); setSpAmount(''); setSpReason(''); }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold"
+                  style={{ background: '#D1FAE5', color: '#065F46' }}>
+                  <Plus size={11} /> SP 지급
+                </button>
+              )}
+              {canGrantEmblem && (
+                <button onClick={() => { setEmbModal(true); setEmblemId(''); }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold"
+                  style={{ background: '#FEF3C7', color: '#92400E' }}>
+                  <Trophy size={11} /> 엠블럼
+                </button>
+              )}
+            </div>
           </div>
           {/* 대표 엠블럼 3슬롯 */}
           <div className="flex gap-2">
@@ -1254,19 +1307,10 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               const mat = emb ? MATERIAL_BADGE[emb.material] : null;
               return (
                 <div key={i} className="flex flex-col items-center justify-center rounded-lg"
-                  style={{
-                    width: 52, height: 52,
-                    background: mat ? mat.bg : 'oklch(0.22 0.025 250)',
-                    border: `2px solid ${mat ? mat.border : 'oklch(0.3 0.02 250)'}`,
-                  }}
+                  style={{ width: 52, height: 52, background: mat ? mat.bg : 'oklch(0.22 0.025 250)', border: `2px solid ${mat ? mat.border : 'oklch(0.3 0.02 250)'}` }}
                   title={emb?.name}>
                   {emb ? (
-                    <>
-                      <Trophy size={18} style={{ color: mat?.text }} />
-                      <span className="text-xs font-bold mt-0.5" style={{ color: mat?.text, fontSize: 9 }}>
-                        {MATERIAL_LABELS[emb.material]}
-                      </span>
-                    </>
+                    <><Trophy size={18} style={{ color: mat?.text }} /><span style={{ fontSize: 9, color: mat?.text, fontWeight: 700, marginTop: 2 }}>{MATERIAL_LABELS[emb.material]}</span></>
                   ) : <span style={{ color: 'oklch(0.4 0.02 250)', fontSize: 18 }}>?</span>}
                 </div>
               );
@@ -1275,7 +1319,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         </div>
       </div>
 
-      {/* SP / 전적 / 엠블럼 수 카드 */}
+      {/* SP / 전적 / 엠블럼 카드 */}
       <div className="grid grid-cols-4 gap-3">
         {[
           { label: '누적 SP', value: profile.totalSP.toLocaleString(), icon: <Zap size={15} />, color: '#C9A84C' },
@@ -1284,52 +1328,74 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
           { label: '라이벌 전적', value: `${profile.rivalWins}승 ${profile.rivalLosses}패`, icon: <Swords size={15} />, color: '#EF4444' },
         ].map((c, i) => (
           <div key={i} className="axis-card p-3">
-            <div className="flex items-center gap-1.5 mb-1.5" style={{ color: c.color }}>
-              {c.icon}
-              <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{c.label}</span>
-            </div>
+            <div className="flex items-center gap-1.5 mb-1.5" style={{ color: c.color }}>{c.icon}<span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{c.label}</span></div>
             <div className="text-lg font-bold" style={{ color: c.color }}>{c.value}</div>
           </div>
         ))}
       </div>
 
-      {/* 라이벌 정보 */}
+      {/* 라이벌 */}
       <div className="grid grid-cols-2 gap-3">
         <div className="axis-card p-4">
           <div className="flex items-center gap-1.5 mb-3">
             <Swords size={14} style={{ color: '#EF4444' }} />
             <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>현재 라이벌</span>
-            {relation && (
-              <span className="text-xs ml-auto" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                승률 {relation.winRate}% / {relation.streak > 0 ? `${relation.streak}연승` : relation.streak < 0 ? `${Math.abs(relation.streak)}연패` : '—'}
-              </span>
-            )}
+            {relation && <span className="text-xs ml-auto" style={{ color: 'oklch(0.55 0.015 250)' }}>승률 {relation.winRate}%{relation.streak > 0 ? ` / ${relation.streak}연승` : relation.streak < 0 ? ` / ${Math.abs(relation.streak)}연패` : ''}</span>}
           </div>
           {rivalStudentName && currentRivalProfile ? (
             <div>
               <div className="text-base font-bold mb-1" style={{ color: 'oklch(0.18 0.02 250)' }}>{rivalStudentName}</div>
-              <div className="text-xs font-semibold mb-1" style={{ color: TIER_COLORS[currentRivalProfile.tier as StudentTier] }}>
-                {TIER_LABELS[currentRivalProfile.tier as StudentTier]}
-              </div>
-              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                SP {currentRivalProfile.totalSP.toLocaleString()} · 엠블럼 {growth.getAchievedEmblems(currentRivalProfile.studentId).length}개
-              </div>
+              <div className="text-xs font-semibold mb-1" style={{ color: TIER_COLORS[currentRivalProfile.tier as StudentTier] }}>{TIER_LABELS[currentRivalProfile.tier as StudentTier]}</div>
+              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>SP {currentRivalProfile.totalSP.toLocaleString()} · 엠블럼 {growth.getAchievedEmblems(currentRivalProfile.studentId).length}개</div>
             </div>
-          ) : (
-            <p className="text-sm" style={{ color: 'oklch(0.65 0.015 250)' }}>라이벌 없음</p>
-          )}
+          ) : <p className="text-sm" style={{ color: 'oklch(0.65 0.015 250)' }}>라이벌 없음</p>}
         </div>
-
         <div className="axis-card p-4">
           <div className="flex items-center gap-1.5 mb-3">
             <Star size={14} style={{ color: '#F59E0B' }} />
             <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>나를 지정한 학생</span>
           </div>
           <div className="text-2xl font-bold mb-1" style={{ color: '#4F46E5' }}>{challengersCount}명</div>
-          <p className="text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>
-            ※ 누구인지는 학생에게 공개되지 않습니다 (관리자만 조회)
-          </p>
+          <p className="text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>※ 누구인지는 학생에게 공개되지 않습니다</p>
         </div>
+      </div>
+
+      {/* SP 최근 이력 */}
+      <div className="axis-card p-4">
+        <div className="flex items-center gap-1.5 mb-3">
+          <Zap size={14} style={{ color: '#C9A84C' }} />
+          <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>SP 최근 이력</span>
+        </div>
+        {recentSPLogs.length === 0 ? (
+          <p className="text-sm text-center py-3" style={{ color: 'oklch(0.65 0.015 250)' }}>SP 이력 없음</p>
+        ) : (
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr style={{ borderBottom: '1px solid oklch(0.92 0.006 250)' }}>
+                {['일자', 'SP', '사유', '출처', '지급자'].map(h => (
+                  <th key={h} className="text-left pb-1.5 font-semibold" style={{ color: 'oklch(0.4 0.015 250)' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {recentSPLogs.map(log => (
+                <tr key={log.id} style={{ borderBottom: '1px solid oklch(0.96 0.004 250)' }}>
+                  <td className="py-1.5" style={{ color: 'oklch(0.5 0.015 250)' }}>{log.createdAt}</td>
+                  <td className="py-1.5 font-bold" style={{ color: '#059669' }}>+{log.amount}</td>
+                  <td className="py-1.5 max-w-40" style={{ color: 'oklch(0.4 0.015 250)' }}>
+                    <span className="block truncate" title={log.reason}>{log.reason}</span>
+                  </td>
+                  <td className="py-1.5">
+                    <span className="px-1.5 py-0.5 rounded" style={{ background: '#EEF2FF', color: '#4338CA' }}>
+                      {SOURCE_TYPE_LABELS[log.sourceType]}
+                    </span>
+                  </td>
+                  <td className="py-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{log.createdBy}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* 최근 획득 엠블럼 */}
@@ -1352,21 +1418,14 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               return (
                 <div key={se.id} className="flex items-center gap-3 px-3 py-2 rounded-lg"
                   style={{ background: 'oklch(0.97 0.004 250)', border: '1px solid oklch(0.92 0.006 250)' }}>
-                  <div className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
-                    style={{ background: mat.bg, border: `1px solid ${mat.border}` }}>
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: mat.bg, border: `1px solid ${mat.border}` }}>
                     <Trophy size={14} style={{ color: mat.text }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate" style={{ color: 'oklch(0.18 0.02 250)' }}>{emb.name}</div>
-                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                      {CATEGORY_LABELS[emb.category]} · {MATERIAL_LABELS[emb.material]}
-                    </div>
+                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{CATEGORY_LABELS[emb.category]} · {MATERIAL_LABELS[emb.material]}</div>
                   </div>
                   <div className="text-xs flex-shrink-0" style={{ color: 'oklch(0.6 0.015 250)' }}>{se.acquiredAt}</div>
-                  <span className="text-xs px-1.5 py-0.5 rounded font-bold flex-shrink-0"
-                    style={{ background: mat.bg, color: mat.text, border: `1px solid ${mat.border}` }}>
-                    {MATERIAL_LABELS[emb.material]}
-                  </span>
                 </div>
               );
             })}
@@ -1374,11 +1433,97 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         )}
       </div>
 
-      {/* Assessment IF 연동 안내 */}
+      {/* 진행 중 엠블럼 */}
+      {inProgressEmblems.length > 0 && (
+        <div className="axis-card p-4">
+          <div className="flex items-center gap-1.5 mb-3">
+            <Target size={14} style={{ color: '#F59E0B' }} />
+            <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>진행 중 엠블럼</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {inProgressEmblems.map(se => {
+              const emb = growth.getEmblemById(se.emblemId);
+              if (!emb) return null;
+              const pct = Math.min(100, Math.round((se.progressCount / emb.requiredCount) * 100));
+              const mat = MATERIAL_BADGE[emb.material];
+              return (
+                <div key={se.id} className="flex items-center gap-3 px-3 py-2 rounded-lg"
+                  style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+                  <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: mat.bg }}>
+                    <Trophy size={12} style={{ color: mat.text }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>{emb.name}</span>
+                      <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{se.progressCount}/{emb.requiredCount}</span>
+                    </div>
+                    <div className="w-full rounded-full h-1.5" style={{ background: 'oklch(0.9 0.01 80)' }}>
+                      <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: '#F59E0B' }} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* IF 성장 힌트 placeholder */}
       <div className="px-4 py-3 rounded-lg text-xs" style={{ background: '#EEF2FF', border: '1px solid #C7D2FE', color: '#4338CA' }}>
-        <strong>IF 분석 연동 준비 완료</strong> — 성적관리 Assessment Engine v2의 계산 실수 / 개념 부족 / 시간 부족 / 부주의 실수 분석 결과와
-        엠블럼 진행도 자동 연동은 다음 단계(Growth v2)에서 구현됩니다.
+        <strong>📊 IF 성장 힌트</strong> — 성적관리 IF 분석 결과와 엠블럼 진행도 연동이 준비되어 있습니다.
+        계산 실수 개선 → 꼼꼼한 검토자 / 계산 정확도 향상 엠블럼,
+        개념 부족 보완 → 개념 정복자 / 개념 회복 엠블럼,
+        시간 부족 개선 → 시간 마스터 / 시간관리 달인 엠블럼과 연결됩니다.
+        (Growth v3에서 자동화 예정)
       </div>
+
+      {/* SP 수동 지급 모달 */}
+      {spModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
+          <div className="bg-white rounded-xl shadow-2xl w-80 p-6">
+            <h3 className="font-bold text-base mb-1" style={{ color: 'oklch(0.15 0.02 250)' }}>SP 수동 지급</h3>
+            <p className="text-xs mb-4" style={{ color: 'oklch(0.55 0.015 250)' }}>대상: <strong>{studentName}</strong></p>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>SP 금액 *</label>
+                <input type="number" min={1} value={spAmount} onChange={e => setSpAmount(e.target.value)}
+                  placeholder="예: 50" className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor: 'oklch(0.87 0.006 250)' }} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>지급 사유 *</label>
+                <input value={spReason} onChange={e => setSpReason(e.target.value)}
+                  placeholder="예: 성실한 학습 태도" className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor: 'oklch(0.87 0.006 250)' }} />
+              </div>
+            </div>
+            <p className="text-xs mt-2" style={{ color: '#EF4444' }}>※ SP 지급 이력은 삭제되지 않습니다.</p>
+            <div className="flex gap-2 justify-end mt-4">
+              <button onClick={() => setSpModal(false)} className="px-4 py-1.5 text-sm rounded-md border" style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.5 0.015 250)' }}>취소</button>
+              <button onClick={handleSpSubmit} className="px-4 py-1.5 text-sm rounded-md font-semibold" style={{ background: '#059669', color: '#fff' }}>지급</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 엠블럼 수동 지급 모달 */}
+      {embModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
+          <div className="bg-white rounded-xl shadow-2xl w-96 p-6">
+            <h3 className="font-bold text-base mb-1" style={{ color: 'oklch(0.15 0.02 250)' }}>엠블럼 수동 지급</h3>
+            <p className="text-xs mb-4" style={{ color: 'oklch(0.55 0.015 250)' }}>대상: <strong>{studentName}</strong></p>
+            <select value={emblemId} onChange={e => setEmblemId(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 text-sm mb-3" style={{ borderColor: 'oklch(0.87 0.006 250)' }}>
+              <option value="">— 엠블럼 선택 —</option>
+              {activeEmblems.map(e => (
+                <option key={e.id} value={e.id}>[{CATEGORY_LABELS[e.category]}] {e.name} ({MATERIAL_LABELS[e.material]})</option>
+              ))}
+            </select>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setEmbModal(false)} className="px-4 py-1.5 text-sm rounded-md border" style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.5 0.015 250)' }}>취소</button>
+              <button onClick={handleEmblemSubmit} className="px-4 py-1.5 text-sm rounded-md font-semibold" style={{ background: 'oklch(0.15 0.02 250)', color: '#C9A84C' }}>지급</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

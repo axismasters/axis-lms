@@ -331,10 +331,11 @@ export function canViewStudentGrowth(t: AccountType): boolean {
 }
 
 /**
- * SP 수동 지급 — 원장급 이상.
+ * SP 수동 지급 — SUPER_ADMIN / DIRECTOR / STAFF.
+ * TEACHER / STUDENT / GUARDIAN 불가.
  */
 export function canAwardSP(t: AccountType): boolean {
-  return t === 'SUPER_ADMIN' || t === 'DIRECTOR';
+  return t === 'SUPER_ADMIN' || t === 'DIRECTOR' || t === 'STAFF';
 }
 
 /**
