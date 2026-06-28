@@ -19,6 +19,7 @@ import { useFinance } from '@/contexts/FinanceContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useEnrollment } from '@/contexts/EnrollmentContext';
+import { useNotification } from '@/contexts/NotificationContext';
 import FinanceSummaryCards from '@/components/FinanceSummaryCards';
 import {
   Invoice, PaymentMethod, InvoiceStatus,
@@ -32,7 +33,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, Receipt, StickyNote, CreditCard, Info, Eye } from 'lucide-react';
+import { Search, Receipt, StickyNote, CreditCard, Info, Eye, Send } from 'lucide-react';
 
 function thisMonthStr() {
   return currentBillingMonth();
@@ -54,6 +55,7 @@ export default function FinancePayments() {
   const { students } = useStudents();
   const { classes, getClass } = useClasses();
   const { enrollments } = useEnrollment();
+  const { createNotificationFromEvent } = useNotification();
 
   const [filterMonth, setFilterMonth] = useState(thisMonthStr());
   const [filterStudent, setFilterStudent] = useState('');
@@ -140,6 +142,36 @@ export default function FinancePayments() {
     toast.success('영수증이 발급되었습니다.');
   };
 
+  // 청구 안내 발송 — 개별 청구서 1건에 대해 FINANCE_INVOICE_ISSUED mock 알림 이력 생성.
+  // 대량 자동 발송 방지를 위해 버튼 클릭(수동) 방식만 제공한다.
+  // 기존 이력은 삭제하지 않으며 재발송 시 이력이 추가된다.
+  const handleInvoiceNotify = (invoiceId: string) => {
+    const inv = invoices.find(i => i.id === invoiceId);
+    if (!inv) return;
+    const stu = studentMap.get(inv.studentId);
+    const cls = getClass(inv.classId);
+    const guardian = stu?.guardians?.[0];
+    createNotificationFromEvent('FINANCE_INVOICE_ISSUED', {
+      studentId: inv.studentId,
+      studentName: stu?.name,
+      guardianName: guardian?.name,
+      guardianPhone: guardian?.phone,
+      className: cls?.name,
+      relatedEntityType: 'FINANCE',
+      relatedEntityId: invoiceId,
+      requestedBy: currentUser.name,
+      vars: {
+        학생명: stu?.name,
+        보호자명: guardian?.name,
+        청구월: inv.billingMonth,
+        청구금액: inv.finalAmount.toLocaleString(),
+        납부기한: inv.dueDate,
+        반명: cls?.name,
+      },
+    });
+    toast.success(`청구 안내를 발송했습니다. (mock — 실제 카카오/SMS 연동 없음)`);
+  };
+
   return (
     <AdminLayout breadcrumbs={[{ label: '재무관리' }, { label: '수납관리' }]}>
       <div className="mb-5">
@@ -207,7 +239,7 @@ export default function FinancePayments() {
             <table className="w-full text-sm" style={{ minWidth: 1100 }}>
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
-                  {['청구월', '학생명', '반명', '수강상태', '청구금액', '수납금액', '미납금액', '상태', '납부일', '영수증', '관리'].map(h => (
+                  {['청구월', '학생명', '반명', '수강상태', '청구금액', '수납금액', '미납금액', '상태', '납부일', '영수증', '청구 안내', '관리'].map(h => (
                     <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
                   ))}
                 </tr>
@@ -248,6 +280,16 @@ export default function FinancePayments() {
                         ) : (
                           <span style={{ color: 'oklch(0.7 0.01 250)' }}>-</span>
                         )}
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap">
+                        {/* 청구 안내 발송 — FINANCE_INVOICE_ISSUED mock 이력 생성 (1건씩 수동 발송) */}
+                        <button
+                          onClick={() => handleInvoiceNotify(inv.id)}
+                          className="flex items-center gap-1 text-xs hover:underline"
+                          style={{ color: 'oklch(0.55 0.18 145)' }}
+                        >
+                          <Send size={11} /> 발송
+                        </button>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <div className="flex items-center gap-2">

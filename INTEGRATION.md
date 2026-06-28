@@ -339,3 +339,84 @@ StudentProvider > ClassProvider > NotificationProvider > EnrollmentProvider > At
 3. 수동발송 수신자 검색 (StudentContext 연동)
 4. 알림 예약 발송 기능
 5. 실제 카카오 알림톡 API 연동 (외부 계약 후)
+
+---
+
+## [Round] Notification Foundation v3 — Invoice & Assessment Hook (2026-06-28)
+
+### 수정된 파일
+
+| 파일 | 변경 내용 |
+|---|---|
+| `src/pages/FinancePayments.tsx` | useNotification import, "청구 안내 발송" 버튼 추가, handleInvoiceNotify 구현 |
+| `src/contexts/NotificationContext.tsx` | AssessmentPublishedPayload 타입 추가, createAssessmentPublishedNotification helper 구현 |
+| `src/contexts/AssessmentContext.tsx` | useNotification + useStudents import, publishExam에 알림 이력 생성 연결 |
+| `README.md` | v3 기준 갱신 |
+
+---
+
+### 청구서 발행 알림 연결 방식 (FINANCE_INVOICE_ISSUED)
+
+**수동 발송 방식 채택** (자동 대량 발송 방지):
+- 이유: FinanceContext의 청구서 자동생성(useEffect)은 매달 다수의 청구서를 한꺼번에 생성하므로, 자동 알림 연결 시 초기 마운트에서 대량 이력이 생성될 위험이 있음
+- 대신 `FinancePayments.tsx` 테이블의 각 청구서 행에 **"발송" 버튼** 추가
+- 버튼 클릭 시 `createNotificationFromEvent('FINANCE_INVOICE_ISSUED', payload)` 호출
+- 알림설정 `ns-006` (enabled=true, 보호자 ON)이 활성화된 경우에만 이력 생성
+- 기존 이력 삭제 없음 — 재발송 시 이력 추가
+
+---
+
+### 성적 공개 알림 연결 방식 (ASSESSMENT_RESULT_PUBLISHED)
+
+**전용 helper + publishExam 자동 연결**:
+
+1. `NotificationContext.createAssessmentPublishedNotification(payload)` 추가
+   - `AssessmentPublishedPayload` 타입으로 구조화
+   - 기본 정책: 학생 ON, 보호자 OFF (알림설정 ns-012 기준)
+   - payload.sendToStudent/sendToGuardian으로 개별 override 가능
+
+2. `AssessmentContext.publishExam()`에 연결
+   - publishExam 성공 시 응시자 목록을 순회하며 학생별 알림 이력 생성
+   - 학생 정보(이름/보호자)는 useStudents()에서 조회
+   - 반 단위 시험(classId 있음)은 별도 publishExam 액션이 없으므로 알림 생성 없음
+
+---
+
+### 알림설정 최종 기본값 확인 (15개)
+
+| id | eventType | enabled | autoSend | 학생 | 보호자 |
+|---|---|---|---|---|---|
+| ns-001 | ATTENDANCE_ABSENCE | ON | ON | OFF | ON |
+| ns-002 | ATTENDANCE_EARLY_LEAVE | ON | ON | OFF | ON |
+| ns-006 | FINANCE_INVOICE_ISSUED | ON | OFF | OFF | ON |
+| ns-012 | ASSESSMENT_RESULT_PUBLISHED | ON | OFF | **ON** | **OFF** |
+| ns-013 | ATTENDANCE_LATE | **OFF** | OFF | OFF | OFF |
+| ns-014 | ATTENDANCE_MAKEUP | **OFF** | OFF | OFF | OFF |
+| ns-015 | ATTENDANCE_OFFICIAL | **OFF** | OFF | OFF | OFF |
+
+---
+
+### 실제 API 미연동 범위
+
+- 카카오 알림톡: 미연동
+- SMS/LMS: 미연동
+- 결제 링크/PG/카드사: 미연동
+- 청구 데이터 삭제 기능: 없음
+- 발송이력 삭제 기능: 없음
+- 모든 발송 = NotificationMessage status='SENT' mock 이력 생성
+
+---
+
+### TypeScript 검사
+
+- `npx tsc --noEmit`: **Exit 0** ✅
+- 기존 엔진 전체 동작 유지 ✅
+
+---
+
+### 남은 한계
+
+1. **FINANCE_INVOICE_ISSUED 자동화**: 현재 수동 버튼 방식. 향후 "이번 달 미발송 청구서 일괄 안내" 기능 추가 가능.
+2. **반 단위 시험 성적공개 알림**: publishExam이 없는 반 단위 시험은 알림 이력 없음. 채점 완료 시점에 별도 hook 필요.
+3. **수동발송 수신자 검색**: 현재 직접 입력 방식 유지.
+4. **성적 점수 변수**: 현재 성적 공개 알림 템플릿에 점수(score) 변수 없음. 향후 추가 가능.

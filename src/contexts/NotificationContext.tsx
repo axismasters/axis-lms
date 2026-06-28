@@ -56,6 +56,21 @@ export interface NotificationEventPayload {
   requestedBy?: string;
 }
 
+// 성적 공개 알림 전용 페이로드
+export interface AssessmentPublishedPayload {
+  studentId: string;
+  studentName: string;
+  guardianName?: string;
+  guardianPhone?: string;
+  assessmentId: string;
+  assessmentName: string;
+  subject?: string;
+  publishedAt?: string;
+  sendToStudent?: boolean;
+  sendToGuardian?: boolean;
+  requestedBy?: string;
+}
+
 // ────────────────────────────────────────────────────────────
 // Context 타입
 // ────────────────────────────────────────────────────────────
@@ -71,6 +86,9 @@ interface NotificationContextType {
 
   // 이벤트 기반 자동 알림 생성
   createNotificationFromEvent: (eventType: NotificationType, payload: NotificationEventPayload) => void;
+
+  // 성적 공개 알림 전용 helper — Assessment Engine에서 publishExam 시 호출
+  createAssessmentPublishedNotification: (payload: AssessmentPublishedPayload) => void;
 
   // 템플릿
   templates: NotificationTemplate[];
@@ -234,7 +252,92 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     });
   }, [messages, settings, templates]);
 
-  // ── 템플릿 ───────────────────────────────────────────────
+  // ── 성적 공개 알림 전용 helper ──────────────────────────
+  // Assessment Engine의 publishExam()에서 직접 호출.
+  // 기본 정책: 학생 ON, 보호자 OFF (알림설정 ASSESSMENT_RESULT_PUBLISHED 값 우선,
+  //            payload.sendToStudent/sendToGuardian로 개별 override 가능).
+  const createAssessmentPublishedNotification = useCallback((payload: AssessmentPublishedPayload) => {
+    const setting = getNotificationSettingByType(settings, 'ASSESSMENT_RESULT_PUBLISHED');
+    if (!setting || !setting.enabled) return;
+
+    const now = new Date().toISOString();
+    const channel: NotificationChannel = setting.defaultChannel;
+    const by = payload.requestedBy ?? '시스템';
+
+    // payload override 또는 설정 기본값 적용
+    const toStudent = payload.sendToStudent !== undefined ? payload.sendToStudent : setting.sendToStudent;
+    const toGuardian = payload.sendToGuardian !== undefined ? payload.sendToGuardian : setting.sendToGuardian;
+
+    const vars: NotificationVars = {
+      학생명: payload.studentName,
+      보호자명: payload.guardianName,
+      시험명: payload.assessmentName,
+      학원연락처: '02-0000-0000',
+      날짜: (payload.publishedAt ?? now).slice(0, 10),
+    };
+    const tpl = templates.find((t) => t.type === 'ASSESSMENT_RESULT_PUBLISHED' && t.isActive);
+    const baseTitle = tpl ? buildNotificationContent(tpl.title, vars) : '[AXIS] 성적 공개 안내';
+    const baseContent = tpl ? buildNotificationContent(tpl.content, vars) : `${payload.studentName} 학생의 ${payload.assessmentName} 성적이 공개되었습니다.`;
+
+    const newMessages: NotificationMessage[] = [];
+
+    if (toStudent) {
+      newMessages.push({
+        id: '',
+        type: 'ASSESSMENT_RESULT_PUBLISHED',
+        channel,
+        recipientType: 'STUDENT',
+        recipientName: payload.studentName,
+        recipientPhone: '',
+        studentId: payload.studentId,
+        studentName: payload.studentName,
+        relatedEntityType: 'ASSESSMENT',
+        relatedEntityId: payload.assessmentId,
+        title: baseTitle,
+        content: baseContent,
+        status: 'SENT',
+        requestedBy: by,
+        sentAt: now,
+        createdAt: now,
+      });
+    }
+
+    if (toGuardian) {
+      newMessages.push({
+        id: '',
+        type: 'ASSESSMENT_RESULT_PUBLISHED',
+        channel,
+        recipientType: 'GUARDIAN',
+        recipientName: payload.guardianName ?? '보호자',
+        recipientPhone: payload.guardianPhone ?? '',
+        studentId: payload.studentId,
+        studentName: payload.studentName,
+        relatedEntityType: 'ASSESSMENT',
+        relatedEntityId: payload.assessmentId,
+        title: baseTitle,
+        content: baseContent,
+        status: 'SENT',
+        requestedBy: by,
+        sentAt: now,
+        createdAt: now,
+        memo: payload.guardianPhone ? undefined : '보호자 연락처 없음 (mock)',
+      });
+    }
+
+    if (newMessages.length === 0) return;
+
+    setMessages((prev) => {
+      let currentMax = prev.reduce((max, m) => {
+        const n = parseInt(m.id.replace('msg-', ''), 10);
+        return isNaN(n) ? max : Math.max(max, n);
+      }, 0);
+      const withIds = newMessages.map((msg) => ({
+        ...msg,
+        id: `msg-${String(++currentMax).padStart(3, '0')}`,
+      }));
+      return [...withIds, ...prev];
+    });
+  }, [settings, templates]);
   const getDefaultTemplate = useCallback((eventType: NotificationType): NotificationTemplate | undefined => {
     return templates.find((t) => t.type === eventType && t.isDefault && t.isActive);
   }, [templates]);
@@ -312,6 +415,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         resendMockNotification,
         updateMessageMemo,
         createNotificationFromEvent,
+        createAssessmentPublishedNotification,
         templates,
         getDefaultTemplate,
         updateNotificationTemplate,

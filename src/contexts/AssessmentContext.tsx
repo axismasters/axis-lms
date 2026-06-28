@@ -18,6 +18,8 @@ import {
   DUMMY_EXAMS, DUMMY_SUBMISSIONS,
   applyAutoGrading, recalcTotalScore, canPublishExam, isSubmissionGraded, requiresPublishAction,
 } from '@/lib/assessmentData';
+import { useNotification } from '@/contexts/NotificationContext';
+import { useStudents } from '@/contexts/StudentContext';
 
 interface NewExamInput {
   title: string;
@@ -65,6 +67,8 @@ const AssessmentContext = createContext<AssessmentContextType | null>(null);
 export function AssessmentProvider({ children }: { children: ReactNode }) {
   const [exams, setExams] = useState<Exam[]>(DUMMY_EXAMS);
   const [submissions, setSubmissions] = useState<ExamSubmission[]>(DUMMY_SUBMISSIONS);
+  const { createAssessmentPublishedNotification } = useNotification();
+  const { students } = useStudents();
 
   const getExam = useCallback((id: string) => exams.find((e) => e.id === id), [exams]);
   const getSubmissionsByExam = useCallback((examId: string) => submissions.filter((s) => s.examId === examId), [submissions]);
@@ -190,9 +194,29 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
     if (!canPublishExam(subs)) {
       return { ok: false, reason: '미채점 응시자가 있어 공개할 수 없습니다. 모든 응시자의 채점을 완료해주세요.' };
     }
-    setExams((prev) => prev.map((e) => (e.id === examId ? { ...e, publishedBy, publishedAt: new Date().toISOString() } : e)));
+    const now = new Date().toISOString();
+    setExams((prev) => prev.map((e) => (e.id === examId ? { ...e, publishedBy, publishedAt: now } : e)));
+
+    // 성적 공개 알림 이력 생성 — 각 응시자마다 개별 이력 생성
+    // 기본 정책: 학생 ON, 보호자 OFF (NotificationContext 설정 기준)
+    subs.forEach((sub) => {
+      const student = students.find((s) => s.id === sub.studentId);
+      if (!student) return;
+      const guardian = student.guardians?.[0];
+      createAssessmentPublishedNotification({
+        studentId: sub.studentId,
+        studentName: student.name,
+        guardianName: guardian?.name,
+        guardianPhone: guardian?.phone,
+        assessmentId: examId,
+        assessmentName: exam.title,
+        publishedAt: now,
+        requestedBy: publishedBy,
+      });
+    });
+
     return { ok: true };
-  }, [exams, submissions]);
+  }, [exams, submissions, students, createAssessmentPublishedNotification]);
 
   // 정정 처리 — 점수를 직접 덮어쓰지 않고 이전 값/사유/처리자/시각을 이력으로 남긴 뒤 점수를 갱신한다.
   const correctScore = useCallback((
