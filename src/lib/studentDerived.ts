@@ -265,12 +265,15 @@ export function formatWon(n: number): string {
 // ────────────────────────────────────────────────────────────
 // 성적 종류 (성적조회 탭 내부 선택 — 별도 탭 아님)
 // ────────────────────────────────────────────────────────────
-export const GRADE_TYPES = ['전체', '내신성적', '전국연합모의고사', '내신대비모의고사', '수능실전모의고사'] as const;
+export const GRADE_TYPES = ['전체', '내신성적', '전국연합모의고사', '내신대비모의고사', '수능실전모의고사', '기타평가'] as const;
 export type GradeType = (typeof GRADE_TYPES)[number];
 
 /** 빠른조회 deep-link gradeType 파라미터 → 성적 종류 */
 export function gradeTypeFromParam(param: string | null): GradeType {
   if (param === 'naesin') return '내신성적';
   if (param === 'mock') return '전국연합모의고사';
+  if (param === 'mockschool') return '내신대비모의고사';
+  if (param === 'suneung') return '수능실전모의고사';
+  if (param === 'eval') return '기타평가';
   return '전체';
 }

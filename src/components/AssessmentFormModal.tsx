@@ -32,6 +32,10 @@ interface Props {
 
 const QUESTION_TYPES: QuestionType[] = [...AUTO_GRADED_TYPES, ...MANUAL_GRADED_TYPES];
 
+// AXIS 확정 과목 목록 (무제한 확장 가능하도록 배열 구조 사용)
+export const SUBJECT_OPTIONS = ['수학', '국어', '영어', '과학', '사회', '기타'] as const;
+export type SubjectOption = (typeof SUBJECT_OPTIONS)[number];
+
 function emptyQuestion(no: number): ExamQuestionDef {
   return { id: nanoid(8), no, type: '객관식', points: 10, correctAnswer: '' };
 }
@@ -40,6 +44,7 @@ const EMPTY_FORM = {
   title: '',
   categoryId: EXAM_CATEGORIES[0].id,
   classId: '', // '' = 학원 전체 대상
+  subject: '수학' as string,
   examDate: '',
 };
 
@@ -88,7 +93,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy }: Props)
     }
 
     const exam = addExam(
-      { title: form.title.trim(), categoryId: form.categoryId, classId: form.classId || undefined, examDate: form.examDate, questions, createdBy },
+      { title: form.title.trim(), categoryId: form.categoryId, classId: form.classId || undefined, subject: form.subject || undefined, examDate: form.examDate, questions, createdBy },
       targetStudentIds
     );
     toast.success(`"${exam.title}" 시험이 생성되었습니다. (응시 대상 ${targetStudentIds.length}명)`);
@@ -136,15 +141,24 @@ export default function AssessmentFormModal({ open, onClose, createdBy }: Props)
                 </Select>
               </div>
               <div>
-                <Label className="text-xs font-semibold mb-1.5 block">시험일</Label>
-                <input
-                  type="date"
-                  value={form.examDate}
-                  onChange={(e) => setForm((f) => ({ ...f, examDate: e.target.value }))}
-                  className="h-9 w-full px-2 rounded border text-sm"
-                  style={{ borderColor: 'oklch(0.9 0.005 250)' }}
-                />
+                <Label className="text-xs font-semibold mb-1.5 block">과목</Label>
+                <Select value={form.subject} onValueChange={(v) => setForm((f) => ({ ...f, subject: v }))}>
+                  <SelectTrigger className="h-9 text-sm w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SUBJECT_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+            <div>
+              <Label className="text-xs font-semibold mb-1.5 block">시험일</Label>
+              <input
+                type="date"
+                value={form.examDate}
+                onChange={(e) => setForm((f) => ({ ...f, examDate: e.target.value }))}
+                className="h-9 w-full px-2 rounded border text-sm"
+                style={{ borderColor: 'oklch(0.9 0.005 250)' }}
+              />
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">대상 반</Label>

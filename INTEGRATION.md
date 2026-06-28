@@ -540,3 +540,116 @@ StudentProvider > ClassProvider > NotificationProvider > EnrollmentProvider > At
 3. IF 분석 실제 데이터 연동 (오답 유형 분류)
 4. 문항별 풀이 시간 기록 구조 (시간 부족 분석용)
 5. 학생 포털 성적 조회 화면 (별도 단계)
+
+---
+
+## [Round] Assessment Engine v2 — Subject, Class Result, IF Placeholder (2026-06-28)
+
+### 수정된 파일
+
+| 파일 | 변경 내용 |
+|---|---|
+| `src/components/AssessmentFormModal.tsx` | SUBJECT_OPTIONS 상수 추가, form에 subject 필드 추가, 기본정보 탭에 과목 Select 추가, addExam 호출 시 subject 전달 |
+| `src/pages/AssessmentDetail.tsx` | BasicInfoTab에 과목 표시 (`exam.subject ?? '-'`) 추가 |
+| `src/lib/studentDerived.ts` | GRADE_TYPES에 `기타평가` 추가, gradeTypeFromParam에 mockschool/suneung/eval 파라미터 추가 |
+| `src/pages/StudentDetail.tsx` | GradesTab — 기타평가 필터 처리, 성적 반영 기준 안내 배너, IF 동기부여형 문구(만약 계산 실수를 줄였다면 등) 적용 |
+
+---
+
+### 과목 필드 보강 방식
+
+**SUBJECT_OPTIONS** = ['수학', '국어', '영어', '과학', '사회', '기타']
+- AssessmentFormModal 기본정보 탭에 과목 Select 추가
+- form.subject → addExam({ …, subject }) → Exam.subject 저장
+- 시험 목록 컬럼: 과목 표시 (이미 v1에 추가됨)
+- 시험 상세 기본정보 탭: `exam.subject ?? '-'` 표시
+- DUMMY_EXAMS: 이미 v1에서 subject: '수학' 추가됨
+
+---
+
+### 성적조회 필터 기준 (GradeType)
+
+| 필터 | 대상 데이터 |
+|---|---|
+| 전체 | 내신성적 + 모의고사(전체) + 시험관리 결과 전체 |
+| 내신성적 | student.internalScores |
+| 전국연합모의고사 | student.mockExamScores (examCategory='전국연합모의고사') |
+| 내신대비모의고사 | mockExamScores + assessmentResults (categoryId='mock-school') |
+| 수능실전모의고사 | mockExamScores + assessmentResults (categoryId='mock-suneung') |
+| **기타평가** (신규) | assessmentResults (unit-eval / certification / entrance-test) — 대학추천 연결 없음 |
+
+---
+
+### 학원 전체 시험 / 반 단위 시험 반영 기준
+
+**getPublishedResultsForStudent()** (assessmentData.ts)가 단일 진실 공급원:
+
+| 구분 | 반영 조건 |
+|---|---|
+| 학원 전체 시험 | `exam.publishedAt` 있을 때만 (공개 완료) |
+| 반 단위 시험 | 해당 학생의 `totalScore !== undefined` (채점 완료) |
+| 공통 제외 | 결석(`status='결석'`) / 미채점(`totalScore undefined`) |
+
+학생 상세 성적조회 탭 상단에 반영 기준 안내 배너 추가.
+
+---
+
+### IF Placeholder 구조
+
+**위치**: StudentDetail.tsx의 `GradesTab` 내 "성적 상세 보기" Area
+
+| 항목 | 표시 문구 (동기부여형) |
+|---|---|
+| 계산 실수 | 만약 계산 실수를 줄였다면 |
+| 개념 부족 | 만약 이 개념을 확실히 익혔다면 |
+| 시간 부족 | 만약 시간 배분을 조금 더 잘했다면 |
+
+- 각 항목은 카드형 행 UI (배경색 구분)
+- "준비 중" 텍스트로 향후 연동 예정 표시
+- 별도 메뉴/화면 없음 — 성적조회 탭 내부에만 위치
+
+---
+
+### Notification 연동 유지 방식
+
+- 학원 전체 시험 공개 → `AssessmentContext.publishExam()` → `createAssessmentPublishedNotification()` (NotificationContext)
+- 반 단위 시험: 채점 완료 후 자동 성적조회 반영, 별도 알림 트리거 없음 (향후 선택 발송 버튼 추가 가능)
+- 실제 카카오/SMS/LMS API: 없음
+
+---
+
+### 권한 기준 (변경 없음)
+
+| 권한 | 대상 |
+|---|---|
+| assessment.create | SUPER_ADMIN, DIRECTOR |
+| assessment.grade | 위 + TEACHER (본인 반) |
+| assessment.publish | SUPER_ADMIN, DIRECTOR |
+| assessment.view | 위 + STAFF, TEACHER (본인 담당) |
+| assessment.resultCorrect | SUPER_ADMIN, DIRECTOR |
+
+---
+
+### 빌드 통과 여부
+
+- `npx tsc --noEmit`: **Exit 0** ✅
+
+---
+
+### 남은 한계
+
+1. **반 단위 시험 알림 선택 발송**: 채점 완료 후 "성적 알림 발송" 버튼 추가 권장 (현재 없음)
+2. **DUMMY_EXAMS subject**: 이미 v1에서 '수학'으로 설정됨. 신규 생성 시 모달에서 선택 가능
+3. **기타평가 필터**: mockExamScores와 연결되지 않으며 Assessment Engine 결과만 표시
+4. **IF 분석 실제 데이터**: 플레이스홀더 단계. 오답 패턴 분류는 별도 구현 필요
+5. **AssessmentFormModal**: 시험 수정(edit) 기능은 현재 없음. 생성만 가능
+
+---
+
+### 다음 추천 개발 단계
+
+1. 반 단위 시험 채점 완료 시 선택 알림 발송 버튼 (AssessmentDetail 채점현황 탭)
+2. IF 분석 실제 오답 데이터 연동
+3. AssessmentFormModal 수정(edit) 기능
+4. 점수 분포 차트 개선
+5. 학생 포털 성적 조회 (별도 단계)

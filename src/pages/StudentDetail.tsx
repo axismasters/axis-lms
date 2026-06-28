@@ -859,7 +859,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
     return [];
   }, [gradeType, student.mockExamScores]);
 
-  // Assessment Engine(시험관리)에서 이 학생에게 공개(또는 반영) 가능한 결과만 가져온다.
+  // Assessment Engine(시험관리)에서 이 학생에게 공개(또는 채점완료) 가능한 결과만 가져온다.
   // getPublishedResultsForStudent()가 이미 "공개되지 않은 결과는 제외"를 보장하므로 여기서는
   // 카테고리별 자동 분류만 한다 — 단원평가/인증평가/입학테스트는 대학추천 계산과 연결하지 않는다.
   const assessmentResults = useMemo(
@@ -868,6 +868,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
   );
   const mockSchoolResults = useMemo(() => assessmentResults.filter((r) => r.categoryId === 'mock-school'), [assessmentResults]);
   const mockSuneungResults = useMemo(() => assessmentResults.filter((r) => r.categoryId === 'mock-suneung'), [assessmentResults]);
+  // 기타평가: 입학테스트 / 단원평가 / 인증평가 — 대학추천과 연결하지 않음
   const schoolEvalResults = useMemo(
     () => assessmentResults.filter((r) => r.categoryId === 'unit-eval' || r.categoryId === 'certification' || r.categoryId === 'entrance-test'),
     [assessmentResults]
@@ -876,6 +877,12 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
   const univ = getUnivDataStatus(student);
   const us = UNIV_STATUS_STYLE[univ];
   const checklist = getUnivChecklist(student);
+
+  // 현재 표시 중인 평가 결과 목록 (기타평가 필터)
+  const currentEvalResults = useMemo(() => {
+    if (gradeType === '기타평가') return schoolEvalResults;
+    return [];
+  }, [gradeType, schoolEvalResults]);
 
   return (
     <div>
@@ -886,6 +893,16 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
         ))}
       </div>
 
+      {/* 성적 반영 기준 안내 */}
+      <div className="flex items-start gap-2 px-3 py-2 rounded-md mb-3 text-xs" style={{ background: 'oklch(0.97 0.01 250)', color: 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.92 0.01 250)' }}>
+        <Info size={11} className="flex-shrink-0 mt-0.5" />
+        <span>
+          <b>학원 전체 시험</b>은 성적 공개 후 표시됩니다. &nbsp;
+          <b>반 단위 시험</b>은 해당 학생 채점 완료 시 표시됩니다. &nbsp;
+          결석/미채점은 표시되지 않습니다.
+        </span>
+      </div>
+
       {gradeType === '전체' ? (
         <>
           <InternalScores scores={student.internalScores} />
@@ -893,6 +910,10 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
         </>
       ) : gradeType === '내신성적' ? (
         <InternalScores scores={student.internalScores} />
+      ) : gradeType === '기타평가' ? (
+        currentEvalResults.length > 0
+          ? <AssessmentResultList title="기타평가 (단원평가·인증평가·입학테스트)" results={currentEvalResults} note="대학추천 계산에는 사용되지 않습니다." />
+          : <div className="px-3 py-8 text-center text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>채점이 반영된 기타평가 결과가 없습니다.</div>
       ) : (
         <MockScores title={gradeType} scores={mockFiltered} />
       )}
@@ -915,8 +936,20 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
       <Area title="성적 상세 보기" desc="문항 단위 분석은 시험관리 엔진(채점)과 연동됩니다.">
         <div className="grid md:grid-cols-2 gap-3">
           <div>
-            <div className="text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>놓친 점수 IF 분석</div>
-            <div className="flex gap-1.5 flex-wrap">{['계산 실수', '개념 부족', '시간 부족'].map((x) => <span key={x} className="text-xs px-2 py-1 rounded-md" style={{ background: 'oklch(0.97 0.02 250)', color: 'oklch(0.45 0.1 250)' }}>{x}</span>)}</div>
+            <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.45 0.015 250)' }}>IF 만약 분석</div>
+            <div className="space-y-2">
+              {[
+                { key: '계산 실수', label: '만약 계산 실수를 줄였다면', color: 'oklch(0.55 0.18 45)', bg: 'oklch(0.97 0.04 60)' },
+                { key: '개념 부족', label: '만약 이 개념을 확실히 익혔다면', color: 'oklch(0.45 0.12 250)', bg: 'oklch(0.97 0.03 250)' },
+                { key: '시간 부족', label: '만약 시간 배분을 조금 더 잘했다면', color: 'oklch(0.45 0.12 300)', bg: 'oklch(0.97 0.03 300)' },
+              ].map(({ key, label, color, bg }) => (
+                <div key={key} className="flex items-start gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: bg }}>
+                  <span className="font-semibold flex-shrink-0" style={{ color }}>IF</span>
+                  <span style={{ color: 'oklch(0.35 0.015 250)' }}>{label}</span>
+                  <span className="ml-auto text-xs italic" style={{ color: 'oklch(0.65 0.01 250)' }}>준비 중</span>
+                </div>
+              ))}
+            </div>
             <div className="text-xs mt-3 font-semibold mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>취약 단원</div>
             <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>문항별 정오표·취약 단원은 채점 데이터 연동 시 표시됩니다.</p>
           </div>

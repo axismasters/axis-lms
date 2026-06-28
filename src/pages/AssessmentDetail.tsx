@@ -237,6 +237,7 @@ function BasicInfoTab({ exam, className, phase }: { exam: Exam; className?: stri
     <div className="grid grid-cols-2 gap-4">
       <Info2 label="시험명" value={exam.title} />
       <Info2 label="시험 종류" value={categoryLabel(exam.categoryId)} />
+      <Info2 label="과목" value={exam.subject ?? '-'} />
       <Info2 label="대상" value={className ?? '학원 전체'} />
       <Info2 label="시험일" value={exam.examDate} />
       <Info2 label="문항 수" value={`${exam.questions.length}문항`} />
