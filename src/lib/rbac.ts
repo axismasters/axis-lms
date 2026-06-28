@@ -48,6 +48,8 @@ export const PERMISSION_KEYS = [
   'assessment.view', 'assessment.create', 'assessment.grade', 'assessment.publish', 'assessment.resultView', 'assessment.resultCorrect',
   // 재무
   'finance.view', 'finance.paymentCreate', 'finance.refundRequest', 'finance.refundApprove', 'finance.receiptIssue', 'finance.settlementConfirm', 'finance.settingUpdate',
+  // 알림
+  'notification.view', 'notification.send', 'notification.templateManage', 'notification.settingManage',
   // 시스템
   'system.logoUpdate', 'system.permissionView', 'system.permissionUpdate', 'system.passwordReset',
 ] as const;
@@ -164,6 +166,9 @@ const DIRECTOR_PERMS: PermissionKey[] = [
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   'assessment.view', 'assessment.create', 'assessment.grade', 'assessment.publish', 'assessment.resultView', 'assessment.resultCorrect',
   'finance.view', 'finance.paymentCreate', 'finance.refundRequest', 'finance.refundApprove', 'finance.receiptIssue', 'finance.settlementConfirm', 'finance.settingUpdate',
+  // 알림
+  'notification.view', 'notification.send', 'notification.templateManage', 'notification.settingManage',
+  // 시스템
   'system.logoUpdate', 'system.permissionView', 'system.passwordReset',
   // 비포함: system.permissionUpdate (권한 매트릭스 편집은 최고관리자 전용)
 ];
@@ -208,6 +213,8 @@ const STAFF_PERMS: PermissionKey[] = [
   'attendance.view', 'attendance.check', 'attendance.update', 'attendance.viewAll',
   'assessment.view', 'assessment.grade', 'assessment.resultView',
   'finance.view', 'finance.paymentCreate', 'finance.refundRequest', 'finance.receiptIssue',
+  // 알림 — STAFF는 발송이력 조회+수동발송+템플릿 조회 가능. 템플릿 수정/설정 변경은 SUPER_ADMIN/DIRECTOR 전용.
+  'notification.view', 'notification.send',
   'system.passwordReset', 'system.permissionView',
   // 비포함: finance.refundApprove/settlementConfirm/settingUpdate, assessment.create/publish(원칙 4), system.permissionUpdate/logoUpdate
 ];

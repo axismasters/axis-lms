@@ -13,6 +13,7 @@ import { EnrollmentProvider } from "./contexts/EnrollmentContext";
 import { AttendanceProvider } from "./contexts/AttendanceContext";
 import { AssessmentProvider } from "./contexts/AssessmentContext";
 import { FinanceProvider } from "./contexts/FinanceContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import StudentList from "./pages/StudentList";
 import StudentNew from "./pages/StudentNew";
@@ -28,6 +29,9 @@ import FinanceRefunds from "./pages/FinanceRefunds";
 import FinanceUnpaid from "./pages/FinanceUnpaid";
 import FinanceSettlements from "./pages/FinanceSettlements";
 import FinanceStatistics from "./pages/FinanceStatistics";
+import NotificationHistory from "./pages/NotificationHistory";
+import NotificationTemplates from "./pages/NotificationTemplates";
+import NotificationSettingsPage from "./pages/NotificationSettings";
 import AcademyInfoManagement from "./pages/settings/AcademyInfoManagement";
 import PermissionSettings from "./pages/settings/PermissionSettings";
 import PasswordResetManagement from "./pages/settings/PasswordResetManagement";
@@ -129,6 +133,13 @@ function Router() {
         <Route path="/finance/settlements" component={FinanceSettlements} />
         <Route path="/finance/statistics" component={FinanceStatistics} />
 
+        {/* 알림관리 (Notification Foundation v1) — SUPER_ADMIN/DIRECTOR/STAFF만 접근 가능.
+            TEACHER/STUDENT/GUARDIAN은 메뉴 자체가 노출되지 않으며, 각 페이지 내부에서 canAccessNotifications로 추가 가드. */}
+        <Route path="/notifications" component={() => <Redirect to="/notifications/history" />} />
+        <Route path="/notifications/history" component={NotificationHistory} />
+        <Route path="/notifications/templates" component={NotificationTemplates} />
+        <Route path="/notifications/settings" component={NotificationSettingsPage} />
+
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -153,12 +164,14 @@ function App() {
               <AttendanceProvider>
                 <AssessmentProvider>
                   <FinanceProvider>
-                    <AuthBoundary>
-                      <TooltipProvider>
-                        <Toaster position="top-right" richColors />
-                        <Router />
-                      </TooltipProvider>
-                    </AuthBoundary>
+                    <NotificationProvider>
+                      <AuthBoundary>
+                        <TooltipProvider>
+                          <Toaster position="top-right" richColors />
+                          <Router />
+                        </TooltipProvider>
+                      </AuthBoundary>
+                    </NotificationProvider>
                   </FinanceProvider>
                 </AssessmentProvider>
               </AttendanceProvider>

@@ -70,6 +70,17 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
+    label: '알림관리',
+    path: '/notifications',
+    icon: <Bell size={16} />,
+    requires: 'notification.view', // SUPER_ADMIN/DIRECTOR/STAFF만 보유 — TEACHER/STUDENT/GUARDIAN은 메뉴 노출 안 됨
+    children: [
+      { label: '발송이력', path: '/notifications/history', requires: 'notification.view' },
+      { label: '템플릿관리', path: '/notifications/templates', requires: 'notification.view' },
+      { label: '알림설정', path: '/notifications/settings', requires: 'notification.view' },
+    ],
+  },
+  {
     label: '시스템설정',
     path: '/settings',
     icon: <Settings size={16} />,
