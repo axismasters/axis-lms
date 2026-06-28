@@ -43,7 +43,7 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    label: '수업관리',
+    label: '반관리',
     path: '/classes',
     icon: <BookOpen size={16} />,
     requires: 'class.view',
@@ -63,7 +63,7 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    label: '성적 관리',
+    label: '성적관리',
     path: '/scores',
     icon: <BarChart2 size={16} />,
     requires: 'assessment.view',

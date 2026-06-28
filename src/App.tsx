@@ -111,8 +111,8 @@ function Router() {
         <Route path="/employees" component={EmployeeList} />
         <Route path="/employees/:id" component={EmployeeDetail} />
 
-        {/* 수업관리 (반 관리) */}
-        {/* AXIS 확정 구조상 수업관리 메뉴(AdminLayout)의 "반 등록"은 /classes?new=1로 진입한다.
+        {/* 반관리 */}
+        {/* AXIS 확정 구조상 반관리 메뉴(AdminLayout)의 "반 등록"은 /classes?new=1로 진입한다.
             ClassFormModal.tsx 기반 등록 모달이 ClassList.tsx에 이미 있으므로 별도 /classes/new 페이지는
             만들지 않았다. ClassList.tsx가 ?new=1 쿼리를 읽어 진입 시 등록 모달을 자동으로 열고,
             모달을 닫으면 /classes로 URL을 정리한다. 아래 /classes/new 라우트는 옛 경로를 직접
@@ -132,7 +132,7 @@ function Router() {
         <Route path="/settings/password-reset" component={PasswordResetManagement} />
 
         {/* 미구현 플레이스홀더 */}
-        {/* 성적관리 (Assessment Engine) — 메뉴는 "성적 관리" 1개만 유지(하위 메뉴 추가 없음).
+        {/* 성적관리 (Assessment Engine v2) — 메뉴는 "성적관리" 1개만 유지(하위 메뉴 추가 없음).
             시험 등록은 ClassList의 ?new=1 패턴과 동일하게 목록 화면 내 모달로 처리한다. */}
         <Route path="/scores/new" component={() => <Redirect to="/scores?new=1" />} />
         <Route path="/scores" component={AssessmentList} />

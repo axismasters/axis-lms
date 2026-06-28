@@ -1,6 +1,6 @@
 // AXIS LMS v1.2 - 성적관리(Assessment Engine) 시험 목록
 // Design: Structured Authority
-// 메뉴는 "성적 관리" 1개만 유지한다(하위 메뉴 추가 없음). 시험 등록은 ClassList.tsx와 동일하게
+// 메뉴는 "성적관리" 1개만 유지한다(하위 메뉴 추가 없음). 시험 등록은 ClassList.tsx와 동일하게
 // ?new=1 쿼리로 진입 시 모달이 자동으로 열리는 패턴을 따른다.
 
 import { useState, useMemo, useEffect } from 'react';
@@ -104,19 +104,19 @@ export default function AssessmentList() {
   // 직접 URL 접근 보강 — 메뉴는 RBAC로 숨겨지지만, /scores 직접 진입 시에도 assessment.view를 확인한다.
   if (!can('assessment.view')) {
     return (
-      <AdminLayout title="성적 관리" breadcrumbs={[{ label: '성적 관리' }]}>
+      <AdminLayout title="성적관리" breadcrumbs={[{ label: '성적관리' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>성적 관리 조회 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>성적관리 조회 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout title="성적 관리" breadcrumbs={[{ label: '성적 관리' }]}>
+    <AdminLayout title="성적관리" breadcrumbs={[{ label: '성적관리' }]}>
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>성적 관리</h1>
+          <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>성적관리</h1>
           <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
             시험 생성 · 채점 · 결과 공개를 관리합니다.
           </p>

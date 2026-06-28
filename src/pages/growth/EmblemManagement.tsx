@@ -1,4 +1,4 @@
-// AXIS LMS v1.2 - 엠블럼관리 (Growth Showcase Foundation v1)
+// AXIS LMS v1.2 - 엠블럼관리 (Growth Showcase Foundation v2)
 // 삭제 없음 — 비활성 처리만 제공.
 // 엠블럼 추가/수정/활성토글/숨김토글: 원장급 이상(canManageEmblems).
 // 강사/행정: 조회만 가능.

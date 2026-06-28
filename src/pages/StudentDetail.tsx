@@ -1202,7 +1202,7 @@ function countAttendance(sessions: { records: { studentId: string; date: string;
 }
 
 // ════════════════════════════════════════════════════════════
-// 성장/진열장 탭 (Growth Showcase Foundation v1)
+// 성장/진열장 탭 (Growth Showcase Foundation v2)
 // 관리자 Back Office 전용. 보호자 화면 없음.
 // ════════════════════════════════════════════════════════════
 

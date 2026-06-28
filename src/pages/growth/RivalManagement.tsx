@@ -1,4 +1,4 @@
-// AXIS LMS v1.2 - 라이벌관리 (Growth Showcase Foundation v1)
+// AXIS LMS v1.2 - 라이벌관리 (Growth Showcase Foundation v2)
 // 관리자는 전체 연결 관계를 볼 수 있음.
 // 학생에게 누가 자신을 지정했는지 절대 노출하지 않음.
 // 라이벌 이력 삭제 없음 — 관계 종료만 제공.

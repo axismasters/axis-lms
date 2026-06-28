@@ -157,7 +157,7 @@ export default function ClassDetail() {
 
   if (!cls) {
     return (
-      <AdminLayout breadcrumbs={[{ label: '수업관리' }, { label: '반 목록', path: '/classes' }, { label: '반 없음' }]}>
+      <AdminLayout breadcrumbs={[{ label: '반관리' }, { label: '반 목록', path: '/classes' }, { label: '반 없음' }]}>
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <BookOpen size={40} style={{ color: 'oklch(0.8 0.01 250)' }} />
           <p style={{ color: 'oklch(0.5 0.015 250)' }}>존재하지 않는 반입니다.</p>
@@ -171,7 +171,7 @@ export default function ClassDetail() {
   // 최고관리자/원장/행정은 canAccessClass가 항상 true(ALL_ACADEMY)이므로 그대로 전체 반에 접근 가능하다.
   if (!canAccessClass(cls.id)) {
     return (
-      <AdminLayout breadcrumbs={[{ label: '수업관리' }, { label: '반 목록', path: '/classes' }, { label: cls.name }]}>
+      <AdminLayout breadcrumbs={[{ label: '반관리' }, { label: '반 목록', path: '/classes' }, { label: cls.name }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>이 반에 접근할 권한이 없습니다.</p>
         </div>
@@ -266,7 +266,7 @@ export default function ClassDetail() {
 
   return (
     <AdminLayout breadcrumbs={[
-      { label: '수업관리' },
+      { label: '반관리' },
       { label: '반 목록', path: '/classes' },
       { label: cls.name },
     ]}>

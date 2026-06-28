@@ -323,7 +323,7 @@ export function isBackOfficeType(t: AccountType): boolean {
 }
 
 // ────────────────────────────────────────────────────────────
-// Growth 권한 Helper (Growth Showcase Foundation v1)
+// Growth 권한 Helper (Growth Showcase Foundation v2)
 // 학생/보호자 화면 노출 없음. 관리자 Back Office 전용.
 // ────────────────────────────────────────────────────────────
 

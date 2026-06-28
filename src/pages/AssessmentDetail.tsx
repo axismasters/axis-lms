@@ -49,9 +49,9 @@ export default function AssessmentDetail() {
   // assessment.view를 먼저 확인한다. 시험 존재 여부보다 권한 체크를 앞에 둔다.
   if (!can('assessment.view')) {
     return (
-      <AdminLayout title="시험 상세" breadcrumbs={[{ label: '성적 관리', path: '/scores' }, { label: '시험 상세' }]}>
+      <AdminLayout title="시험 상세" breadcrumbs={[{ label: '성적관리', path: '/scores' }, { label: '시험 상세' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>성적 관리 조회 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>성적관리 조회 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -59,7 +59,7 @@ export default function AssessmentDetail() {
 
   if (!exam) {
     return (
-      <AdminLayout title="시험 상세" breadcrumbs={[{ label: '성적 관리', path: '/scores' }, { label: '시험 상세' }]}>
+      <AdminLayout title="시험 상세" breadcrumbs={[{ label: '성적관리', path: '/scores' }, { label: '시험 상세' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>시험을 찾을 수 없습니다.</p>
         </div>
@@ -70,7 +70,7 @@ export default function AssessmentDetail() {
   // 방어적 가드: 강사가 URL을 직접 입력해 본인 범위 밖 시험(학원 전체 대상 등)에 접근하는 경우 차단.
   if (!canAccessExam(exam.id, exam.classId)) {
     return (
-      <AdminLayout title="시험 상세" breadcrumbs={[{ label: '성적 관리', path: '/scores' }, { label: '시험 상세' }]}>
+      <AdminLayout title="시험 상세" breadcrumbs={[{ label: '성적관리', path: '/scores' }, { label: '시험 상세' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>이 시험에 접근할 권한이 없습니다.</p>
         </div>
@@ -116,12 +116,12 @@ export default function AssessmentDetail() {
   ];
 
   return (
-    <AdminLayout breadcrumbs={[{ label: '성적 관리', path: '/scores' }, { label: exam.title }]}>
+    <AdminLayout breadcrumbs={[{ label: '성적관리', path: '/scores' }, { label: exam.title }]}>
       {/* 헤더 */}
       <div className="flex items-start justify-between mb-4">
         <div>
           <button onClick={() => navigate('/scores')} className="flex items-center gap-1 text-xs mb-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-            <ChevronLeft size={12} /> 성적 관리로
+            <ChevronLeft size={12} /> 성적관리로
           </button>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>{exam.title}</h1>
           <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>

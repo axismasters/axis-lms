@@ -166,7 +166,7 @@ export default function ClassList() {
   const levelList = Array.from(new Set(visibleClasses.map(c => c.level)));
 
   return (
-      <AdminLayout breadcrumbs={[{ label: '수업관리' }, { label: '반 목록' }]}>
+      <AdminLayout breadcrumbs={[{ label: '반관리' }, { label: '반 목록' }]}>
       {/* 페이지 헤더 */}
       <div className="flex items-start justify-between mb-5">
         <div>
