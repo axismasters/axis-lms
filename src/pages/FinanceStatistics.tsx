@@ -79,7 +79,8 @@ export default function FinanceStatistics() {
         {monthlyStats.length === 0 ? (
           <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>표시할 데이터가 없습니다.</p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="axis-table-wrap">
+          <table className="w-full text-sm" style={{ minWidth: 600 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
                 {['청구월', '청구액', '수납액', '미납액', '환불액', '청구 비교'].map(h => (
@@ -104,6 +105,7 @@ export default function FinanceStatistics() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

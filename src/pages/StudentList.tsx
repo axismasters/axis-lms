@@ -254,7 +254,7 @@ export default function StudentList() {
       <div className="text-xs mb-2" style={{ color: 'oklch(0.5 0.015 250)' }}>총 <b style={{ color: 'oklch(0.45 0.2 277)' }}>{filtered.length}</b>명</div>
 
       <div className="axis-card overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="axis-table-wrap">
           <table className="w-full text-sm" style={{ minWidth: showFinanceColumn ? 1180 : 1060 }}>
             <thead>
               <tr style={{ background: 'oklch(0.98 0.004 247)', borderBottom: '1px solid oklch(0.9 0.008 250)' }}>

@@ -172,7 +172,7 @@ export default function StudentDetail() {
 
       <SummaryCards student={student} showFinance={showFinance} onJump={setTab} />
 
-      <div className="flex gap-1 mt-5 mb-4 overflow-x-auto" style={{ borderBottom: '1px solid oklch(0.9 0.008 250)' }}>
+      <div className="axis-detail-tabs mt-5 mb-4" style={{ borderBottom: '1px solid oklch(0.9 0.008 250)' }}>
         {TABS.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)} className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors relative" style={{ color: tab === t.key ? 'oklch(0.45 0.2 277)' : 'oklch(0.5 0.015 250)' }}>
             {t.icon}{t.label}
@@ -622,7 +622,7 @@ function EnrollmentTab({ student }: { student: Student }) {
         {active.length === 0 ? (
           <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>수강 중인 반이 없습니다.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="axis-table-wrap">
             <table className="w-full text-sm" style={{ minWidth: 900 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
@@ -783,7 +783,7 @@ function AttendanceTab({ student }: { student: Student }) {
         {records.length === 0 ? (
           <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>출결 기록이 없습니다.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="axis-table-wrap">
             <table className="w-full text-sm" style={{ minWidth: 720 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
@@ -1005,7 +1005,7 @@ function InternalScores({ scores }: { scores: InternalScore[] }) {
       ) : (
         <>
           {latest && <ScoreSummary title={`${latest.year} ${latest.semester} ${latest.examType}`} score={`${latest.rawScore}점`} grade={`${latest.grade}등급`} sub={latest.subject} />}
-          <div className="overflow-x-auto">
+          <div className="axis-table-wrap">
             <table className="w-full text-sm" style={{ minWidth: 620 }}>
               <thead><tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>{['학년도', '학기', '시험', '과목', '원점수', '등급', '비고'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12 }}>{h}</th>)}</tr></thead>
               <tbody>
@@ -1121,7 +1121,7 @@ function FinanceTab({ student }: { student: Student }) {
 
       {f.classBills.length > 0 && (
         <Area title="수강별 청구 내역" desc="수강료·반유형은 반관리(ClassContext) 실제 반 데이터. 일할 계산은 재무관리 엔진에서 등록일/퇴원일 기준으로 처리.">
-          <div className="overflow-x-auto">
+          <div className="axis-table-wrap">
             <table className="w-full text-sm" style={{ minWidth: 680 }}>
               <thead><tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>{['수강반', '반유형', '월 수강료', '일할', '청구액', '납부 상태'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12 }}>{h}</th>)}</tr></thead>
               <tbody>

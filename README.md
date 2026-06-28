@@ -25,7 +25,8 @@
 | 통합 QA | v1 | ✅ 완료 | 라우팅/권한/엔진 연결 검증 |
 | 직원관리 | HR Stabilization v1 | ✅ 완료 | 직원등록/목록/상세/퇴직 처리 |
 | 권한관리 | RBAC Stabilization v1 | ✅ 완료 | 11카테고리 매트릭스/복사/이력/복원 |
-| **Release Checkpoint** | UI Consistency QA v1 | ✅ 완료 | 메뉴명 통일, 오래된 문구 정리, 문서 최신화 |
+| Release Checkpoint | UI Consistency QA v1 | ✅ 완료 | 메뉴명 통일, 오래된 문구 정리 |
+| **Mobile/App Optimization** | **Readiness v1** | ✅ 완료 | **AdminLayout 반응형, 표 모바일 대응, 탭 스크롤** |
 
 ## 관리자 메뉴 구조
 
@@ -48,7 +49,7 @@
 
 /students                  학생 목록
 /students/new              학생 등록
-/students/:id              학생 상세 (탭: 기본정보/보호자·가족/수강이력/출결현황/성적조회/재무상태/성장·진열장/운영메모)
+/students/:id              학생 상세 (탭: 기본정보/보호자·가족/수강이력/출결현황/성적조회/재무상태/성장·진열장)
 
 /employees                 직원 목록
 /employees?new=1           직원 등록 (모달)
@@ -81,6 +82,33 @@
 /settings/permissions      권한설정
 /settings/password-reset   비밀번호 초기화 관리
 ```
+
+## 모바일/앱 최적화 준비 현황 (v1)
+
+> **중요**: 이번 단계는 실제 앱 패키징이 아닙니다. Capacitor/React Native/Flutter 없음.
+
+### 반응형 레이아웃 구조
+- **데스크톱 (lg ≥ 1024px)**: 240px 고정 사이드바 + 메인 콘텐츠 (기존 구조 유지)
+- **모바일 (< 1024px)**: 사이드바 숨김 → 햄버거 버튼(≡) → 슬라이드 드로어 오픈
+- 드로어 열림 시 배경 오버레이 + body 스크롤 잠금
+- 경로 이동 시 드로어 자동 닫힘
+
+### 표 중심 화면 대응
+- 전체 표 래퍼를 `.axis-table-wrap` (overflow-x: auto + touch scroll)으로 통일
+- 대상: StudentList, EmployeeList, ClassList, AttendanceCheck, AttendanceStatus,
+  FinancePayments, FinanceRefunds, FinanceUnpaid, FinanceSettlements, FinanceStatistics,
+  NotificationHistory, NotificationTemplates, AssessmentList, GrowthOverview,
+  EmblemManagement, RivalManagement, PermissionSettings
+
+### 학생 상세 탭 대응
+- `.axis-detail-tabs` 클래스로 가로 스크롤 + 스크롤바 숨김 적용
+- 탭 버튼 flex-shrink: 0 으로 줄바꿈 방지
+
+### 공통 CSS 유틸리티 추가 (index.css)
+- `.axis-table-wrap`: touch-friendly 가로 스크롤
+- `.axis-detail-tabs`: 탭 가로 스크롤 (스크롤바 숨김)
+- `.axis-summary-grid`: 2열→3열→4열→5열 반응형 요약 카드 그리드
+- `.axis-page-header`, `.axis-filter-row`: 모바일 세로 스택 대응
 
 ## 권한 매트릭스 요약
 

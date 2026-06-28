@@ -197,7 +197,7 @@ export default function AssessmentList() {
             조회 조건에 해당하는 시험이 없습니다.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="axis-table-wrap">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>

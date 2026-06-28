@@ -301,7 +301,7 @@ export default function AttendanceStatusPage() {
             조회 조건에 해당하는 출결 이력이 없습니다.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="axis-table-wrap">
             <table className="w-full text-sm" style={{ minWidth: 1180 }}>
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>

@@ -210,7 +210,7 @@ export default function EmployeeList() {
 
       {/* 직원 목록 */}
       <div className="axis-card overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="axis-table-wrap">
           <table className="w-full text-sm" style={{ minWidth: 700 }}>
             <thead>
               <tr style={{ background: 'oklch(0.98 0.004 247)', borderBottom: '1px solid oklch(0.9 0.008 250)' }}>

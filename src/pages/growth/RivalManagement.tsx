@@ -92,7 +92,8 @@ export default function RivalManagement() {
 
       {/* 메인 테이블 */}
       <div className="axis-card overflow-hidden mb-5">
-        <table className="w-full text-sm border-collapse">
+        <div className="axis-table-wrap">
+        <table className="w-full text-sm border-collapse" style={{ minWidth: 800 }}>
           <thead>
             <tr style={{ background: 'oklch(0.97 0.004 250)', borderBottom: '1px solid oklch(0.92 0.006 250)' }}>
               {['학생명', '닉네임', '현재 라이벌', '승', '패', '승률', '연승/연패', '나를 지정', '다음 변경', '관리'].map(h => (
@@ -185,6 +186,7 @@ export default function RivalManagement() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* 전체 라이벌 연결 관계 (관리자 전용 뷰) */}

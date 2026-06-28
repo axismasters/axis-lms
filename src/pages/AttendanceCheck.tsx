@@ -400,7 +400,8 @@ export default function AttendanceCheck() {
 
           {/* 출결 목록 테이블 */}
           <div className="axis-card overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="axis-table-wrap">
+            <table className="w-full text-sm" style={{ minWidth: 720 }}>
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
                   {['#', '학생명', '보호자 연락처', '출결 상태', '사유', '알림', ''].map(h => (
@@ -529,6 +530,7 @@ export default function AttendanceCheck() {
                 })}
               </tbody>
             </table>
+            </div>
 
             {enrolledStudents.length === 0 && (
               <div className="text-center py-10 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>

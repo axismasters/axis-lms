@@ -328,7 +328,7 @@ export default function NotificationTemplates() {
           <div className="px-5 py-3 border-b" style={{ borderColor: 'oklch(0.93 0.01 250)' }}>
             <span className="text-sm font-medium" style={{ color: 'oklch(0.3 0.02 250)' }}>총 {filtered.length}건</span>
           </div>
-          <div className="overflow-x-auto">
+          <div className="axis-table-wrap">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: 'oklch(0.97 0.005 250)' }}>

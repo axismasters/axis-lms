@@ -257,7 +257,8 @@ export default function ClassList() {
             <Button variant="outline" size="sm" onClick={() => setFormModal({ open: true })}>반 개설하기</Button>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="axis-table-wrap">
+          <table className="w-full text-sm" style={{ minWidth: 800 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid oklch(0.92 0.005 250)', background: 'oklch(0.985 0.003 250)' }}>
                 {['반 이름', '과목 / 수준', '담당 강사', '시간표', '정원 현황', '강의실', '상태', '관리'].map(h => (
@@ -383,6 +384,7 @@ export default function ClassList() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

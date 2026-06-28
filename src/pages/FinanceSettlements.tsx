@@ -96,7 +96,8 @@ export default function FinanceSettlements() {
       </div>
 
       <div className="axis-card overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="axis-table-wrap">
+        <table className="w-full text-sm" style={{ minWidth: 700 }}>
           <thead>
             <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
               {['정산월', '청구액', '수납액', '미납액', '환불액', '순매출', '상태', '확정자', '확정일', '관리'].map(h => (
@@ -142,6 +143,7 @@ export default function FinanceSettlements() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       <AlertDialog open={!!confirmTarget} onOpenChange={o => !o && setConfirmTarget(null)}>

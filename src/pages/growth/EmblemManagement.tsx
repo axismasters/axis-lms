@@ -130,7 +130,8 @@ export default function EmblemManagement() {
 
       {/* 테이블 */}
       <div className="axis-card overflow-hidden">
-        <table className="w-full text-sm border-collapse">
+        <div className="axis-table-wrap">
+        <table className="w-full text-sm border-collapse" style={{ minWidth: 700 }}>
           <thead>
             <tr style={{ background: 'oklch(0.97 0.004 250)', borderBottom: '1px solid oklch(0.92 0.006 250)' }}>
               {['엠블럼명', '카테고리', '재질 단계', '획득 조건', '필요 횟수', '숨김', '활성', '관리'].map(h => (
@@ -207,9 +208,8 @@ export default function EmblemManagement() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
-
-      {/* 엠블럼 추가/수정 모달 */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }}>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">

@@ -523,7 +523,7 @@ export default function PermissionSettings() {
             )}
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="axis-table-wrap">
             <table className="w-full text-sm" style={{ minWidth: 680 }}>
               <thead>
                 <tr style={{ background: 'oklch(0.97 0.006 250)', borderBottom: '1px solid oklch(0.9 0.008 250)' }}>

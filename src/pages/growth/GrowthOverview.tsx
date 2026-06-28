@@ -135,7 +135,8 @@ export default function GrowthOverview() {
           {recentLogs.length === 0 ? (
             <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>이력 없음</p>
           ) : (
-            <table className="w-full text-xs border-collapse">
+            <div className="axis-table-wrap">
+            <table className="w-full text-xs border-collapse" style={{ minWidth: 480 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid oklch(0.92 0.006 250)' }}>
                   {['일자', '학생', 'SP', '사유', '출처', '지급자'].map(h => (
@@ -165,13 +166,15 @@ export default function GrowthOverview() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       )}
 
       {/* 학생 목록 테이블 */}
       <div className="axis-card overflow-hidden">
-        <table className="w-full text-sm border-collapse">
+        <div className="axis-table-wrap">
+        <table className="w-full text-sm border-collapse" style={{ minWidth: 680 }}>
           <thead>
             <tr style={{ background: 'oklch(0.97 0.004 250)', borderBottom: '1px solid oklch(0.92 0.006 250)' }}>
               {['학생명', '닉네임', '티어', '누적 SP', '이번 시즌 SP', '대표 엠블럼', '현재 라이벌', '보유 엠블럼', '관리'].map(h => (
@@ -255,6 +258,7 @@ export default function GrowthOverview() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* SP 수동 지급 모달 */}
