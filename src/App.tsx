@@ -50,7 +50,7 @@ function PlaceholderPage({ title }: { title: string }) {
           <span className="text-2xl">🚧</span>
         </div>
         <p className="text-sm font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>{title} 화면은 다음 단계에서 구현됩니다.</p>
-        <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>현재 학생관리 · 수업관리 · 출결관리 엔진이 구현된 상태입니다.</p>
+        <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>현재 학생관리 · 반관리 · 수강등록 · 출결관리 · 재무관리 · 알림관리 · 성적관리 · 성장관리 엔진이 구현된 상태입니다.</p>
       </div>
     </AdminLayout>
   );
@@ -137,15 +137,17 @@ function Router() {
         <Route path="/finance/settlements" component={FinanceSettlements} />
         <Route path="/finance/statistics" component={FinanceStatistics} />
 
-        {/* 알림관리 (Notification Foundation v1) — SUPER_ADMIN/DIRECTOR/STAFF만 접근 가능.
+        {/* 알림관리 (Notification Foundation v3) — SUPER_ADMIN/DIRECTOR/STAFF만 접근 가능.
             TEACHER/STUDENT/GUARDIAN은 메뉴 자체가 노출되지 않으며, 각 페이지 내부에서 canAccessNotifications로 추가 가드. */}
         <Route path="/notifications" component={() => <Redirect to="/notifications/history" />} />
         <Route path="/notifications/history" component={NotificationHistory} />
         <Route path="/notifications/templates" component={NotificationTemplates} />
         <Route path="/notifications/settings" component={NotificationSettingsPage} />
 
-        {/* 성장관리 (Growth Showcase Foundation v1)
-            canAccessGrowth: SUPER_ADMIN / DIRECTOR / STAFF / TEACHER 허용. STUDENT / GUARDIAN 차단.
+        {/* 성장관리 (Growth Showcase Foundation v2)
+            canAccessGrowth: SUPER_ADMIN / DIRECTOR / STAFF만 접근 가능. TEACHER는 성장관리 전체 메뉴 접근 불가.
+            TEACHER는 담당 학생의 StudentDetail 성장/진열장 탭(canViewStudentGrowth)만 조회 가능.
+            STUDENT / GUARDIAN: BackOfficeGate에서 차단.
             엠블럼 정책 관리(canManageEmblems)·라이벌 관리(canManageRivals)는 각 페이지 내부에서 게이트. */}
         <Route path="/growth" component={() => <Redirect to="/growth/overview" />} />
         <Route path="/growth/overview" component={GrowthOverview} />

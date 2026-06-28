@@ -1,4 +1,4 @@
-// AXIS LMS v1.2 - Notification Foundation v1 데이터 구조
+// AXIS LMS v1.2 - Notification Foundation v3 데이터 구조
 // 출결/수강/재무/시험 이벤트에서 발생하는 알림의 타입, mock 데이터, 헬퍼 함수
 //
 // AXIS 확정 원칙:

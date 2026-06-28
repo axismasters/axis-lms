@@ -1,262 +1,223 @@
-# AXIS LMS v1.2 — Growth Showcase v2
+# AXIS LMS v1.2 — Integrated QA & Permission Audit v1
 # INTEGRATION.md
 
-작업 기준: `axis-lms-v1_2-assessment-engine-v2.zip` + Growth Foundation v1 buildfix
-작업명: Growth Showcase v2 — SP & Emblem Event Hooks
-산출물: `axis-lms-v1.2-growth-showcase-v2.zip`
+작업 기준: `axis-lms-v1_2-growth-showcase-v2-buildfix.zip`
+작업명: Integrated QA & Permission Audit v1
+산출물: `axis-lms-v1.2-integrated-qa-v1.zip`
 
 ---
 
-## 수정/추가 파일 목록
+## 이번 QA 작업 내용
 
-### 수정 파일 (4개)
+### 변경된 파일 (5개)
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/lib/growthData.ts` | StudentSPLog 타입 추가, 엠블럼 16→27개로 보강, attendanceHookKey 필드 추가, MOCK_SP_LOGS 추가 |
-| `src/contexts/GrowthContext.tsx` | helper 전면 보강 — SP이력, 진행도, 출결Hook, IF Hook, alias 함수들 |
-| `src/pages/growth/GrowthOverview.tsx` | SP/엠블럼 수동 지급 모달 + SP 이력 패널 추가 |
-| `src/pages/StudentDetail.tsx` | GrowthShowcaseTab v2 — SP이력 + 진행중 엠블럼 + 수동 지급 + IF 힌트 |
+| `src/App.tsx` | PlaceholderPage 구버전 문구 수정, 알림관리 주석 버전 v1→v3 |
+| `src/contexts/StudentContext.tsx` | `deleteStudent` 삭제 금지 정책 경고 주석 + console.warn 추가 |
+| `src/lib/notificationData.ts` | 파일 헤더 버전 v1→v3 |
+| `README.md` | 전체 최신화 (완료 모듈/라우팅/권한표/삭제금지정책) |
+| `INTEGRATION.md` | 전체 최신화 (이 파일) |
+
+### 신규 추가 파일
+
+없음 (QA 안정화 작업 — 새 엔진 추가 없음)
 
 ---
 
-## SP 구조
+## 전체 모듈 상태
 
-```ts
-// StudentGrowthProfile
-totalSP: number;     // 누적 SP (티어 기준)
-seasonSP: number;    // 이번 시즌 SP
+| 모듈 | 버전 | 데이터 계층 | 컨텍스트 | 주요 페이지 |
+|------|------|------------|----------|------------|
+| 학생관리 | — | `lib/dummyData.ts` | `StudentContext` | StudentList, StudentNew, StudentDetail |
+| 반관리 | — | `lib/classData.ts` | `ClassContext` | ClassList, ClassDetail |
+| 수강등록 | Foundation v6 | `lib/enrollmentData.ts` | `EnrollmentContext` | (StudentDetail/ClassDetail 내 탭) |
+| 출결관리 | — | `lib/attendanceData.ts` | `AttendanceContext` | AttendanceCheck, AttendanceStatus |
+| 재무관리 | Foundation v3 | `lib/financeData.ts` | `FinanceContext` | Finance{Payments/Refunds/Unpaid/Settlements/Statistics} |
+| 알림관리 | Foundation v3 | `lib/notificationData.ts` | `NotificationContext` | Notification{History/Templates/Settings} |
+| 성적관리 | Assessment Engine v2 | `lib/assessmentData.ts` | `AssessmentContext` | AssessmentList, AssessmentDetail |
+| 성장관리 | Foundation v2 | `lib/growthData.ts` | `GrowthContext` | growth/{GrowthOverview/EmblemManagement/RivalManagement} |
+| 시스템설정 | — | `lib/rbac.ts` | `AuthContext` | settings/{Academy/Permissions/PasswordReset} |
 
-// 티어 임계값
-WOOD(50) → STONE(150) → BRONZE(350) → IRON(700)
-→ SILVER(1200) → GOLD(2000) → DIAMOND(3500)
+---
+
+## Provider 트리 순서 (확정)
+
+```
+ThemeProvider
+└── StudentProvider
+    └── ClassProvider
+        └── NotificationProvider          ← Finance/Attendance/Assessment 이벤트 수신
+            └── EnrollmentProvider
+                └── AttendanceProvider
+                    └── AssessmentProvider
+                        └── FinanceProvider
+                            └── GrowthProvider
+                                └── AuthBoundary (AuthProvider — useStudents 필요)
+                                    └── Router
 ```
 
 ---
 
-## SP 지급 이력 구조 (수정 2)
+## 엔진 간 연결 구조
 
-```ts
-interface StudentSPLog {
-  id: string;
-  studentId: string;
-  amount: number;               // 양수만 (이번 단계)
-  reason: string;
-  sourceType: GrowthSourceType; // ATTENDANCE|ASSESSMENT|ENROLLMENT|RIVAL|MANUAL
-  sourceId?: string;            // 연동된 출결/시험/엠블럼 ID
-  createdAt: string;
-  createdBy: string;            // 지급 주체 (관리자 이름 or 'SYSTEM')
-}
 ```
+수강등록(EnrollmentContext)
+  ├─→ 출결 대상자 공급 (활성 수강생만 출결 대상)
+  ├─→ 재무 자동 청구서 생성 (등록/종료/퇴원 시)
+  └─→ 알림 이벤트
+      - ENROLLMENT_CREATED
+      - ENROLLMENT_ENDED
+      - ENROLLMENT_WITHDRAWN
 
-- `addStudentSP(studentId, amount, reason, sourceType, sourceId?, createdBy?)` 호출 시 자동 생성
-- 삭제 기능 없음
-- 음수 SP 이번 단계 허용 안 함
+재무(FinanceContext)
+  └─→ 알림 이벤트 (FINANCE_REFUND_REQUESTED / APPROVED / REJECTED / COMPLETED)
 
----
+성적관리(AssessmentContext)
+  ├─→ 알림 이벤트 (ASSESSMENT_RESULT_PUBLISHED — 학원 전체 시험 공개 시)
+  └─→ 성장관리 IF Hook (onIfAnalysisResult) — placeholder 구조 준비 완료, 실제 호출은 다음 단계
 
-## 엠블럼 지급/진행도 구조
+성장관리(GrowthContext)
+  ├─ SP 이력 (StudentSPLog) — 삭제 없음
+  ├─ 엠블럼 (StudentEmblem) — 삭제 없음, 비활성만
+  └─ 라이벌 (RivalRelation) — 삭제 없음, 종료(ended)만
 
-```ts
-// 지급
-awardEmblemMock(studentId, emblemId, sourceType, sourceId?, createdBy?)
-// → achieved=true StudentEmblem 생성 + +50 SP 자동 지급
-
-// 진행도 증가 (미달성 상태)
-updateEmblemProgress(studentId, emblemId, amount)
-// → progressCount 증가, requiredCount 달성 시 별도 awardEmblemMock 호출 가능
-
-// 대표 엠블럼 설정
-setRepresentativeEmblems(studentId, emblemIds) // 최대 3개
+출결관리(AttendanceContext)
+  └─→ 성장관리 Hook (onAttendanceEvent) — placeholder 구조 준비 완료, 실제 호출은 다음 단계
 ```
-
-엠블럼 삭제 없음 — `toggleEmblemActive(emblemId)` 비활성만 제공.
-
----
-
-## 출결 Hook 준비 방식 (수정 4)
-
-```ts
-// GrowthContext
-onAttendanceEvent({
-  studentId,
-  eventType: 'PRESENT' | 'ABSENT' | 'LATE' | 'EARLY_LEAVE' | 'MAKEUP',
-  date,
-  monthlyPerfect?: boolean,     // 월 개근 여부
-  consecutiveMonths?: number,   // 연속 개근 개월 수
-  totalPresentCount?: number,   // 누적 출석 수
-})
-```
-
-- 출석/보강 이벤트에서만 성장 hook 작동
-- 결석/조퇴에 SP 차감 없음 (이번 단계 정책)
-- 월 개근 → 개근왕 엠블럼 progress + +30 SP
-- 연속 개근 → 성실의 증거 엠블럼 progress
-- 누적 출석 → 꾸준한 출석자 엠블럼 progress
-- AttendanceContext에서 `useGrowth().onAttendanceEvent(...)` 형태로 호출 가능 (연동은 다음 단계)
-
----
-
-## 성적/IF Hook 준비 방식 (수정 5)
-
-```ts
-// 채점 완료 후 호출
-onIfAnalysisResult({
-  studentId,
-  examId,
-  ifFlags: {
-    calculationError: boolean,
-    conceptLack: boolean,
-    timeShortage: boolean,
-    carelessMistake: boolean,
-  }
-})
-// → 오류가 없는 항목의 관련 엠블럼 progress 자동 증가
-
-// 수동 기록
-recordIfReflectionMock(studentId, ifKey, improved: boolean)
-// → improved=true 시 관련 엠블럼 progress 증가
-
-// IF key → 연동 엠블럼
-calculationError  → emb-011(꼼꼼한 검토자), emb-024(계산 정확도 향상)
-conceptLack       → emb-007(개념 정복자), emb-025(개념 회복)
-timeShortage      → emb-010(시간 마스터), emb-026(시간관리 달인)
-carelessMistake   → emb-011(꼼꼼한 검토자)
-```
-
-실제 분석 엔진 없음. 문제은행/대학추천/AI 연동 없음.
-
----
-
-## 엠블럼 카테고리별 보강 현황
-
-| 카테고리 | 이전 | 이후 |
-|----------|------|------|
-| LIFE | 3개 | 5개 (+꾸준한 출석자, 과제 완수자) |
-| GROWTH | 3개 | 5개 (+SP 누적 500, SP 누적 2000) |
-| ASSESSMENT | 4개 | 6개 (+단원평가 통과, 성적 공개 후 성장) |
-| RIVAL | 3개 | 4개 (+리벤지 성공) |
-| SKILL | 1개 | 4개 (+계산 정확도 향상, 개념 회복, 시간관리 달인) |
-| SPECIAL | 1개 | 2개 (+시즌 한정: 선구자) |
-| **합계** | **16개** | **26개** |
-
----
-
-## 학생 상세 진열장 반영 방식
-
-탭 접근: `canViewStudentGrowth(accountType)` + 기존 `canAccessStudent(studentId)` 가드 조합
-
-표시 내용 (v2):
-- 닉네임 + 현재 티어 (헤더)
-- 대표 엠블럼 3슬롯
-- SP 수동 지급 버튼 (canAwardSP)
-- 엠블럼 수동 지급 버튼 (canAwardEmblem)
-- 누적 SP / 이번 시즌 SP / 보유 엠블럼 수 / 라이벌 전적
-- 현재 라이벌 요약 (이름, 티어, SP, 엠블럼 수, 승률/연승연패)
-- 나를 지정한 학생 수 (숫자만, 누구인지 미공개)
-- SP 최근 이력 5건 (일자/금액/사유/출처/지급자)
-- 최근 획득 엠블럼 5개
-- 진행 중 엠블럼 + 진행바
-- IF 성장 힌트 placeholder 배너
 
 ---
 
 ## 권한 기준 (확정)
 
-| 기능 | 허용 AccountType |
-|------|----------------|
-| **성장관리 메뉴 접근** (canAccessGrowth) | SUPER_ADMIN, DIRECTOR, STAFF |
-| **학생 성장/진열장 탭** (canViewStudentGrowth) | SUPER_ADMIN, DIRECTOR, STAFF, **TEACHER(담당 학생만)** |
-| **SP/엠블럼 수동 지급** (canAwardSP / canAwardEmblem) | SUPER_ADMIN, DIRECTOR, STAFF |
-| **엠블럼 정책 관리** (canManageEmblems) | SUPER_ADMIN, DIRECTOR |
-| **라이벌 전체 관리/조회** (canManageRivals) | SUPER_ADMIN, DIRECTOR |
-| STUDENT / GUARDIAN | 차단 (BackOfficeGate) |
+### AccountType별 Back Office 접근
 
-TEACHER 접근 범위:
-- `/growth/*` URL 직접 입력 시 차단
-- 담당 학생 StudentDetail 성장/진열장 탭: 조회만 가능 (수동 지급 버튼 미노출)
+| AccountType | Admin Back Office | 비고 |
+|-------------|:-----------------:|------|
+| SUPER_ADMIN | ✅ | 전체 권한 |
+| DIRECTOR | ✅ | system.permissionUpdate 제외 |
+| STAFF | ✅ | 정산확정/환불승인/성적공개/엠블럼정책 제외 |
+| TEACHER | ✅ (제한적) | 재무/알림/성장관리 메뉴 없음, 담당 학생/반만 |
+| STUDENT | ❌ | BackOfficeGate 차단, 향후 포털 |
+| GUARDIAN | ❌ | BackOfficeGate 차단, 향후 포털 |
 
----
+### 기능별 권한 세부
 
-## GrowthContext 주요 helper (v2 전체)
+| 기능 | SUPER_ADMIN | DIRECTOR | STAFF | TEACHER |
+|------|:-----------:|:--------:|:-----:|:-------:|
+| 재무관리 메뉴 접근 | ✅ | ✅ | ✅ | ❌ |
+| 재무 정산 확정 (`finance.settlementConfirm`) | ✅ | ✅ | ❌ | ❌ |
+| 환불 승인 (`finance.refundApprove`) | ✅ | ✅ | ❌ | ❌ |
+| 알림관리 메뉴 접근 | ✅ | ✅ | ✅ | ❌ |
+| 알림 템플릿 관리 (`notification.templateManage`) | ✅ | ✅ | ❌ | ❌ |
+| 성적 공개 (`assessment.publish`) | ✅ | ✅ | ❌ | ❌ |
+| 시험 생성 (`assessment.create`) | ✅ | ✅ | ❌ | ❌ |
+| 성장관리 메뉴 접근 (`canAccessGrowth`) | ✅ | ✅ | ✅ | ❌ |
+| 학생 성장/진열장 탭 (`canViewStudentGrowth`) | ✅ | ✅ | ✅ | ✅ (담당만) |
+| SP/엠블럼 수동 지급 | ✅ | ✅ | ✅ | ❌ |
+| 엠블럼 정책 관리 (`canManageEmblems`) | ✅ | ✅ | ❌ | ❌ |
+| 라이벌 전체 관리 (`canManageRivals`) | ✅ | ✅ | ❌ | ❌ |
+| 권한 매트릭스 편집 (`system.permissionUpdate`) | ✅ | ❌ | ❌ | ❌ |
 
-```ts
-// 프로필
-getProfile(studentId) / getGrowthProfile(studentId)
+### TEACHER 데이터 범위
 
-// 엠블럼
-getStudentEmblems(studentId)
-getAchievedEmblems(studentId)
-getRecentEmblems(studentId, limit?)
-getRepresentativeEmblems(studentId)          // Emblem[] 반환
-setRepresentativeEmblems(studentId, ids[])   // 최대 3개
-
-// SP
-getSPLogs(studentId, limit?)
-addStudentSP(studentId, amount, reason, sourceType, sourceId?, createdBy?)
-
-// 지급
-awardEmblemMock(studentId, emblemId, sourceType, sourceId?, createdBy?)
-updateEmblemProgress(studentId, emblemId, amount)
-
-// 라이벌
-getRivalInfo(studentId) / getRivalSummary(studentId)
-getStudentsTargetingMe(studentId)            // 관리자 전용, 학생 노출 금지
-
-// Hook
-onAttendanceEvent(params)
-onIfAnalysisResult(params)
-recordIfReflectionMock(studentId, ifKey, improved)
-```
+- `dataScope: 'ASSIGNED_CLASSES'`
+- `assignedClassIds`: 배정된 반 목록
+- `assignedStudentIds`: 배정 반 수강생 ∪ 명시 배정 학생 (AuthContext에서 자동 집계)
+- 재무/알림/성장관리 메뉴 미노출 (AdminLayout `requiresFn` / `requires` 체크)
+- 담당 학생 상세 → 성장/진열장 탭 조회 가능 (수동 지급 버튼 미노출)
 
 ---
 
-## 실제 미연동 범위 (다음 단계)
+## 삭제 금지 정책
 
-- AttendanceContext → onAttendanceEvent 실제 호출 연결
-- AssessmentContext → onIfAnalysisResult 실제 호출 연결
-- SP 임계값 기반 엠블럼 자동 지급 (SP 누적 500, 2000)
-- 시즌 리셋 기능
+| 대상 | 구현 방식 | 확인 결과 |
+|------|----------|----------|
+| 수강 이력 | 종료/퇴원 status 변경만 | ✅ delete 함수 없음 |
+| 재무 데이터 (수납/청구서) | 환불/취소 처리만 | ✅ FinanceContext 주석 명시 |
+| 발송이력 | 삭제 기능 없음 | ✅ NotificationContext 삭제 없음 |
+| 엠블럼 | 비활성(`active=false`)/숨김 토글만 | ✅ `toggleEmblemActive` 만 존재 |
+| 라이벌 이력 | 관계 종료(`ended=true`)만 | ✅ 이력 자체 삭제 없음 |
+| SP 지급 이력 | 삭제 기능 없음 | ✅ SPLog append-only |
+| 성적 공개 후 수정 | 공개 후 채점 수정 불가 | ✅ `resultCorrect` 공개완료 이후 차단 |
+| `deleteStudent` | ⚠ 함수 존재하나 UI 미사용 | console.warn 추가, UI 호출 없음 |
 
 ---
 
 ## 빌드 통과 여부
 
-Growth v2 관련 파일(growthData, GrowthContext, GrowthOverview, StudentDetail GrowthTab)
-TypeScript 로직 오류: **0개** (컨테이너 내 확인 완료)
-
-사전 존재 오류 (Growth 작업 전 베이스 파일, 이 작업과 무관):
-- `src/App.tsx(171)` — 기존 오류
-- `src/components/ErrorBoundary.tsx(31)` — 기존 오류
-- `src/pages/ClassList.tsx(219, 233)` — 기존 오류
-
-로컬: `npm install && npm run build`
+| 항목 | 결과 |
+|------|------|
+| `npx tsc --noEmit` | ✅ 오류 0개 |
+| `npm run build` | ✅ 통과 (chunk size 경고 있음, 기능/빌드 실패 아님) |
+| 이전 buildfix 기준 빌드 통과 상태 | ✅ 유지 (신규 코드 없음, 주석/문자열만 수정) |
 
 ---
 
-## 검증 체크리스트
+## 현재 Mock 상태 (실제 연동 미완료)
 
-✅ SUPER_ADMIN/DIRECTOR/STAFF — 성장관리 메뉴 접근 가능
-✅ TEACHER — 성장관리 메뉴 안 보임
-✅ TEACHER — /growth/* 직접 입력 시 차단
-✅ TEACHER — 담당 학생 성장/진열장 탭 조회 가능
-✅ TEACHER — SP/엠블럼 수동 지급 버튼 미노출 (canAwardSP = false)
-✅ SP 지급 시 totalSP / seasonSP / SPLog 반영
-✅ 엠블럼 지급 시 StudentEmblem + +50 SP 자동 지급
-✅ 엠블럼 삭제 없음 (비활성만)
-✅ 라이벌 이력 삭제 없음 (종료만)
-✅ SP 이력 삭제 없음
-✅ 결석/조퇴 SP 차감 없음
-✅ 보호자 화면 없음
-✅ 문제은행/대학추천/AI 기능 없음
-✅ 기존 학생관리/반관리/수강등록/출결/재무/알림/성적 무수정
+| 영역 | Mock 상태 | 실제 연동 시 교체 대상 |
+|------|----------|----------------------|
+| 인증/로그인 | DEV 계정 전환 셀렉터 | 실제 세션 기반 로그인 |
+| 재무 | mock 수납/청구/환불 데이터 | 실제 결제 API |
+| 알림 발송 | mock 발송이력 생성 | 카카오/SMS/LMS API |
+| 성장 → 출결 Hook | `onAttendanceEvent` 구조만 준비 | AttendanceContext 연결 |
+| 성장 → IF Hook | `onIfAnalysisResult` 구조만 준비 | AssessmentContext 연결 |
+| SP 임계값 엠블럼 자동 지급 | 구조 없음 (다음 단계) | GrowthContext 내 trigger 추가 |
 
 ---
 
 ## 다음 추천 개발 단계
 
-1. **Growth v3 — 출결 실제 연동**: AttendanceContext 채점 후 onAttendanceEvent 자동 호출
-2. **Growth v3 — IF 실제 연동**: AssessmentContext publishExam 후 onIfAnalysisResult 자동 호출
-3. **Growth v3 — SP 임계값 엠블럼**: totalSP 500/2000 달성 시 자동 지급
-4. **Growth v3 — 시즌 관리**: 시즌 시작/리셋, 시즌 아카이브
-5. **학생 포털 (별도 단계)**: 나의 진열장 화면 (학생용)
+1. **Growth v3 — 출결 실제 연동**
+   - `AttendanceContext.checkAttendance()` 내에서 `useGrowth().onAttendanceEvent()` 자동 호출
+   - 월 개근, 연속 개근, 누적 출석 엠블럼 자동 진행
+
+2. **Growth v3 — IF 실제 연동**
+   - `AssessmentContext.gradeSubmission()` 완료 후 `onIfAnalysisResult()` 자동 호출
+   - IF 분석 결과 기반 엠블럼 progress 자동 증가
+
+3. **Growth v3 — SP 임계값 엠블럼 자동 지급**
+   - `addStudentSP()` 호출 후 totalSP 500/2000 달성 시 자동 지급 트리거
+
+4. **Growth v4 — 시즌 관리**
+   - 시즌 시작/리셋, seasonSP 초기화, 시즌 아카이브
+
+5. **학생/보호자 포털 (별도 앱)**
+   - `BackOfficeGate`에서 차단 중인 STUDENT/GUARDIAN 계정용 별도 포털
+   - 나의 진열장, 성적 조회, 출결 확인
+
+6. **실제 인증 연동**
+   - DEV 계정 전환 UI 제거, 세션 기반 로그인 구현
+
+---
+
+## QA 체크리스트 (Integrated QA v1 기준)
+
+| 항목 | 결과 |
+|------|------|
+| `tsc --noEmit` 오류 0개 | ✅ |
+| 전체 라우팅 정상 (21개 경로) | ✅ |
+| SUPER_ADMIN 전체 권한 | ✅ |
+| DIRECTOR 정산 확정/성적 공개 가능 | ✅ |
+| STAFF 재무 정산 확정 불가 | ✅ |
+| STAFF 환불 승인 불가 | ✅ |
+| STAFF SP/엠블럼 수동 지급 가능 | ✅ |
+| TEACHER 재무/알림 메뉴 차단 | ✅ |
+| TEACHER 성장관리 전체 메뉴 차단 | ✅ |
+| TEACHER 담당 학생 성장/진열장 탭 조회 가능 | ✅ |
+| TEACHER SP/엠블럼 수동 지급 버튼 미노출 | ✅ |
+| STUDENT/GUARDIAN Admin 접근 차단 | ✅ |
+| 보호자 라이벌/엠블럼 노출 없음 | ✅ |
+| 성적 공개 알림 mock 이력 | ✅ |
+| 재무 환불/미납 알림 mock 이력 | ✅ |
+| SP 지급 이력 삭제 없음 | ✅ |
+| 엠블럼 삭제 없음 | ✅ |
+| 라이벌 이력 삭제 없음 | ✅ |
+| 발송이력 삭제 없음 | ✅ |
+| 성적 공개 후 직접 수정 없음 | ✅ |
+| PlaceholderPage 문구 최신화 | ✅ |
+| notificationData.ts 버전 헤더 최신화 | ✅ |
+| deleteStudent 정책 경고 추가 | ✅ |
+| README 최신화 | ✅ |
+| INTEGRATION.md 최신화 | ✅ |

@@ -14,6 +14,7 @@ interface StudentContextType {
   getStudent: (id: string) => Student | undefined;
   addStudent: (student: Omit<Student, 'id' | 'registeredAt' | 'internalScores' | 'mockExamScores' | 'consultRecords' | 'operationMemos'>) => Student;
   updateStudent: (id: string, updates: Partial<Student>) => void;
+  /** @deprecated 사용 금지 — 삭제 금지 정책(soft-delete만 허용). setStudentStatus('퇴원')를 사용하세요. UI에서 호출하지 않습니다. */
   deleteStudent: (id: string) => void;
   setStudentStatus: (id: string, status: StudentStatus) => void;
   assignClass: (studentId: string, enrollment: ClassInfo) => void;
@@ -56,7 +57,12 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
     setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates } : s)));
   }, []);
 
+  // ⚠ 삭제 금지 정책: 이 함수는 하드 삭제이므로 UI에서 절대 호출하지 않습니다.
+  // 퇴원 처리는 setStudentStatus('퇴원')를 사용하세요.
+  // TODO: 추후 이 함수를 인터페이스에서도 제거 예정.
   const deleteStudent = useCallback((id: string) => {
+    // eslint-disable-next-line no-console
+    console.warn('[AXIS LMS] deleteStudent 호출 감지 — 삭제 금지 정책 위반. studentId:', id);
     setStudents((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
