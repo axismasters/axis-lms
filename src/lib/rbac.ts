@@ -287,3 +287,59 @@ export const DEFAULT_PERMISSIONS: Record<AccountType, PermissionKey[]> = {
 export function isBackOfficeType(t: AccountType): boolean {
   return t === 'SUPER_ADMIN' || t === 'DIRECTOR' || t === 'STAFF';
 }
+
+// ────────────────────────────────────────────────────────────
+// Growth 권한 Helper (Growth Showcase Foundation v1)
+// 학생/보호자 화면 노출 없음. 관리자 Back Office 전용.
+// ────────────────────────────────────────────────────────────
+
+/**
+ * 성장관리 관리자 메뉴 접근 권한.
+ * SUPER_ADMIN / DIRECTOR / STAFF만 허용.
+ * TEACHER는 성장관리 메뉴 전체 접근 불가 (담당 학생 상세 탭은 canViewStudentGrowth 별도 사용).
+ * STUDENT / GUARDIAN: 관리자 메뉴 접근 불가(BackOfficeGate에서 차단).
+ */
+export function canAccessGrowth(t: AccountType): boolean {
+  return t === 'SUPER_ADMIN' || t === 'DIRECTOR' || t === 'STAFF';
+}
+
+/**
+ * 엠블럼 정책 관리(추가·수정·활성토글·숨김토글) — 원장급 이상.
+ * SUPER_ADMIN / DIRECTOR 전용. STAFF·TEACHER는 조회만 가능.
+ */
+export function canManageEmblems(t: AccountType): boolean {
+  return t === 'SUPER_ADMIN' || t === 'DIRECTOR';
+}
+
+/**
+ * 라이벌 전체 관리(승패 mock 추가·관계 종료) — 원장급 이상.
+ * SUPER_ADMIN / DIRECTOR 전용.
+ */
+export function canManageRivals(t: AccountType): boolean {
+  return t === 'SUPER_ADMIN' || t === 'DIRECTOR';
+}
+
+/**
+ * 학생 상세 화면 내 성장/진열장 탭 조회 권한.
+ * SUPER_ADMIN / DIRECTOR / STAFF / TEACHER 허용.
+ * 단, TEACHER는 반드시 canAccessStudent(student.id) 게이트와 함께 사용해야
+ * 담당 학생만 볼 수 있다 (StudentDetail.tsx에서 기존 canAccessStudent 가드 유지).
+ * STUDENT / GUARDIAN: 관리자 메뉴 접근 불가(BackOfficeGate에서 차단).
+ */
+export function canViewStudentGrowth(t: AccountType): boolean {
+  return t === 'SUPER_ADMIN' || t === 'DIRECTOR' || t === 'STAFF' || t === 'TEACHER';
+}
+
+/**
+ * SP 수동 지급 — 원장급 이상.
+ */
+export function canAwardSP(t: AccountType): boolean {
+  return t === 'SUPER_ADMIN' || t === 'DIRECTOR';
+}
+
+/**
+ * 엠블럼 수동 지급 — STAFF 이상.
+ */
+export function canAwardEmblem(t: AccountType): boolean {
+  return t === 'SUPER_ADMIN' || t === 'DIRECTOR' || t === 'STAFF';
+}

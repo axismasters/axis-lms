@@ -5,17 +5,19 @@
 import { Link, useLocation } from 'wouter';
 import {
   Users, BookOpen, BarChart2, Settings, ChevronRight, CalendarCheck,
-  Building2, ShieldCheck, KeyRound, GraduationCap, Bell, Wallet,
+  Building2, ShieldCheck, KeyRound, GraduationCap, Bell, Wallet, Trophy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { PermissionKey, POSITION_LABEL } from '@/lib/rbac';
+import { PermissionKey, POSITION_LABEL, canAccessGrowth, canManageEmblems, canManageRivals } from '@/lib/rbac';
 
 interface NavItem {
   label: string;
   path: string;
   icon: React.ReactNode;
   requires?: PermissionKey; // 최상위 메뉴 노출에 필요한 권한(없으면 항상 노출 — 하위 children이 개별 게이트)
+  /** PermissionKey 기반이 아닌 AccountType 기반 가시성 판단이 필요할 때 사용 */
+  requiresFn?: (can: (k: PermissionKey) => boolean, accountType: string) => boolean;
   children?: { label: string; path: string; icon?: React.ReactNode; requires?: PermissionKey }[];
 }
 
@@ -70,6 +72,18 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
+    label: '성장관리',
+    path: '/growth',
+    icon: <Trophy size={16} />,
+    // PermissionKey가 아닌 AccountType 기반 권한 — canAccessGrowth 사용
+    requiresFn: (_can, accountType) => canAccessGrowth(accountType as import('@/lib/rbac').AccountType),
+    children: [
+      { label: '성장현황', path: '/growth/overview' },
+      { label: '엠블럼관리', path: '/growth/emblems' },
+      { label: '라이벌관리', path: '/growth/rivals' },
+    ],
+  },
+  {
     label: '알림관리',
     path: '/notifications',
     icon: <Bell size={16} />,
@@ -111,7 +125,14 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
   const visibleNav = NAV_ITEMS
     .map((item): NavItem | null => {
       const visibleChildren = item.children?.filter((c) => !c.requires || can(c.requires));
-      const visible = item.children ? (visibleChildren && visibleChildren.length > 0) : (!item.requires || can(item.requires));
+      let visible: boolean;
+      if (item.requiresFn) {
+        visible = item.requiresFn(can, currentUser.accountType);
+      } else if (item.children) {
+        visible = !!(visibleChildren && visibleChildren.length > 0);
+      } else {
+        visible = !item.requires || can(item.requires);
+      }
       return visible ? { ...item, children: visibleChildren } : null;
     })
     .filter((x): x is NavItem => x !== null);
@@ -121,6 +142,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
     if (path === '/classes') return location === '/classes' || location.startsWith('/classes/');
     if (path === '/attendance') return location === '/attendance' || location.startsWith('/attendance/');
     if (path === '/settings') return location.startsWith('/settings');
+    if (path === '/growth') return location.startsWith('/growth');
     return location.startsWith(path);
   };
 

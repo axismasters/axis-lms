@@ -12,6 +12,7 @@ import {
   ChevronLeft, Phone, User, CreditCard, CalendarCheck, BookOpen, BarChart2,
   Users, KeyRound, Power, Plus, ArrowRightLeft, Receipt, Target,
   Bell, CheckCircle2, XCircle, AlertTriangle, Info, Link2, StickyNote, X,
+  Trophy, Zap, Star, Swords, Award,
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { StatusBadge, GradeBadge, formatDate } from '@/components/StatusBadge';
@@ -22,7 +23,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { useEnrollment } from '@/contexts/EnrollmentContext';
 import EnrollmentFormModal from '@/components/EnrollmentFormModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { isBackOfficeType } from '@/lib/rbac';
+import { isBackOfficeType, canViewStudentGrowth } from '@/lib/rbac';
 import { STATUS_CONFIG, AttendanceStatus } from '@/lib/attendanceData';
 import { ClassRoom } from '@/lib/classData';
 import { Student, StudentStatus, ClassInfo, InternalScore, MockExamScore } from '@/lib/dummyData';
@@ -34,6 +35,11 @@ import {
   GRADE_TYPES, GradeType, gradeTypeFromParam,
 } from '@/lib/studentDerived';
 import { cn } from '@/lib/utils';
+import { useGrowth } from '@/contexts/GrowthContext';
+import {
+  TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
+  CATEGORY_LABELS, StudentTier,
+} from '@/lib/growthData';
 
 // ════════════════════════════════════════════════════════════
 // 공통 작은 컴포넌트
@@ -87,7 +93,7 @@ function AttStatusPill({ status }: { status: AttendanceStatus }) {
 // ════════════════════════════════════════════════════════════
 // 메인
 // ════════════════════════════════════════════════════════════
-type TabKey = 'basic' | 'guardian' | 'enrollment' | 'attendance' | 'grades' | 'finance';
+type TabKey = 'basic' | 'guardian' | 'enrollment' | 'attendance' | 'grades' | 'finance' | 'growth';
 
 export default function StudentDetail() {
   const params = useParams<{ id: string }>();
@@ -105,7 +111,7 @@ export default function StudentDetail() {
     const sp = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
     let tab = (sp.get('tab') as TabKey) || 'basic';
     if (tab === 'finance' && !showFinance) tab = 'basic';
-    const valid: TabKey[] = ['basic', 'guardian', 'enrollment', 'attendance', 'grades', 'finance'];
+    const valid: TabKey[] = ['basic', 'guardian', 'enrollment', 'attendance', 'grades', 'finance', 'growth'];
     if (!valid.includes(tab)) tab = 'basic';
     return { tab, gradeType: gradeTypeFromParam(sp.get('gradeType')) };
   }, [showFinance]);
@@ -134,6 +140,9 @@ export default function StudentDetail() {
     );
   }
 
+  const { currentUser: authUser } = useAuth();
+  const showGrowth = canViewStudentGrowth(authUser.accountType);
+
   const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
     { key: 'basic', label: '기본정보', icon: <User size={14} /> },
     { key: 'guardian', label: '보호자·가족', icon: <Users size={14} /> },
@@ -141,6 +150,7 @@ export default function StudentDetail() {
     { key: 'attendance', label: '출결현황', icon: <CalendarCheck size={14} /> },
     { key: 'grades', label: '성적조회', icon: <BarChart2 size={14} /> },
     ...(showFinance ? [{ key: 'finance' as TabKey, label: '재무상태', icon: <CreditCard size={14} /> }] : []),
+    ...(showGrowth ? [{ key: 'growth' as TabKey, label: '성장/진열장', icon: <Trophy size={14} /> }] : []),
   ];
 
   return (
@@ -177,6 +187,7 @@ export default function StudentDetail() {
       {tab === 'attendance' && <AttendanceTab student={student} />}
       {tab === 'grades' && <GradesTab student={student} initialGradeType={initial.gradeType} />}
       {tab === 'finance' && showFinance && <FinanceTab student={student} />}
+      {tab === 'growth' && showGrowth && <GrowthShowcaseTab studentId={student.id} studentName={student.name} />}
     </AdminLayout>
   );
 }
@@ -1188,4 +1199,186 @@ function countAttendance(sessions: { records: { studentId: string; date: string;
   const c = emptyCounts();
   sessions.forEach((sess) => sess.records.forEach((r) => { if (r.studentId === studentId && r.date.startsWith(ym)) c[r.status]++; }));
   return c;
+}
+
+// ════════════════════════════════════════════════════════════
+// 성장/진열장 탭 (Growth Showcase Foundation v1)
+// 관리자 Back Office 전용. 보호자 화면 없음.
+// ════════════════════════════════════════════════════════════
+function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; studentName: string }) {
+  const growth = useGrowth();
+  const { students } = useStudents();
+  const profile = growth.getProfile(studentId);
+  const achievedEmblems = growth.getAchievedEmblems(studentId);
+  const recentEmblems = growth.getRecentEmblems(studentId, 5);
+  const { currentRivalProfile, challengersCount, relation } = growth.getRivalInfo(studentId);
+  const repEmblems = (profile?.representativeEmblemIds ?? [])
+    .map(id => growth.getEmblemById(id))
+    .filter((e): e is NonNullable<typeof e> => !!e);
+  const rivalStudentName = currentRivalProfile
+    ? students.find(s => s.id === currentRivalProfile.studentId)?.name
+    : undefined;
+  const tier = (profile?.tier ?? 'UNRANKED') as StudentTier;
+
+  if (!profile) {
+    return (
+      <div className="axis-card p-12 text-center">
+        <Trophy size={36} style={{ color: 'oklch(0.85 0.01 250)', display: 'block', margin: '0 auto 12px' }} />
+        <p className="text-sm font-medium mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>
+          {studentName} 학생의 성장 프로필이 아직 없습니다.
+        </p>
+        <p className="text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>
+          첫 시험 응시 또는 관리자 수동 등록 후 생성됩니다.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* 진열장 헤더 카드 */}
+      <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, oklch(0.15 0.02 250) 0%, oklch(0.22 0.03 260) 100%)' }}>
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-xs font-bold tracking-widest mb-1" style={{ color: '#C9A84C' }}>AXIS 진열장</div>
+            <div className="text-xl font-bold text-white mb-2">{profile.nickname}</div>
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold"
+              style={{ background: TIER_COLORS[tier] + '30', color: TIER_COLORS[tier], border: `1px solid ${TIER_COLORS[tier]}60` }}>
+              ⚡ {TIER_LABELS[tier]}
+            </span>
+          </div>
+          {/* 대표 엠블럼 3슬롯 */}
+          <div className="flex gap-2">
+            {[0, 1, 2].map(i => {
+              const emb = repEmblems[i];
+              const mat = emb ? MATERIAL_BADGE[emb.material] : null;
+              return (
+                <div key={i} className="flex flex-col items-center justify-center rounded-lg"
+                  style={{
+                    width: 52, height: 52,
+                    background: mat ? mat.bg : 'oklch(0.22 0.025 250)',
+                    border: `2px solid ${mat ? mat.border : 'oklch(0.3 0.02 250)'}`,
+                  }}
+                  title={emb?.name}>
+                  {emb ? (
+                    <>
+                      <Trophy size={18} style={{ color: mat?.text }} />
+                      <span className="text-xs font-bold mt-0.5" style={{ color: mat?.text, fontSize: 9 }}>
+                        {MATERIAL_LABELS[emb.material]}
+                      </span>
+                    </>
+                  ) : <span style={{ color: 'oklch(0.4 0.02 250)', fontSize: 18 }}>?</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* SP / 전적 / 엠블럼 수 카드 */}
+      <div className="grid grid-cols-4 gap-3">
+        {[
+          { label: '누적 SP', value: profile.totalSP.toLocaleString(), icon: <Zap size={15} />, color: '#C9A84C' },
+          { label: '이번 시즌 SP', value: profile.seasonSP.toLocaleString(), icon: <Star size={15} />, color: '#3B82F6' },
+          { label: '보유 엠블럼', value: `${achievedEmblems.length}개`, icon: <Award size={15} />, color: '#8B5CF6' },
+          { label: '라이벌 전적', value: `${profile.rivalWins}승 ${profile.rivalLosses}패`, icon: <Swords size={15} />, color: '#EF4444' },
+        ].map((c, i) => (
+          <div key={i} className="axis-card p-3">
+            <div className="flex items-center gap-1.5 mb-1.5" style={{ color: c.color }}>
+              {c.icon}
+              <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{c.label}</span>
+            </div>
+            <div className="text-lg font-bold" style={{ color: c.color }}>{c.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 라이벌 정보 */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="axis-card p-4">
+          <div className="flex items-center gap-1.5 mb-3">
+            <Swords size={14} style={{ color: '#EF4444' }} />
+            <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>현재 라이벌</span>
+            {relation && (
+              <span className="text-xs ml-auto" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                승률 {relation.winRate}% / {relation.streak > 0 ? `${relation.streak}연승` : relation.streak < 0 ? `${Math.abs(relation.streak)}연패` : '—'}
+              </span>
+            )}
+          </div>
+          {rivalStudentName && currentRivalProfile ? (
+            <div>
+              <div className="text-base font-bold mb-1" style={{ color: 'oklch(0.18 0.02 250)' }}>{rivalStudentName}</div>
+              <div className="text-xs font-semibold mb-1" style={{ color: TIER_COLORS[currentRivalProfile.tier as StudentTier] }}>
+                {TIER_LABELS[currentRivalProfile.tier as StudentTier]}
+              </div>
+              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                SP {currentRivalProfile.totalSP.toLocaleString()} · 엠블럼 {growth.getAchievedEmblems(currentRivalProfile.studentId).length}개
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm" style={{ color: 'oklch(0.65 0.015 250)' }}>라이벌 없음</p>
+          )}
+        </div>
+
+        <div className="axis-card p-4">
+          <div className="flex items-center gap-1.5 mb-3">
+            <Star size={14} style={{ color: '#F59E0B' }} />
+            <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>나를 지정한 학생</span>
+          </div>
+          <div className="text-2xl font-bold mb-1" style={{ color: '#4F46E5' }}>{challengersCount}명</div>
+          <p className="text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>
+            ※ 누구인지는 학생에게 공개되지 않습니다 (관리자만 조회)
+          </p>
+        </div>
+      </div>
+
+      {/* 최근 획득 엠블럼 */}
+      <div className="axis-card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5">
+            <Award size={14} style={{ color: '#C9A84C' }} />
+            <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>최근 획득 엠블럼</span>
+          </div>
+          <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>전체 {achievedEmblems.length}개</span>
+        </div>
+        {recentEmblems.length === 0 ? (
+          <p className="text-sm text-center py-4" style={{ color: 'oklch(0.65 0.015 250)' }}>획득한 엠블럼이 없습니다.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {recentEmblems.map(se => {
+              const emb = growth.getEmblemById(se.emblemId);
+              if (!emb) return null;
+              const mat = MATERIAL_BADGE[emb.material];
+              return (
+                <div key={se.id} className="flex items-center gap-3 px-3 py-2 rounded-lg"
+                  style={{ background: 'oklch(0.97 0.004 250)', border: '1px solid oklch(0.92 0.006 250)' }}>
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
+                    style={{ background: mat.bg, border: `1px solid ${mat.border}` }}>
+                    <Trophy size={14} style={{ color: mat.text }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate" style={{ color: 'oklch(0.18 0.02 250)' }}>{emb.name}</div>
+                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                      {CATEGORY_LABELS[emb.category]} · {MATERIAL_LABELS[emb.material]}
+                    </div>
+                  </div>
+                  <div className="text-xs flex-shrink-0" style={{ color: 'oklch(0.6 0.015 250)' }}>{se.acquiredAt}</div>
+                  <span className="text-xs px-1.5 py-0.5 rounded font-bold flex-shrink-0"
+                    style={{ background: mat.bg, color: mat.text, border: `1px solid ${mat.border}` }}>
+                    {MATERIAL_LABELS[emb.material]}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Assessment IF 연동 안내 */}
+      <div className="px-4 py-3 rounded-lg text-xs" style={{ background: '#EEF2FF', border: '1px solid #C7D2FE', color: '#4338CA' }}>
+        <strong>IF 분석 연동 준비 완료</strong> — 성적관리 Assessment Engine v2의 계산 실수 / 개념 부족 / 시간 부족 / 부주의 실수 분석 결과와
+        엠블럼 진행도 자동 연동은 다음 단계(Growth v2)에서 구현됩니다.
+      </div>
+    </div>
+  );
 }

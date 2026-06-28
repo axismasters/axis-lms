@@ -15,6 +15,7 @@ import { AssessmentProvider } from "./contexts/AssessmentContext";
 import { FinanceProvider } from "./contexts/FinanceContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { GrowthProvider } from "./contexts/GrowthContext";
 import StudentList from "./pages/StudentList";
 import StudentNew from "./pages/StudentNew";
 import StudentDetail from "./pages/StudentDetail";
@@ -35,6 +36,9 @@ import NotificationSettingsPage from "./pages/NotificationSettings";
 import AcademyInfoManagement from "./pages/settings/AcademyInfoManagement";
 import PermissionSettings from "./pages/settings/PermissionSettings";
 import PasswordResetManagement from "./pages/settings/PasswordResetManagement";
+import GrowthOverview from "./pages/growth/GrowthOverview";
+import EmblemManagement from "./pages/growth/EmblemManagement";
+import RivalManagement from "./pages/growth/RivalManagement";
 import AdminLayout from "./components/AdminLayout";
 
 // 미구현 페이지 플레이스홀더
@@ -140,6 +144,14 @@ function Router() {
         <Route path="/notifications/templates" component={NotificationTemplates} />
         <Route path="/notifications/settings" component={NotificationSettingsPage} />
 
+        {/* 성장관리 (Growth Showcase Foundation v1)
+            canAccessGrowth: SUPER_ADMIN / DIRECTOR / STAFF / TEACHER 허용. STUDENT / GUARDIAN 차단.
+            엠블럼 정책 관리(canManageEmblems)·라이벌 관리(canManageRivals)는 각 페이지 내부에서 게이트. */}
+        <Route path="/growth" component={() => <Redirect to="/growth/overview" />} />
+        <Route path="/growth/overview" component={GrowthOverview} />
+        <Route path="/growth/emblems" component={EmblemManagement} />
+        <Route path="/growth/rivals" component={RivalManagement} />
+
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -168,12 +180,14 @@ function App() {
                 <AttendanceProvider>
                   <AssessmentProvider>
                     <FinanceProvider>
-                      <AuthBoundary>
-                        <TooltipProvider>
-                          <Toaster position="top-right" richColors />
-                          <Router />
-                        </TooltipProvider>
-                      </AuthBoundary>
+                      <GrowthProvider>
+                        <AuthBoundary>
+                          <TooltipProvider>
+                            <Toaster position="top-right" richColors />
+                            <Router />
+                          </TooltipProvider>
+                        </AuthBoundary>
+                      </GrowthProvider>
                     </FinanceProvider>
                   </AssessmentProvider>
                 </AttendanceProvider>
