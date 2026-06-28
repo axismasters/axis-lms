@@ -1,19 +1,24 @@
-// AXIS LMS v1.2 - 통계 화면 (Finance Foundation v1)
+// AXIS LMS v1.2 - 통계 화면 (Finance Foundation v2)
 // 차트 라이브러리가 프로젝트에 없으므로(package.json 확인) 새로 추가하지 않고, 표 + 요약 카드 +
 // 막대 형태의 간단한 바(div width%)로만 구현한다(이번 단계는 "간단 통계"까지만).
+//
+// Finance Foundation v2: 월별 청구/수납/미납/환불 계산을 financeData.ts의 calculateMonthlyFinanceStats로
+// 옮겼다(정산관리 화면의 calculateMonthlySettlement와 동일한 합산 로직을 공유). 이전 버전은 환불액을
+// APPROVED(아직 완료 전)까지 합산해 과대 집계되는 문제가 있었는데, 공통 helper로 옮기면서
+// COMPLETED 상태만 정확히 집계하도록 함께 고쳐졌다.
 
 import { useMemo } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { useClasses } from '@/contexts/ClassContext';
-import { canManageFinance, getClassEnrollmentType } from '@/lib/financeData';
+import { canManageFinance, getClassEnrollmentType, calculateMonthlyFinanceStats } from '@/lib/financeData';
 
 function won(n: number) { return `${n.toLocaleString()}원`; }
 
 export default function FinanceStatistics() {
   const { can } = useAuth();
-  const { invoices, getPaidAmount, refunds } = useFinance();
+  const { invoices, payments, refunds, getPaidAmount } = useFinance();
   const { classes, getClass } = useClasses();
 
   if (!canManageFinance(can)) {
@@ -26,22 +31,13 @@ export default function FinanceStatistics() {
     );
   }
 
-  // 월별 집계(청구/수납/미납/환불) — 최근 청구가 있는 달만 모아서 최신순으로 표시
-  const monthlyStats = useMemo(() => {
-    const months = Array.from(new Set(invoices.map(i => i.billingMonth))).sort().reverse();
-    return months.map(month => {
-      const monthInvoices = invoices.filter(i => i.billingMonth === month);
-      const billed = monthInvoices.reduce((s, i) => s + i.finalAmount, 0);
-      const paid = monthInvoices.reduce((s, i) => s + getPaidAmount(i.id), 0);
-      const unpaid = monthInvoices.reduce((s, i) => s + Math.max(0, i.finalAmount - getPaidAmount(i.id)), 0);
-      const refunded = refunds
-        .filter(r => (r.status === 'APPROVED' || r.status === 'COMPLETED') && monthInvoices.some(i => i.id === r.invoiceId))
-        .reduce((s, r) => s + (r.approvedAmount ?? 0), 0);
-      return { month, billed, paid, unpaid, refunded };
-    });
-  }, [invoices, refunds, getPaidAmount]);
+  // 월별 집계(청구/수납/미납/환불) — 정산관리와 동일한 calculateMonthlySettlement 로직을 그대로 공유한다.
+  const monthlyStats = useMemo(
+    () => calculateMonthlyFinanceStats(invoices, payments, refunds),
+    [invoices, payments, refunds]
+  );
 
-  const maxBilled = Math.max(1, ...monthlyStats.map(m => m.billed));
+  const maxBilled = Math.max(1, ...monthlyStats.map(m => m.totalBilled));
 
   // 반별 매출(수납 기준)
   const classStats = useMemo(() => {
@@ -73,7 +69,7 @@ export default function FinanceStatistics() {
       <div className="mb-5">
         <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>통계</h1>
         <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-          월별·반별·수강 유형별 매출을 간단히 요약합니다.
+          월별·반별·수강 유형별 매출을 간단히 요약합니다. 모든 금액은 실제 청구/수납/환불 데이터에서 계산됩니다.
         </p>
       </div>
 
@@ -95,13 +91,13 @@ export default function FinanceStatistics() {
               {monthlyStats.map(m => (
                 <tr key={m.month} style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
                   <td className="px-2.5 py-2 text-xs tabular-nums font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{m.month}</td>
-                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(m.billed)}</td>
-                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(m.paid)}</td>
-                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(m.unpaid)}</td>
-                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(m.refunded)}</td>
+                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(m.totalBilled)}</td>
+                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(m.totalPaid)}</td>
+                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(m.totalUnpaid)}</td>
+                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(m.totalRefunded)}</td>
                   <td className="px-2.5 py-2" style={{ minWidth: 140 }}>
                     <div className="h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${(m.billed / maxBilled) * 100}%`, background: 'oklch(0.511 0.262 276.966)' }} />
+                      <div className="h-full rounded-full" style={{ width: `${(m.totalBilled / maxBilled) * 100}%`, background: 'oklch(0.511 0.262 276.966)' }} />
                     </div>
                   </td>
                 </tr>

@@ -61,6 +61,7 @@ axis-lms-v1.2/
     │   ├── AdminLayout.tsx       # Back Office 레이아웃 — 사이드바 메뉴, RBAC 메뉴 필터링
     │   ├── ClassFormModal.tsx    # 반 등록/수정 모달
     │   ├── EnrollmentFormModal.tsx # 학생 상세 "반 등록" 모달 (Enrollment 생성)
+    │   ├── FinanceSummaryCards.tsx # 재무관리 공용 요약 카드(청구금액/수납완료/미납금액/환불금액)
     │   ├── AssessmentFormModal.tsx # 시험 등록 모달 (기본정보/문항 구성 2탭, 문항 단위 혼합 채점 설정)
     │   ├── StatusBadge.tsx       # 상태 배지 공통 컴포넌트
     │   ├── ErrorBoundary.tsx     # 전역 에러 바운더리
@@ -73,7 +74,8 @@ axis-lms-v1.2/
     │   ├── EnrollmentContext.tsx  # 수강(Enrollment) 데이터 관리 — Finance Engine 준비용 단일 진실 공급원
     │   ├── AttendanceContext.tsx  # 출결 세션/기록 관리
     │   ├── AssessmentContext.tsx  # 시험 생성/채점/공개/정정 관리
-    │   ├── FinanceContext.tsx     # 청구/수납/환불/정산 관리 (Enrollment 기준, 삭제 기능 없음)
+    │   ├── FinanceContext.tsx     # 청구/수납/환불/정산/영수증 관리 (Enrollment 기준, 삭제 기능 없음,
+    │   │                          #   enrollments 변경 시 매월 청구서 자동 생성, 수납 시 영수증 자동 발급)
     │   └── ThemeContext.tsx       # 테마 Provider (현재 light 고정 패스스루)
     │
     ├── lib/                      # 실제 데이터/타입 모듈 (모든 페이지가 `@/lib/...`로 import)
@@ -83,7 +85,8 @@ axis-lms-v1.2/
     │   ├── enrollmentData.ts      # 수강(Enrollment) 더미 데이터 + 타입, Finance Engine 연동용 조회 helper
     │   ├── attendanceData.ts      # 출결 더미 데이터 + AttendanceStatus 등 타입
     │   ├── assessmentData.ts      # 시험 더미 데이터 + Exam/ExamSubmission 타입, 채점/공개 판정 파생 함수
-    │   ├── financeData.ts         # 청구/수납/환불/정산 mock 데이터 + 타입, 일할계산 함수, 재무 권한 helper
+    │   ├── financeData.ts         # 청구/수납/환불/정산/영수증 mock 데이터 + 타입, 일할계산 함수
+    │   │                          #   (중도등록/중도퇴원), 매월 자동 청구서 생성 함수, 재무 권한 helper
     │   ├── studentDerived.ts      # 학생 화면에서 쓰는 파생 계산(수강현황, 재무, 모의고사 등)
     │   └── utils.ts               # `cn` 헬퍼(clsx + tailwind-merge)
     │

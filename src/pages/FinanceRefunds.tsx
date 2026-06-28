@@ -1,6 +1,10 @@
-// AXIS LMS v1.2 - 환불관리 화면 (Finance Foundation v1)
+// AXIS LMS v1.2 - 환불관리 화면 (Finance Foundation v3)
 // 흐름: 행정(또는 원장/최고관리자)이 요청 등록(REQUESTED) → 원장/최고관리자가 승인(APPROVED)/반려
 // (REJECTED) → 승인된 건은 완료(COMPLETED, mock 처리)까지 진행한다. 실제 계좌 환불/PG 취소 연동은 하지 않는다.
+//
+// Finance Foundation v3: 대상 청구를 선택하면, 그 수강(Enrollment)이 해당 청구월 안에 종료/퇴원되었는지
+// 확인해 calculateWithdrawalRefundAmount(중도 퇴원 환불 일할 계산)로 제안 금액을 자동 채운다 — 행정이
+// 직접 일수를 계산하지 않아도 되며, 제안값은 그대로 요청해도 되고 필요시 조정할 수 있다.
 
 import { useState, useMemo } from 'react';
 import AdminLayout from '@/components/AdminLayout';
@@ -11,7 +15,7 @@ import { useClasses } from '@/contexts/ClassContext';
 import { useEnrollment } from '@/contexts/EnrollmentContext';
 import {
   Refund, RefundStatus, REFUND_STATUS_LABEL,
-  canManageFinance, canRequestRefund, canApproveRefund,
+  canManageFinance, canRequestRefund, canApproveRefund, calculateWithdrawalRefundAmount,
 } from '@/lib/financeData';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,7 +37,7 @@ const STATUS_STYLE: Record<RefundStatus, { bg: string; text: string }> = {
 
 export default function FinanceRefunds() {
   const { currentUser, can } = useAuth();
-  const { refunds, invoices, requestRefund, approveRefund, rejectRefund, completeRefund } = useFinance();
+  const { refunds, invoices, requestRefund, approveRefund, rejectRefund, completeRefund, getRefundable } = useFinance();
   const { students } = useStudents();
   const { getClass } = useClasses();
   const { enrollments } = useEnrollment();
@@ -42,6 +46,7 @@ export default function FinanceRefunds() {
   const [reqInvoiceId, setReqInvoiceId] = useState('');
   const [reqAmount, setReqAmount] = useState('');
   const [reqReason, setReqReason] = useState('');
+  const [withdrawalSuggestion, setWithdrawalSuggestion] = useState<{ amount: number; endDate: string } | null>(null);
 
   const [approveModal, setApproveModal] = useState<Refund | null>(null);
   const [approveAmount, setApproveAmount] = useState('');
@@ -73,15 +78,40 @@ export default function FinanceRefunds() {
   }, [refunds]);
 
   const openRequestModal = () => {
-    setReqInvoiceId(''); setReqAmount(''); setReqReason('');
+    setReqInvoiceId(''); setReqAmount(''); setReqReason(''); setWithdrawalSuggestion(null);
     setRequestModal(true);
   };
+
+  // Finance Foundation v3: 대상 청구를 선택하면, 그 수강이 해당 청구월 안에 종료/퇴원되었는지 확인해
+  // 중도 퇴원 환불 일할 계산(calculateWithdrawalRefundAmount)으로 제안 금액을 자동 채운다. 행정이
+  // 그대로 사용해도 되고, 직접 다른 금액으로 조정해도 된다(자동 채움일 뿐 강제하지 않음).
+  const handleSelectInvoice = (invoiceId: string) => {
+    setReqInvoiceId(invoiceId);
+    const inv = invoiceMap.get(invoiceId);
+    const enr = inv ? enrollmentMap.get(inv.enrollmentId) : undefined;
+    const isWithdrawnThisMonth = !!(
+      inv && enr?.endDate && enr.tuitionAmount &&
+      (enr.status === '종료' || enr.status === '퇴원') &&
+      enr.endDate.slice(0, 7) === inv.billingMonth
+    );
+    if (isWithdrawnThisMonth && inv && enr?.endDate && enr.tuitionAmount) {
+      const suggested = calculateWithdrawalRefundAmount(enr.tuitionAmount, enr.endDate, inv.billingMonth);
+      const capped = Math.min(suggested, getRefundable(invoiceId));
+      setReqAmount(String(capped));
+      setWithdrawalSuggestion({ amount: capped, endDate: enr.endDate });
+    } else {
+      setReqAmount('');
+      setWithdrawalSuggestion(null);
+    }
+  };
+
   const saveRequest = () => {
     if (!reqInvoiceId) { toast.error('환불 대상 청구를 선택하세요.'); return; }
     const amount = Number(reqAmount);
-    if (!amount || Number.isNaN(amount) || amount <= 0) { toast.error('올바른 환불 요청 금액을 입력하세요.'); return; }
+    if (!amount || Number.isNaN(amount) || amount <= 0) { toast.error('환불요청액은 0원보다 커야 합니다.'); return; }
     if (!reqReason.trim()) { toast.error('환불 사유는 필수입니다.'); return; }
-    requestRefund({ invoiceId: reqInvoiceId, requestedAmount: amount, requestedBy: currentUser.name, reason: reqReason.trim() });
+    const result = requestRefund({ invoiceId: reqInvoiceId, requestedAmount: amount, requestedBy: currentUser.name, reason: reqReason.trim() });
+    if (!result.ok) { toast.error(result.reason ?? '환불 요청 등록에 실패했습니다.'); return; }
     toast.success('환불 요청이 등록되었습니다.');
     setRequestModal(false);
   };
@@ -90,8 +120,9 @@ export default function FinanceRefunds() {
   const confirmApprove = () => {
     if (!approveModal) return;
     const amount = Number(approveAmount);
-    if (!amount || Number.isNaN(amount) || amount <= 0) { toast.error('올바른 승인 금액을 입력하세요.'); return; }
-    approveRefund(approveModal.id, amount, currentUser.name);
+    if (!amount || Number.isNaN(amount) || amount <= 0) { toast.error('승인금액은 0원보다 커야 합니다.'); return; }
+    const result = approveRefund(approveModal.id, amount, currentUser.name);
+    if (!result.ok) { toast.error(result.reason ?? '환불 승인에 실패했습니다.'); return; }
     toast.success('환불이 승인되었습니다.');
     setApproveModal(null);
   };
@@ -203,20 +234,32 @@ export default function FinanceRefunds() {
           <div className="py-2 space-y-3">
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">대상 청구</Label>
-              <Select value={reqInvoiceId} onValueChange={setReqInvoiceId}>
+              <Select value={reqInvoiceId} onValueChange={handleSelectInvoice}>
                 <SelectTrigger className="h-9 text-sm w-full"><SelectValue placeholder="청구 선택…" /></SelectTrigger>
                 <SelectContent>
-                  {invoices.map(inv => {
+                  {invoices.filter(inv => inv.status !== 'CANCELED' && getRefundable(inv.id) > 0).map(inv => {
                     const stu = studentMap.get(inv.studentId);
                     const cls = getClass(inv.classId);
-                    return <SelectItem key={inv.id} value={inv.id}>{inv.billingMonth} · {stu?.name} · {cls?.name} ({won(inv.finalAmount)})</SelectItem>;
+                    return <SelectItem key={inv.id} value={inv.id}>{inv.billingMonth} · {stu?.name} · {cls?.name} (환불가능 {won(getRefundable(inv.id))})</SelectItem>;
                   })}
                 </SelectContent>
               </Select>
+              {invoices.filter(inv => inv.status !== 'CANCELED' && getRefundable(inv.id) > 0).length === 0 && (
+                <p className="text-xs mt-1" style={{ color: 'oklch(0.6 0.015 250)' }}>환불 가능한 청구서가 없습니다(미수납 또는 이미 전액 환불됨).</p>
+              )}
+              {withdrawalSuggestion && (
+                <div className="flex items-start gap-1.5 mt-1.5 p-2 rounded text-xs" style={{ background: 'oklch(0.95 0.06 250)', color: 'oklch(0.38 0.18 250)' }}>
+                  <Info size={11} className="mt-0.5 flex-shrink-0" />
+                  {withdrawalSuggestion.endDate} 중도 퇴원 기준 일할 계산 제안액 {won(withdrawalSuggestion.amount)}을 자동으로 채웠습니다. 필요하면 직접 조정하세요.
+                </div>
+              )}
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">요청 금액</Label>
-              <Input type="number" value={reqAmount} onChange={e => setReqAmount(e.target.value)} className="text-sm" />
+              <Input type="number" min={1} max={reqInvoiceId ? getRefundable(reqInvoiceId) : undefined} value={reqAmount} onChange={e => setReqAmount(e.target.value)} className="text-sm" />
+              {reqInvoiceId && Number(reqAmount) > getRefundable(reqInvoiceId) && (
+                <p className="text-xs mt-1" style={{ color: 'oklch(0.5 0.18 27)' }}>환불요청액은 환불 가능 금액({won(getRefundable(reqInvoiceId))})을 초과할 수 없습니다.</p>
+              )}
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">사유</Label>
@@ -235,10 +278,15 @@ export default function FinanceRefunds() {
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle className="text-sm">환불 승인</DialogTitle></DialogHeader>
           <div className="py-2 space-y-3">
-            <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>요청 금액: {approveModal ? won(approveModal.requestedAmount) : ''}</p>
+            <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+              요청 금액: {approveModal ? won(approveModal.requestedAmount) : ''} · 환불 가능 금액: {approveModal ? won(getRefundable(approveModal.invoiceId)) : ''}
+            </p>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">승인 금액</Label>
-              <Input type="number" value={approveAmount} onChange={e => setApproveAmount(e.target.value)} className="text-sm" />
+              <Input type="number" min={1} max={approveModal ? Math.min(approveModal.requestedAmount, getRefundable(approveModal.invoiceId)) : undefined} value={approveAmount} onChange={e => setApproveAmount(e.target.value)} className="text-sm" />
+              {approveModal && Number(approveAmount) > Math.min(approveModal.requestedAmount, getRefundable(approveModal.invoiceId)) && (
+                <p className="text-xs mt-1" style={{ color: 'oklch(0.5 0.18 27)' }}>승인금액은 요청액과 환불 가능 금액을 초과할 수 없습니다.</p>
+              )}
             </div>
             <div className="flex items-start gap-2 p-2.5 rounded text-xs" style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.38 0.18 250)' }}>
               <Info size={11} className="mt-0.5 flex-shrink-0" /> 승인 후에는 "환불 완료 처리" 버튼으로 mock 완료 처리를 할 수 있습니다(실제 계좌 환불 연동 없음).

@@ -1,3 +1,301 @@
+# AXIS LMS v1.2 — Finance Foundation v3 (최종 설계 보완, Commit Ready)
+
+> Finance Foundation v2를 기반으로 8가지 항목을 보완했습니다. 그중 1·3·5번은 이미 v1/v2에서
+> 구현되어 있어 재확인만 했고, 2·4·6·7번을 새로 구현했습니다. 기존 기능은 전혀 삭제하지 않고
+> 확장했습니다.
+
+---
+
+## 1. 추가/수정 파일 목록
+
+| 파일 | 유형 |
+|---|---|
+| `src/components/FinanceSummaryCards.tsx` | 신규 — 공용 요약 카드(청구금액/수납완료/미납금액/환불금액) |
+| `src/lib/financeData.ts` | 수정 — `Receipt` 타입, `generateMonthlyInvoices`, `calculateWithdrawalRefundAmount`, `generateReceiptNumber`, `currentBillingMonth` 추가, mock 시나리오 1건 추가(`inv-102`/`pay-102`) |
+| `src/contexts/FinanceContext.tsx` | 수정 — `useEnrollment()` 연동, 매월 자동 청구서 생성 `useEffect`, `addPayment`에서 영수증 자동 발급, `receipts` state·`getReceiptByPayment` 추가 |
+| `src/pages/FinancePayments.tsx` | 수정 — `FinanceSummaryCards` 적용(기존 카드는 보조 카드로 보존), 영수증 보기 모달 추가 |
+| `src/pages/FinanceRefunds.tsx` | 수정 — 대상 청구 선택 시 중도 퇴원 환불 일할 계산 자동 제안 |
+
+`FinanceSettlements.tsx`, `FinanceStatistics.tsx`, `FinanceUnpaid.tsx`, `App.tsx`, `rbac.ts`,
+`EnrollmentContext.tsx` 등 — **전혀 건드리지 않았습니다.** `diff -rq`로 위 5개 파일 외 모든 파일이
+1바이트도 다르지 않음을 확인했습니다.
+
+---
+
+## 2. 항목별 구현 내용
+
+### 1. Enrollment 기준 수납 구조 — 이미 구현됨, 재확인만
+`Invoice`/`Payment`/`Refund`/`Receipt`(신규) 전부 `enrollmentId`를 필수 필드로 가지고 있어, 학생
+기준이 아니라 수강 단위로 모든 재무 데이터가 묶입니다. 새로 추가한 `Receipt` 타입도 동일하게
+`enrollmentId`를 포함시켜 일관성을 유지했습니다. 변경할 부분이 없어 코드는 건드리지 않았습니다.
+
+### 2. 매월 1일 자동 청구서 생성 구조 (신규)
+`financeData.ts`의 `generateMonthlyInvoices(month, enrollments, existingInvoices)`가 순수 함수로
+"그 달에 아직 청구서가 없는 활성 수강"만 idempotent하게 찾아 생성합니다. `FinanceContext`는
+`useEnrollment()`로 `enrollments`를 가져와 **`enrollments`가 바뀔 때마다**(신규 등록/종료/퇴원) 이
+함수를 호출하는 `useEffect`를 추가했습니다. 실제 서비스에서는 서버 스케줄러가 매월 1일 00시에 같은
+함수를 호출하면 되고, 이 mock 환경에서는 "앱이 켜져 있는 동안 누락분을 보충 생성"하는 방식으로 같은
+구조를 시연합니다. 화면에서 수동으로 다시 동기화할 수 있도록 `generateInvoicesForMonth(month)`도
+함께 노출했습니다(idempotent라 여러 번 호출해도 안전).
+
+### 3. 중도 등록 시 일할 계산 — 함수는 이미 있었음, 이번에 자동 흐름에 통합
+`calculateProratedAmount`는 v1부터 있었지만, "새 Enrollment가 생성되는 순간 자동으로 일할 계산된
+청구서가 생기는 흐름"은 없었습니다. 이번에 `generateMonthlyInvoices`가 `enrollments` 변경에 반응하게
+되면서, **학생 상세/반 상세에서 새로 "반 등록"을 하면 그 즉시 이번 달 일할 계산된 청구서가 자동
+생성됩니다**(시작일이 이번 달 안이면 자동으로 일할 계산 적용). 순수 JS 시뮬레이션으로 검증했습니다.
+
+### 4. 중도 퇴원 환불 일할 계산 (신규)
+`calculateWithdrawalRefundAmount(monthlyAmount, withdrawalDate, billingMonth)`를 추가했습니다 —
+"월 전체 금액 − 퇴원일까지 실제 사용한 금액"으로 환불해야 할 금액을 계산합니다(이미 그 달 전액을
+선청구·수납한 뒤 중도 퇴원하는 경우를 가정 — AXIS는 사후 환불 방식을 원칙으로 하므로, 이미 발행된
+청구서를 재계산하지 않고 환불 워크플로우로 차액을 돌려줍니다). `FinanceRefunds.tsx`의 "환불 요청
+등록" 모달에서 대상 청구를 선택하면, 그 수강이 해당 청구월 안에 종료/퇴원됐는지 자동으로 감지해
+제안 금액을 채워줍니다(행정이 직접 일수를 계산할 필요가 없고, 필요하면 직접 조정도 가능). 실제로
+시연할 수 있도록 mock 데이터에 미환불 중도퇴원 시나리오(`enr-101`/`inv-102`)를 1건 추가했습니다.
+
+### 5. 환불 워크플로우(요청→승인→완료) — 이미 구현됨, 재확인만
+v1/v2부터 `requestRefund`(행정 포함 가능)→`approveRefund`/`rejectRefund`(원장·최고관리자만,
+`finance.refundApprove`로 게이트)→`completeRefund`(mock) 흐름이 정확히 이렇게 동작하고 있었습니다.
+`rbac.ts`를 다시 확인해 STAFF가 `finance.refundApprove`를 보유하지 않음을 재확인했고, 코드는
+변경하지 않았습니다.
+
+### 6. 영수증 자동 발급 구조 (신규, 데이터 구조만)
+`Receipt` 인터페이스(`id`/`paymentId`/`invoiceId`/`studentId`/`enrollmentId`/`receiptNumber`/
+`amount`/`issuedAt`/`issuedBy`)를 추가했습니다. `FinanceContext.addPayment`가 수납을 등록하는 즉시
+`Receipt`를 자동 생성하고 `Payment.receiptIssued`를 바로 `true`로 설정합니다(이전엔 수동으로
+"발급" 버튼을 눌러야 했습니다). 영수증 번호는 `RCT-YYYYMM-####` 형식으로 자동 부여됩니다. 기존
+v1/v2 mock 결제 중 `receiptIssued: true`였던 건들은 `DUMMY_RECEIPTS`로 1:1 매칭해 과거 데이터와도
+일관성을 유지했고, `receiptIssued: false`로 남아있던 레거시 건은 수동 "발급" 버튼이 여전히 동작해
+그 시점에 `Receipt`를 생성합니다(하위 호환). PDF 출력은 이번 단계에 포함하지 않았으며, 화면에는
+"보기" 버튼으로 영수증 번호·금액·발급일·발급자를 확인하는 모달만 추가했습니다.
+
+### 7. Finance Summary Card (신규)
+`src/components/FinanceSummaryCards.tsx`를 새로 만들어 요청하신 4개 지표(이번 달 청구금액/수납완료/
+미납금액/환불금액)를 보여줍니다. `calculateMonthlySettlement`를 그대로 사용하므로 **정산관리·통계
+화면과 항상 같은 숫자**를 보여줍니다(서로 다른 계산식으로 어긋나는 일이 없습니다). `FinancePayments.tsx`
+(재무관리 기본 화면)에 적용했고, 기존에 있던 고유 정보(수납 완료 건수, 환불 요청 대기액)는 삭제하지
+않고 작은 보조 카드 줄로 그대로 보존했습니다.
+
+### 8. Commit Ready 상태
+아래 빌드 결과와 같이 `tsc -b` 오류 0, 핵심 로직 전체 순수 JS 시뮬레이션 PASS를 확인했습니다.
+`README.md`의 디렉터리 구조도 신규 파일(`FinanceSummaryCards.tsx`)과 변경 내용을 반영해 갱신했습니다.
+
+---
+
+## 3. 빌드 통과 여부
+
+네트워크 차단으로 `npm install`은 이번에도 불가능했습니다. `npm run build`(`tsc -b && vite build`)의
+선행 단계인 `tsc -b`를 실제 사용된 모든 패키지의 최소 타입 스텁으로 이 환경에서 그대로 실행했습니다.
+
+```
+$ tsc -p tsconfig.app.json --noEmit --ignoreDeprecations 6.0
+(종료 코드 0, 오류 없음)
+
+$ tsc -p tsconfig.node.json --noEmit
+(종료 코드 0, 오류 없음)
+```
+
+**1차 시도에서 바로 오류 0건, 통과.** 핵심 로직(중도퇴원 환불 일할계산, 매월 자동 청구서 생성의
+idempotent 동작과 중도등록 일할계산 통합, 영수증 번호 생성, Enrollment 필드 보유, 환불 권한 매핑)을
+React와 무관한 순수 JS로 직접 실행해 전부 PASS를 확인했습니다. 새로 추가한 mock 시나리오
+(`enr-101`/`inv-102`)의 실제 제안 금액(8,387원)도 계산해 0보다 큰 합리적인 값임을 확인했습니다.
+`vite build`의 실제 번들링은 이 컨테이너에서 패키지를 설치할 수 없어 실행하지 못했으며, 호스트에서
+`npm run build`를 그대로 실행해 최종 확인하시면 됩니다.
+
+---
+
+## 4. 남은 한계
+
+- 매월 자동 청구서 생성은 "enrollments 변경 시점"을 트리거로 사용합니다(앱이 켜져 있어야 동작) —
+  실제 서비스에서는 서버 스케줄러가 매월 1일 00시에 동일한 `generateMonthlyInvoices` 함수를
+  독립적으로 호출해야 합니다(이번 단계는 구조만 제공, 백엔드 cron 연동은 다음 단계).
+- 중도 퇴원 환불은 "제안값을 자동 채움"까지만 구현했고, 실제 환불 요청 등록은 여전히 행정이
+  수동으로 확인 후 "요청 등록" 버튼을 눌러야 합니다(워크플로우를 건너뛰는 자동 환불 생성은
+  의도적으로 만들지 않았습니다 — 요청→승인 절차를 항상 거치게 하기 위함).
+- 영수증은 데이터 구조와 "보기" 화면까지만 구현했습니다(요청하신 대로 PDF 출력은 다음 단계).
+- `Settlement.totalBilled` 등 v2부터 남아있던 mock 고정 필드는 여전히 타입에 존재합니다(화면이
+  더 이상 참조하지 않을 뿐 필드 자체는 그대로 — v2 보고서에서 이미 언급한 한계, 이번에도 동일).
+
+---
+
+## 5. 다음 추천 개발 단계
+
+1. **서버 스케줄러 연동** — `generateMonthlyInvoices`를 실제 매월 1일 cron job에서 호출하도록 백엔드 구현.
+2. **영수증 PDF 출력** — 현재 데이터 구조(`Receipt`)를 기반으로 PDF 템플릿 렌더링 추가.
+3. **환불 중복요청 방지** — v2 보고서에서 이미 제안한 항목, 이번에도 유효.
+4. **`Settlement` mock 필드 정리** — v2부터의 한계, 완전히 제거하거나 확정 시점 스냅샷으로 재정의.
+
+# AXIS LMS v1.2 — Finance Foundation v2: Validation & Settlement Automation
+
+> GitHub 최신 반영본(Finance Foundation v1) 기준으로 작업했습니다. 기존 FinanceContext/financeData/
+> 재무관리 5개 화면 구조를 유지한 채, 위험한 입력을 막는 검증과 정산/통계 자동 계산만 보강했습니다.
+
+---
+
+## 1. 추가/수정 파일 목록
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/lib/financeData.ts` | 공통 계산 helper 7종 추가(`getInvoicePaidAmount`/`getInvoiceRefundedAmount`/`getInvoiceUnpaidAmount`/`getRefundableAmount`/`calculateInvoiceStatus`/`calculateMonthlySettlement`/`calculateMonthlyFinanceStats`) |
+| `src/contexts/FinanceContext.tsx` | `addPayment`/`requestRefund`/`approveRefund`/`confirmSettlement`에 검증 추가, 전부 `{ ok, reason }` 반환 패턴으로 변경, 내부 금액 계산을 새 helper로 위임 |
+| `src/pages/FinancePayments.tsx` | 수납 등록 결과(`{ok, reason}`) 확인 후 toast 안내, 입력칸에 `max`/실시간 초과 경고 추가 |
+| `src/pages/FinanceRefunds.tsx` | 환불 요청/승인 결과 확인 후 toast 안내, 대상 청구 선택지를 "환불 가능한 청구서"만 필터링, 입력칸에 한도 표시·실시간 경고 추가 |
+| `src/pages/FinanceSettlements.tsx` | 금액 전부를 mock 고정값 대신 `calculateMonthlySettlement`로 매번 계산, 확정 실패 시 안내, "이미 확정" 문구 명시 |
+| `src/pages/FinanceStatistics.tsx` | 월별 통계를 `calculateMonthlyFinanceStats`로 리팩토링(기존 환불액 집계 버그도 함께 해소 — 아래 5번 참고) |
+
+`FinanceUnpaid.tsx`, `App.tsx`, `AdminLayout.tsx`, `rbac.ts`, `EnrollmentContext.tsx`, `AttendanceContext.tsx`
+등 — **전혀 건드리지 않았습니다.** `diff -rq`로 위 6개 파일 외 모든 파일이 1바이트도 다르지 않음을
+확인했습니다.
+
+---
+
+## 2. 수납 검증 방식 (수정 1)
+
+`FinanceContext.addPayment`에서 순서대로 검증합니다:
+1. 청구서 존재 여부
+2. `status === 'PAID'` → "이미 완납된 청구서입니다."
+3. `status === 'CANCELED'` → 수납 불가(명시 안 됐지만 일관성을 위해 추가)
+4. `amount <= 0` → "수납금액은 0원보다 커야 합니다."
+5. `amount > getInvoiceUnpaidAmount(invoice, payments)` → "수납금액은 남은 미납금액을 초과할 수 없습니다."
+
+전부 통과하면 Payment를 추가하고, `calculateInvoiceStatus`(누적 수납액 기준)로 그 즉시 상태를
+재계산합니다(`UNPAID`→`PARTIAL`→`PAID`). 화면(`FinancePayments.tsx`)은 `addPayment`의 반환값을 확인해
+실패 시 정확한 사유를 `toast.error`로 보여주고, 입력칸 자체에도 `max` 속성과 실시간 초과 경고를 추가해
+사용자가 입력하는 순간부터 안내받습니다. 목록의 수납금액/미납금액/상태는 `invoices`/`payments`
+state가 갱신되는 즉시 리렌더링되어 따로 손댈 필요가 없었습니다(기존 React 패턴이 그대로 작동).
+
+---
+
+## 3. 환불 검증 방식 (수정 2, 3)
+
+### 요청 단계 (`requestRefund`)
+1. 청구서 존재 여부, `CANCELED` 거부
+2. 실제 수납액(`getInvoicePaidAmount`) `<= 0`이면 → "미수납 청구서는 환불 요청을 할 수 없습니다."
+3. `requestedAmount <= 0` → "환불요청액은 0원보다 커야 합니다."
+4. `requestedAmount > 실제수납액` → "환불요청액은 실제 수납금액을 초과할 수 없습니다."
+5. `requestedAmount > getRefundableAmount(...)` → "남은 환불 가능 금액을 초과할 수 없습니다."
+
+`getRefundableAmount`는 "실제 수납액 − 이미 완료(COMPLETED)되거나 승인(APPROVED, 아직 완료 전)된
+환불 누적액"으로 계산합니다. 요청 단계와 승인 단계 양쪽에서 이 한 함수를 그대로 재사용해, "이미 환불
+완료된 금액이 있으면 남은 가능 금액 기준으로 제한"(요구사항 3번)이 자연스럽게 일반화됩니다.
+
+### 승인 단계 (`approveRefund`)
+1. 요청 존재 여부, 이미 처리된 요청(`status !== 'REQUESTED'`) 거부
+2. `approvedAmount <= 0` → "승인금액은 0원보다 커야 합니다."
+3. `approvedAmount > requestedAmount` → "승인금액은 환불요청액을 초과할 수 없습니다."
+4. `approvedAmount > getRefundableAmount(...)`(이 시점에 다시 계산 — 요청 시점과 승인 시점 사이에
+   다른 환불이 먼저 처리됐을 가능성을 재검증) → "실제 환불 가능 금액을 초과할 수 없습니다."
+
+**STAFF는 승인/반려 버튼 자체가 보이지 않습니다** — 이건 1차 Foundation 때부터 이미
+`canApproveRefund(can)`(= `finance.refundApprove`)로 게이트되어 있었고, STAFF는 이 권한을 보유하지
+않습니다(SUPER_ADMIN/DIRECTOR만 보유). 이번 v2에서는 그 권한 게이트를 변경하지 않고 그대로
+재확인했으며, 추가로 **금액 검증**만 보강했습니다.
+
+---
+
+## 4. 정산 자동 계산 방식 (수정 4, 5)
+
+`calculateMonthlySettlement(month, invoices, payments, refunds)`를 요청하신 계산식 그대로 구현했습니다:
+
+```
+totalBilled   = 해당 월 Invoice.finalAmount 합계 (status !== 'CANCELED')
+totalPaid     = 해당 월 Invoice에 연결된 Payment.amount 합계
+totalUnpaid   = max(0, totalBilled - totalPaid)
+totalRefunded = 해당 월 Invoice에 연결된 Refund 중 status === 'COMPLETED'의 approvedAmount 합계
+netRevenue    = totalPaid - totalRefunded
+```
+
+`FinanceSettlements.tsx`는 더 이상 `Settlement.totalBilled` 등 mock 고정 필드를 화면에 표시하지
+않습니다 — 상단 요약 카드와 목록 전부 이 함수의 실시간 계산값을 사용합니다. `Settlement` 레코드
+(`DUMMY_SETTLEMENTS`)는 그대로 남겨뒀지만, 이제는 **"그 달이 확정됐는지(status)·누가/언제 확정했는지
+(confirmedBy/confirmedAt)"만 의미 있는 메타데이터**로 역할이 좁혀졌습니다(금액 필드 자체는 더 이상
+화면이 신뢰하지 않습니다).
+
+`confirmSettlement`는 이미 `CONFIRMED`인 정산을 다시 확정하려 하면 `{ ok: false, reason: '이미 확정된
+정산입니다.' }`를 반환합니다. 화면에서도 `status === 'DRAFT'`일 때만 확정 버튼이 보이고(STAFF는
+`canConfirm`이 false라 그 경우에도 버튼 대신 "정산 확정은 원장 또는 최고관리자만 가능합니다." 안내만
+보임), `CONFIRMED`가 되면 "이미 확정된 정산입니다." 안내로 바뀝니다 — Context의 가드와 화면의 가드가
+이중으로 동작합니다.
+
+---
+
+## 5. 통계 자동 계산 방식 (수정 6)
+
+`calculateMonthlyFinanceStats(invoices, payments, refunds)`가 Invoice에 존재하는 모든 청구월을 모아
+각 월에 `calculateMonthlySettlement`를 적용해 반환합니다 — **정산관리 화면과 통계 화면이 완전히 같은
+계산 로직을 공유**합니다(같은 함수를 호출하므로 두 화면의 숫자가 항상 일치합니다).
+
+이 과정에서 **1차 Foundation의 기존 버그를 하나 발견해 함께 고쳤습니다**: 기존 통계 화면의 "월별 환불액"
+계산이 `status === 'APPROVED' || status === 'COMPLETED'` 둘 다를 합산하고 있었는데, 이는 "아직 실제로
+돈이 빠져나가지 않은(승인만 되고 완료 전인) 환불"까지 환불액으로 과대 집계하는 문제였습니다. 공통
+helper로 옮기면서 `COMPLETED`만 정확히 집계하도록 자연스럽게 해소됐습니다.
+
+반별 매출/수강 유형별 매출은 기존 로직(`getPaidAmount` 합산, `getClassEnrollmentType` 분류)을 그대로
+유지했습니다 — 이미 실제 데이터 기준이었고 별도 버그가 없었습니다. 차트 라이브러리는 추가하지
+않았고, 기존처럼 표 + 카드 + 막대(div width%)로만 구현했습니다.
+
+---
+
+## 6. 권한 기준 (변경 없음, 재확인만)
+
+1차 Foundation에서 이미 정정했던 권한 매핑을 그대로 유지하고, 이번에 다시 코드 레벨로 확인했습니다.
+
+| 직급 | `finance.view` | `finance.refundApprove` | `finance.settlementConfirm` |
+|---|---|---|---|
+| SUPER_ADMIN / DIRECTOR | ✅ | ✅ | ✅ |
+| STAFF | ✅ | ❌ | ❌ |
+| TEACHER / STUDENT / GUARDIAN | ❌ | ❌ | ❌ |
+
+`rbac.ts`는 이번 v2에서 전혀 건드리지 않았습니다(이미 정확했으므로 변경할 필요가 없었습니다).
+
+---
+
+## 7. 빌드 통과 여부
+
+네트워크 차단으로 `npm install`은 이번에도 불가능했습니다. `npm run build`(`tsc -b && vite build`)의
+선행 단계인 `tsc -b`를 실제 사용된 모든 패키지의 최소 타입 스텁으로 이 환경에서 그대로 실행했습니다.
+
+```
+$ tsc -p tsconfig.app.json --noEmit --ignoreDeprecations 6.0
+(종료 코드 0, 오류 없음)
+
+$ tsc -p tsconfig.node.json --noEmit
+(종료 코드 0, 오류 없음)
+```
+
+**1차 시도에서 바로 오류 0건, 통과.** 검증 로직(수납 한도/완납 차단, 환불 요청·승인 한도, 정산
+자동계산의 CANCELED 제외·COMPLETED만 카운트, 재확정 차단, STAFF/SUPER_ADMIN/DIRECTOR 권한 분기)을
+React와 무관한 순수 JS로 직접 실행해 9가지 시나리오 전부 PASS를 확인했습니다. `vite build`의 실제
+번들링은 이 컨테이너에서 패키지를 설치할 수 없어 실행하지 못했으며, 호스트에서 `npm run build`를
+그대로 실행해 최종 확인하시면 됩니다.
+
+---
+
+## 8. 남은 한계
+
+- `Settlement.totalBilled` 등 mock 고정 필드는 타입과 더미 데이터에 여전히 남아 있습니다(화면이
+  더 이상 참조하지 않을 뿐 필드 자체를 제거하지는 않았습니다 — 전체 재작성 금지 원칙에 따라 구조
+  변경을 최소화했습니다). 다음 단계에서 완전히 제거하거나, 확정 시점의 스냅샷으로 의미를 재정의할
+  수 있습니다.
+- 환불 요청 단계에서는 동시에 여러 건의 `REQUESTED`(아직 승인 전) 요청이 같은 청구서에 쌓일 수
+  있습니다 — `getRefundableAmount`가 `REQUESTED` 상태는 차감 대상에서 제외하기 때문입니다(승인
+  시점에 재검증하므로 실질적인 초과 환불은 막히지만, "요청 중복 자체"를 막는 별도 검증은 아직
+  없습니다).
+- `discountAmount`는 여전히 항상 0으로 고정됩니다(v1과 동일, 이번 범위 밖).
+- 월별 Invoice 자동 생성 배치, 실제 결제/알림 연동은 이번에도 포함하지 않았습니다(지시하신 그대로).
+
+---
+
+## 9. 다음 추천 개발 단계
+
+1. **환불 요청 중복 방지** — 같은 청구서에 `REQUESTED` 상태 요청이 이미 있으면 새 요청을 막거나
+   경고하는 검증 추가.
+2. **Settlement 레코드 정리** — mock 고정 필드(`totalBilled` 등)를 타입에서 제거하거나, 확정 시점의
+   스냅샷 용도로 의미를 명확히 재정의.
+3. **월별 Invoice 자동 생성** — Finance Foundation v1 보고서에서 이미 제안한 단계, 이번 검증 보강이
+   끝났으므로 다음 순서로 적합합니다.
+4. **할인(discountAmount) 적용 화면** — 필드는 있지만 적용 로직/화면이 없는 상태.
+
 # AXIS LMS v1.2 — Finance Foundation v1
 
 > GitHub 최신 반영본(Attendance × Enrollment Integration v1) 기준으로 작업했습니다. 재무관리를

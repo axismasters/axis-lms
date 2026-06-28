@@ -1,12 +1,17 @@
-// AXIS LMS v1.2 - 정산관리 화면 (Finance Foundation v1)
+// AXIS LMS v1.2 - 정산관리 화면 (Finance Foundation v2)
 // 월별 요약 화면. 정산 확정은 최고관리자/원장만 가능하며, 행정은 조회만 가능하고 확정 버튼 자체가
 // 노출되지 않는다(canConfirmSettlement = finance.settlementConfirm — STAFF는 미보유).
+//
+// Finance Foundation v2: 금액(청구액/수납액/미납액/환불액/순매출)은 더 이상 Settlement 레코드의
+// mock 고정값을 표시하지 않는다. 매번 calculateMonthlySettlement(financeData.ts)로 invoices/payments/
+// refunds 원본 데이터를 그대로 합산해 보여준다(AXIS 확정 원칙 8). Settlement 레코드 자체는 "그 달이
+// 확정됐는지(status)·누가/언제 확정했는지(confirmedBy/confirmedAt)"만 의미 있게 쓰인다.
 
 import { useState, useMemo } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFinance } from '@/contexts/FinanceContext';
-import { canManageFinance, canConfirmSettlement, SettlementStatus, SETTLEMENT_STATUS_LABEL } from '@/lib/financeData';
+import { canManageFinance, canConfirmSettlement, calculateMonthlySettlement, SettlementStatus, SETTLEMENT_STATUS_LABEL } from '@/lib/financeData';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
@@ -25,7 +30,7 @@ const STATUS_STYLE: Record<SettlementStatus, { bg: string; text: string }> = {
 
 export default function FinanceSettlements() {
   const { currentUser, can } = useAuth();
-  const { settlements, confirmSettlement } = useFinance();
+  const { settlements, invoices, payments, refunds, confirmSettlement } = useFinance();
   const [confirmTarget, setConfirmTarget] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(thisMonthStr());
 
@@ -41,11 +46,17 @@ export default function FinanceSettlements() {
   const canConfirm = canConfirmSettlement(can);
 
   const sorted = useMemo(() => [...settlements].sort((a, b) => b.month.localeCompare(a.month)), [settlements]);
-  const selected = settlements.find(s => s.month === selectedMonth);
+  // 선택 월 요약 카드 — Settlement 레코드가 없는 달(예: 그 달 정산이 아직 만들어지지 않음)이어도
+  // Invoice가 있으면 그대로 계산해 보여준다(레코드 존재 여부와 무관하게 항상 실제 데이터 기준).
+  const selectedAmounts = useMemo(
+    () => calculateMonthlySettlement(selectedMonth, invoices, payments, refunds),
+    [selectedMonth, invoices, payments, refunds]
+  );
 
   const handleConfirm = () => {
     if (!confirmTarget) return;
-    confirmSettlement(confirmTarget, currentUser.name);
+    const result = confirmSettlement(confirmTarget, currentUser.name);
+    if (!result.ok) { toast.error(result.reason ?? '정산 확정에 실패했습니다.'); setConfirmTarget(null); return; }
     toast.success('정산이 확정되었습니다.');
     setConfirmTarget(null);
   };
@@ -55,34 +66,32 @@ export default function FinanceSettlements() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>정산관리</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>월별 청구·수납·미납·환불을 요약해 확정합니다.</p>
+          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>월별 청구·수납·미납·환불을 요약해 확정합니다. 금액은 실제 청구/수납/환불 데이터에서 매번 계산됩니다.</p>
         </div>
         <input type="month" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} className="h-9 px-2 rounded border text-sm" style={{ borderColor: 'oklch(0.9 0.005 250)' }} />
       </div>
 
-      {/* 선택 월 요약 카드 */}
+      {/* 선택 월 요약 카드 — 실시간 계산값 */}
       <div className="grid grid-cols-5 gap-3 mb-4">
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>{selectedMonth} 총 청구액</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.38 0.18 250)' }}>{won(selected?.totalBilled ?? 0)}</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.38 0.18 250)' }}>{won(selectedAmounts.totalBilled)}</div>
         </div>
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>총 수납액</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(selected?.totalPaid ?? 0)}</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(selectedAmounts.totalPaid)}</div>
         </div>
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>총 미납액</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(selected?.totalUnpaid ?? 0)}</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(selectedAmounts.totalUnpaid)}</div>
         </div>
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>총 환불액</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(selected?.totalRefunded ?? 0)}</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(selectedAmounts.totalRefunded)}</div>
         </div>
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>순매출</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
-            {won((selected?.totalPaid ?? 0) - (selected?.totalRefunded ?? 0))}
-          </div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{won(selectedAmounts.netRevenue)}</div>
         </div>
       </div>
 
@@ -97,16 +106,16 @@ export default function FinanceSettlements() {
           </thead>
           <tbody>
             {sorted.map(s => {
-              const netRevenue = s.totalPaid - s.totalRefunded;
+              const amounts = calculateMonthlySettlement(s.month, invoices, payments, refunds);
               const style = STATUS_STYLE[s.status];
               return (
                 <tr key={s.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                   <td className="px-3 py-2.5 text-xs tabular-nums font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{s.month}</td>
-                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(s.totalBilled)}</td>
-                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(s.totalPaid)}</td>
-                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(s.totalUnpaid)}</td>
-                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(s.totalRefunded)}</td>
-                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap font-semibold" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{won(netRevenue)}</td>
+                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(amounts.totalBilled)}</td>
+                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(amounts.totalPaid)}</td>
+                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(amounts.totalUnpaid)}</td>
+                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(amounts.totalRefunded)}</td>
+                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap font-semibold" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{won(amounts.netRevenue)}</td>
                   <td className="px-3 py-2.5 whitespace-nowrap">
                     <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: style.bg, color: style.text }}>
                       {s.status === 'CONFIRMED' && <Lock size={10} />} {SETTLEMENT_STATUS_LABEL[s.status]}
@@ -115,13 +124,17 @@ export default function FinanceSettlements() {
                   <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{s.confirmedBy ?? '-'}</td>
                   <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>{s.confirmedAt?.slice(0, 10) ?? '-'}</td>
                   <td className="px-3 py-2.5 whitespace-nowrap">
+                    {/* 이미 CONFIRMED인 정산은 다시 확정할 수 없다 — status가 DRAFT일 때만 확정 버튼 자체가 보인다(AXIS 확정 원칙). */}
                     {s.status === 'DRAFT' && canConfirm && (
                       <button onClick={() => setConfirmTarget(s.id)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
                         <CheckCircle2 size={11} /> 정산 확정
                       </button>
                     )}
                     {s.status === 'DRAFT' && !canConfirm && (
-                      <span className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>확정 권한 없음</span>
+                      <span className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>정산 확정은 원장 또는 최고관리자만 가능합니다.</span>
+                    )}
+                    {s.status === 'CONFIRMED' && (
+                      <span className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>이미 확정된 정산입니다.</span>
                     )}
                   </td>
                 </tr>
