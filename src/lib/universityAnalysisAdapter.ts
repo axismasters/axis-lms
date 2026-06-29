@@ -311,3 +311,98 @@ export function safeAssembleUniversityAnalysisInput(
     snapshotAt:    new Date().toISOString(),
   };
 }
+
+// ────────────────────────────────────────────────────────────
+// Data Quality Bridge v1 — 입력 품질 판단 헬퍼
+// ────────────────────────────────────────────────────────────
+
+/**
+ * UniversityAnalysisInput에서 누락되거나 불충분한 항목을 식별하는 태그 타입.
+ *
+ * - 'no-internal-grades'          : 내신 성적이 전혀 없음
+ * - 'no-suneung-results'          : 수능실전모의 응시 기록이 없음
+ * - 'insufficient-suneung-rounds' : 수능실전모의가 1~2회로 3회 미만
+ * - 'no-mock-summaries'           : 모의고사 요약(mock-suneung/mock-school) 없음
+ */
+export type UniversityAnalysisMissingField =
+  | 'no-internal-grades'
+  | 'no-suneung-results'
+  | 'insufficient-suneung-rounds'
+  | 'no-mock-summaries';
+
+/**
+ * UniversityAnalysisInput 품질 평가 결과.
+ *
+ * 실제 추천 계산 결과를 포함하지 않으며,
+ * 엔진에 전달하기 전 입력 데이터의 충분성을 점검하는 용도로만 사용한다.
+ */
+export interface UniversityAnalysisInputQuality {
+  /**
+   * 전반적인 입력 상태 — input.readiness.adapterStatus 와 동일.
+   * Quality 객체만으로 전체 상태를 판단할 수 있도록 포함한다.
+   */
+  overallStatus: UniversityAnalysisAdapterStatus;
+  /** 누락되거나 불충분한 항목 목록 (없으면 빈 배열) */
+  missingFields: UniversityAnalysisMissingField[];
+  /** 사람이 읽을 수 있는 경고 메시지 목록 — 한국어, 없으면 빈 배열 */
+  warnings: string[];
+}
+
+/**
+ * UniversityAnalysisInput을 검사해 입력 품질 평가 결과를 반환한다.
+ *
+ * 판단 기준:
+ * - 내신 성적 없음           → 'no-internal-grades'
+ * - 수능실전모의 0회          → 'no-suneung-results'
+ * - 수능실전모의 1~2회        → 'insufficient-suneung-rounds'
+ * - 모의고사 요약 목록 없음   → 'no-mock-summaries'
+ *
+ * 반환값에는 대학명 / 합격 가능성 / 추천 순위가 포함되지 않는다.
+ *
+ * @param input safeAssembleUniversityAnalysisInput() 결과
+ */
+export function getUniversityAnalysisInputQuality(
+  input: UniversityAnalysisInput,
+): UniversityAnalysisInputQuality {
+  const missingFields: UniversityAnalysisMissingField[] = [];
+  const warnings: string[] = [];
+
+  if (!input.internalGrades.hasData) {
+    missingFields.push('no-internal-grades');
+    warnings.push('내신 성적이 입력되지 않았습니다.');
+  }
+
+  if (input.readiness.suneungRounds === 0) {
+    missingFields.push('no-suneung-results');
+    warnings.push('수능실전모의 데이터가 없습니다.');
+  } else if (input.readiness.suneungRounds < 3) {
+    missingFields.push('insufficient-suneung-rounds');
+    warnings.push(
+      `수능실전모의가 ${input.readiness.suneungRounds}회입니다. 3회 이상이면 누적 평균 산출이 가능합니다.`,
+    );
+  }
+
+  if (input.mockSummaries.length === 0) {
+    missingFields.push('no-mock-summaries');
+    warnings.push('모의고사 요약 데이터가 없습니다.');
+  }
+
+  return {
+    overallStatus: input.readiness.adapterStatus,
+    missingFields,
+    warnings,
+  };
+}
+
+/**
+ * UniversityAnalysisInput에서 누락/불충분 항목 목록만 반환하는 편의 함수.
+ *
+ * getUniversityAnalysisInputQuality(input).missingFields 의 단축 형태다.
+ *
+ * @param input safeAssembleUniversityAnalysisInput() 결과
+ */
+export function getMissingUniversityAnalysisFields(
+  input: UniversityAnalysisInput,
+): UniversityAnalysisMissingField[] {
+  return getUniversityAnalysisInputQuality(input).missingFields;
+}

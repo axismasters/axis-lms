@@ -1,16 +1,26 @@
-# AXIS LMS v1.2 - University Analysis Adapter Preview Bridge v1 buildfix
+# AXIS LMS v1.2 - University Analysis Adapter Data Quality Bridge v1 buildfix
 
 ## ChatGPT QA 판정
 
-이번 zip은 `axis-university-analysis-engine-phase5.1`을 직접 통합하지 않고, 기존 `StudentDetail.tsx`의 상담 리포트 미리보기 영역 안에서 `universityAnalysisAdapter.ts` helper를 호출해 분석 입력 구성 상태만 표시하는 단계다.
+이번 zip은 `UniversityAnalysisInput`을 기준으로 실제 추천 계산 전에 입력 품질과 부족 데이터를 판단하는 helper를 추가하는 단계다.
 
-원본 코드 방향은 안전했으나, `adapterMockSummaries`의 빈 배열 추론이 GitHub Actions에서 `never[]` 타입 위험을 만들 수 있어 buildfix 업로드본을 따로 만든다.
+원본 방향은 AXIS LMS v1.2 기준에 맞지만, `StudentDetail.tsx`에서 직전 Preview Bridge buildfix의 배열 타입 명시가 다시 `const list = []`로 회귀했다. GitHub Actions 타입 위험을 줄이기 위해 buildfix 업로드본을 따로 만든다.
 
 ## 변경 파일
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/pages/StudentDetail.tsx` | 분석 입력 구성 상태 섹션 추가, `adapterMockSummaries` 배열 타입 명시 |
+| `src/lib/universityAnalysisAdapter.ts` | 입력 품질 판단 타입 2종과 helper 2종 추가 |
+| `src/pages/StudentDetail.tsx` | 분석 입력 구성 상태 섹션에 warning 목록 표시, 배열 타입 회귀 복구 |
+
+## 추가된 adapter helper
+
+| 항목 | 역할 |
+|------|------|
+| `UniversityAnalysisMissingField` | 누락/불충분 항목 태그 타입 |
+| `UniversityAnalysisInputQuality` | 입력 품질 결과 타입 |
+| `getUniversityAnalysisInputQuality(input)` | 내신, 수능실전모의, 모의 요약의 부족 상태와 warning 반환 |
+| `getMissingUniversityAnalysisFields(input)` | `missingFields`만 반환하는 편의 함수 |
 
 ## buildfix 내용
 
@@ -42,15 +52,15 @@ const list: ReturnType<typeof adaptMockSummaryFromLms>[] = [];
 | AI 분석 버튼 추가 없음 | 정상 |
 | 대학명/학과명/합격 가능성/추천 순위 산출 없음 | 정상 |
 | `TeacherExamGrading.tsx` 변경 없음 | 정상 |
-| `universityAnalysisAdapter.ts` 변경 없음 | 정상 |
+| `universityAnalysisAdapter.ts` 기존 타입 구조 유지 | 정상 |
 
 ## 빌드 확인
 
 로컬 검사 폴더에는 프로젝트 의존성이 설치되어 있지 않아 `npm run build`가 `tsc: not found`로 중단된다.
 
-`npm install`도 레지스트리 정책으로 `@tailwindcss/vite` 다운로드가 403 차단되어 로컬 빌드 완료까지는 확인하지 못했다.
+이전과 동일하게 `npm install`도 레지스트리 정책으로 `@tailwindcss/vite` 다운로드가 403 차단되는 환경이라 로컬 빌드 완료까지는 확인하지 못했다.
 
-대신 변경 파일의 참조 변수, import, 타입 필드, `TeacherExamGrading.tsx` 고정 패턴은 정적으로 확인했다. 최종 main 반영은 GitHub Actions 통과 기준으로 승인한다.
+대신 변경 파일의 import, 참조 변수, 타입 필드, `TeacherExamGrading.tsx` 고정 패턴은 정적으로 확인했다. 최종 main 반영은 GitHub Actions 통과 기준으로 승인한다.
 
 ## 업로드 판단
 
@@ -58,17 +68,17 @@ const list: ReturnType<typeof adaptMockSummaryFromLms>[] = [];
 
 업로드 파일:
 
-`axis-lms-v1_2-university-analysis-adapter-preview-bridge-v1-buildfix-github-upload.zip`
+`axis-lms-v1_2-university-analysis-adapter-data-quality-bridge-v1-buildfix-github-upload.zip`
 
 커밋명:
 
-`대학분석 미리보기 브릿지 반영`
+`대학분석 입력품질 브릿지 반영`
 
 ## baseline 반영 조건
 
 GitHub Actions가 정상 통과하면 baseline에 다음 항목을 추가한다.
 
-33. University Analysis Adapter Preview Bridge v1 buildfix
+34. University Analysis Adapter Data Quality Bridge v1 buildfix
 
 ## 보류 유지
 

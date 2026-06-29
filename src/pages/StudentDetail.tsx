@@ -33,6 +33,7 @@ import {
   adaptInternalGradesFromLms,
   adaptMockSummaryFromLms,
   safeAssembleUniversityAnalysisInput,
+  getUniversityAnalysisInputQuality,
 } from '@/lib/universityAnalysisAdapter';
 import {
   getActiveClasses, getPastClasses, resolveClassView, timeSlotsToSchedule, ClassView,
@@ -929,6 +930,10 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
     () => safeAssembleUniversityAnalysisInput(student.id, student.name, adapterReadiness, adapterInternalGrades, adapterMockSummaries),
     [student.id, student.name, adapterReadiness, adapterInternalGrades, adapterMockSummaries]
   );
+  const analysisQuality = useMemo(
+    () => getUniversityAnalysisInputQuality(analysisInput),
+    [analysisInput]
+  );
   // ────────────────────────────────────────────────────────
 
   // 현재 표시 중인 평가 결과 목록 (기타평가 필터)
@@ -1219,6 +1224,16 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
               <div className="mt-2 text-xs tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>
                 수능실전모의 {analysisInput.readiness.suneungRounds}회 · 모의 카테고리 {analysisInput.mockSummaries.length}종
               </div>
+            )}
+            {analysisQuality.warnings.length > 0 && (
+              <ul className="mt-2 space-y-0.5">
+                {analysisQuality.warnings.map((w) => (
+                  <li key={w} className="flex items-start gap-1.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                    <span className="flex-shrink-0">·</span>
+                    <span>{w}</span>
+                  </li>
+                ))}
+              </ul>
             )}
             <p className="text-xs mt-2" style={{ color: 'oklch(0.7 0.01 250)' }}>
               입력 조립 결과 — 실제 추천 계산은 포함되지 않습니다.
