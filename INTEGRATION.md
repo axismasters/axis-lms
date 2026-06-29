@@ -95,3 +95,52 @@ Claude 원본 `axis-lms-v1_2-homework-qa-cleanup-v1.zip`은 `StudentHome.tsx`, `
 ## TeacherExamGrading 타입픽스 유지
 
 `src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.
+
+---
+
+# AXIS LMS v1.2 — Assessment Home Bridge QA v1
+
+## ChatGPT QA 판정
+
+성적/시험 관련 홈 요약 흐름을 검사한 결과, 현재 구현이 기준을 충족한다. 코드 변경 없이 QA 기록만 남긴다.
+
+## QA 확인
+
+| 항목 | 상태 |
+|------|------|
+| 강사 홈 `mySubmissions`가 `assignedStudentIds` 기준으로 제한됨 | 정상 |
+| 강사 홈 `candidateExams`가 담당 반 또는 학원 전체 시험만 후보로 사용함 | 정상 |
+| 강사 홈 미채점 시험이 담당 학생의 `채점중` 제출 기준으로 계산됨 | 정상 |
+| 강사 홈 최근 성적이 담당 학생의 `채점완료` 제출 기준으로 계산됨 | 정상 |
+| 강사 홈 채점 링크가 `/teacher/exams/:id/grading` 유지 | 정상 |
+| 학생 홈 최근 성적이 `getPublishedResultsForStudent()` 공개 정책 사용 | 정상 |
+| 학부모 홈 성적 요약이 `selectedChildId` 기준으로만 조회됨 | 정상 |
+| 학부모 홈에 라이벌/경쟁/엠블럼 정보 미노출 | 정상 |
+| 기존 숙제 홈 요약 | 유지 |
+| 기존 출결 홈 연결 | 유지 |
+| 기존 콘텐츠 공개자료 흐름 | 유지 |
+| 기존 학생 홈 나의 진열장/티어/SP | 유지 |
+
+## 변경하지 않은 파일
+
+- `src/pages/teacher/TeacherHome.tsx`
+- `src/pages/student/StudentHome.tsx`
+- `src/pages/parent/ParentHome.tsx`
+- `src/pages/teacher/TeacherExamGrading.tsx`
+- Context / Layout / Route / Provider 전체
+- Admin Back Office 전체
+
+## 보류 유지
+
+- NGD2 연동 없음
+- 문제은행 연동 없음
+- 시험/성적 엔진 구조 변경 없음
+- 성적 산식 변경 없음
+- 성적 공개 정책 변경 없음
+- 숙제 제출/자동채점 없음
+- 알림 기능 추가 없음
+- Rival / Emblem / IF 분석 직접 구현 없음
+
+## TeacherExamGrading 타입픽스 유지
+
+`src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.
