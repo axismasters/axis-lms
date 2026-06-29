@@ -5,11 +5,10 @@
 //
 // 현재 단계(API Fetch Connection v1):
 //   - callPhase51AnalyzeApi를 실제 fetch 기반으로 교체
-//   - API base URL: import.meta.env.VITE_PHASE51_API_URL
+//   - API base URL: VITE_PHASE51_API_URL 환경변수 (Phase51ImportMetaEnv 로컬 타입으로 안전하게 접근)
 //   - POST ${baseUrl}/analyze — body: JSON.stringify(draft)
 //   - 엔진 본체 import 없음
 //   - LMS 내부에서 합격 가능성·추천 순위·대학명을 계산하지 않는다
-//   - 이 파일의 함수는 아직 LMS 화면에서 호출하지 않는다
 //
 // 다음 단계:
 //   - Stage 4: LMS UI에 응답 표시 (GradesTab 내부 조건부 렌더)
@@ -21,11 +20,19 @@
 
 import type { Phase51AnalyzeRequestDraft } from '@/lib/universityAnalysisAdapter';
 
-type Phase51ImportMetaEnv = ImportMeta & {
-  readonly env?: {
-    readonly VITE_PHASE51_API_URL?: string;
+// ────────────────────────────────────────────────────────────
+// 로컬 env 타입 — vite-env.d.ts / vite/client 없이 안전하게 접근
+// ────────────────────────────────────────────────────────────
+
+/**
+ * vite/client reference 없이 import.meta.env를 안전하게 캐스팅하기 위한 로컬 타입.
+ * 이 타입은 universityAnalysisClient.ts 전용이며 외부에 export하지 않는다.
+ */
+interface Phase51ImportMetaEnv {
+  env?: {
+    VITE_PHASE51_API_URL?: string;
   };
-};
+}
 
 // ────────────────────────────────────────────────────────────
 // Phase 5.1 API 상태
@@ -184,7 +191,7 @@ export interface Phase51AnalyzeResponse {
 export async function callPhase51AnalyzeApi(
   draft: Phase51AnalyzeRequestDraft,
 ): Promise<Phase51AnalyzeResponse> {
-  const baseUrl = (import.meta as Phase51ImportMetaEnv).env?.VITE_PHASE51_API_URL;
+  const baseUrl = (import.meta as unknown as Phase51ImportMetaEnv).env?.VITE_PHASE51_API_URL;
   if (!baseUrl) {
     throw new Error('VITE_PHASE51_API_URL is not set.');
   }

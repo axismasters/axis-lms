@@ -45,6 +45,11 @@ import {
 } from '@/lib/universityAnalysisAdapter';
 import { nanoid } from 'nanoid';
 import {
+  callPhase51AnalyzeApi,
+  type Phase51ApiStatus,
+  type Phase51AnalyzeResponse,
+} from '@/lib/universityAnalysisClient';
+import {
   getActiveClasses, getPastClasses, resolveClassView, timeSlotsToSchedule, ClassView,
   getUnivDataStatus, getUnivChecklist, UNIV_STATUS_STYLE,
   getFinance, formatWon,
@@ -886,6 +891,9 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
     mathPercentileDelta: '',
     mathGradeUp: '',
   });
+  const [apiStatus, setApiStatus] = useState<Phase51ApiStatus>('idle');
+  const [apiResponse, setApiResponse] = useState<Phase51AnalyzeResponse | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const { exams, submissions } = useAssessment();
 
   const mockFiltered = useMemo(() => {
@@ -999,6 +1007,23 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
     [analysisInput, student.mockExamScores, student.internalScores, draftContext, draftTargetUniversities, draftScenario]
   );
   // ────────────────────────────────────────────────────────
+
+  // Response UI Wiring v1 — Phase 5.1 API 호출 핸들러 (사용자 버튼 클릭 시에만 실행)
+  const handleRequestAnalysis = () => {
+    if (apiStatus === 'pending' || draftBundle.validation.status !== 'ready') return;
+    setApiStatus('pending');
+    setApiError(null);
+    setApiResponse(null);
+    void callPhase51AnalyzeApi(draftBundle.draft)
+      .then((result) => {
+        setApiResponse(result);
+        setApiStatus('success');
+      })
+      .catch((e: unknown) => {
+        setApiError(e instanceof Error ? e.message : '알 수 없는 에러');
+        setApiStatus('error');
+      });
+  };
 
   // 현재 표시 중인 평가 결과 목록 (기타평가 필터)
   const currentEvalResults = useMemo(() => {
@@ -1643,9 +1668,96 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
             </pre>
           </details>
 
-          <p className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>
-            실제 Phase 5.1 API는 호출되지 않습니다.
-          </p>
+          {/* ⑨ Phase 5.1 응답 확인 — Response UI Wiring v1 */}
+          <div className="mt-3 pt-3 border-t" style={{ borderColor: 'oklch(0.93 0.008 250)' }}>
+            <button
+              onClick={handleRequestAnalysis}
+              disabled={apiStatus === 'pending' || draftBundle.validation.status !== 'ready'}
+              className="w-full py-1.5 rounded-md text-xs font-medium transition-colors"
+              style={{
+                background: draftBundle.validation.status === 'ready'
+                  ? 'oklch(0.95 0.012 250)'
+                  : 'oklch(0.97 0.005 250)',
+                color: draftBundle.validation.status === 'ready'
+                  ? 'oklch(0.35 0.02 250)'
+                  : 'oklch(0.65 0.01 250)',
+                cursor: (apiStatus === 'pending' || draftBundle.validation.status !== 'ready')
+                  ? 'not-allowed'
+                  : 'pointer',
+              }}
+            >
+              {apiStatus === 'pending' ? '응답 대기 중...' : 'Phase 5.1 응답 확인'}
+            </button>
+
+            {/* ready 아닐 때 안내 */}
+            {draftBundle.validation.status !== 'ready' && (
+              <p className="text-xs mt-1.5" style={{ color: 'oklch(0.65 0.01 250)' }}>
+                Draft 검증 상태가 'ready'일 때 호출 가능합니다.
+              </p>
+            )}
+
+            {/* pending */}
+            {apiStatus === 'pending' && (
+              <p className="text-xs mt-2" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                Phase 5.1 분석 응답 대기 중...
+              </p>
+            )}
+
+            {/* error */}
+            {apiStatus === 'error' && apiError && (
+              <div
+                className="mt-2 px-3 py-2 rounded-md text-xs"
+                style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.45 0.15 25)' }}
+              >
+                {apiError}
+              </div>
+            )}
+
+            {/* success */}
+            {apiStatus === 'success' && apiResponse && (
+              <div className="mt-2 space-y-2">
+                {/* reportSummary */}
+                <div className="px-3 py-2 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
+                  <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>보고서 요약</div>
+                  <p className="text-xs" style={{ color: 'oklch(0.35 0.015 250)' }}>{apiResponse.reportSummary}</p>
+                </div>
+
+                {/* counselingComment */}
+                <div className="px-3 py-2 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
+                  <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>상담 코멘트</div>
+                  <p className="text-xs" style={{ color: 'oklch(0.35 0.015 250)' }}>{apiResponse.counselingComment}</p>
+                </div>
+
+                {/* dataConfidence / targetGap 수 / subjectWeakness 수 */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="px-2 py-1.5 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
+                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>신뢰도</div>
+                    <div className="text-xs font-semibold mt-0.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
+                      {Math.round(apiResponse.dataConfidence * 100)}%
+                    </div>
+                  </div>
+                  <div className="px-2 py-1.5 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
+                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>목표 갭</div>
+                    <div className="text-xs font-semibold mt-0.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
+                      {apiResponse.targetGap.length}건
+                    </div>
+                  </div>
+                  <div className="px-2 py-1.5 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
+                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>취약 과목</div>
+                    <div className="text-xs font-semibold mt-0.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
+                      {apiResponse.subjectWeakness.length}개
+                    </div>
+                  </div>
+                </div>
+
+                {/* recommendationBand.summary */}
+                <div className="px-3 py-2 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
+                  <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>추천 밴드 요약</div>
+                  <p className="text-xs" style={{ color: 'oklch(0.35 0.015 250)' }}>{apiResponse.recommendationBand.summary}</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </Area>
     </div>
