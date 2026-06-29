@@ -36,6 +36,8 @@ import {
   getUniversityAnalysisInputQuality,
   buildUniversityAnalysisPayloadPreview,
   getUniversityAnalysisHandoffGate,
+  buildPhase51AnalyzeRequestDraftBundle,
+  type Phase51Track,
 } from '@/lib/universityAnalysisAdapter';
 import {
   getActiveClasses, getPastClasses, resolveClassView, timeSlotsToSchedule, ClassView,
@@ -870,6 +872,7 @@ function MonthCalendar({ ym, records }: { ym: string; records: { date: string; s
 // ════════════════════════════════════════════════════════════
 function GradesTab({ student, initialGradeType }: { student: Student; initialGradeType: GradeType }) {
   const [gradeType, setGradeType] = useState<GradeType>(initialGradeType);
+  const [draftTrack, setDraftTrack] = useState<Phase51Track | null>(null);
   const { exams, submissions } = useAssessment();
 
   const mockFiltered = useMemo(() => {
@@ -943,6 +946,16 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
   const handoffGate = useMemo(
     () => getUniversityAnalysisHandoffGate(payloadPreview),
     [payloadPreview]
+  );
+  // Draft Preview UI Wiring v1 — buildPhase51AnalyzeRequestDraftBundle
+  const draftBundle = useMemo(
+    () => buildPhase51AnalyzeRequestDraftBundle(
+      analysisInput,
+      student.mockExamScores,
+      student.internalScores,
+      draftTrack != null ? { track: draftTrack } : undefined,
+    ),
+    [analysisInput, student.mockExamScores, student.internalScores, draftTrack]
   );
   // ────────────────────────────────────────────────────────
 
@@ -1255,7 +1268,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                   : 'oklch(0.55 0.015 250)',
               }}>
                 {handoffGate.status === 'ready'
-                  ? '준비 조건 충족'
+                  ? '연동 준비 완료'
                   : handoffGate.status === 'needs-data'
                   ? '데이터 보완 권장'
                   : '데이터 입력 필요'}
@@ -1275,6 +1288,114 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
           <Info size={13} style={{ color: 'oklch(0.511 0.262 276.966)', flexShrink: 0, marginTop: 1 }} />
           <p className="text-xs" style={{ color: 'oklch(0.45 0.015 250)' }}>
             실제 대학명·합격 가능성·추천 순위는 다음 단계에서 계산됩니다.
+          </p>
+        </div>
+
+        {/* ⑥ Phase 5.1 Draft Preview — University Analysis Draft Preview UI Wiring v1 */}
+        <div className="mt-4 pt-4 border-t" style={{ borderColor: 'oklch(0.93 0.008 250)' }}>
+          <div className="text-xs font-semibold mb-2.5 flex items-center gap-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+            <FileText size={11} />
+            Phase 5.1 Draft 검증 미리보기
+          </div>
+
+          {/* 계열 선택 */}
+          <div className="mb-3">
+            <div className="text-xs mb-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>계열 선택 (선택)</div>
+            <div className="flex gap-1.5">
+              {(['인문', '자연', '통합'] as Phase51Track[]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setDraftTrack(t === draftTrack ? null : t)}
+                  className="px-2.5 py-1 rounded-md text-xs font-medium border transition-colors"
+                  style={{
+                    background:   draftTrack === t ? 'oklch(0.511 0.262 276.966)' : 'white',
+                    color:        draftTrack === t ? 'white' : 'oklch(0.45 0.015 250)',
+                    borderColor:  draftTrack === t ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.9 0.008 250)',
+                  }}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Validation 결과 */}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>Draft 검증 상태</span>
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+              style={
+                draftBundle.validation.status === 'ready'
+                  ? { background: 'oklch(0.94 0.08 160)', color: 'oklch(0.35 0.12 160)' }
+                  : draftBundle.validation.status === 'needs-data'
+                  ? { background: 'oklch(0.97 0.06 80)', color: 'oklch(0.45 0.12 80)' }
+                  : { background: 'oklch(0.96 0.005 250)', color: 'oklch(0.5 0.015 250)' }
+              }
+            >
+              {draftBundle.validation.status === 'ready'
+                ? '전달 준비'
+                : draftBundle.validation.status === 'needs-data'
+                ? '데이터 보완 필요'
+                : '데이터 부족'}
+            </span>
+          </div>
+
+          {/* Missing fields */}
+          {draftBundle.validation.messages.length > 0 && (
+            <ul className="mb-2 space-y-0.5">
+              {draftBundle.validation.messages.map((msg) => (
+                <li key={msg} className="flex items-start gap-1.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                  <span className="flex-shrink-0">·</span>
+                  <span>{msg}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {draftBundle.validation.missingFields.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {draftBundle.validation.missingFields.map((field) => (
+                <span
+                  key={field}
+                  className="px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.5 0.015 250)' }}
+                >
+                  {field}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* 목표 대학 / 개선 시나리오 자리 표시 */}
+          <div className="space-y-1.5 mb-2">
+            {[
+              '목표 대학 입력',
+              'IF 개선 시나리오',
+            ].map((label) => (
+              <div
+                key={label}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs"
+                style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.65 0.01 250)' }}
+              >
+                <span>{label}</span>
+                <span className="ml-auto italic">다음 단계에서 구현 예정</span>
+              </div>
+            ))}
+          </div>
+
+          <details className="mb-2">
+            <summary className="cursor-pointer text-xs font-medium" style={{ color: 'oklch(0.45 0.015 250)' }}>
+              AnalyzeRequest draft payload 보기
+            </summary>
+            <pre
+              className="mt-2 max-h-56 overflow-auto rounded-md p-2 text-[10px] leading-relaxed"
+              style={{ background: 'oklch(0.985 0.003 247)', color: 'oklch(0.35 0.015 250)' }}
+            >
+              {JSON.stringify(draftBundle.draft, null, 2)}
+            </pre>
+          </details>
+
+          <p className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>
+            실제 Phase 5.1 API는 호출되지 않습니다.
           </p>
         </div>
       </Area>
