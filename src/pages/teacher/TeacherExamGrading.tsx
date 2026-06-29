@@ -65,7 +65,7 @@ export default function TeacherExamGrading() {
   // 3. Scope 강화:
   //    classId 있는 시험 → assignedClassIds 포함 여부
   //    classId 없는 학원 전체 시험 → 담당 학생 submission ≥1
-  const visibleExam = (() => {
+  const scopedExam = (() => {
     if (!rawExam) return undefined;
     if (rawExam.classId) {
       return assignedClassIds.includes(rawExam.classId) ? rawExam : undefined;
@@ -73,7 +73,8 @@ export default function TeacherExamGrading() {
     return mySubmissions.length > 0 ? rawExam : undefined;
   })();
 
-  if (!visibleExam) return <NotFoundScreen />;
+  if (!scopedExam) return <NotFoundScreen />;
+  const visibleExam = scopedExam;
 
   const assignedStudents = students.filter((s) => assignedStudentIds.includes(s.id));
 
