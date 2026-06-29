@@ -47,3 +47,6 @@ export type UpdateContentInput = Partial<AddContentInput>;
 // ── 초기 더미 데이터 ─────────────────────────────────────────
 // 새로고침 시 초기화 (Context state 수준).
 export const INITIAL_CONTENT: ContentItem[] = [];
+
+// ── Content Persistence v1 ───────────────────────────────────
+export const CONTENT_STORAGE_KEY = 'axis_lms_content_items_v1';

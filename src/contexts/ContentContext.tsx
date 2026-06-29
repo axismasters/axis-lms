@@ -16,8 +16,8 @@ import {
   ContentVisibility,
   AddContentInput,
   UpdateContentInput,
-  INITIAL_CONTENT,
 } from '@/lib/contentData';
+import { loadContentItems, saveContentItems } from '@/lib/contentPersistence';
 
 // ── Context 타입 ─────────────────────────────────────────────
 
@@ -62,7 +62,7 @@ const VISIBILITY_RANK: Record<ContentVisibility, number> = {
 const ContentContext = createContext<ContentContextType | null>(null);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<ContentItem[]>(INITIAL_CONTENT);
+  const [items, setItems] = useState<ContentItem[]>(() => loadContentItems());
 
   const addContent = useCallback((input: AddContentInput): ContentItem => {
     const now = new Date().toISOString();
@@ -72,22 +72,32 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       createdAt: now,
       updatedAt: now,
     };
-    setItems(prev => [newItem, ...prev]);
+    setItems(prev => {
+      const updated = [newItem, ...prev];
+      saveContentItems(updated);
+      return updated;
+    });
     return newItem;
   }, []);
 
   const updateContent = useCallback((id: string, patch: UpdateContentInput): void => {
-    setItems(prev =>
-      prev.map(item =>
+    setItems(prev => {
+      const updated = prev.map(item =>
         item.id === id
           ? { ...item, ...patch, updatedAt: new Date().toISOString() }
           : item
-      )
-    );
+      );
+      saveContentItems(updated);
+      return updated;
+    });
   }, []);
 
   const deleteContent = useCallback((id: string): void => {
-    setItems(prev => prev.filter(item => item.id !== id));
+    setItems(prev => {
+      const updated = prev.filter(item => item.id !== id);
+      saveContentItems(updated);
+      return updated;
+    });
   }, []);
 
   const getByTeacher = useCallback(

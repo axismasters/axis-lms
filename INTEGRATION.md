@@ -802,3 +802,43 @@ parentVisible  (rank 2) → 강사 + 학생 + 학부모
 ### typecheck 결과
 - 실제 타입 오류 0건 (node_modules 미설치 오류만 잔존)
 - scopedExam baseline 유지 확인
+
+---
+
+## Content Persistence v1 buildfix
+
+**작업명**: Content Persistence v1 buildfix  
+**목표**: 강사 수업노트/수업영상/학습자료가 새로고침 후에도 유지되도록 기존 ContentContext에 localStorage persistence만 최소 추가
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/lib/contentData.ts` | `CONTENT_STORAGE_KEY` 추가. 기존 `ContentItem`, `AddContentInput`, `UpdateContentInput`, `INITIAL_CONTENT = []` 구조 유지 |
+| `src/lib/contentPersistence.ts` | 신규. `ContentItem[]` 전체를 `axis_lms_content_items_v1` localStorage key로 저장/복원 |
+| `src/contexts/ContentContext.tsx` | 기존 API 유지. 초기값을 `loadContentItems()`로 로드하고 `addContent/updateContent/deleteContent` 후 `saveContentItems(updated)` 호출 |
+
+### 유지 사항
+
+- 기존 ContentContext API 유지:
+  - `items`
+  - `addContent(input): ContentItem`
+  - `updateContent(id, patch): void`
+  - `deleteContent(id): void`
+  - `getByTeacher(teacherId, classIds?, type?): ContentItem[]`
+  - `getVisibleForClass(classId, minVisibility): ContentItem[]`
+- `getByTeacher` 최신순 정렬 유지
+- `getVisibleForClass` 최신순 정렬 유지
+- `teacherOnly`는 학생/학부모 포털에 노출되지 않음
+- 학생 포털은 `getVisibleForClass(classId, 'studentVisible')` 호출 유지
+- 학부모 포털은 `getVisibleForClass(classId, 'parentVisible')` 호출 유지
+- TeacherNotes/TeacherVideos UI, `TeacherLayout`, `assignedClassIds` 스코프 가드, 삭제 기능 변경 없음
+- Admin Back Office 변경 없음
+- 문제은행/NGD2 연동 없음
+- 파일 업로드 기능 없음
+- 외부 영상 API 연동 없음
+
+### scopedExam baseline 유지
+
+- `src/pages/teacher/TeacherExamGrading.tsx` 변경 없음
+- `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 타입픽스 유지
