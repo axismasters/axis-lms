@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { CalendarCheck, BarChart2, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2, X } from 'lucide-react';
+import { CalendarCheck, BarChart2, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2, X, ClipboardList, CalendarClock, CheckCircle2 } from 'lucide-react';
 import ParentLayout from '@/layouts/ParentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
@@ -15,6 +15,8 @@ import { useClasses } from '@/contexts/ClassContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useContent } from '@/contexts/ContentContext';
+import { useHomework } from '@/contexts/HomeworkContext';
+import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import type { ContentItem } from '@/lib/contentData';
 
@@ -100,6 +102,8 @@ export default function ParentHome() {
   const { sessions } = useAttendance();
   const { exams, submissions } = useAssessment();
   const { getVisibleForClass } = useContent();
+  const { getForStudent } = useHomework();
+  const { getStatus } = useHomeworkStatus();
 
   // 연결된 자녀 목록 (assignedStudentIds 기준)
   const myChildren = students.filter((s) =>
@@ -144,6 +148,36 @@ export default function ParentHome() {
     )
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 5);
+
+  // 자녀 숙제: 학부모는 조회만 가능, 완료 처리/제출/채점 없음
+  const childEnrolledClassIds = childActiveClasses.map(ci => ci.id);
+  const childHomework = selectedChildId ? getForStudent(childEnrolledClassIds) : [];
+  const incompleteHomework = childHomework.filter(hw => {
+    const status = getStatus(hw.id, selectedChildId);
+    return status?.status !== 'completed';
+  });
+  const upcomingHomework = [...incompleteHomework]
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .slice(0, 3);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const classNameOf = (classId: string) => (
+    childActiveClasses.find(c => c.id === classId)?.name
+    ?? classes.find(c => c.id === classId)?.name
+    ?? classId
+  );
+  const dueBadge = (dueDate: string) => {
+    if (dueDate < today) return { label: '마감', color: 'oklch(0.55 0.015 250)' };
+    if (dueDate === today) return { label: '오늘 마감', color: 'oklch(0.577 0.245 27.325)' };
+    const diff = Math.ceil((new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000);
+    return { label: `D-${diff}`, color: 'oklch(0.511 0.262 276.966)' };
+  };
+  const homeworkStatusLabel = (homeworkId: string) => {
+    const status = getStatus(homeworkId, selectedChildId)?.status ?? 'assigned';
+    if (status === 'completed') return { label: '완료', color: 'oklch(0.45 0.15 160)' };
+    if (status === 'seen') return { label: '확인함', color: 'oklch(0.511 0.262 276.966)' };
+    return { label: '미확인', color: 'oklch(0.55 0.015 250)' };
+  };
 
   return (
     <ParentLayout title="AXIS 학부모">
@@ -285,6 +319,67 @@ export default function ParentHome() {
                             {r.earnedScore}/{r.totalPoints}
                           </div>
                           <div className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>{pct}%</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            {/* 숙제 현황 (조회 전용) */}
+            <section>
+              <div className="flex items-center justify-between mb-2 px-1">
+                <div className="flex items-center gap-2">
+                  <ClipboardList size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
+                  <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>숙제 현황</span>
+                  {incompleteHomework.length > 0 && (
+                    <span
+                      className="text-xs px-1.5 py-0.5 rounded-full font-bold text-white"
+                      style={{ background: 'oklch(0.577 0.245 27.325)' }}
+                    >
+                      {incompleteHomework.length}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>조회 전용</span>
+              </div>
+
+              {childHomework.length === 0 ? (
+                <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                  배정된 숙제가 없습니다.
+                </div>
+              ) : incompleteHomework.length === 0 ? (
+                <div className="axis-card p-4 flex items-center gap-2">
+                  <CheckCircle2 size={16} style={{ color: 'oklch(0.45 0.15 160)' }} />
+                  <span className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>미완료 숙제가 없습니다.</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {upcomingHomework.map(hw => {
+                    const due = dueBadge(hw.dueDate);
+                    const status = homeworkStatusLabel(hw.id);
+                    return (
+                      <div key={hw.id} className="axis-card p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="font-medium text-sm truncate" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                              {hw.title}
+                            </div>
+                            <div className="flex items-center gap-1 mt-0.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                              <CalendarClock size={11} />
+                              {classNameOf(hw.classId)} · {hw.dueDate}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            <span
+                              className="text-xs px-2 py-0.5 rounded-full font-medium"
+                              style={{ background: 'oklch(0.95 0.005 250)', color: due.color }}
+                            >
+                              {due.label}
+                            </span>
+                            <span className="text-xs" style={{ color: status.color }}>{status.label}</span>
+                          </div>
                         </div>
                       </div>
                     );
