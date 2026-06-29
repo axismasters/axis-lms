@@ -10,7 +10,7 @@ import { useParams, useLocation } from 'wouter';
 import { toast } from 'sonner';
 import {
   ChevronLeft, Phone, User, CreditCard, CalendarCheck, BookOpen, BarChart2,
-  Users, KeyRound, Power, Plus, ArrowRightLeft, Receipt, Target,
+  Users, KeyRound, Power, Plus, ArrowRightLeft, Receipt, Target, FileText,
   Bell, CheckCircle2, XCircle, AlertTriangle, Info, Link2, StickyNote, X,
   Trophy, Zap, Star, Swords, Award,
 } from 'lucide-react';
@@ -27,7 +27,7 @@ import { isBackOfficeType, canViewStudentGrowth, canAwardSP, canAwardEmblem } fr
 import { STATUS_CONFIG, AttendanceStatus } from '@/lib/attendanceData';
 import { ClassRoom } from '@/lib/classData';
 import { Student, StudentStatus, ClassInfo, InternalScore, MockExamScore } from '@/lib/dummyData';
-import { getPublishedResultsForStudent, categoryLabel, StudentExamResult } from '@/lib/assessmentData';
+import { getPublishedResultsForStudent, categoryLabel, StudentExamResult, getUniversityRecommendationReadiness } from '@/lib/assessmentData';
 import {
   getActiveClasses, getPastClasses, resolveClassView, timeSlotsToSchedule, ClassView,
   getUnivDataStatus, getUnivChecklist, UNIV_STATUS_STYLE,
@@ -889,6 +889,12 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
   const us = UNIV_STATUS_STYLE[univ];
   const checklist = getUnivChecklist(student);
 
+  // Assessment Engine 기반 수능실전모의 준비 상태 — University Recommendation Readiness Foundation v1
+  const readiness = useMemo(
+    () => getUniversityRecommendationReadiness(assessmentResults),
+    [assessmentResults]
+  );
+
   // 현재 표시 중인 평가 결과 목록 (기타평가 필터)
   const currentEvalResults = useMemo(() => {
     if (gradeType === '기타평가') return schoolEvalResults;
@@ -980,6 +986,127 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
               <span className="text-xs" style={{ color: ok ? 'oklch(0.3 0.02 250)' : 'oklch(0.6 0.015 250)' }}>{label}</span>
             </div>
           ))}
+        </div>
+
+        {/* Assessment Engine 기반 수능실전모의 준비 상태 — University Recommendation Readiness Foundation v1 */}
+        <div className="mt-4 pt-4 border-t" style={{ borderColor: 'oklch(0.93 0.008 250)' }}>
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>
+              수능실전모의 데이터 준비 상태 (Assessment Engine)
+            </span>
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+              style={
+                readiness.status === '충분'
+                  ? { background: 'oklch(0.94 0.08 160)', color: 'oklch(0.35 0.12 160)' }
+                  : readiness.status === '준비 중'
+                  ? { background: 'oklch(0.97 0.06 80)', color: 'oklch(0.45 0.12 80)' }
+                  : { background: 'oklch(0.96 0.005 250)', color: 'oklch(0.5 0.015 250)' }
+              }
+            >
+              {readiness.status}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              ['응시 회차', readiness.hasRecentScore,    `${readiness.suneungRounds}회`],
+              ['최근 점수', readiness.hasRecentScore,    '확인 가능'],
+              ['누적 평균', readiness.hasCumulativeAvg,  '산출 가능'],
+              ['최근 3회 평균', readiness.hasLast3Avg,   '산출 가능'],
+            ] as const).map(([label, ok, okText]) => (
+              <div
+                key={label}
+                className="flex items-center gap-2 p-2.5 rounded-md"
+                style={{ border: '1px solid oklch(0.93 0.008 250)' }}
+              >
+                {ok
+                  ? <CheckCircle2 size={13} style={{ color: 'oklch(0.5 0.13 160)' }} />
+                  : <XCircle size={13} style={{ color: 'oklch(0.7 0.02 250)' }} />
+                }
+                <span className="text-xs flex-1" style={{ color: ok ? 'oklch(0.3 0.02 250)' : 'oklch(0.6 0.015 250)' }}>
+                  {label}
+                </span>
+                {ok && (
+                  <span className="text-xs tabular-nums ml-auto" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                    {okText}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="text-xs mt-2" style={{ color: 'oklch(0.65 0.01 250)' }}>
+            실제 대학명·합격 가능성·추천 순위는 표시되지 않습니다.
+          </p>
+        </div>
+      </Area>
+
+      {/* 상담 리포트 미리보기 — University Report Preview Foundation v1 */}
+      <Area
+        title="상담 리포트 미리보기"
+        desc="상담 전 성적·실전모의 데이터 준비 상태 요약 — 읽기 전용"
+        action={
+          <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded" style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.45 0.15 250)' }}>
+            <FileText size={11} /> 미리보기
+          </span>
+        }
+      >
+        {/* 학생 헤더 */}
+        <div className="flex items-center gap-3 mb-4 p-3 rounded-lg" style={{ background: 'oklch(0.97 0.004 250)' }}>
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
+            style={{ background: 'oklch(0.511 0.262 276.966)' }}
+          >
+            {student.name.charAt(0)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{student.name}</div>
+            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>대학추천 상담 준비 상태</div>
+          </div>
+          <span
+            className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0"
+            style={{ background: us.bg, color: us.text, border: `1px solid ${us.border}` }}
+          >
+            {univ}
+          </span>
+        </div>
+
+        {/* 데이터 준비 항목 */}
+        <div className="space-y-1.5">
+          {([
+            ['내신 입력',           checklist.hasInternal,      checklist.hasInternal ? '입력됨' : '미입력'],
+            ['모의고사 입력',        checklist.hasMock,          checklist.hasMock ? '입력됨' : '미입력'],
+            ['수능실전모의 응시',     readiness.hasRecentScore,   `${readiness.suneungRounds}회`],
+            ['최근 실전모의 데이터',  readiness.hasRecentScore,   readiness.hasRecentScore ? '존재' : '없음'],
+            ['최근 3회 평균 산출',   readiness.hasLast3Avg,      readiness.hasLast3Avg ? '가능' : '불가 (3회 이상 필요)'],
+          ] as [string, boolean, string][]).map(([label, ok, valueText]) => (
+            <div
+              key={label}
+              className="flex items-center gap-2 px-3 py-2 rounded-md"
+              style={{ background: ok ? 'oklch(0.97 0.03 160)' : 'oklch(0.97 0.005 250)' }}
+            >
+              {ok
+                ? <CheckCircle2 size={13} style={{ color: 'oklch(0.5 0.13 160)' }} />
+                : <XCircle     size={13} style={{ color: 'oklch(0.7 0.02 250)' }} />
+              }
+              <span className="text-xs flex-1" style={{ color: 'oklch(0.35 0.02 250)' }}>{label}</span>
+              <span
+                className="text-xs font-medium tabular-nums"
+                style={{ color: ok ? 'oklch(0.35 0.12 160)' : 'oklch(0.55 0.015 250)' }}
+              >
+                {valueText}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* 안내 문구 */}
+        <div
+          className="mt-4 px-3 py-2.5 rounded-lg text-center"
+          style={{ background: 'oklch(0.97 0.04 250)', border: '1px solid oklch(0.93 0.008 250)' }}
+        >
+          <p className="text-xs" style={{ color: 'oklch(0.45 0.015 250)' }}>
+            실제 대학명·합격 가능성·추천 순위는 다음 단계에서 계산됩니다.
+          </p>
         </div>
       </Area>
     </div>
