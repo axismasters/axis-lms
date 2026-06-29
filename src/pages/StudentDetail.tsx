@@ -27,7 +27,13 @@ import { isBackOfficeType, canViewStudentGrowth, canAwardSP, canAwardEmblem } fr
 import { STATUS_CONFIG, AttendanceStatus } from '@/lib/attendanceData';
 import { ClassRoom } from '@/lib/classData';
 import { Student, StudentStatus, ClassInfo, InternalScore, MockExamScore } from '@/lib/dummyData';
-import { getPublishedResultsForStudent, categoryLabel, StudentExamResult, getUniversityRecommendationReadiness } from '@/lib/assessmentData';
+import { getPublishedResultsForStudent, categoryLabel, StudentExamResult, getUniversityRecommendationReadiness, getMockAccumulationSummary } from '@/lib/assessmentData';
+import {
+  adaptReadinessFromLms,
+  adaptInternalGradesFromLms,
+  adaptMockSummaryFromLms,
+  safeAssembleUniversityAnalysisInput,
+} from '@/lib/universityAnalysisAdapter';
 import {
   getActiveClasses, getPastClasses, resolveClassView, timeSlotsToSchedule, ClassView,
   getUnivDataStatus, getUnivChecklist, UNIV_STATUS_STYLE,
@@ -895,6 +901,36 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
     [assessmentResults]
   );
 
+  // ── University Analysis Adapter Input Bridge v1 ──────────
+  // LMS 데이터 → 어댑터 입력 타입으로 변환 (엔진 호출 없음)
+  const adapterReadiness = useMemo(
+    () => adaptReadinessFromLms(readiness, student.internalScores.length > 0, student.mockExamScores.length > 0),
+    [readiness, student.internalScores.length, student.mockExamScores.length]
+  );
+  const adapterInternalGrades = useMemo(
+    () => adaptInternalGradesFromLms(student.internalScores),
+    [student.internalScores]
+  );
+  const suneungAccum = useMemo(() => {
+    const sorted = [...mockSuneungResults].sort((a, b) => a.examDate.localeCompare(b.examDate));
+    return getMockAccumulationSummary(sorted);
+  }, [mockSuneungResults]);
+  const mockSchoolAccum = useMemo(() => {
+    const sorted = [...mockSchoolResults].sort((a, b) => a.examDate.localeCompare(b.examDate));
+    return getMockAccumulationSummary(sorted);
+  }, [mockSchoolResults]);
+  const adapterMockSummaries = useMemo(() => {
+    const list: ReturnType<typeof adaptMockSummaryFromLms>[] = [];
+    if (suneungAccum.totalRounds > 0) list.push(adaptMockSummaryFromLms('mock-suneung', suneungAccum));
+    if (mockSchoolAccum.totalRounds > 0) list.push(adaptMockSummaryFromLms('mock-school', mockSchoolAccum));
+    return list;
+  }, [suneungAccum, mockSchoolAccum]);
+  const analysisInput = useMemo(
+    () => safeAssembleUniversityAnalysisInput(student.id, student.name, adapterReadiness, adapterInternalGrades, adapterMockSummaries),
+    [student.id, student.name, adapterReadiness, adapterInternalGrades, adapterMockSummaries]
+  );
+  // ────────────────────────────────────────────────────────
+
   // 현재 표시 중인 평가 결과 목록 (기타평가 필터)
   const currentEvalResults = useMemo(() => {
     if (gradeType === '기타평가') return schoolEvalResults;
@@ -1125,6 +1161,68 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* ⑤ 어댑터 입력 구성 상태 — University Analysis Adapter Input Bridge v1 */}
+        <div className="mb-4">
+          <div className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+            <Target size={11} />
+            분석 입력 구성 상태
+          </div>
+          <div
+            className="rounded-lg px-3.5 py-3"
+            style={{ border: '1px solid oklch(0.92 0.01 250)', background: 'oklch(0.985 0.004 250)' }}
+          >
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>어댑터 입력 상태</span>
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+                style={
+                  analysisInput.readiness.adapterStatus === 'ready'
+                    ? { background: 'oklch(0.94 0.08 160)', color: 'oklch(0.35 0.12 160)' }
+                    : analysisInput.readiness.adapterStatus === 'partial'
+                    ? { background: 'oklch(0.97 0.06 80)', color: 'oklch(0.45 0.12 80)' }
+                    : { background: 'oklch(0.96 0.005 250)', color: 'oklch(0.5 0.015 250)' }
+                }
+              >
+                {analysisInput.readiness.adapterStatus === 'ready'
+                  ? '입력 구성 완료'
+                  : analysisInput.readiness.adapterStatus === 'partial'
+                  ? '입력 일부'
+                  : '데이터 부족'}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {([
+                ['내신', analysisInput.internalGrades.hasData],
+                ['수능실전모의', analysisInput.readiness.suneungRounds > 0],
+                ['모의 요약', analysisInput.mockSummaries.length > 0],
+              ] as [string, boolean][]).map(([label, ok]) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs"
+                  style={{
+                    background: ok ? 'oklch(0.97 0.03 160)' : 'oklch(0.97 0.005 250)',
+                    border: `1px solid ${ok ? 'oklch(0.88 0.07 160)' : 'oklch(0.93 0.006 250)'}`,
+                  }}
+                >
+                  {ok
+                    ? <CheckCircle2 size={11} style={{ color: 'oklch(0.5 0.13 160)', flexShrink: 0 }} />
+                    : <XCircle     size={11} style={{ color: 'oklch(0.75 0.02 250)', flexShrink: 0 }} />
+                  }
+                  <span style={{ color: ok ? 'oklch(0.35 0.02 250)' : 'oklch(0.6 0.012 250)' }}>{label}</span>
+                </div>
+              ))}
+            </div>
+            {analysisInput.readiness.suneungRounds > 0 && (
+              <div className="mt-2 text-xs tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                수능실전모의 {analysisInput.readiness.suneungRounds}회 · 모의 카테고리 {analysisInput.mockSummaries.length}종
+              </div>
+            )}
+            <p className="text-xs mt-2" style={{ color: 'oklch(0.7 0.01 250)' }}>
+              입력 조립 결과 — 실제 추천 계산은 포함되지 않습니다.
+            </p>
           </div>
         </div>
 
