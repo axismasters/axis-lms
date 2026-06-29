@@ -1,84 +1,38 @@
-# AXIS LMS v1.2 — Student Finance View Foundation v1
+# AXIS LMS v1.2 — Student Finance Home Bridge v1
 
-## ChatGPT QA 판정
+## 목적
 
-이번 zip은 `INTEGRATION.md`만 있는 QA 기록이 아니라, 학생 포털에 본인 수납 내역 조회 화면을 추가하는 실제 기능 Foundation 단계다.
-
-원본 zip의 코드 변경 범위는 적절하나, 업로드본은 현재 확정 baseline 기준을 명확히 하기 위해 정리된 `INTEGRATION.md`와 변경 파일만 포함한다.
-
-## 현재 확정 baseline
-
-- Teacher Workflow Persistence v1 buildfix
-- Student Portal Foundation v1
-- TeacherExamGrading scopedExam 타입픽스
-- Parent Portal Foundation v1
-- Admin Back Office QA Cleanup v1
-- Teacher Content Engine v1
-- Content Visibility Bridge v1
-- Content Persistence v1 buildfix
-- Content Detail UX v1
-- Homework Foundation v1
-- Homework Status / Completion v1
-- Homework Detail UX v1
-- Homework Home Bridge v1
-- Parent Homework Bridge v1
-- Homework QA Cleanup v1
-- Attendance Home Bridge QA v1
-- Assessment Home Bridge QA v1
-- Portal Home Regression QA v1
-- Student Parent Portal Scope QA v1
-- Parent Finance View Foundation v1
-- Parent Finance Home Bridge v1
+학생 홈에서 수납 상태를 `FinanceContext` 실데이터와 연결하고, 학생 수납 조회 화면(`/student/finance`)로 이동할 수 있게 한다.
 
 ## 변경 파일
 
 | 파일 | 변경 내용 |
-|------|-----------|
-| `src/pages/student/StudentFinance.tsx` | 학생 본인 수납 내역 조회 전용 화면 추가 |
-| `src/routes/StudentRoutes.tsx` | `/student/finance` 라우트를 `StudentFinance`로 연결 |
+|---|---|
+| `src/pages/student/StudentHome.tsx` | 수납 상태 섹션 추가, `FinanceContext` 조회 함수 연결, `/student/finance` 링크 추가 |
 
-## 구현 범위
+## 구현 내용
 
-학생 본인 `currentUser.assignedStudentIds[0]` 기준으로만 청구/수납 내역을 조회한다.
+- `useFinance()`의 기존 조회 함수만 사용한다.
+- `currentUser.assignedStudentIds[0]` 기준으로 학생 본인 수납 내역만 조회한다.
+- `CANCELED` 청구서는 학생 홈 요약에서 제외한다.
+- 총 청구액과 미납액을 계산해 표시한다.
+- 수납 내역이 없으면 빈 상태 문구를 표시한다.
+- 미납액이 있으면 `미납 있음`, 없으면 `완납` 배지를 표시한다.
+- 카드 클릭 시 `/student/finance`로 이동한다.
 
-기존 `FinanceContext`의 `getInvoicesByStudent`, `getUnpaidAmount`, `getPaymentsByInvoice`만 사용하며 새 Provider나 재무 데이터 구조는 추가하지 않는다. 취소 청구서(`CANCELED`)는 목록에서 제외한다.
+## 유지 원칙
 
-## QA 확인
+- 학생 화면은 조회 전용이다.
+- 납부 등록, 환불 신청, 수정, 삭제, 영수증 발급 기능을 추가하지 않았다.
+- 학부모 홈, 학부모 수납 화면, 관리자 재무 화면은 변경하지 않았다.
+- 실제 결제/PG, 카카오 알림, 영수증 PDF는 구현하지 않았다.
+- 문제은행/NGD2, Rival/Emblem/IF는 연결하지 않았다.
+- `src/pages/teacher/TeacherExamGrading.tsx`는 변경하지 않았다.
 
-| 항목 | 상태 |
-|------|------|
-| 학생 본인 `assignedStudentIds[0]` 기준으로만 수납 내역 조회 | 정상 |
-| 취소 청구서 `CANCELED` 제외 | 정상 |
-| 청구액/미납액/완납 여부 표시 | 정상 |
-| 청구서별 수납 내역 표시 | 정상 |
-| 수납 내역 없음 빈 상태 표시 | 정상 |
-| `/student/finance` 라우트 연결 | 정상 |
-| 기존 학생 홈/출결/성적/수업자료/숙제/나의 진열장/티어/SP 흐름 변경 없음 | 정상 |
-| 납부 등록/환불 요청/수정/삭제 버튼 없음 | 정상 |
-| 학생 화면에 라이벌/경쟁/엠블럼 정보 신규 노출 없음 | 정상 |
+## 검증 메모
 
-## 변경하지 않은 파일
-
-- `src/pages/student/StudentHome.tsx`
-- `src/contexts/FinanceContext.tsx`
-- `src/pages/teacher/TeacherExamGrading.tsx`
-- Layout / Provider 전체
-- Admin Back Office 전체
-
-## 보류 유지
-
-- 실제 결제/PG 연동 없음
-- 환불 신청 기능 없음
-- 영수증 PDF 출력 없음
-- 카카오 알림톡/수납 알림 추가 없음
-- NGD2 연동 없음
-- 문제은행 연동 없음
-- Rival / Emblem / IF 분석 직접 구현 없음
-
-## 운영 메모
-
-이번 단계는 `/student/finance` 직접 라우트 연결까지다. 학생 홈 빠른 이동에 수납 버튼을 추가하는 작업은 별도 Home Bridge 단계에서 다룬다.
-
-## TeacherExamGrading 타입픽스 유지
-
-`src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.
+- 원본 zip에는 실제 코드 변경이 포함되어 있었으나, `INTEGRATION.md`의 이전 마일스톤 요약에 업로드 제외 항목이 섞여 있어 업로드용 문서를 정리했다.
+- `FinanceContext`에 `getInvoicesByStudent`, `getUnpaidAmount`가 존재함을 확인했다.
+- `/student/finance`는 Student Finance View Foundation v1에서 이미 연결된 라우트를 사용한다.
+- 로컬 workspace에 의존성(`node_modules`)이 없어 `npm run build`는 `tsc: not found`로 실행되지 않았다.
+- `npm install`은 registry 403으로 실패해 GitHub Actions 빌드 확인이 필요하다.

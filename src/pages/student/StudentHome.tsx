@@ -1,9 +1,10 @@
-// AXIS LMS v1.2 - StudentHome (Student Portal Foundation v1)
-// 학생 홈: 인사 / 빠른 이동 / 나의 진열장 / 최근 공개 성적.
-// 성적은 getPublishedResultsForStudent() 정책에 따라 공개/반영 결과만 표시.
+// AXIS LMS v1.2 - StudentHome (Student Finance Home Bridge v1)
+// 학생 홈: 인사 / 빠른 이동 / 숙제 요약 / 티어·SP / 나의 진열장 / 최근 성적 / 수납 상태.
+// ✅ QA Fix: QUICK_ACTIONS 4개 → grid-cols-2 (2×2)
+// ✅ Finance Bridge: 수납 상태 섹션 추가 — FinanceContext 실데이터, /student/finance 링크
 
 import { Link } from 'wouter';
-import { Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck, ClipboardList, CalendarClock, CheckCircle2 } from 'lucide-react';
+import { Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck, ClipboardList, CalendarClock, CheckCircle2, CreditCard, ChevronRight } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
@@ -12,14 +13,15 @@ import { useGrowth } from '@/contexts/GrowthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useHomework } from '@/contexts/HomeworkContext';
 import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
+import { useFinance } from '@/contexts/FinanceContext';
 import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 
 const QUICK_ACTIONS = [
-  { icon: BookOpen,     label: '내 반',  path: '/student/classes',    color: 'oklch(0.511 0.262 276.966)' },
+  { icon: BookOpen,      label: '내 반',  path: '/student/classes',    color: 'oklch(0.511 0.262 276.966)' },
   { icon: ClipboardList, label: '숙제',   path: '/student/homework',   color: 'oklch(0.45 0.15 160)' },
-  { icon: BarChart2,    label: '성적',   path: '/student/grades',     color: 'oklch(0.45 0.15 160)' },
-  { icon: CalendarCheck, label: '출결',  path: '/student/attendance', color: 'oklch(0.55 0.15 80)' },
+  { icon: BarChart2,     label: '성적',   path: '/student/grades',     color: 'oklch(0.45 0.15 160)' },
+  { icon: CalendarCheck, label: '출결',   path: '/student/attendance', color: 'oklch(0.55 0.15 80)' },
 ];
 
 export default function StudentHome() {
@@ -30,6 +32,7 @@ export default function StudentHome() {
   const { exams, submissions } = useAssessment();
   const { getForStudent } = useHomework();
   const { getStatus } = useHomeworkStatus();
+  const { getInvoicesByStudent, getUnpaidAmount } = useFinance();
 
   const myStudentId = currentUser.assignedStudentIds[0] ?? '';
   const student = students.find((s) => s.id === myStudentId);
@@ -71,6 +74,13 @@ export default function StudentHome() {
   const tierColor = profile ? TIER_COLORS[profile.tier] : 'oklch(0.7 0.01 250)';
   const tierLabel = profile ? TIER_LABELS[profile.tier] : '-';
 
+  // 수납 요약 — 본인 ID 기준, CANCELED 제외
+  const myInvoices = myStudentId
+    ? getInvoicesByStudent(myStudentId).filter(inv => inv.status !== 'CANCELED')
+    : [];
+  const financeTotalBilled = myInvoices.reduce((s, inv) => s + inv.finalAmount, 0);
+  const financeUnpaid      = myInvoices.reduce((s, inv) => s + getUnpaidAmount(inv.id), 0);
+
   return (
     <StudentLayout title="AXIS 학생">
       <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
@@ -88,7 +98,7 @@ export default function StudentHome() {
           </div>
         </div>
 
-        {/* 빠른 이동 */}
+        {/* 빠른 이동 — 4개 항목을 2×2 그리드로 균형 있게 배치 */}
         <div className="grid grid-cols-2 gap-2">
           {QUICK_ACTIONS.map(({ icon: Icon, label, path, color }) => (
             <Link key={path} href={path} style={{ display: 'block' }}>
@@ -251,7 +261,7 @@ export default function StudentHome() {
                         style={{
                           color: pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)',
                         }}
-                      >
+      >
                         {r.earnedScore}/{r.totalPoints}
                       </div>
                       <div className="text-xs tabular-nums" style={{ color: 'oklch(0.6 0.015 250)' }}>{pct}%</div>
@@ -261,6 +271,57 @@ export default function StudentHome() {
               })}
             </div>
           )}
+        </section>
+
+        {/* 수납 상태 — FinanceContext 실데이터, /student/finance 링크 */}
+        <section>
+          <div className="flex items-center gap-2 mb-2 px-1">
+            <CreditCard size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+            <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>수납 상태</span>
+          </div>
+          <Link href="/student/finance">
+            <div className="axis-card p-4 cursor-pointer">
+              {myInvoices.length === 0 ? (
+                <div className="flex items-center justify-between">
+                  <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                    수납 내역이 없습니다
+                  </div>
+                  <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex gap-3 text-xs flex-wrap">
+                    <span style={{ color: 'oklch(0.55 0.015 250)' }}>
+                      청구{' '}
+                      <span className="font-semibold tabular-nums" style={{ color: 'oklch(0.25 0.02 250)' }}>
+                        {financeTotalBilled.toLocaleString()}원
+                      </span>
+                    </span>
+                    {financeUnpaid > 0 && (
+                      <span style={{ color: 'oklch(0.55 0.015 250)' }}>
+                        미납{' '}
+                        <span className="font-semibold tabular-nums" style={{ color: 'oklch(0.55 0.2 27)' }}>
+                          {financeUnpaid.toLocaleString()}원
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full font-medium"
+                      style={financeUnpaid > 0
+                        ? { background: 'oklch(0.93 0.1 25)',   color: 'oklch(0.45 0.15 25)' }
+                        : { background: 'oklch(0.92 0.08 145)', color: 'oklch(0.3 0.12 145)' }
+                      }
+                    >
+                      {financeUnpaid > 0 ? '미납 있음' : '완납'}
+                    </span>
+                    <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </Link>
         </section>
 
       </div>
