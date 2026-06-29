@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useContent } from '@/contexts/ContentContext';
 import { getLocalDateStr } from '@/utils/dateUtils';
+import type { ContentVisibility } from '@/lib/contentData';
 
 const todayStr = getLocalDateStr();
 
@@ -32,6 +33,7 @@ export default function TeacherNotes() {
     topic: '',
     content: '',
     homework: '',
+    visibility: 'teacherOnly' as ContentVisibility,
   });
 
   // ContentContext에서 본인 수업노트 조회
@@ -55,7 +57,7 @@ export default function TeacherNotes() {
       content: form.content.trim(),
       homework: form.homework.trim() || undefined,
       date: form.date,
-      visibility: 'teacherOnly',  // v1: 학생·학부모 포털 미노출
+      visibility: form.visibility,
     });
 
     setForm({
@@ -64,6 +66,7 @@ export default function TeacherNotes() {
       topic: '',
       content: '',
       homework: '',
+      visibility: 'teacherOnly',
     });
     setShowForm(false);
     setSavedFlash(true);
@@ -189,6 +192,22 @@ export default function TeacherNotes() {
                     className="w-full text-sm rounded-md px-3 py-2 border resize-none"
                     style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.2 0.02 250)' }}
                   />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold block mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                    공개 범위
+                  </label>
+                  <select
+                    value={form.visibility}
+                    onChange={(e) => setForm((f) => ({ ...f, visibility: e.target.value as ContentVisibility }))}
+                    className="w-full text-sm rounded-md px-3 py-2 border appearance-none"
+                    style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.2 0.02 250)' }}
+                  >
+                    <option value="teacherOnly">내부용 (강사만)</option>
+                    <option value="studentVisible">학생 공개</option>
+                    <option value="parentVisible">학부모 공개</option>
+                  </select>
                 </div>
 
                 <div className="flex gap-2">

@@ -1,5 +1,8 @@
 # AXIS LMS v1.2 — INTEGRATION.md
-## 강사 포털 Foundation v1
+## Content Visibility Bridge v1
+
+현재 최종 섹션: `Content Visibility Bridge v1`
+기반 baseline: `Teacher Content Engine v1` GitHub Actions 통과 상태
 
 ---
 
@@ -736,3 +739,66 @@ GrowthProvider
 - ContentContext state → DB/Supabase 영속화
 - 학생 포털: `getVisibleForClass(classId, 'studentVisible')` 연동
 - 학부모 포털: `getVisibleForClass(classId, 'parentVisible')` 연동
+
+---
+
+## Content Visibility Bridge v1
+
+**작업명**: Content Visibility Bridge v1  
+**기반**: Teacher Content Engine v1
+
+### 수정 파일 (4개)
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/pages/teacher/TeacherNotes.tsx` | 폼에 공개 범위 select 추가 (teacherOnly/studentVisible/parentVisible), `visibility: form.visibility`로 저장 |
+| `src/pages/teacher/TeacherVideos.tsx` | 동일 — 공개 범위 select 추가 |
+| `src/pages/student/StudentClasses.tsx` | 수강중 반별 `getVisibleForClass(classId, 'studentVisible')` 콘텐츠 섹션 추가 |
+| `src/pages/parent/ParentHome.tsx` | 선택 자녀 수강반의 `getVisibleForClass(classId, 'parentVisible')` 콘텐츠 섹션 추가 |
+
+### 공개 범위 정책
+
+| 역할 | 호출 | 조회 범위 |
+|------|------|-----------|
+| 강사 | `getByTeacher(teacherId, assignedClassIds)` | 본인 전체 (teacherOnly 포함) |
+| 학생 | `getVisibleForClass(classId, 'studentVisible')` | `studentVisible` + `parentVisible` |
+| 학부모 | `getVisibleForClass(classId, 'parentVisible')` | `parentVisible` 만 |
+
+**설계 이유:**  
+학생은 수업 자료 전체(studentVisible 이상)를 볼 수 있고, 학부모는 명시적으로 부모 공개 처리된 자료만 본다. studentVisible 자료(예: 연습 문제, 수업 노트)가 학부모 포털에 자동 노출되지 않도록 분리.
+
+```
+teacherOnly  (rank 0) → 강사만
+studentVisible (rank 1) → 강사 + 학생
+parentVisible  (rank 2) → 강사 + 학생 + 학부모
+```
+
+### 학생 포털 — StudentClasses.tsx
+- 수강중인 반마다 카드 하단에 "수업자료 (N건)" 섹션 표시
+- `getVisibleForClass(ci.id, 'studentVisible')` 호출
+- 최대 5건 표시, 초과 시 "외 N건" 표시
+- note: 제목 + 내용(2줄) / video/material: 제목 + 날짜 + 링크 열기
+- 조회 전용
+
+### 학부모 포털 — ParentHome.tsx
+- 선택 자녀의 수강 반 전체에서 parentVisible 콘텐츠 수집 후 날짜 역순 최대 5건
+- 자녀 선택 변경 시 자동 갱신 (selectedChildId state 기반)
+- 성적 요약과 수납 상태 사이에 "공개 수업자료" 섹션 삽입
+- 콘텐츠가 없으면 섹션 자체 미표시
+- 수납 placeholder 변경 없음
+
+### 강사 visibility UI (최소)
+- 기본값 `teacherOnly` 유지
+- `<select>` 1개로 teacherOnly / studentVisible / parentVisible 선택
+- TeacherNotes / TeacherVideos 폼 하단, 버튼 바로 위에 위치
+
+### 변경하지 않은 파일
+- TeacherExamGrading.tsx — scopedExam 패턴 유지
+- Admin Back Office 파일 — 변경 없음
+- ParentAttendance.tsx, ParentGrades.tsx — 변경 없음
+- StudentGrades.tsx, StudentAttendance.tsx, StudentHome.tsx — 변경 없음
+- ContentContext.tsx — 변경 없음 (getVisibleForClass 기존 구현 사용)
+
+### typecheck 결과
+- 실제 타입 오류 0건 (node_modules 미설치 오류만 잔존)
+- scopedExam baseline 유지 확인

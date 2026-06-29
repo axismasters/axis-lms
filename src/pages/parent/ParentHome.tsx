@@ -7,13 +7,14 @@
 
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { CalendarCheck, BarChart2, CreditCard, ChevronDown, BookOpen, ChevronRight } from 'lucide-react';
+import { CalendarCheck, BarChart2, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2 } from 'lucide-react';
 import ParentLayout from '@/layouts/ParentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
+import { useContent } from '@/contexts/ContentContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 
 function scoreColor(pct: number) {
@@ -26,6 +27,7 @@ export default function ParentHome() {
   const { classes } = useClasses();
   const { sessions } = useAttendance();
   const { exams, submissions } = useAssessment();
+  const { getVisibleForClass } = useContent();
 
   // 연결된 자녀 목록 (assignedStudentIds 기준)
   const myChildren = students.filter((s) =>
@@ -58,6 +60,17 @@ export default function ParentHome() {
   const publishedResults = selectedChildId
     ? getPublishedResultsForStudent(exams, submissions, selectedChildId).slice(0, 2)
     : [];
+
+  // 자녀 학부모 공개 콘텐츠 — parentVisible만 표시 (studentVisible 제외)
+  const parentContent = childActiveClasses
+    .flatMap(ci =>
+      getVisibleForClass(ci.id, 'parentVisible').map(item => ({
+        ...item,
+        className: ci.name,
+      }))
+    )
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 5);
 
   return (
     <ParentLayout title="AXIS 학부모">
@@ -206,6 +219,47 @@ export default function ParentHome() {
                 </div>
               )}
             </section>
+
+            {/* 공개 수업자료 (parentVisible) */}
+            {parentContent.length > 0 && (
+              <section>
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <FileText size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
+                  <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>공개 수업자료</span>
+                  <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>{parentContent.length}건</span>
+                </div>
+                <div className="space-y-2">
+                  {parentContent.map(item => (
+                    <div key={item.id} className="axis-card p-3 flex items-start gap-3">
+                      {item.type === 'note'
+                        ? <FileText size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                        : <Play size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.45 0.15 160)' }} />
+                      }
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                          {item.title}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                          {item.className} · {item.date}
+                        </div>
+                        {item.type === 'note' && item.content && (
+                          <div className="text-xs mt-1 line-clamp-2" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                            {item.content}
+                          </div>
+                        )}
+                        {item.url && (
+                          <a href={item.url} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-1 text-xs"
+                            style={{ color: 'oklch(0.45 0.15 160)' }}>
+                            <Link2 size={11} /> 링크 열기
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* 수납 상태 요약 (placeholder) */}
             <section>

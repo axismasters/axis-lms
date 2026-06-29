@@ -1,11 +1,12 @@
 // AXIS LMS v1.2 - StudentClasses (Student Portal Foundation v1)
 // 학생 전용 내 반/수업 조회 — 읽기 전용.
 
-import { BookOpen, Clock } from 'lucide-react';
+import { BookOpen, Clock, Play, FileText, Link2 } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useClasses } from '@/contexts/ClassContext';
+import { useContent } from '@/contexts/ContentContext';
 import type { TimeSlot } from '@/lib/classData';
 
 const DAY_ORDER = ['월', '화', '수', '목', '금', '토', '일'];
@@ -23,6 +24,7 @@ export default function StudentClasses() {
   const { currentUser } = useAuth();
   const { students } = useStudents();
   const { classes } = useClasses();
+  const { getVisibleForClass } = useContent();
 
   const myStudentId = currentUser.assignedStudentIds[0] ?? '';
   const student = students.find(s => s.id === myStudentId);
@@ -100,6 +102,52 @@ export default function StudentClasses() {
                     <div className="mt-1 text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>
                       수강 시작 {ci.startDate}
                     </div>
+
+                    {/* 공개 수업자료 — studentVisible 이상 */}
+                    {(() => {
+                      const classContent = getVisibleForClass(ci.id, 'studentVisible');
+                      if (classContent.length === 0) return null;
+                      return (
+                        <div className="mt-3 pt-3 border-t space-y-1.5" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
+                          <div className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                            수업자료 ({classContent.length})
+                          </div>
+                          {classContent.slice(0, 5).map(item => (
+                            <div key={item.id} className="flex items-start gap-2 text-xs">
+                              {item.type === 'note'
+                                ? <FileText size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                                : <Play size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.45 0.15 160)' }} />
+                              }
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium truncate" style={{ color: 'oklch(0.3 0.02 250)' }}>
+                                  {item.title}
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-0.5" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                                  <span>{item.date}</span>
+                                  {item.url && (
+                                    <a href={item.url} target="_blank" rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-0.5"
+                                      style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                                      <Link2 size={10} /> 링크
+                                    </a>
+                                  )}
+                                </div>
+                                {item.type === 'note' && item.content && (
+                                  <div className="mt-0.5 line-clamp-2" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                                    {item.content}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          {classContent.length > 5 && (
+                            <div className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>
+                              외 {classContent.length - 5}건
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })}
