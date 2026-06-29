@@ -996,3 +996,46 @@ export function sanitizeImprovementScenarioInput(
 
   return Object.keys(scenario).length > 0 ? scenario : undefined;
 }
+
+// ────────────────────────────────────────────────────────────
+// Request Draft Assembly Bridge v1
+// buildPhase51AnalyzeRequestDraft + validatePhase51AnalyzeRequestDraft 조합.
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Phase 5.1 AnalyzeRequest draft와 검증 결과를 함께 담는 bundle 타입.
+ *
+ * 실제 Phase 5.1 API 호출 결과가 아니며, 대학명/합격 가능성/추천 순위를 포함하지 않는다.
+ */
+export interface Phase51AnalyzeRequestDraftBundle {
+  draft: Phase51AnalyzeRequestDraft;
+  validation: Phase51DraftValidationResult;
+}
+
+/**
+ * 기존 helper를 조합해 `{ draft, validation }`을 한 번에 반환한다.
+ *
+ * 새 계산 로직을 만들지 않고, 실제 Phase 5.1 API를 호출하지 않는다.
+ */
+export function buildPhase51AnalyzeRequestDraftBundle(
+  input: UniversityAnalysisInput,
+  mockExamScores?: MockExamScore[],
+  internalScores?: InternalScore[],
+  context?: Phase51StudentContextDraft,
+  targetUniversities?: Phase51TargetUniversityInputDraft[],
+  improvementScenario?: Phase51ImprovementScenarioInputDraft,
+): Phase51AnalyzeRequestDraftBundle {
+  const draft = buildPhase51AnalyzeRequestDraft(
+    input,
+    mockExamScores,
+    internalScores,
+    context,
+    targetUniversities,
+    improvementScenario,
+  );
+
+  return {
+    draft,
+    validation: validatePhase51AnalyzeRequestDraft(draft),
+  };
+}

@@ -1,9 +1,9 @@
-# AXIS LMS v1.2 - University Analysis Improvement Scenario Bridge v1 buildfix
+# AXIS LMS v1.2 - University Analysis Request Draft Assembly Bridge v1 buildfix
 
 ## ChatGPT QA 판정
 
-원본 zip은 `improvementScenario` 단일값을 명시 입력으로 채우려는 방향은 맞다.
-다만 직전 baseline 42번에서 고친 Phase 5.1 실제 계약 draft 일부를 다시 이전 구조로 되돌렸다.
+원본 zip은 `{ draft, validation }`을 함께 반환하는 assembly bridge 방향은 맞다.
+다만 직전 baseline 43번에서 고친 Phase 5.1 실제 계약 draft 일부를 다시 이전 구조로 되돌렸다.
 
 따라서 원본 zip 대신 이 buildfix 업로드본을 사용한다.
 
@@ -11,7 +11,7 @@
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/lib/universityAnalysisAdapter.ts` | `buildPhase51AnalyzeRequestDraft`에 `improvementScenario` 선택 인자 추가, `sanitizeImprovementScenarioInput` helper 추가 |
+| `src/lib/universityAnalysisAdapter.ts` | `Phase51AnalyzeRequestDraftBundle`, `buildPhase51AnalyzeRequestDraftBundle` 추가 |
 
 ## buildfix 기준
 
@@ -26,16 +26,16 @@
 | `Phase51TargetUniversityInputDraft` | `univId`, `univName`, `deptName` 유지 |
 | `improvementScenario` | 단일 `Phase51ImprovementScenarioInputDraft` 유지 |
 
-## improvementScenario 정제 기준
+## assembly 기준
 
-| 항목 | 판단 |
+| 항목 | 내용 |
 |------|------|
-| `mathStdScoreDelta` | 유한한 숫자일 때만 반영 |
-| `mathPercentileDelta` | 유한한 숫자일 때만 반영 |
-| `mathGradeUp` | 유한한 숫자일 때만 반영 |
-| 모두 비어 있음 | `undefined` 반환 |
+| `draft` | 기존 `buildPhase51AnalyzeRequestDraft(...)` 결과 |
+| `validation` | 기존 `validatePhase51AnalyzeRequestDraft(draft)` 결과 |
+| 신규 계산 | 없음 |
+| 실제 API 호출 | 없음 |
 
-개선 시나리오 자동 계산, 합격 가능성 변화 계산, 추천 순위 변화 계산은 수행하지 않는다.
+이번 산출물은 assembly bridge이며, QA freeze 문서 통합은 다음 단계에서 별도 묶음 작업으로 진행한다.
 
 ## QA 확인
 
@@ -64,17 +64,17 @@
 
 업로드 파일:
 
-`axis-lms-v1_2-university-analysis-improvement-scenario-bridge-v1-buildfix-github-upload.zip`
+`axis-lms-v1_2-university-analysis-request-draft-assembly-bridge-v1-buildfix-github-upload.zip`
 
 커밋명:
 
-`대학분석 개선시나리오 브릿지 반영`
+`대학분석 요청초안 조립 브릿지 반영`
 
 ## baseline 반영 조건
 
 GitHub Actions가 정상 통과하면 baseline에 다음 항목을 추가한다.
 
-43. University Analysis Improvement Scenario Bridge v1 buildfix
+44. University Analysis Request Draft Assembly Bridge v1 buildfix
 
 ## 보류 유지
 
