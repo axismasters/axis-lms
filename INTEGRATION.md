@@ -220,3 +220,64 @@ Claude 원본 `axis-lms-v1_2-homework-qa-cleanup-v1.zip`은 `StudentHome.tsx`, `
 ## TeacherExamGrading 타입픽스 유지
 
 `src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.
+
+---
+
+# AXIS LMS v1.2 — Student Parent Portal Scope QA v1
+
+## ChatGPT QA 판정
+
+학생/학부모 포털 상세 화면의 조회 범위와 읽기 전용 정책을 검사했다. 학생/학부모 출결 상세의 출석률 계산만 `AttendanceContext.getStats()` 정책에 맞게 공결 포함으로 보정한다.
+
+## 변경 파일
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/pages/student/StudentAttendance.tsx` | 출석률 계산에 `공결` 포함 |
+| `src/pages/parent/ParentAttendance.tsx` | 출석률 계산에 `공결` 포함 |
+
+## 출석률 정책
+
+`AttendanceContext.getStats()`는 `출석 + 보강출석 + 공결`을 출석률 분자로 사용한다. 학생/학부모 출결 상세도 같은 기준을 사용하도록 맞춘다.
+
+## QA 확인
+
+| 항목 | 상태 |
+|------|------|
+| 학생 화면이 `currentUser.assignedStudentIds[0]` 기준으로 본인 데이터만 조회 | 정상 |
+| 학생 성적이 `getPublishedResultsForStudent()` 공개 정책 유지 | 정상 |
+| 학생 출결이 본인 소속 반과 본인 `studentId` records만 조회 | 정상 |
+| 학생 수업자료가 `studentVisible` 기준 조회 | 정상 |
+| 학생 숙제가 수강중 반 기준 공개 숙제만 조회 | 정상 |
+| 학생 숙제 완료 표시는 학생 전용 상태 처리로 유지 | 정상 |
+| 학부모 화면이 `currentUser.assignedStudentIds` 범위 자녀만 조회 | 정상 |
+| 학부모 출결/성적이 선택 자녀 `selectedChildId` 기준으로 제한 | 정상 |
+| 학부모 숙제가 조회 전용으로 유지되고 완료/제출/채점 버튼 없음 | 정상 |
+| 학부모 화면에 라이벌/경쟁/엠블럼 정보 미노출 | 정상 |
+| 학부모 콘텐츠가 `parentVisible` 기준 조회 | 정상 |
+
+## 변경하지 않은 파일
+
+- `src/pages/student/StudentClasses.tsx`
+- `src/pages/student/StudentHomework.tsx`
+- `src/pages/student/StudentGrades.tsx`
+- `src/pages/parent/ParentGrades.tsx`
+- `src/pages/parent/ParentHome.tsx`
+- `src/pages/teacher/TeacherExamGrading.tsx`
+- Context / Layout / Route / Provider 전체
+- Admin Back Office 전체
+
+## 보류 유지
+
+- NGD2 연동 없음
+- 문제은행 연동 없음
+- 시험/성적 엔진 구조 변경 없음
+- 성적 산식/공개 정책 변경 없음
+- 숙제 제출/파일 업로드/자동채점 없음
+- 알림 기능 추가 없음
+- Admin Back Office 변경 없음
+- Rival / Emblem / IF 분석 직접 구현 없음
+
+## TeacherExamGrading 타입픽스 유지
+
+`src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.

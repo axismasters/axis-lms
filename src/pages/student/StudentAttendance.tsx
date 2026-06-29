@@ -55,7 +55,7 @@ export default function StudentAttendance() {
 
   const total = myRecords.length;
   const attendanceRate = total > 0
-    ? Math.round((stats.출석 / total) * 100)
+    ? Math.round(((stats.출석 + stats.공결) / total) * 100)
     : null;
 
   return (

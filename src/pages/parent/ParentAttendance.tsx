@@ -48,10 +48,11 @@ export default function ParentAttendance() {
     .slice(0, 30);
 
   const presentCount = childRecords.filter(r => r.status === '출석' || r.status === '보강출석').length;
+  const officialCount = childRecords.filter(r => r.status === '공결').length;
   const lateCount = childRecords.filter(r => r.status === '지각' || r.status === '조퇴').length;
   const absentCount = childRecords.filter(r => r.status === '결석').length;
   const total = childRecords.length;
-  const attendanceRate = total > 0 ? Math.round((presentCount / total) * 100) : null;
+  const attendanceRate = total > 0 ? Math.round(((presentCount + officialCount) / total) * 100) : null;
 
   return (
     <ParentLayout title="자녀 출결">
