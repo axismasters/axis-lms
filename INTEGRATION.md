@@ -144,3 +144,79 @@ Claude 원본 `axis-lms-v1_2-homework-qa-cleanup-v1.zip`은 `StudentHome.tsx`, `
 ## TeacherExamGrading 타입픽스 유지
 
 `src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.
+
+---
+
+# AXIS LMS v1.2 — Portal Home Regression QA v1
+
+## ChatGPT QA 판정
+
+강사/학생/학부모 홈 전체를 회귀 검사한 결과, 숙제/출결/성적/콘텐츠 홈 요약이 서로 충돌하지 않는다. 코드 변경 없이 QA 기록만 남긴다.
+
+## TeacherHome QA
+
+| 항목 | 상태 |
+|------|------|
+| 빠른 실행 `/teacher/attendance`, `/teacher/exams`, `/teacher/students`, `/teacher/notes`, `/teacher/videos`, `/teacher/homework` 경로가 `TeacherRoutes`와 일치 | 정상 |
+| 채점 상세 링크가 `/teacher/exams/:examId/grading` 유지 | 정상 |
+| 숙제 요약 섹션 유지 | 정상 |
+| 오늘 수업 섹션과 출결 상태 뱃지 유지 | 정상 |
+| 미채점 시험 섹션 유지 | 정상 |
+| 최근 성적 섹션 유지 | 정상 |
+| 담당 학생/담당 반 스코프 유지 | 정상 |
+
+## StudentHome QA
+
+| 항목 | 상태 |
+|------|------|
+| 빠른 이동 `/student/classes`, `/student/homework`, `/student/grades`, `/student/attendance` 경로가 `StudentRoutes`와 일치 | 정상 |
+| 빠른 이동 4개 항목이 `grid-cols-2` 2x2 구조 유지 | 정상 |
+| 숙제 요약 섹션 유지 | 정상 |
+| 티어/SP 섹션 유지 | 정상 |
+| 나의 진열장 섹션 유지 | 정상 |
+| 최근 성적이 `getPublishedResultsForStudent()` 공개 정책 사용 | 정상 |
+
+## ParentHome QA
+
+| 항목 | 상태 |
+|------|------|
+| 자녀 선택 섹션 유지 | 정상 |
+| 수강 반 섹션 유지 | 정상 |
+| 출결 요약이 자녀 소속 반과 `selectedChildId` 기준으로 제한 | 정상 |
+| 최근 성적이 `selectedChildId` 기준으로 제한 | 정상 |
+| 공개 수업자료가 `parentVisible` 기준으로 조회 | 정상 |
+| 숙제 현황이 조회 전용으로 유지 | 정상 |
+| 수납 상태 링크 `/parent/finance`가 `ParentRoutes` placeholder와 일치 | 정상 |
+| 학부모 홈에 라이벌/경쟁/엠블럼 정보 미노출 | 정상 |
+
+## Content Visibility QA
+
+| 포털 | 조회 방식 | 상태 |
+|------|-----------|------|
+| 학생 | `StudentClasses.tsx`에서 `getVisibleForClass(classId, 'studentVisible')` 사용 | 정상 |
+| 학부모 | `ParentHome.tsx`에서 `getVisibleForClass(classId, 'parentVisible')` 사용 | 정상 |
+
+`ContentContext`의 `VISIBILITY_RANK`는 `teacherOnly = 0`, `studentVisible = 1`, `parentVisible = 2`이며, `getVisibleForClass()`는 요청한 최소 공개 범위 이상의 항목만 반환한다.
+
+## 변경하지 않은 파일
+
+- `src/pages/teacher/TeacherHome.tsx`
+- `src/pages/student/StudentHome.tsx`
+- `src/pages/parent/ParentHome.tsx`
+- `src/pages/teacher/TeacherExamGrading.tsx`
+- Context / Layout / Route / Provider 전체
+- Admin Back Office 전체
+
+## 보류 유지
+
+- NGD2 연동 없음
+- 문제은행 연동 없음
+- 시험/성적 엔진 구조 변경 없음
+- 숙제 제출/자동채점 없음
+- 알림 기능 추가 없음
+- Admin Back Office 변경 없음
+- Rival / Emblem / IF 분석 직접 구현 없음
+
+## TeacherExamGrading 타입픽스 유지
+
+`src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.
