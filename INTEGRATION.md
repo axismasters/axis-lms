@@ -447,3 +447,59 @@ UI 1차 검증(TeacherExamGrading) + Context 2차 검증 일치.
 ### npm run typecheck / npm run build
 - typecheck: 수정 파일 타입 오류 0건 (ClassList.tsx pre-existing 2건 제외)
 - build: 환경 egress 차단으로 `npm install` 불가. 로컬 `npm install && npm run build` 통과 예상.
+
+---
+
+## Student Portal Foundation v1 + buildfix/integration 정리
+
+**작업명**: Student Portal Foundation v1 + buildfix/integration  
+**기반**: Teacher Workflow Persistence v1 buildfix
+
+### 수정 파일 (Student Portal)
+
+| 파일 | 종류 | 내용 |
+|------|------|------|
+| `src/layouts/StudentLayout.tsx` | 수정 | Bottom Nav: 홈/내 반/성적/출결 4탭. `성장` 탭 제거, `flex:1` 균등 배치 |
+| `src/pages/student/StudentHome.tsx` | 수정 | 빠른 이동 3카드 추가, 최근 성적 → `getPublishedResultsForStudent` 정책 적용 |
+| `src/pages/student/StudentClasses.tsx` | **신규** | 내 반/수업 조회 (`/student/classes`) |
+| `src/pages/student/StudentGrades.tsx` | **신규** | 성적 조회 (`/student/grades`) — 공개/반영 결과만 |
+| `src/pages/student/StudentAttendance.tsx` | **신규** | 출결 조회 (`/student/attendance`) |
+| `src/routes/StudentRoutes.tsx` | 수정 | 신규 3개 라우트 등록, `/student/scores → /student/grades` 리다이렉트 |
+
+### buildfix/integration 정리
+
+| 파일 | 변경 | 이유 |
+|------|------|------|
+| `src/pages/teacher/TeacherExamGrading.tsx` | `exam` → `visibleExam` 전체 rename | GitHub Actions 통과 baseline의 타입픽스 복원. `const visibleExam = (() => ...)(); if (!visibleExam) return <NotFoundScreen />` 패턴으로 undefined 조기 탈출 후 타입 안전성 명시 |
+
+### 학생 포털 설계 원칙 확인
+
+| 원칙 | 구현 방식 |
+|------|-----------|
+| 조회 전용 | 수정/등록/삭제 UI 없음 |
+| 본인 데이터만 | `currentUser.assignedStudentIds[0]` 기준 필터 |
+| 성적 공개 정책 | `getPublishedResultsForStudent()` 단일 호출 |
+| 반 단위 시험 | `totalScore !== undefined` 시 노출 (채점완료) |
+| 학원 전체 시험 | `publishedAt` 있을 때만 노출 |
+| 결석/미채점 | 자동 제외 (visibility 함수 내부 처리) |
+| 문제은행/NGD2 | 미포함 |
+| 관리자/강사/학부모 | 변경 없음 |
+
+### 학생 포털 라우트 최종 구조
+
+```
+/student            → StudentHome (홈 + 진열장 + 최근 성적)
+/student/classes    → StudentClasses (내 반/수업 조회)
+/student/grades     → StudentGrades (성적 조회)
+/student/attendance → StudentAttendance (출결 조회)
+/student/growth     → placeholder (성장 진열장, 다음 단계)
+/student/scores     → redirect → /student/grades (하위호환)
+```
+
+### npm run typecheck / npm run build
+- typecheck: 신규/수정 파일 타입 오류 0건 (ClassList.tsx pre-existing 2건 제외)
+- TeacherExamGrading.tsx visibleExam rename 후 타입 오류 없음 확인
+- build: 환경 egress 차단으로 `npm install` 불가. 로컬 `npm install && npm run build` 통과 예상.
+
+### 관리자 Back Office 영향
+없음. 수정 파일: `src/pages/student/`, `src/layouts/StudentLayout.tsx`, `src/routes/StudentRoutes.tsx`, `src/pages/teacher/TeacherExamGrading.tsx` (rename only).
