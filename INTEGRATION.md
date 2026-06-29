@@ -1,57 +1,52 @@
-# AXIS LMS v1.2 — INTEGRATION.md
-## Parent Homework Bridge v1
+# AXIS LMS v1.2 — Homework QA Cleanup v1
 
-### ChatGPT 보정 메모
+## ChatGPT QA 판정
 
-Claude 원본 zip은 최신 baseline의 학부모 홈에서 출결 요약, 수납 링크, 기존 `useAssessment`/`assessmentData` 기반 성적 흐름을 크게 바꿔 회귀 위험이 있었다.
-이번 업로드본은 GitHub Actions 통과 baseline의 `ParentHome.tsx`를 기준으로 숙제 현황 조회 섹션만 추가한다.
+Claude 원본 `axis-lms-v1_2-homework-qa-cleanup-v1.zip`은 `StudentHome.tsx`, `TeacherHome.tsx`를 큰 폭으로 재작성하여 최신 통과 baseline을 되돌릴 위험이 있었다.
 
-### 작업 범위
-학부모 홈(`ParentHome.tsx`)에 자녀별 숙제 현황 조회 Bridge 추가.
+이번 GitHub 업로드본은 코드 파일을 포함하지 않고, 현재 GitHub Actions 통과 baseline에 대한 QA 기록만 남긴다.
 
----
+## 원본 zip 업로드 제외 사유
 
-### 변경 파일
+| 파일 | 판정 | 사유 |
+|------|------|------|
+| `src/pages/student/StudentHome.tsx` | 제외 | 최신 baseline의 홈 레이아웃을 재작성하고, `profile.sp`, `profile.material`, `def.icon` 등 현재 Growth 타입과 맞지 않는 접근 가능성이 있음 |
+| `src/pages/teacher/TeacherHome.tsx` | 제외 | 최신 baseline의 빠른 실행/오늘 수업/미채점/최근 성적 흐름을 다시 구성하고, 채점 링크를 `/teacher/exams/:id/grade`로 바꿔 현재 라우트(`/teacher/exams/:id/grading`)와 충돌 가능성이 있음 |
 
-| 파일 | 변경 내용 |
-|------|-----------|
-| `src/pages/parent/ParentHome.tsx` | 숙제 현황 섹션 추가 (조회 전용) |
+## 현재 baseline 유지 확인
 
----
-
-### 숙제 Bridge 동작
-
-- 자녀 식별: `currentUser.assignedStudentIds` → `students.filter(s => childIds.includes(s.id))`
-- 선택 자녀 수강중 반: `child.classes.filter(c => c.status === '수강중').map(c => c.id)`
-- 숙제 조회: `getForStudent(childEnrolledClassIds)` → published + 수강중 반만
-- 미완료 계산: `getStatus(hw.id, selectedChildId)?.status !== 'completed'`
-- 표시: 미완료 N건 배지 + dueDate 오름차순 임박 숙제 최대 3건
-- 각 숙제 행: 제목, 반명, 마감일, **자녀 상태 텍스트** (확인함/미확인/완료)
-- **완료 버튼 없음** — 학부모는 조회만 가능
-
-### 기존 섹션 유지
-
-| 섹션 | 상태 |
+| 항목 | 상태 |
 |------|------|
-| 자녀 선택 (selectedChildId state) | ✅ 유지 |
-| 수강 반 요약 | ✅ 유지 |
-| 출결 요약 | ✅ 유지 |
-| 성적 (getPublishedResultsForStudent) | ✅ 유지 |
-| 공개 수업자료 (parentVisible, ContentDetailModal) | ✅ 유지 |
-| 수납 상태 placeholder | ✅ 유지 |
+| 강사 숙제 등록/공개/삭제 | 유지 |
+| 학생 숙제 조회/확인/완료/상세 | 유지 |
+| 강사 숙제 상세/학생별 상태 조회 | 유지 |
+| 학생 홈 숙제 요약 | 유지 |
+| 강사 홈 숙제 요약 | 유지 |
+| 학부모 홈 자녀별 숙제 조회 | 유지 |
+| 학생 홈 나의 진열장/티어/SP | 유지 |
+| 강사 홈 빠른 실행/오늘 수업/미채점 시험/최근 성적 | 유지 |
+| 학부모 홈 자녀 선택/출결/성적/공개자료/수납 | 유지 |
 
----
+## 변경하지 않은 것
 
-### 변경하지 않은 파일
+- `src/pages/teacher/TeacherHomework.tsx`
+- `src/pages/student/StudentHomework.tsx`
+- `src/pages/teacher/TeacherHome.tsx`
+- `src/pages/student/StudentHome.tsx`
+- `src/pages/parent/ParentHome.tsx`
+- `src/pages/teacher/TeacherExamGrading.tsx`
+- Context / Layout / Route / Provider 전체
+- Admin Back Office 전체
 
-- `src/pages/teacher/TeacherExamGrading.tsx` — scopedExam → visibleExam 패턴 유지
-- `HomeworkContext`, `HomeworkStatusContext`, `ContentContext` — API 변경 없음
-- 강사/학생 포털 — 변경 없음
-- Admin Back Office — 변경 없음
-- 라우트, Provider 트리 — 변경 없음
+## 보류 유지
 
----
+- NGD2 연동 없음
+- 문제은행 연동 없음
+- 숙제 제출 기능 없음
+- 자동채점 없음
+- 알림 기능 추가 없음
+- Rival / Emblem / IF 분석 직접 구현 없음
 
-### NGD2 / 문제은행 / 자동채점 미연동
+## TeacherExamGrading 타입픽스 유지
 
-숙제 현황 Bridge는 텍스트 표시 및 상태 조회만. 완료 처리, 제출, 채점, 파일, 알림 없음.
+`src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 변경하지 않는다.
