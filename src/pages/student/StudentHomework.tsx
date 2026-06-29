@@ -3,7 +3,7 @@
 // 학생 — 수강 중인 반의 공개된(published) 숙제만 조회
 // draft / 미수강 반 숙제는 절대 노출 안 됨
 
-import { useEffect, useState, type ElementType } from 'react';
+import { useEffect, useState } from 'react';
 import { ClipboardList, CalendarClock, CheckCircle2, Circle, Eye, X } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,11 +55,17 @@ export default function StudentHomework() {
     return { label: `D-${Math.ceil((new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000)}`, bg: 'oklch(0.93 0.05 250)', fg: 'oklch(0.3 0.08 250)' };
   }
 
-  const statusConfig: Record<HomeworkStatusValue, { label: string; Icon: ElementType; color: string }> = {
-    assigned:  { label: '미확인', Icon: Circle,       color: 'oklch(0.65 0.01 250)' },
-    seen:      { label: '확인함', Icon: Eye,          color: 'oklch(0.5 0.1 250)' },
-    completed: { label: '완료',   Icon: CheckCircle2, color: 'oklch(0.45 0.15 145)' },
+  const statusConfig: Record<HomeworkStatusValue, { label: string; color: string }> = {
+    assigned:  { label: '미확인', color: 'oklch(0.65 0.01 250)' },
+    seen:      { label: '확인함', color: 'oklch(0.5 0.1 250)' },
+    completed: { label: '완료',   color: 'oklch(0.45 0.15 145)' },
   };
+
+  function renderStatusIcon(statusValue: HomeworkStatusValue, size: number) {
+    if (statusValue === 'completed') return <CheckCircle2 size={size} />;
+    if (statusValue === 'seen') return <Eye size={size} />;
+    return <Circle size={size} />;
+  }
 
   function HomeworkDetailModal({
     hw,
@@ -70,7 +76,7 @@ export default function StudentHomework() {
   }) {
     const status = myStudentId ? getStatus(hw.id, myStudentId) : null;
     const statusValue: HomeworkStatusValue = status?.status ?? 'assigned';
-    const { label: statusLabel, Icon: StatusIcon, color: statusColor } = statusConfig[statusValue];
+    const { label: statusLabel, color: statusColor } = statusConfig[statusValue];
     const isCompleted = statusValue === 'completed';
 
     return (
@@ -109,7 +115,7 @@ export default function StudentHomework() {
 
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-1.5" style={{ color: statusColor }}>
-              <StatusIcon size={15} />
+              {renderStatusIcon(statusValue, 15)}
               <span className="text-sm font-medium">{statusLabel}</span>
               {status?.completedAt && (
                 <span className="text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>
@@ -161,7 +167,7 @@ export default function StudentHomework() {
           const badge = dueBadge(hw.dueDate);
           const status = myStudentId ? getStatus(hw.id, myStudentId) : null;
           const statusValue: HomeworkStatusValue = status?.status ?? 'assigned';
-          const { label: statusLabel, Icon: StatusIcon, color: statusColor } = statusConfig[statusValue];
+          const { label: statusLabel, color: statusColor } = statusConfig[statusValue];
           const isCompleted = statusValue === 'completed';
           return (
             <div
@@ -204,7 +210,7 @@ export default function StudentHomework() {
 
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-1.5" style={{ color: statusColor }}>
-                  <StatusIcon size={14} />
+                  {renderStatusIcon(statusValue, 14)}
                   <span className="text-xs font-medium">{statusLabel}</span>
                   {status?.completedAt && (
                     <span className="text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>

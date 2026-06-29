@@ -32,6 +32,10 @@
 - `src/pages/student/StudentHomework.tsx`의 동적 lucide 아이콘 타입을 React `ElementType`에서 `LucideIcon`으로 변경했다.
 - GitHub Actions 오류인 `'StatusIcon' cannot be used as a JSX component`를 해결하기 위한 타입 전용 수정이다.
 
+### buildfix2 메모
+- GitHub Actions의 JSX 타입 검사에서 동적 `StatusIcon` 컴포넌트가 계속 실패하여 동적 컴포넌트 사용을 제거했다.
+- 상태 아이콘은 `renderStatusIcon(statusValue, size)` 헬퍼가 직접 `<Circle />`, `<Eye />`, `<CheckCircle2 />`를 반환하도록 변경했다.
+
 ## Content Visibility Bridge v1
 
 현재 최종 섹션: `Content Visibility Bridge v1`
