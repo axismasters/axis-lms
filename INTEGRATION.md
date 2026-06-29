@@ -1,9 +1,9 @@
-# AXIS LMS v1.2 - University Analysis Mock Exam Subject Detail Bridge v1 buildfix
+# AXIS LMS v1.2 - University Analysis School Record Input Bridge v1 buildfix
 
 ## ChatGPT QA 판정
 
-원본 zip은 `Student.mockExamScores`를 Phase 5.1 request draft에 연결하려는 방향은 맞다.
-다만 직전 baseline 37번에서 실제 Phase 5.1 계약 기준으로 고친 `AnalyzeRequest` draft 타입을 다시 이전 추론형 구조로 되돌렸다.
+원본 zip은 `Student.internalScores`에서 `schoolRecord`를 채우려는 방향은 맞다.
+다만 직전 baseline 38번에서 고친 Phase 5.1 실제 계약 draft 일부를 다시 이전 구조로 되돌렸다.
 
 따라서 원본 zip 대신 이 buildfix 업로드본을 사용한다.
 
@@ -11,7 +11,7 @@
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/lib/universityAnalysisAdapter.ts` | `MockExamScore` 타입 import, `mockExamScores` 선택 인자 추가, 과목별 모의고사 draft 변환 helper 추가 |
+| `src/lib/universityAnalysisAdapter.ts` | `buildPhase51AnalyzeRequestDraft`에 `internalScores` 선택 인자 추가, `adaptInternalScoresToSchoolRecordInputDraft` helper 추가 |
 
 ## buildfix 기준
 
@@ -19,42 +19,28 @@
 |------|------|
 | `Phase51GradeLevel` | `1 | 2 | 3` 유지 |
 | `Phase51Track` | `'인문' | '자연' | '통합'` 유지 |
-| `schoolRecord` | `Phase51SchoolRecordInputDraft | null` 유지 |
+| `Phase51MockExamRecordDraft` | 실제 Phase 5.1 `MockExamRecord` 대응 평면 필드 구조 유지 |
+| `Phase51SchoolRecordInputDraft` | `avgGrade`, `koreanGrade`, `mathGrade`, `note?` 구조 유지 |
 | `targetUniversities` | `Phase51TargetUniversityInputDraft[]` 유지 |
 | `improvementScenario` | 단일 `Phase51ImprovementScenarioInputDraft` 유지 |
-| `mockExamRecords` | 실제 Phase 5.1 `MockExamRecord` 대응 평면 필드 구조 유지 |
 
 ## 추가 함수
 
 | 함수 | 역할 |
 |------|------|
-| `adaptMockExamScoreToRecordDraft(score)` | `Student.mockExamScores` 단일 항목을 `Phase51MockExamRecordDraft`로 변환 |
-| `adaptMockExamScoresToRecordDrafts(scores)` | `Student.mockExamScores` 배열 전체를 draft 배열로 변환 |
+| `adaptInternalScoresToSchoolRecordInputDraft(scores)` | `Student.internalScores` 배열에서 Phase 5.1 `SchoolRecordInput` draft를 생성 |
 
 ## 변환 규칙
 
-| LMS 원자료 | draft 필드 |
-|-----------|------------|
-| `examName` | `examLabel` |
-| `examDate` 또는 `examName`의 연도 | `year` |
-| `korean.standardScore` | `koreanStdScore` |
-| `korean.percentile` | `koreanPercentile` |
-| `korean.grade` | `koreanGrade` |
-| `math.standardScore` | `mathStdScore` |
-| `math.percentile` | `mathPercentile` |
-| `math.grade` | `mathGrade` |
-| `english.grade` | `englishGrade` |
-| `inquiry1.subject` | `inquiry1Name` |
-| `inquiry1.standardScore` | `inquiry1StdScore` |
-| `inquiry1.percentile` | `inquiry1Percentile` |
-| `inquiry1.grade` | `inquiry1Grade` |
-| `inquiry2.subject` | `inquiry2Name` |
-| `inquiry2.standardScore` | `inquiry2StdScore` |
-| `inquiry2.percentile` | `inquiry2Percentile` |
-| `inquiry2.grade` | `inquiry2Grade` |
-| `history.grade` | `koreanHistoryGrade` |
+| draft 필드 | 변환 규칙 |
+|-----------|-----------|
+| `avgGrade` | 전체 `InternalScore.grade` 단순 평균 |
+| `koreanGrade` | 과목명에 `국어`가 포함된 항목의 단순 평균 |
+| `mathGrade` | 과목명에 `수학`이 포함된 항목의 단순 평균 |
+| `note` | 데이터가 있을 때 LMS 기준 단순 평균임을 표시 |
 
-LMS에 없는 과목 선택값(`koreanSubjectType`, `mathSubjectType`)과 탐구 영역(`inquiry1Area`, `inquiry2Area`)은 추론하지 않고 비워 둔다.
+평균은 소수점 둘째 자리까지 반올림한다. 해당 데이터가 없으면 `null`로 둔다.
+가중 평균, 교과 전형 계산, 대학추천 계산은 수행하지 않는다.
 
 ## QA 확인
 
@@ -83,17 +69,17 @@ LMS에 없는 과목 선택값(`koreanSubjectType`, `mathSubjectType`)과 탐구
 
 업로드 파일:
 
-`axis-lms-v1_2-university-analysis-mock-exam-subject-detail-bridge-v1-buildfix-github-upload.zip`
+`axis-lms-v1_2-university-analysis-school-record-input-bridge-v1-buildfix-github-upload.zip`
 
 커밋명:
 
-`대학분석 모의고사 과목상세 브릿지 반영`
+`대학분석 내신입력 브릿지 반영`
 
 ## baseline 반영 조건
 
 GitHub Actions가 정상 통과하면 baseline에 다음 항목을 추가한다.
 
-38. University Analysis Mock Exam Subject Detail Bridge v1 buildfix
+39. University Analysis School Record Input Bridge v1 buildfix
 
 ## 보류 유지
 

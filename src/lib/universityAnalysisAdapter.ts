@@ -672,13 +672,16 @@ export interface Phase51AnalyzeRequestDraft {
 export function buildPhase51AnalyzeRequestDraft(
   input: UniversityAnalysisInput,
   mockExamScores?: MockExamScore[],
+  internalScores?: InternalScore[],
 ): Phase51AnalyzeRequestDraft {
   return {
     studentId:                input.studentId,
     studentName:              input.studentName,
     gradeLevel:               null,
     track:                    null,
-    schoolRecord:             null,
+    schoolRecord:             internalScores
+      ? adaptInternalScoresToSchoolRecordInputDraft(internalScores)
+      : null,
     mockExamRecords:          mockExamScores
       ? adaptMockExamScoresToRecordDrafts(mockExamScores)
       : [],
@@ -747,4 +750,41 @@ export function adaptMockExamScoresToRecordDrafts(
   scores: MockExamScore[],
 ): Phase51MockExamRecordDraft[] {
   return scores.map(adaptMockExamScoreToRecordDraft);
+}
+
+// ────────────────────────────────────────────────────────────
+// School Record Input Bridge v1
+// Student.internalScores → Phase51SchoolRecordInputDraft 변환 헬퍼.
+// ────────────────────────────────────────────────────────────
+
+function averageGradeOrNull(scores: InternalScore[]): number | null {
+  if (scores.length === 0) return null;
+  const sum = scores.reduce((total, score) => total + score.grade, 0);
+  return Math.round((sum / scores.length) * 100) / 100;
+}
+
+/**
+ * `Student.internalScores` 배열에서 Phase 5.1 SchoolRecordInput draft를 생성한다.
+ *
+ * 계산 규칙:
+ * - avgGrade: 전 과목 단순 산술 평균
+ * - koreanGrade: 과목명에 '국어'가 포함된 항목의 단순 산술 평균
+ * - mathGrade: 과목명에 '수학'이 포함된 항목의 단순 산술 평균
+ *
+ * 과도한 입시 계산, 가중 평균, 대학추천 계산은 수행하지 않는다.
+ */
+export function adaptInternalScoresToSchoolRecordInputDraft(
+  scores: InternalScore[],
+): Phase51SchoolRecordInputDraft {
+  const koreanScores = scores.filter((score) => score.subject.includes('국어'));
+  const mathScores = scores.filter((score) => score.subject.includes('수학'));
+
+  return {
+    avgGrade: averageGradeOrNull(scores),
+    koreanGrade: averageGradeOrNull(koreanScores),
+    mathGrade: averageGradeOrNull(mathScores),
+    note: scores.length > 0
+      ? `LMS internalScores ${scores.length}건 기준 단순 평균`
+      : undefined,
+  };
 }
