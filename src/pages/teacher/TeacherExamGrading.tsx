@@ -74,6 +74,7 @@ export default function TeacherExamGrading() {
   })();
 
   if (!exam) return <NotFoundScreen />;
+  const visibleExam = exam;
 
   const assignedStudents = students.filter((s) => assignedStudentIds.includes(s.id));
 
@@ -96,16 +97,16 @@ export default function TeacherExamGrading() {
   function handleGrade(studentId: string) {
     const inp = getInput(studentId);
     const scoreNum = parseFloat(inp.score);
-    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > exam.totalScore) {
+    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > visibleExam.totalScore) {
       setErrors((prev) => ({
         ...prev,
-        [studentId]: `0~${exam.totalScore}점 범위의 숫자를 입력해주세요.`,
+        [studentId]: `0~${visibleExam.totalScore}점 범위의 숫자를 입력해주세요.`,
       }));
       return;
     }
 
     const result = gradeSubmissionByTeacher(
-      exam.id,
+      visibleExam.id,
       studentId,
       scoreNum,
       currentUser.name,
@@ -135,9 +136,9 @@ export default function TeacherExamGrading() {
 
         {/* 시험 정보 헤더 (담당 학생 기준 counts) */}
         <div className="axis-card p-4">
-          <div className="font-semibold text-base" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</div>
+          <div className="font-semibold text-base" style={{ color: 'oklch(0.2 0.02 250)' }}>{visibleExam.title}</div>
           <div className="text-xs mt-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
-            {exam.subject} · {exam.examDate} · 만점 {exam.totalScore}점
+            {visibleExam.subject} · {visibleExam.examDate} · 만점 {visibleExam.totalScore}점
           </div>
           <div className="flex gap-4 mt-2 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
             <span className="flex items-center gap-1">
@@ -176,7 +177,7 @@ export default function TeacherExamGrading() {
                 const inp = getInput(sub.studentId);
                 const scoreNum = parseFloat(inp.score);
                 const isValidScore =
-                  !isNaN(scoreNum) && scoreNum >= 0 && scoreNum <= exam.totalScore;
+                  !isNaN(scoreNum) && scoreNum >= 0 && scoreNum <= visibleExam.totalScore;
                 const errMsg = errors[sub.studentId];
                 return (
                   <div key={sub.studentId} className="axis-card p-4">
@@ -194,12 +195,12 @@ export default function TeacherExamGrading() {
                     <div className="space-y-2">
                       <div>
                         <label className="text-xs block mb-1" style={{ color: 'oklch(0.5 0.015 250)' }}>
-                          점수 <span style={{ color: 'oklch(0.6 0.015 250)' }}>(0~{exam.totalScore}점)</span>
+                          점수 <span style={{ color: 'oklch(0.6 0.015 250)' }}>(0~{visibleExam.totalScore}점)</span>
                         </label>
                         <input
                           type="number"
                           min={0}
-                          max={exam.totalScore}
+                          max={visibleExam.totalScore}
                           value={inp.score}
                           onChange={(e) => updateInput(sub.studentId, { score: e.target.value })}
                           placeholder="점수 입력"
@@ -274,7 +275,7 @@ export default function TeacherExamGrading() {
                       <div className="flex items-center gap-1.5">
                         <CheckCircle2 size={14} style={{ color: 'oklch(0.45 0.15 160)' }} />
                         <span className="text-sm font-bold tabular-nums" style={{ color: 'oklch(0.3 0.02 250)' }}>
-                          {sub.totalScore ?? '?'}/{exam.totalScore}
+                          {sub.totalScore ?? '?'}/{visibleExam.totalScore}
                         </span>
                       </div>
                     </div>
