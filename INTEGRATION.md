@@ -470,7 +470,7 @@ UI 1차 검증(TeacherExamGrading) + Context 2차 검증 일치.
 
 | 파일 | 변경 | 이유 |
 |------|------|------|
-| `src/pages/teacher/TeacherExamGrading.tsx` | `exam` → `visibleExam` 전체 rename | GitHub Actions 통과 baseline의 타입픽스 복원. `const visibleExam = (() => ...)(); if (!visibleExam) return <NotFoundScreen />` 패턴으로 undefined 조기 탈출 후 타입 안전성 명시 |
+| `src/pages/teacher/TeacherExamGrading.tsx` | `scopedExam`으로 scope 결과를 받은 뒤 guard 후 `visibleExam` 확정 | GitHub Actions 통과 baseline의 타입픽스. `handleGrade` 같은 내부 함수에서도 `visibleExam`이 undefined가 아님을 TypeScript가 인식하도록 유지 |
 
 ### 학생 포털 설계 원칙 확인
 
@@ -498,11 +498,11 @@ UI 1차 검증(TeacherExamGrading) + Context 2차 검증 일치.
 
 ### npm run typecheck / npm run build
 - typecheck: 신규/수정 파일 타입 오류 0건 (ClassList.tsx pre-existing 2건 제외)
-- TeacherExamGrading.tsx visibleExam rename 후 타입 오류 없음 확인
+- TeacherExamGrading.tsx scopedExam → visibleExam 확정 패턴 적용 후 타입 오류 없음 확인
 - build: 환경 egress 차단으로 `npm install` 불가. 로컬 `npm install && npm run build` 통과 예상.
 
 ### 관리자 Back Office 영향
-없음. 수정 파일: `src/pages/student/`, `src/layouts/StudentLayout.tsx`, `src/routes/StudentRoutes.tsx`, `src/pages/teacher/TeacherExamGrading.tsx` (rename only).
+없음. 수정 파일: `src/pages/student/`, `src/layouts/StudentLayout.tsx`, `src/routes/StudentRoutes.tsx`, `src/pages/teacher/TeacherExamGrading.tsx` (scope guard 타입픽스).
 
 ---
 
@@ -549,7 +549,7 @@ UI 1차 검증(TeacherExamGrading) + Context 2차 검증 일치.
 
 | 파일 | 상태 |
 |------|------|
-| TeacherExamGrading.tsx `visibleExam` | ✅ 유지 (11곳 확인) |
+| TeacherExamGrading.tsx `scopedExam → visibleExam` 타입픽스 | ✅ 유지 |
 | Student Portal 파일 | ✅ 변경 없음 |
 | Admin Back Office | ✅ 변경 없음 |
 | Teacher Portal | ✅ 변경 없음 |
@@ -558,3 +558,49 @@ UI 1차 검증(TeacherExamGrading) + Context 2차 검증 일치.
 ### npm run typecheck / npm run build
 - typecheck: 신규/수정 파일 타입 오류 0건 (ClassList.tsx pre-existing 2건 제외)
 - build: 환경 egress 차단으로 `npm install` 불가. 로컬 `npm install && npm run build` 통과 예상.
+
+---
+
+## Parent Portal Foundation v1 — scopedExam Typefix (GitHub Actions 통과 baseline)
+
+**작업명**: Parent Portal Foundation v1 scopedExam typefix  
+**사유**: `const visibleExam = (() => {...})()` 패턴에서 TypeScript가 `handleGrade` 클로저 내 `visibleExam`을 `Exam | undefined`로 추론 → GitHub Actions 실패
+
+### 수정 파일
+
+| 파일 | 변경 |
+|------|------|
+| `src/pages/teacher/TeacherExamGrading.tsx` | `const visibleExam = (() => ...)()` → `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 2단계 패턴 |
+
+### 확정 코드 구조 (이후 절대 되돌리지 않음)
+
+```tsx
+const scopedExam = (() => {
+  if (!rawExam) return undefined;
+  if (rawExam.classId) {
+    return assignedClassIds.includes(rawExam.classId) ? rawExam : undefined;
+  }
+  return mySubmissions.length > 0 ? rawExam : undefined;
+})();
+if (!scopedExam) return <NotFoundScreen />;
+const visibleExam = scopedExam;   // visibleExam: Exam — 클로저에서도 undefined 없음
+```
+
+**왜 이 방식인가:**
+- IIFE 결과 `scopedExam: Exam | undefined`를 조기 반환으로 narrowing
+- `visibleExam = scopedExam` 시점에서 TypeScript가 `visibleExam: Exam`을 확정 추론
+- `handleGrade` 등 내부 클로저에서도 `visibleExam.totalScore` 등 접근 시 possibly undefined 오류 없음
+- `const visibleExam = (() => ...)()` 방식은 클로저에서 narrowing이 전파되지 않아 실패
+
+### 최종 회귀 검증
+
+| 파일 | 상태 |
+|------|------|
+| TeacherExamGrading scopedExam 패턴 | ✅ 적용 완료 |
+| Student Portal 4개 파일 | ✅ 변경 없음 |
+| Parent Portal 5개 파일 | ✅ 유지 |
+| Admin Back Office | ✅ 변경 없음 |
+| isSubmissionGraded / recalcTotalScore buildfix | ✅ 유지 |
+
+### npm run typecheck
+- 수정 후 타입 오류 0건 (ClassList.tsx pre-existing 2건 제외)

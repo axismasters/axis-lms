@@ -62,9 +62,10 @@ export default function TeacherExamGrading() {
     (s) => s.examId === examId && myStudentIds.has(s.studentId)
   );
 
-  // 3. Scope 강화:
-  //    classId 있는 시험 → assignedClassIds 포함 여부
-  //    classId 없는 학원 전체 시험 → 담당 학생 submission ≥1
+  // 3. Scope 강화 — IIFE 결과를 scopedExam으로 받고, 조기 반환 후 visibleExam에 재할당.
+  //    const visibleExam = (() => ...)() 방식은 TypeScript가 클로저(handleGrade 등)에서
+  //    visibleExam을 Exam|undefined로 추론해 "possibly undefined" 오류를 냄.
+  //    scopedExam(Exam|undefined) → 조기 반환 → visibleExam(Exam) 2단계로 해소.
   const scopedExam = (() => {
     if (!rawExam) return undefined;
     if (rawExam.classId) {
@@ -72,7 +73,6 @@ export default function TeacherExamGrading() {
     }
     return mySubmissions.length > 0 ? rawExam : undefined;
   })();
-
   if (!scopedExam) return <NotFoundScreen />;
   const visibleExam = scopedExam;
 
