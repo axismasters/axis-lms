@@ -38,7 +38,9 @@ import {
   getUniversityAnalysisHandoffGate,
   buildPhase51AnalyzeRequestDraftBundle,
   type Phase51Track,
+  type Phase51TargetUniversityInputDraft,
 } from '@/lib/universityAnalysisAdapter';
+import { nanoid } from 'nanoid';
 import {
   getActiveClasses, getPastClasses, resolveClassView, timeSlotsToSchedule, ClassView,
   getUnivDataStatus, getUnivChecklist, UNIV_STATUS_STYLE,
@@ -873,6 +875,8 @@ function MonthCalendar({ ym, records }: { ym: string; records: { date: string; s
 function GradesTab({ student, initialGradeType }: { student: Student; initialGradeType: GradeType }) {
   const [gradeType, setGradeType] = useState<GradeType>(initialGradeType);
   const [draftTrack, setDraftTrack] = useState<Phase51Track | null>(null);
+  const [draftTargetUniversities, setDraftTargetUniversities] = useState<Phase51TargetUniversityInputDraft[]>([]);
+  const [targetInput, setTargetInput] = useState({ univName: '', deptName: '' });
   const { exams, submissions } = useAssessment();
 
   const mockFiltered = useMemo(() => {
@@ -948,14 +952,16 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
     [payloadPreview]
   );
   // Draft Preview UI Wiring v1 — buildPhase51AnalyzeRequestDraftBundle
+  // Target University Draft Input UI Wiring v1 — draftTargetUniversities 연결
   const draftBundle = useMemo(
     () => buildPhase51AnalyzeRequestDraftBundle(
       analysisInput,
       student.mockExamScores,
       student.internalScores,
       draftTrack != null ? { track: draftTrack } : undefined,
+      draftTargetUniversities.length > 0 ? draftTargetUniversities : undefined,
     ),
-    [analysisInput, student.mockExamScores, student.internalScores, draftTrack]
+    [analysisInput, student.mockExamScores, student.internalScores, draftTrack, draftTargetUniversities]
   );
   // ────────────────────────────────────────────────────────
 
@@ -1365,21 +1371,141 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
             </div>
           )}
 
-          {/* 목표 대학 / 개선 시나리오 자리 표시 */}
-          <div className="space-y-1.5 mb-2">
-            {[
-              '목표 대학 입력',
-              'IF 개선 시나리오',
-            ].map((label) => (
+          {/* ⑦ 목표 대학 입력 UI — Target University Draft Input UI Wiring v1 */}
+          <div className="mb-3 pt-1">
+            <div className="text-xs font-semibold mb-1.5 flex items-center gap-1.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
+              <Target size={11} />
+              목표 대학 입력
+            </div>
+            <p className="text-xs mb-2 leading-relaxed" style={{ color: 'oklch(0.6 0.01 250)' }}>
+              추천 결과가 아닌, 직접 지정하는 분석 대상 대학/학과입니다.
+            </p>
+
+            {/* 입력 폼 */}
+            <div className="flex gap-1.5 mb-2">
+              <input
+                type="text"
+                placeholder="대학명"
+                value={targetInput.univName}
+                onChange={(e) => setTargetInput((prev) => ({ ...prev, univName: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && targetInput.univName.trim() && targetInput.deptName.trim()) {
+                    setDraftTargetUniversities((prev) => [
+                      ...prev,
+                      { univId: `univ-${nanoid(6)}`, univName: targetInput.univName.trim(), deptName: targetInput.deptName.trim() },
+                    ]);
+                    setTargetInput({ univName: '', deptName: '' });
+                  }
+                }}
+                className="flex-1 min-w-0 rounded-md px-2 py-1 text-xs border"
+                style={{
+                  borderColor: 'oklch(0.88 0.008 250)',
+                  background: 'white',
+                  color: 'oklch(0.22 0.02 250)',
+                  outline: 'none',
+                }}
+              />
+              <input
+                type="text"
+                placeholder="학과명"
+                value={targetInput.deptName}
+                onChange={(e) => setTargetInput((prev) => ({ ...prev, deptName: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && targetInput.univName.trim() && targetInput.deptName.trim()) {
+                    setDraftTargetUniversities((prev) => [
+                      ...prev,
+                      { univId: `univ-${nanoid(6)}`, univName: targetInput.univName.trim(), deptName: targetInput.deptName.trim() },
+                    ]);
+                    setTargetInput({ univName: '', deptName: '' });
+                  }
+                }}
+                className="flex-1 min-w-0 rounded-md px-2 py-1 text-xs border"
+                style={{
+                  borderColor: 'oklch(0.88 0.008 250)',
+                  background: 'white',
+                  color: 'oklch(0.22 0.02 250)',
+                  outline: 'none',
+                }}
+              />
+              <button
+                onClick={() => {
+                  const u = targetInput.univName.trim();
+                  const d = targetInput.deptName.trim();
+                  if (!u || !d) return;
+                  setDraftTargetUniversities((prev) => [
+                    ...prev,
+                    { univId: `univ-${nanoid(6)}`, univName: u, deptName: d },
+                  ]);
+                  setTargetInput({ univName: '', deptName: '' });
+                }}
+                disabled={!targetInput.univName.trim() || !targetInput.deptName.trim()}
+                className="flex-shrink-0 flex items-center gap-0.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
+                style={{
+                  background: (!targetInput.univName.trim() || !targetInput.deptName.trim())
+                    ? 'oklch(0.95 0.005 250)'
+                    : 'oklch(0.511 0.262 276.966)',
+                  color: (!targetInput.univName.trim() || !targetInput.deptName.trim())
+                    ? 'oklch(0.65 0.01 250)'
+                    : 'white',
+                  cursor: (!targetInput.univName.trim() || !targetInput.deptName.trim()) ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <Plus size={10} />
+                추가
+              </button>
+            </div>
+
+            {/* 입력된 목표 대학 목록 */}
+            {draftTargetUniversities.length > 0 ? (
+              <ul className="space-y-1 mb-1.5">
+                {draftTargetUniversities.map((u, idx) => (
+                  <li
+                    key={u.univId}
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs"
+                    style={{ background: 'oklch(0.96 0.008 250)', color: 'oklch(0.3 0.02 250)' }}
+                  >
+                    <span className="font-semibold flex-shrink-0 tabular-nums" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                      {idx + 1}
+                    </span>
+                    <span className="flex-1 min-w-0 truncate">
+                      {u.univName}
+                      <span style={{ color: 'oklch(0.55 0.015 250)' }}> · </span>
+                      {u.deptName}
+                    </span>
+                    <button
+                      onClick={() => setDraftTargetUniversities((prev) => prev.filter((_, i) => i !== idx))}
+                      className="flex-shrink-0 p-0.5 rounded transition-colors"
+                      title="삭제"
+                      style={{ color: 'oklch(0.65 0.01 250)' }}
+                    >
+                      <X size={10} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
               <div
-                key={label}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs"
+                className="text-xs px-2.5 py-1.5 rounded-md mb-1.5"
                 style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.65 0.01 250)' }}
               >
-                <span>{label}</span>
-                <span className="ml-auto italic">다음 단계에서 구현 예정</span>
+                아직 입력된 목표 대학이 없습니다.
               </div>
-            ))}
+            )}
+
+            {draftTargetUniversities.length > 0 && (
+              <p className="text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>
+                payload preview의 <code style={{ fontFamily: 'monospace', fontSize: '10px' }}>targetUniversities</code>에 반영됩니다.
+              </p>
+            )}
+          </div>
+
+          {/* IF 개선 시나리오 (placeholder — 다음 단계) */}
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs mb-2"
+            style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.65 0.01 250)' }}
+          >
+            <span>IF 개선 시나리오</span>
+            <span className="ml-auto italic">다음 단계에서 구현 예정</span>
           </div>
 
           <details className="mb-2">
