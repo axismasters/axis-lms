@@ -4,11 +4,13 @@
 // NGD2 연동 없음 · 자동채점 없음 · 파일 업로드 없음
 
 import { useState } from 'react';
-import { ClipboardList, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import { ClipboardList, Plus, Trash2, Eye, EyeOff, Users } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClasses } from '@/contexts/ClassContext';
+import { useStudents } from '@/contexts/StudentContext';
 import { useHomework } from '@/contexts/HomeworkContext';
+import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { getLocalDateStr } from '@/utils/dateUtils';
 import type { Homework } from '@/lib/homeworkData';
 
@@ -17,7 +19,9 @@ const todayStr = getLocalDateStr();
 export default function TeacherHomework() {
   const { currentUser } = useAuth();
   const { classes } = useClasses();
+  const { students } = useStudents();
   const { addHomework, updateHomework, deleteHomework, getByTeacher } = useHomework();
+  const { getStatusesForHomework } = useHomeworkStatus();
 
   // assignedClassIds 스코프 가드 — 담당 반만
   const assignedClassIds: string[] = currentUser.assignedClassIds ?? [];
@@ -69,6 +73,12 @@ export default function TeacherHomework() {
 
   const classNameOf = (classId: string) =>
     classes.find(c => c.id === classId)?.name ?? classId;
+
+  function studentsInClass(classId: string): string[] {
+    return students
+      .filter(s => s.classes.some(c => c.id === classId && c.status === '수강중'))
+      .map(s => s.id);
+  }
 
   const statusBadge = (status: 'draft' | 'published') =>
     status === 'published'
@@ -230,6 +240,11 @@ export default function TeacherHomework() {
 
           {myHomework.map(hw => {
             const badge = statusBadge(hw.status);
+            const targetStudentIds = studentsInClass(hw.classId);
+            const total = targetStudentIds.length;
+            const homeworkStatuses = getStatusesForHomework(hw.id, targetStudentIds);
+            const completedCount = homeworkStatuses.filter(s => s.status === 'completed').length;
+            const seenCount = homeworkStatuses.filter(s => s.status === 'seen').length;
             return (
               <div
                 key={hw.id}
@@ -257,6 +272,22 @@ export default function TeacherHomework() {
                   <p className="text-xs line-clamp-2" style={{ color: 'oklch(0.45 0.01 250)' }}>
                     {hw.description}
                   </p>
+                )}
+
+                {hw.status === 'published' && total > 0 && (
+                  <div
+                    className="flex items-center gap-3 text-xs rounded-lg px-3 py-2"
+                    style={{ background: 'oklch(0.97 0.004 250)', color: 'oklch(0.45 0.01 250)' }}
+                  >
+                    <Users size={12} />
+                    <span>
+                      완료{' '}
+                      <strong style={{ color: 'oklch(0.35 0.1 145)' }}>{completedCount}</strong>
+                      명 / 확인{' '}
+                      <strong style={{ color: 'oklch(0.4 0.08 250)' }}>{seenCount}</strong>
+                      명 / 대상 <strong>{total}</strong>명
+                    </span>
+                  </div>
                 )}
 
                 {/* 액션 */}

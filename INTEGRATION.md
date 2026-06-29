@@ -845,6 +845,59 @@ parentVisible  (rank 2) → 강사 + 학생 + 학부모
 
 ---
 
+## Homework Status / Completion v1
+
+**작업명**: Homework Status / Completion v1  
+**목표**: 학생별 숙제 확인/완료 상태와 강사용 완료 현황을 추가
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/lib/homeworkStatusData.ts` | 학생별 숙제 상태 타입 추가 (`assigned`, `seen`, `completed`) |
+| `src/lib/homeworkStatusPersistence.ts` | 숙제 상태 localStorage 저장/복원 helper 추가 |
+| `src/contexts/HomeworkStatusContext.tsx` | 학생별 상태 조회/갱신 및 강사용 숙제별 상태 조회 Context 추가 |
+| `src/App.tsx` | `HomeworkStatusProvider` 연결 |
+| `src/pages/student/StudentHomework.tsx` | 숙제 확인 자동 표시, 완료 버튼, 상태 배지 추가 |
+| `src/pages/teacher/TeacherHomework.tsx` | 숙제별 완료/확인/대상 학생 수 현황 추가 |
+
+### 학생 숙제 상태 흐름
+
+- 학생 식별은 기존 `currentUser.assignedStudentIds[0]` 기준 유지
+- 학생의 `classes` 중 `status === '수강중'`인 반 ID만 숙제 조회에 사용
+- 화면 진입 시 해당 숙제가 `assigned` 또는 미기록이면 `seen`으로 기록
+- 학생은 각 숙제를 `completed`로 표시 가능
+- 상태 강등은 불가
+
+### 강사 완료 현황 흐름
+
+- 강사는 기존 `assignedClassIds` 스코프 기준으로 본인 숙제만 조회
+- 저장 직전 `assignedClassIds.includes(form.classId)` 재확인 유지
+- 대상 학생은 해당 반을 `수강중`으로 가진 학생 기준
+- 공개 숙제 카드에 `완료 n명 / 확인 n명 / 대상 n명` 표시
+
+### 유지 사항
+
+- Homework Foundation v1의 등록/조회 흐름 유지
+- 기존 TeacherLayout / StudentLayout 변경 없음
+- 기존 RoleRoute 구조 변경 없음
+- Parent Portal 변경 없음
+- Admin Back Office 변경 없음
+- ContentContext API 변경 없음
+- Content Visibility / Persistence / Detail UX 변경 없음
+- 문제은행/NGD2 연동 없음
+- 검증 시험지 불러오기 없음
+- 파일 업로드 기능 없음
+- 자동채점 기능 없음
+- 알림 발송 기능 없음
+
+### scopedExam baseline 유지
+
+- `src/pages/teacher/TeacherExamGrading.tsx` 변경 없음
+- `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 타입픽스 유지
+
+---
+
 ## Homework Foundation v1
 
 **작업명**: Homework Foundation v1  

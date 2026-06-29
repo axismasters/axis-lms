@@ -21,6 +21,7 @@ import { GrowthProvider } from "./contexts/GrowthContext";
 import { EmployeeProvider } from "./contexts/EmployeeContext";
 import { ContentProvider } from "./contexts/ContentContext";
 import { HomeworkProvider } from "./contexts/HomeworkContext";
+import { HomeworkStatusProvider } from "./contexts/HomeworkStatusContext";
 
 // 역할별 라우트
 import AdminRoutes from "./routes/AdminRoutes";
@@ -151,12 +152,14 @@ function App() {
                         <GrowthProvider>
                           <ContentProvider>
                             <HomeworkProvider>
-                              <AuthBoundary>
-                                <TooltipProvider>
-                                  <Toaster position="top-right" richColors />
-                                  <Router />
-                                </TooltipProvider>
-                              </AuthBoundary>
+                              <HomeworkStatusProvider>
+                                <AuthBoundary>
+                                  <TooltipProvider>
+                                    <Toaster position="top-right" richColors />
+                                    <Router />
+                                  </TooltipProvider>
+                                </AuthBoundary>
+                              </HomeworkStatusProvider>
                             </HomeworkProvider>
                           </ContentProvider>
                         </GrowthProvider>
