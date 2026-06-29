@@ -4,7 +4,7 @@
 // NGD2 연동 없음 · 자동채점 없음 · 파일 업로드 없음
 
 import { useState } from 'react';
-import { ClipboardList, Plus, Trash2, Eye, EyeOff, Users } from 'lucide-react';
+import { ClipboardList, Plus, Trash2, Eye, EyeOff, Users, X } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClasses } from '@/contexts/ClassContext';
@@ -13,6 +13,7 @@ import { useHomework } from '@/contexts/HomeworkContext';
 import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { getLocalDateStr } from '@/utils/dateUtils';
 import type { Homework } from '@/lib/homeworkData';
+import type { HomeworkStatusValue } from '@/lib/homeworkStatusData';
 
 const todayStr = getLocalDateStr();
 
@@ -31,6 +32,7 @@ export default function TeacherHomework() {
 
   const [showForm, setShowForm] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [detailHomework, setDetailHomework] = useState<Homework | null>(null);
   const [form, setForm] = useState({
     classId: activeClasses[0]?.id ?? '',
     title: '',
@@ -84,6 +86,122 @@ export default function TeacherHomework() {
     status === 'published'
       ? { label: '공개', bg: 'oklch(0.92 0.06 145)', fg: 'oklch(0.3 0.1 145)' }
       : { label: '미공개', bg: 'oklch(0.92 0.01 250)', fg: 'oklch(0.5 0.01 250)' };
+
+  const homeworkStatusBadge: Record<HomeworkStatusValue, { label: string; bg: string; fg: string }> = {
+    assigned:  { label: '미확인', bg: 'oklch(0.92 0.01 250)', fg: 'oklch(0.5 0.01 250)' },
+    seen:      { label: '확인함', bg: 'oklch(0.93 0.05 250)', fg: 'oklch(0.3 0.08 250)' },
+    completed: { label: '완료',   bg: 'oklch(0.92 0.06 145)', fg: 'oklch(0.3 0.1 145)' },
+  };
+
+  function HomeworkDetailModal({ hw, onClose }: { hw: Homework; onClose: () => void }) {
+    const targetStudents = studentsInClass(hw.classId).map(studentId => {
+      const student = students.find(s => s.id === studentId);
+      const status = getStatusesForHomework(hw.id, [studentId])[0];
+      const statusValue: HomeworkStatusValue = status?.status ?? 'assigned';
+      return {
+        id: studentId,
+        name: student?.name ?? studentId,
+        statusValue,
+        completedAt: status?.completedAt,
+      };
+    });
+    const completedCount = targetStudents.filter(s => s.statusValue === 'completed').length;
+    const seenCount = targetStudents.filter(s => s.statusValue === 'seen').length;
+    const assignedCount = targetStudents.filter(s => s.statusValue === 'assigned').length;
+    const publicBadge = statusBadge(hw.status);
+
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: 'rgba(15, 23, 42, 0.48)' }}
+        onClick={onClose}
+      >
+        <div
+          className="axis-card w-full max-w-md p-5 relative space-y-3"
+          style={{ maxHeight: '82vh', overflowY: 'auto' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 p-1 rounded-full"
+            style={{ color: 'oklch(0.55 0.015 250)' }}
+            aria-label="닫기"
+          >
+            <X size={18} />
+          </button>
+
+          <div className="pr-8 font-bold text-base leading-snug" style={{ color: 'oklch(0.2 0.02 250)' }}>
+            {hw.title}
+          </div>
+          <div className="text-xs space-y-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
+            <div>반: {classNameOf(hw.classId)}</div>
+            <div>마감일: {hw.dueDate}</div>
+            <div>
+              공개 상태:{' '}
+              <span
+                className="px-2 py-0.5 rounded-full font-medium"
+                style={{ background: publicBadge.bg, color: publicBadge.fg }}
+              >
+                {publicBadge.label}
+              </span>
+            </div>
+          </div>
+
+          {hw.description && (
+            <div className="text-sm whitespace-pre-wrap rounded-lg p-3"
+              style={{ background: 'oklch(0.97 0.004 250)', color: 'oklch(0.3 0.02 250)' }}>
+              {hw.description}
+            </div>
+          )}
+
+          <div
+            className="flex items-center gap-3 text-xs rounded-lg px-3 py-2"
+            style={{ background: 'oklch(0.97 0.004 250)', color: 'oklch(0.45 0.01 250)' }}
+          >
+            <Users size={12} />
+            <span>
+              완료 <strong style={{ color: 'oklch(0.35 0.1 145)' }}>{completedCount}</strong>명 /
+              확인 <strong style={{ color: 'oklch(0.4 0.08 250)' }}>{seenCount}</strong>명 /
+              미확인 <strong>{assignedCount}</strong>명 / 대상 <strong>{targetStudents.length}</strong>명
+            </span>
+          </div>
+
+          <div className="space-y-1.5">
+            {targetStudents.length === 0 && (
+              <div className="text-xs text-center py-4" style={{ color: 'oklch(0.6 0.01 250)' }}>
+                대상 학생이 없습니다.
+              </div>
+            )}
+            {targetStudents.map(student => {
+              const badge = homeworkStatusBadge[student.statusValue];
+              return (
+                <div
+                  key={student.id}
+                  className="flex items-center justify-between rounded-lg px-3 py-2"
+                  style={{ background: 'oklch(0.975 0.003 250)' }}
+                >
+                  <span className="text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>{student.name}</span>
+                  <div className="flex items-center gap-2">
+                    {student.completedAt && (
+                      <span className="text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>
+                        {student.completedAt.slice(0, 10)}
+                      </span>
+                    )}
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full font-medium"
+                      style={{ background: badge.bg, color: badge.fg }}
+                    >
+                      {badge.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <TeacherLayout title="숙제 관리">
@@ -293,6 +411,13 @@ export default function TeacherHomework() {
                 {/* 액션 */}
                 <div className="flex items-center gap-2 pt-1">
                   <button
+                    onClick={() => setDetailHomework(hw)}
+                    className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg border"
+                    style={{ borderColor: 'oklch(0.88 0.008 250)', color: 'oklch(0.45 0.01 250)' }}
+                  >
+                    상세
+                  </button>
+                  <button
                     onClick={() => toggleStatus(hw)}
                     className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg border"
                     style={{ borderColor: 'oklch(0.88 0.008 250)', color: 'oklch(0.45 0.01 250)' }}
@@ -315,6 +440,12 @@ export default function TeacherHomework() {
           })}
         </div>
       </div>
+      {detailHomework && (
+        <HomeworkDetailModal
+          hw={detailHomework}
+          onClose={() => setDetailHomework(null)}
+        />
+      )}
     </TeacherLayout>
   );
 }

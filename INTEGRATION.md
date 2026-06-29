@@ -1,4 +1,33 @@
 # AXIS LMS v1.2 — INTEGRATION.md
+
+## Homework Detail UX v1
+
+**작업명**: Homework Detail UX v1
+**기반 baseline**: Homework Status / Completion v1 GitHub Actions 통과 상태
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/pages/student/StudentHomework.tsx` | 학생 숙제 카드에 상세 보기 모달 추가, 기존 완료 처리 유지 |
+| `src/pages/teacher/TeacherHomework.tsx` | 강사 숙제 카드에 상세 모달 추가, 학생별 확인/완료 상태 요약 추가 |
+
+### 유지한 핵심 기준
+- 학생 숙제 조회는 `currentUser.assignedStudentIds[0]` → `students.id` → `student.classes` 기준을 유지한다.
+- 학생은 수강중 반의 공개 숙제만 조회한다.
+- 강사 숙제 등록/조회는 `currentUser.assignedClassIds` 기준을 유지한다.
+- 강사 저장 시 `assignedClassIds.includes(form.classId)` 스코프 가드를 유지한다.
+- 대상 학생 계산은 `student.classes.some(c => c.id === classId && c.status === '수강중')` 기준을 유지한다.
+- `TeacherExamGrading.tsx`의 `scopedExam` 타입픽스는 변경하지 않는다.
+
+### 이번 단계에서 하지 않은 것
+- NGD2 / 문제은행 연동 없음
+- 숙제 제출 파일 업로드 없음
+- 자동채점 없음
+- Admin Back Office 변경 없음
+- Parent Portal 변경 없음
+- 라우트/레이아웃 구조 변경 없음
+- Rival / Emblem / IF 분석 직접 구현 없음
+
 ## Content Visibility Bridge v1
 
 현재 최종 섹션: `Content Visibility Bridge v1`
