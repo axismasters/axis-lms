@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { CalendarCheck, BarChart2, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2 } from 'lucide-react';
+import { CalendarCheck, BarChart2, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2, X } from 'lucide-react';
 import ParentLayout from '@/layouts/ParentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
@@ -16,9 +16,81 @@ import { useAttendance } from '@/contexts/AttendanceContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useContent } from '@/contexts/ContentContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
+import type { ContentItem } from '@/lib/contentData';
 
 function scoreColor(pct: number) {
   return pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)';
+}
+
+function ContentDetailModal({
+  item,
+  className,
+  onClose,
+}: {
+  item: ContentItem;
+  className: string;
+  onClose: () => void;
+}) {
+  const typeLabel: Record<string, string> = {
+    note: '수업노트',
+    video: '수업영상',
+    material: '학습자료',
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(15, 23, 42, 0.48)' }}
+      onClick={onClose}
+    >
+      <div
+        className="axis-card w-full max-w-md p-5 relative space-y-3"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 p-1 rounded-full"
+          style={{ color: 'oklch(0.55 0.015 250)' }}
+          aria-label="닫기"
+        >
+          <X size={18} />
+        </button>
+
+        <div className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.15 160)' }}>
+          {typeLabel[item.type] ?? item.type} · 학부모 공개
+        </div>
+        <div className="pr-8 font-bold text-base leading-snug" style={{ color: 'oklch(0.2 0.02 250)' }}>
+          {item.title}
+        </div>
+        <div className="text-xs space-y-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <div>반: {className}</div>
+          <div>날짜: {item.date}</div>
+        </div>
+
+        {item.type === 'note' && item.content && (
+          <div className="text-sm whitespace-pre-wrap rounded-lg p-3"
+            style={{ background: 'oklch(0.97 0.004 250)', color: 'oklch(0.3 0.02 250)' }}>
+            {item.content}
+          </div>
+        )}
+
+        {item.homework && (
+          <div className="text-xs rounded-lg p-3"
+            style={{ background: 'oklch(0.96 0.04 160)', color: 'oklch(0.35 0.12 160)' }}>
+            과제: {item.homework}
+          </div>
+        )}
+
+        {item.url && (
+          <a href={item.url} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium"
+            style={{ color: 'oklch(0.45 0.15 160)' }}>
+            <Link2 size={14} /> 링크 열기
+          </a>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function ParentHome() {
@@ -37,6 +109,7 @@ export default function ParentHome() {
   const [selectedChildId, setSelectedChildId] = useState<string>(
     myChildren[0]?.id ?? ''
   );
+  const [selectedItem, setSelectedItem] = useState<{ item: ContentItem; className: string } | null>(null);
   const child = myChildren.find((s) => s.id === selectedChildId);
 
   // 자녀 소속 반 (수강중만)
@@ -230,7 +303,12 @@ export default function ParentHome() {
                 </div>
                 <div className="space-y-2">
                   {parentContent.map(item => (
-                    <div key={item.id} className="axis-card p-3 flex items-start gap-3">
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setSelectedItem({ item, className: item.className })}
+                      className="axis-card p-3 flex items-start gap-3 w-full text-left"
+                    >
                       {item.type === 'note'
                         ? <FileText size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.511 0.262 276.966)' }} />
                         : <Play size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.45 0.15 160)' }} />
@@ -248,14 +326,14 @@ export default function ParentHome() {
                           </div>
                         )}
                         {item.url && (
-                          <a href={item.url} target="_blank" rel="noopener noreferrer"
+                          <span
                             className="inline-flex items-center gap-1 mt-1 text-xs"
                             style={{ color: 'oklch(0.45 0.15 160)' }}>
                             <Link2 size={11} /> 링크 열기
-                          </a>
+                          </span>
                         )}
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </section>
@@ -289,6 +367,13 @@ export default function ParentHome() {
         )}
 
       </div>
+      {selectedItem && (
+        <ContentDetailModal
+          item={selectedItem.item}
+          className={selectedItem.className}
+          onClose={() => setSelectedItem(null)}
+        />
+      )}
     </ParentLayout>
   );
 }

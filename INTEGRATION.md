@@ -842,3 +842,37 @@ parentVisible  (rank 2) → 강사 + 학생 + 학부모
 
 - `src/pages/teacher/TeacherExamGrading.tsx` 변경 없음
 - `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 타입픽스 유지
+
+---
+
+## Content Detail UX v1
+
+**작업명**: Content Detail UX v1  
+**목표**: 학생/학부모 포털의 공개 수업자료 목록에서 항목 클릭 시 간단 상세 모달 제공
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/pages/student/StudentClasses.tsx` | 기존 학생 수강반 조회 흐름 유지. `getVisibleForClass(classId, 'studentVisible')` 결과 항목 클릭 시 상세 모달 표시 |
+| `src/pages/parent/ParentHome.tsx` | 기존 자녀 선택/출결/성적/수납 흐름 유지. `getVisibleForClass(classId, 'parentVisible')` 결과 항목 클릭 시 상세 모달 표시 |
+
+### 유지 사항
+
+- ContentContext API 변경 없음
+- 학생 포털은 `studentVisible` 이상 공개 자료만 사용
+- 학부모 포털은 `parentVisible` 공개 자료만 사용
+- `teacherOnly` 자료는 학생/학부모 포털에 노출되지 않음
+- 학생 식별은 기존 `currentUser.assignedStudentIds[0]` 방식 유지
+- 학부모 자녀 식별은 기존 `currentUser.assignedStudentIds` 방식 유지
+- 학부모 출결/성적/수납 섹션 유지
+- 강사 화면 변경 없음
+- Admin Back Office 변경 없음
+- 문제은행/NGD2 연동 없음
+- 파일 업로드 기능 없음
+- 외부 영상 API 연동 없음
+
+### scopedExam baseline 유지
+
+- `src/pages/teacher/TeacherExamGrading.tsx` 변경 없음
+- `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 타입픽스 유지

@@ -1,12 +1,14 @@
 // AXIS LMS v1.2 - StudentClasses (Student Portal Foundation v1)
 // 학생 전용 내 반/수업 조회 — 읽기 전용.
 
-import { BookOpen, Clock, Play, FileText, Link2 } from 'lucide-react';
+import { useState } from 'react';
+import { BookOpen, Clock, Play, FileText, Link2, X } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useContent } from '@/contexts/ContentContext';
+import type { ContentItem } from '@/lib/contentData';
 import type { TimeSlot } from '@/lib/classData';
 
 const DAY_ORDER = ['월', '화', '수', '목', '금', '토', '일'];
@@ -20,11 +22,83 @@ function formatSchedule(timeSlots: TimeSlot[]): string {
   return `${days} ${first.startTime}–${first.endTime}`;
 }
 
+function ContentDetailModal({
+  item,
+  className,
+  onClose,
+}: {
+  item: ContentItem;
+  className: string;
+  onClose: () => void;
+}) {
+  const typeLabel: Record<string, string> = {
+    note: '수업노트',
+    video: '수업영상',
+    material: '학습자료',
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(15, 23, 42, 0.48)' }}
+      onClick={onClose}
+    >
+      <div
+        className="axis-card w-full max-w-md p-5 relative space-y-3"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 p-1 rounded-full"
+          style={{ color: 'oklch(0.55 0.015 250)' }}
+          aria-label="닫기"
+        >
+          <X size={18} />
+        </button>
+
+        <div className="text-xs font-semibold" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+          {typeLabel[item.type] ?? item.type}
+        </div>
+        <div className="pr-8 font-bold text-base leading-snug" style={{ color: 'oklch(0.2 0.02 250)' }}>
+          {item.title}
+        </div>
+        <div className="text-xs space-y-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <div>반: {className}</div>
+          <div>날짜: {item.date}</div>
+        </div>
+
+        {item.type === 'note' && item.content && (
+          <div className="text-sm whitespace-pre-wrap rounded-lg p-3"
+            style={{ background: 'oklch(0.97 0.004 250)', color: 'oklch(0.3 0.02 250)' }}>
+            {item.content}
+          </div>
+        )}
+
+        {item.homework && (
+          <div className="text-xs rounded-lg p-3"
+            style={{ background: 'oklch(0.96 0.04 160)', color: 'oklch(0.35 0.12 160)' }}>
+            과제: {item.homework}
+          </div>
+        )}
+
+        {item.url && (
+          <a href={item.url} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium"
+            style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+            <Link2 size={14} /> 링크 열기
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function StudentClasses() {
   const { currentUser } = useAuth();
   const { students } = useStudents();
   const { classes } = useClasses();
   const { getVisibleForClass } = useContent();
+  const [selectedItem, setSelectedItem] = useState<{ item: ContentItem; className: string } | null>(null);
 
   const myStudentId = currentUser.assignedStudentIds[0] ?? '';
   const student = students.find(s => s.id === myStudentId);
@@ -113,7 +187,13 @@ export default function StudentClasses() {
                             수업자료 ({classContent.length})
                           </div>
                           {classContent.slice(0, 5).map(item => (
-                            <div key={item.id} className="flex items-start gap-2 text-xs">
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setSelectedItem({ item, className: ci.name })}
+                              className="w-full flex items-start gap-2 text-xs text-left rounded-md px-2 py-1.5"
+                              style={{ background: 'oklch(0.98 0.004 250)' }}
+                            >
                               {item.type === 'note'
                                 ? <FileText size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.511 0.262 276.966)' }} />
                                 : <Play size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.45 0.15 160)' }} />
@@ -125,11 +205,10 @@ export default function StudentClasses() {
                                 <div className="flex items-center gap-1.5 mt-0.5" style={{ color: 'oklch(0.6 0.015 250)' }}>
                                   <span>{item.date}</span>
                                   {item.url && (
-                                    <a href={item.url} target="_blank" rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-0.5"
+                                    <span className="inline-flex items-center gap-0.5"
                                       style={{ color: 'oklch(0.511 0.262 276.966)' }}>
                                       <Link2 size={10} /> 링크
-                                    </a>
+                                    </span>
                                   )}
                                 </div>
                                 {item.type === 'note' && item.content && (
@@ -138,7 +217,7 @@ export default function StudentClasses() {
                                   </div>
                                 )}
                               </div>
-                            </div>
+                            </button>
                           ))}
                           {classContent.length > 5 && (
                             <div className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>
@@ -186,6 +265,13 @@ export default function StudentClasses() {
         )}
 
       </div>
+      {selectedItem && (
+        <ContentDetailModal
+          item={selectedItem.item}
+          className={selectedItem.className}
+          onClose={() => setSelectedItem(null)}
+        />
+      )}
     </StudentLayout>
   );
 }
