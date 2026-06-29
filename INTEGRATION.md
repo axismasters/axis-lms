@@ -28,6 +28,10 @@
 - 라우트/레이아웃 구조 변경 없음
 - Rival / Emblem / IF 분석 직접 구현 없음
 
+### buildfix 메모
+- `src/pages/student/StudentHomework.tsx`의 동적 lucide 아이콘 타입을 React `ElementType`에서 `LucideIcon`으로 변경했다.
+- GitHub Actions 오류인 `'StatusIcon' cannot be used as a JSX component`를 해결하기 위한 타입 전용 수정이다.
+
 ## Content Visibility Bridge v1
 
 현재 최종 섹션: `Content Visibility Bridge v1`
