@@ -503,3 +503,58 @@ UI 1차 검증(TeacherExamGrading) + Context 2차 검증 일치.
 
 ### 관리자 Back Office 영향
 없음. 수정 파일: `src/pages/student/`, `src/layouts/StudentLayout.tsx`, `src/routes/StudentRoutes.tsx`, `src/pages/teacher/TeacherExamGrading.tsx` (rename only).
+
+---
+
+## Parent Portal Foundation v1
+
+**작업명**: Parent Portal Foundation v1
+**기반**: Student Portal Foundation v1 + buildfix/integration
+
+### 수정 파일
+
+| 파일 | 종류 | 내용 |
+|------|------|------|
+| `src/layouts/ParentLayout.tsx` | 수정 | Bottom Nav: 홈/출결/성적/수납 4탭 (알림→성적 교체). Link `flex:1` 균등 배치 |
+| `src/pages/parent/ParentHome.tsx` | 수정 | 출결 필터 개선 (자녀 소속 반만), 성적 `getPublishedResultsForStudent` 적용, 수강반 섹션 추가, 수납 링크 |
+| `src/pages/parent/ParentAttendance.tsx` | **신규** | 자녀 출결 상세 조회 (`/parent/attendance`) |
+| `src/pages/parent/ParentGrades.tsx` | **신규** | 자녀 성적 상세 조회 (`/parent/grades`) |
+| `src/routes/ParentRoutes.tsx` | 수정 | ParentAttendance / ParentGrades 라우트 등록, `/parent/finance` placeholder 유지 |
+
+### 학부모 포털 설계 원칙 확인
+
+| 원칙 | 구현 |
+|------|------|
+| 조회 전용 | 수정/등록/삭제 UI 없음 |
+| 자녀 데이터만 | `currentUser.assignedStudentIds` 포함 여부 필터 |
+| 자녀 선택/전환 | 복수 자녀 시 select UI, 단일 자녀 시 표시만 |
+| 출결 스코프 | 자녀 소속 반 세션만 (`child.classes`로 classId 집합 생성 후 필터) |
+| 성적 공개 정책 | `getPublishedResultsForStudent()` — 반단위 채점완료 + 전체시험 publishedAt |
+| 결석/미채점 | 자동 제외 (visibility 함수 내부) |
+| 라이벌/엠블럼 | 노출 없음 |
+| 상담관리 | 독립 메뉴 없음 |
+| 재무 상세 | placeholder (이번 단계 미구현) |
+| 문제은행/NGD2 | 미포함 |
+
+### 학부모 포털 라우트 최종 구조
+
+```
+/parent            → ParentHome (자녀 선택 + 요약)
+/parent/attendance → ParentAttendance (출결 상세)
+/parent/grades     → ParentGrades (성적 상세)
+/parent/finance    → placeholder (수납 — 다음 단계)
+```
+
+### 기존 baseline 회귀 여부
+
+| 파일 | 상태 |
+|------|------|
+| TeacherExamGrading.tsx `visibleExam` | ✅ 유지 (11곳 확인) |
+| Student Portal 파일 | ✅ 변경 없음 |
+| Admin Back Office | ✅ 변경 없음 |
+| Teacher Portal | ✅ 변경 없음 |
+| assessmentData isSubmissionGraded buildfix | ✅ 유지 |
+
+### npm run typecheck / npm run build
+- typecheck: 신규/수정 파일 타입 오류 0건 (ClassList.tsx pre-existing 2건 제외)
+- build: 환경 egress 차단으로 `npm install` 불가. 로컬 `npm install && npm run build` 통과 예상.

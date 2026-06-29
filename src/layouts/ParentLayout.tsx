@@ -1,17 +1,17 @@
-// AXIS LMS v1.2 - ParentLayout
-// 보호자 전용 레이아웃: 중앙 카드형, Bottom Navigation 기반.
+// AXIS LMS v1.2 - ParentLayout (Parent Portal Foundation v1)
+// 보호자 전용 레이아웃. Bottom Navigation 4탭.
 // 라이벌/엠블럼/경쟁 정보 노출 금지 원칙 유지.
 
 import { Link, useLocation } from 'wouter';
-import { Home, CalendarCheck, CreditCard, Bell, GraduationCap } from 'lucide-react';
+import { Home, CalendarCheck, BarChart2, CreditCard, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 
 const PARENT_NAV = [
-  { path: '/parent',             label: '홈',   icon: Home },
+  { path: '/parent',             label: '홈',  icon: Home },
   { path: '/parent/attendance',  label: '출결', icon: CalendarCheck },
+  { path: '/parent/grades',      label: '성적', icon: BarChart2 },
   { path: '/parent/finance',     label: '수납', icon: CreditCard },
-  { path: '/parent/notices',     label: '알림', icon: Bell },
 ];
 
 interface ParentLayoutProps {
@@ -65,7 +65,7 @@ export default function ParentLayout({ children, title }: ParentLayoutProps) {
         {children}
       </main>
 
-      {/* ⚠ DEV ONLY: 역할 전환기 — 운영 배포 전 제거 */}
+      {/* ⚠ DEV ONLY */}
       <DevRoleSwitcher />
 
       {/* Bottom Navigation */}
@@ -76,13 +76,10 @@ export default function ParentLayout({ children, title }: ParentLayoutProps) {
         {PARENT_NAV.map(({ path, label, icon: Icon }) => {
           const active = isActive(path);
           return (
-            <Link key={path} href={path}>
+            <Link key={path} href={path} style={{ flex: 1, display: 'flex' }}>
               <div
-                className="flex-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors"
-                style={{
-                  minWidth: 64,
-                  color: active ? 'oklch(0.45 0.15 160)' : 'oklch(0.6 0.015 250)',
-                }}
+                className="flex flex-col items-center justify-center gap-0.5 w-full py-1 cursor-pointer transition-colors"
+                style={{ color: active ? 'oklch(0.45 0.15 160)' : 'oklch(0.6 0.015 250)' }}
               >
                 <Icon size={20} />
                 <span className="text-xs font-medium">{label}</span>
