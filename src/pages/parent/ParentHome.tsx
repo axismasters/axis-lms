@@ -1,9 +1,10 @@
-// AXIS LMS v1.2 - ParentHome (Parent Portal Foundation v1)
+// AXIS LMS v1.2 - ParentHome (Parent Finance Home Bridge v1)
 // 보호자 전용 홈: 자녀 선택 / 수강 반 요약 / 출결 요약 / 공개 성적 / 수납 상태.
 // ✅ 성적: getPublishedResultsForStudent 정책 준수 (결석/미채점/미공개 제외)
 // ✅ 출결: 자녀 소속 반 세션만 필터링
+// ✅ 수납 상태: FinanceContext 실데이터 연결 (getInvoicesByStudent + getUnpaidAmount)
 // 🚫 라이벌/엠블럼/경쟁 정보 노출 금지
-// 🚫 상담관리 독립 메뉴 없음
+// 🚫 납부 등록/환불 요청/수정/삭제 버튼 없음
 
 import { useState } from 'react';
 import { Link } from 'wouter';
@@ -17,6 +18,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { useContent } from '@/contexts/ContentContext';
 import { useHomework } from '@/contexts/HomeworkContext';
 import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
+import { useFinance } from '@/contexts/FinanceContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import type { ContentItem } from '@/lib/contentData';
 
@@ -104,6 +106,7 @@ export default function ParentHome() {
   const { getVisibleForClass } = useContent();
   const { getForStudent } = useHomework();
   const { getStatus } = useHomeworkStatus();
+  const { getInvoicesByStudent, getUnpaidAmount } = useFinance();
 
   // 연결된 자녀 목록 (assignedStudentIds 기준)
   const myChildren = students.filter((s) =>
@@ -161,6 +164,13 @@ export default function ParentHome() {
     .slice(0, 3);
 
   const today = new Date().toISOString().slice(0, 10);
+
+  // 수납 요약 — selectedChildId 기준, CANCELED 제외
+  const childInvoices = selectedChildId
+    ? getInvoicesByStudent(selectedChildId).filter(inv => inv.status !== 'CANCELED')
+    : [];
+  const financeTotalBilled = childInvoices.reduce((s, inv) => s + inv.finalAmount, 0);
+  const financeUnpaid      = childInvoices.reduce((s, inv) => s + getUnpaidAmount(inv.id), 0);
   const classNameOf = (classId: string) => (
     childActiveClasses.find(c => c.id === classId)?.name
     ?? classes.find(c => c.id === classId)?.name
@@ -434,27 +444,53 @@ export default function ParentHome() {
               </section>
             )}
 
-            {/* 수납 상태 요약 (placeholder) */}
+            {/* 수납 상태 요약 — FinanceContext 실데이터 연결 */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
                 <CreditCard size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>수납 상태</span>
               </div>
               <Link href="/parent/finance">
-                <div className="axis-card p-4 flex items-center justify-between cursor-pointer">
-                  <div>
-                    <div className="text-sm font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>이번 달 수강료</div>
-                    <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                      수납 탭에서 상세 내역을 확인하세요
+                <div className="axis-card p-4 cursor-pointer">
+                  {childInvoices.length === 0 ? (
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                        수납 내역이 없습니다
+                      </div>
+                      <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                      style={{ background: 'oklch(0.94 0.08 160)', color: 'oklch(0.35 0.12 160)' }}>
-                      완납
-                    </span>
-                    <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
-                  </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex gap-3 text-xs flex-wrap">
+                        <span style={{ color: 'oklch(0.55 0.015 250)' }}>
+                          청구{' '}
+                          <span className="font-semibold tabular-nums" style={{ color: 'oklch(0.25 0.02 250)' }}>
+                            {financeTotalBilled.toLocaleString()}원
+                          </span>
+                        </span>
+                        {financeUnpaid > 0 && (
+                          <span style={{ color: 'oklch(0.55 0.015 250)' }}>
+                            미납{' '}
+                            <span className="font-semibold tabular-nums" style={{ color: 'oklch(0.55 0.2 27)' }}>
+                              {financeUnpaid.toLocaleString()}원
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={financeUnpaid > 0
+                            ? { background: 'oklch(0.93 0.1 25)',   color: 'oklch(0.45 0.15 25)' }
+                            : { background: 'oklch(0.92 0.08 145)', color: 'oklch(0.3 0.12 145)' }
+                          }
+                        >
+                          {financeUnpaid > 0 ? '미납 있음' : '완납'}
+                        </span>
+                        <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Link>
             </section>
