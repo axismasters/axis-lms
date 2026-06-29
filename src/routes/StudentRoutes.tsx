@@ -7,6 +7,7 @@ import StudentHome from '@/pages/student/StudentHome';
 import StudentClasses from '@/pages/student/StudentClasses';
 import StudentGrades from '@/pages/student/StudentGrades';
 import StudentAttendance from '@/pages/student/StudentAttendance';
+import StudentHomework from '@/pages/student/StudentHomework';
 import StudentLayout from '@/layouts/StudentLayout';
 
 function StudentPlaceholder({ title }: { title: string }) {
@@ -40,6 +41,9 @@ export default function StudentRoutes() {
 
         {/* 출결 조회 */}
         <Route path="/student/attendance" component={StudentAttendance} />
+
+        {/* 내 숙제 */}
+        <Route path="/student/homework" component={StudentHomework} />
 
         {/* 성장 진열장 (Foundation — 홈에서 접근) */}
         <Route path="/student/growth" component={() => <StudentPlaceholder title="성장 진열장" />} />

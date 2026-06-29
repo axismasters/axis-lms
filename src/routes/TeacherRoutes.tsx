@@ -13,6 +13,7 @@ import TeacherExamGrading from '@/pages/teacher/TeacherExamGrading';
 import TeacherGrades from '@/pages/teacher/TeacherGrades';
 import TeacherVideos from '@/pages/teacher/TeacherVideos';
 import TeacherNotes from '@/pages/teacher/TeacherNotes';
+import TeacherHomework from '@/pages/teacher/TeacherHomework';
 import TeacherLayout from '@/layouts/TeacherLayout';
 
 function TeacherPlaceholder({ title }: { title: string }) {
@@ -66,6 +67,9 @@ export default function TeacherRoutes() {
 
         {/* 내 수업노트 */}
         <Route path="/teacher/notes" component={TeacherNotes} />
+
+        {/* 숙제 관리 */}
+        <Route path="/teacher/homework" component={TeacherHomework} />
 
         {/* 구 경로 하위호환 리다이렉트 */}
         <Route path="/teacher/scores" component={() => <Redirect to="/teacher/grades" />} />

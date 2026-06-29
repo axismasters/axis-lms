@@ -3,7 +3,7 @@
 // 성적은 getPublishedResultsForStudent() 정책에 따라 공개/반영 결과만 표시.
 
 import { Link } from 'wouter';
-import { Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck } from 'lucide-react';
+import { Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck, ClipboardList } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGrowth } from '@/contexts/GrowthContext';
@@ -13,6 +13,7 @@ import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 
 const QUICK_ACTIONS = [
   { icon: BookOpen,     label: '내 반',  path: '/student/classes',    color: 'oklch(0.511 0.262 276.966)' },
+  { icon: ClipboardList, label: '숙제',   path: '/student/homework',   color: 'oklch(0.45 0.15 160)' },
   { icon: BarChart2,    label: '성적',   path: '/student/grades',     color: 'oklch(0.45 0.15 160)' },
   { icon: CalendarCheck, label: '출결',  path: '/student/attendance', color: 'oklch(0.55 0.15 80)' },
 ];

@@ -5,7 +5,7 @@
 import { Link } from 'wouter';
 import {
   CalendarCheck, BarChart2, Users, Play, FileText,
-  Clock, CheckCircle2, AlertCircle,
+  Clock, CheckCircle2, AlertCircle, ClipboardList,
 } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +30,7 @@ const QUICK_ACTIONS = [
   { icon: Users,         label: '담당 학생', path: '/teacher/students',   color: 'oklch(0.511 0.262 276.966)' },
   { icon: FileText,      label: '수업노트',  path: '/teacher/notes',      color: 'oklch(0.511 0.262 276.966)' },
   { icon: Play,          label: '수업자료',  path: '/teacher/videos',     color: 'oklch(0.511 0.262 276.966)' },
+  { icon: ClipboardList, label: '숙제 관리', path: '/teacher/homework',   color: 'oklch(0.45 0.15 160)' },
 ];
 
 export default function TeacherHome() {

@@ -845,6 +845,62 @@ parentVisible  (rank 2) → 강사 + 학생 + 학부모
 
 ---
 
+## Homework Foundation v1
+
+**작업명**: Homework Foundation v1  
+**목표**: AXIS LMS 내부에서 강사가 담당 반에 숙제를 등록하고, 학생이 수강 중인 반의 공개 숙제를 조회하는 최소 흐름 구성
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/lib/homeworkData.ts` | 숙제 타입, 입력 타입, localStorage key 추가 |
+| `src/lib/homeworkPersistence.ts` | `Homework[]` 저장/복원 helper 추가 |
+| `src/contexts/HomeworkContext.tsx` | 숙제 CRUD, 강사 조회, 학생 조회 Context 추가 |
+| `src/App.tsx` | `HomeworkProvider` 연결 |
+| `src/routes/TeacherRoutes.tsx` | `/teacher/homework` 라우트 추가. 기존 RoleRoute 유지 |
+| `src/routes/StudentRoutes.tsx` | `/student/homework` 라우트 추가. 기존 RoleRoute 유지 |
+| `src/pages/teacher/TeacherHomework.tsx` | 강사 숙제 등록/공개 전환/삭제 화면 추가 |
+| `src/pages/student/StudentHomework.tsx` | 학생 공개 숙제 조회 화면 추가 |
+| `src/pages/teacher/TeacherHome.tsx` | 빠른 실행에 숙제 관리 진입 추가 |
+| `src/pages/student/StudentHome.tsx` | 빠른 이동에 숙제 진입 추가 |
+
+### 강사 숙제 등록 흐름
+
+- 강사는 `currentUser.assignedClassIds`에 포함된 운영중 반만 선택 가능
+- 저장 직전에도 `assignedClassIds.includes(form.classId)`로 스코프 재확인
+- 숙제 필드: `id`, `classId`, `teacherId`, `title`, `description`, `dueDate`, `status`, `createdAt`, `updatedAt`
+- 상태는 `published` / `draft`
+- 강사는 본인이 등록한 숙제만 조회
+
+### 학생 숙제 조회 흐름
+
+- 학생 식별은 기존 `currentUser.assignedStudentIds[0]` 기준 유지
+- 학생의 `classes` 중 `status === '수강중'`인 반 ID만 조회 기준으로 사용
+- `published` 숙제만 학생에게 표시
+- `draft` 또는 미수강 반 숙제는 노출되지 않음
+
+### 유지 사항
+
+- 기존 `TeacherLayout`, `StudentLayout` 변경 없음
+- 기존 RoleRoute 구조 유지
+- ContentContext API 변경 없음
+- Content Visibility / Persistence / Detail UX 변경 없음
+- Parent Portal 변경 없음
+- Admin Back Office 변경 없음
+- 문제은행/NGD2 연동 없음
+- 검증 시험지 불러오기 없음
+- 파일 업로드 기능 없음
+- 자동채점 기능 없음
+- 알림 발송 기능 없음
+
+### scopedExam baseline 유지
+
+- `src/pages/teacher/TeacherExamGrading.tsx` 변경 없음
+- `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 타입픽스 유지
+
+---
+
 ## Content Detail UX v1
 
 **작업명**: Content Detail UX v1  

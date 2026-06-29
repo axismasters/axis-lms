@@ -20,6 +20,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { GrowthProvider } from "./contexts/GrowthContext";
 import { EmployeeProvider } from "./contexts/EmployeeContext";
 import { ContentProvider } from "./contexts/ContentContext";
+import { HomeworkProvider } from "./contexts/HomeworkContext";
 
 // 역할별 라우트
 import AdminRoutes from "./routes/AdminRoutes";
@@ -149,12 +150,14 @@ function App() {
                       <FinanceProvider>
                         <GrowthProvider>
                           <ContentProvider>
-                            <AuthBoundary>
-                              <TooltipProvider>
-                                <Toaster position="top-right" richColors />
-                                <Router />
-                              </TooltipProvider>
-                            </AuthBoundary>
+                            <HomeworkProvider>
+                              <AuthBoundary>
+                                <TooltipProvider>
+                                  <Toaster position="top-right" richColors />
+                                  <Router />
+                                </TooltipProvider>
+                              </AuthBoundary>
+                            </HomeworkProvider>
                           </ContentProvider>
                         </GrowthProvider>
                       </FinanceProvider>
