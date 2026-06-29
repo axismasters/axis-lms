@@ -328,3 +328,122 @@ const mySubmissions = submissions.filter(s => myStudentIds.has(s.studentId));
 ### 다음 단계 제안
 - **Teacher Workflow Persistence v1**: AssessmentContext에 강사용 채점 mutation 추가, 출결 저장 AttendanceContext 연동
 - **Teacher Content Engine v1**: TeacherVideos/TeacherNotes 실제 업로드/저장 기능, ContentContext 구현
+
+---
+
+## Teacher Workflow Persistence v1
+
+**작업명**: Teacher Workflow Persistence v1
+**기반**: Teacher Workflow Foundation v1 QA Fix
+
+### 목표
+강사 화면의 mock/local state 저장을 기존 React Context 내 mutation으로 연결.
+실제 DB/API 서버 없이, 현재 Context state 안에서 세션 간 데이터 유지.
+
+### 수정 파일
+
+| 파일 | 내용 |
+|------|------|
+| `src/lib/assessmentData.ts` | `ExamSubmission`에 `teacherNote?: string` 필드 추가 |
+| `src/contexts/AttendanceContext.tsx` | `saveTeacherAttendance` mutation 추가 (interface + 구현 + Provider value) |
+| `src/contexts/AssessmentContext.tsx` | `gradeSubmissionByTeacher` mutation 추가 (interface + 구현 + Provider value) |
+| `src/pages/teacher/TeacherAttendance.tsx` | `saveTeacherAttendance` 호출로 교체, 날짜/반 변경 시 Context 세션 데이터 초기화 |
+| `src/pages/teacher/TeacherExamGrading.tsx` | `gradeSubmissionByTeacher` 호출로 교체, local grades state 제거, Context 기반 UI 파생 |
+
+### 신규 Mutation 상세
+
+**AttendanceContext.saveTeacherAttendance**
+- 파라미터: `classId, date, studentIds, recordMap, by`
+- 1차 검증: 결석 사유 누락 → `{ ok: false }`
+- 2차 검증: 세션 잠금 확인 → `{ ok: false }`
+- 동작: 기존 세션이 있으면 레코드 업데이트, 없으면 신규 세션 생성 (전체 출석 기본값 + override 적용)
+- 결석/조퇴 알림: 기존 `updateRecord` 패턴과 동일하게 `createNotificationFromEvent` 호출
+
+**AssessmentContext.gradeSubmissionByTeacher**
+- 파라미터: `examId, studentId, totalScore, gradedBy, note?`
+- 검증: 시험 존재, 제출 기록 존재, 결석 학생 보호, 점수 0~totalScore clamping
+- 동작: `totalScore` 직접 지정, `status = '채점완료'` 전환, `teacherNote` 저장
+- 문항별 breakdown 없이 총점만 저장하는 강사 채점 경로
+
+### Persistence 범위
+
+**Context 내 유지 (이번 단계 달성):**
+- TeacherAttendance 저장 → `AttendanceContext.sessions` 업데이트 → 날짜/반 재선택 시 기존 데이터 로드
+- TeacherExamGrading 채점 → `AssessmentContext.submissions` 업데이트 → 즉시 채점완료 섹션 반영
+- TeacherGrades 화면에도 자동 반영 (같은 Context 읽음)
+- TeacherStudentDetail 출결 요약도 자동 반영
+
+**아직 mock/context state 수준 (새로고침 시 초기화):**
+- 모든 Context 데이터는 DUMMY_* 초기값에서 시작하며 브라우저 새로고침 시 초기화됨
+- TeacherNotes 수업노트 (별도 Context 미구현)
+- DB/API 연동은 다음 단계에서 진행
+
+### 관리자 Back Office 영향
+없음. AttendanceContext/AssessmentContext 기존 함수 일체 변경 없음 (인터페이스 확장만).
+
+### npm run typecheck / npm run build
+- typecheck: 신규/수정 파일 타입 오류 0건 (ClassList.tsx pre-existing 2건 제외)
+- build: 환경 egress 차단으로 `npm install` 불가. 로컬 `npm install && npm run build` 통과 예상.
+
+### 다음 단계 제안
+- **Teacher Content Engine v1**: TeacherVideos/TeacherNotes 실제 ContentContext 구현
+- **Persistence v1 DB 연결**: Context mutation을 REST API 호출로 교체, 새로고침 영속성 구현
+
+---
+
+## Teacher Workflow Persistence v1 buildfix
+
+**작업명**: Teacher Workflow Persistence v1 buildfix
+**기반**: Teacher Workflow Persistence v1
+
+### 수정 사유
+강사 총점 직접 채점(`gradeSubmissionByTeacher`)이 기존 `isSubmissionGraded`/`canPublishExam` 판정과 불일치.
+
+| 문제 | 원인 | 증상 |
+|------|------|------|
+| 채점완료 미인식 | `isSubmissionGraded`가 `answers.every(a.score !== undefined)` 만 확인 | 강사가 총점 입력해도 `채점중`으로 남음 |
+| totalScore 덮어쓰기 | `recalcTotalScore`가 `isSubmissionGraded=true` 진입 후 answers 합산(=0) 반환 | 채점 완료 후 다른 mutation 호출 시 총점 0으로 초기화 |
+| 점수 범위 silent clamp | `Math.max(0, Math.min(...))` 사용 | 범위 초과 입력 시 오류 없이 최대값으로 저장 |
+
+### 수정 파일
+
+| 파일 | 내용 |
+|------|------|
+| `src/lib/assessmentData.ts` | `isSubmissionGraded` — 강사 직접 채점 경로 추가 조건 |
+| `src/lib/assessmentData.ts` | `recalcTotalScore` — 강사 직접 채점 totalScore 보존 경로 추가 |
+| `src/contexts/AssessmentContext.tsx` | `gradeSubmissionByTeacher` — silent clamp 제거, 명시적 범위 오류 반환 |
+
+### 수정 상세
+
+**`isSubmissionGraded` 변경점**
+```
+기존: status=결석 → true; answers all scored → true; else false
+변경: status=결석 → true; status=채점완료 && totalScore !== undefined → true; answers all scored → true; else false
+```
+강사 직접 채점 경로를 명시적으로 인식. 기존 문항별 채점 흐름은 unchanged.
+
+**`recalcTotalScore` 변경점**
+- `allAnswersGraded = answers.length > 0 && answers.every(a.score !== undefined)` 를 먼저 체크
+- `!allAnswersGraded && status='채점완료' && totalScore !== undefined` → 강사 직접 채점 경로 → `return sub` (totalScore 보존)
+- 위 조건 불만족 시 기존 로직 동일 (결석처리, isSubmissionGraded, answers 합산)
+- 모든 answers가 문항별로 채점 완료되면 regular path에서 answers 합산으로 자연히 교체됨 (올바른 동작)
+
+**`gradeSubmissionByTeacher` 변경점**
+```
+기존: const clamped = Math.max(0, Math.min(totalScore, exam.totalScore)) → silent 저장
+변경: if (totalScore < 0 || totalScore > exam.totalScore) return { ok:false, reason }
+```
+UI 1차 검증(TeacherExamGrading) + Context 2차 검증 일치.
+
+### 수정하지 않은 파일
+- `TeacherExamGrading.tsx`: 기존 UI 범위 검증 + Context 오류 표시 유지, 변경 없음
+- `AttendanceContext.tsx`: 이번 buildfix 범위 아님
+
+### 다음 개선점 기록
+- **동일 출결 저장 시 결석/조퇴 알림 중복 발송 방지**: `saveTeacherAttendance` 호출 시 기존 세션에 이미 결석/조퇴로 저장된 학생은 알림을 재발송하지 않아야 함. 현재는 매 저장마다 조건 충족 시 알림이 발송됨.
+- **세션 이미 잠긴 경우 UI 안내**: `isLocked=true` 세션의 날짜/반 선택 시 편집 불가 안내 필요.
+- **DB/API 연동**: 현재 모든 Context 데이터는 새로고침 시 초기화. 실제 영속성은 다음 단계.
+
+### npm run typecheck / npm run build
+- typecheck: 수정 파일 타입 오류 0건 (ClassList.tsx pre-existing 2건 제외)
+- build: 환경 egress 차단으로 `npm install` 불가. 로컬 `npm install && npm run build` 통과 예상.
