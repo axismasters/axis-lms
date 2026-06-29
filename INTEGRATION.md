@@ -50,3 +50,48 @@ Claude 원본 `axis-lms-v1_2-homework-qa-cleanup-v1.zip`은 `StudentHome.tsx`, `
 ## TeacherExamGrading 타입픽스 유지
 
 `src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 변경하지 않는다.
+
+---
+
+# AXIS LMS v1.2 — Attendance Home Bridge QA v1
+
+## 변경 파일
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/pages/teacher/TeacherHome.tsx` | 오늘 수업 카드에서 담당 반 출결 상태를 `useAttendance().getSession(classId, todayDate)`로 표시하고 `/teacher/attendance` 빠른 이동을 연결 |
+| `src/pages/student/StudentHome.tsx` | 빠른 이동 4개 항목을 `grid-cols-2`로 조정하여 2×2 균형 배치 |
+
+## 변경하지 않은 파일
+
+- `src/pages/parent/ParentHome.tsx` — 이미 자녀 소속 반 세션과 선택 자녀 `studentId` 기준으로 출결 record를 필터링하므로 변경 불필요
+- `src/pages/teacher/TeacherExamGrading.tsx` — scopedExam 타입픽스 유지
+- Context / Layout / Route / Provider 전체
+- Admin Back Office 전체
+
+## QA 확인
+
+| 항목 | 상태 |
+|------|------|
+| 강사 홈 assignedClassIds 스코프 | 유지 |
+| 학생 홈 출결 빠른 이동 | 유지 |
+| 학부모 홈 자녀별 출결 스코프 | 기존 구현 정상 확인 |
+| 기존 숙제 홈 요약 | 유지 |
+| 학생 홈 나의 진열장/티어/SP | 유지 |
+| 강사 홈 빠른 실행/오늘 수업/미채점 시험/최근 성적 | 유지 |
+| 학부모 홈 자녀 선택/수강 반/출결/성적/공개자료/수납/숙제 흐름 | 유지 |
+| `/teacher/exams/:id/grading` 라우트 | 유지 |
+
+## 보류 유지
+
+- NGD2 연동 없음
+- 문제은행 연동 없음
+- 시험/성적 엔진 구조 변경 없음
+- 숙제 제출/자동채점 없음
+- 알림 기능 추가 없음
+- Admin Back Office 변경 없음
+- Rival / Emblem / IF 분석 직접 구현 없음
+
+## TeacherExamGrading 타입픽스 유지
+
+`src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.

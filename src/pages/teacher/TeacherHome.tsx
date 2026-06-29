@@ -13,6 +13,7 @@ import { useClasses } from '@/contexts/ClassContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useHomework } from '@/contexts/HomeworkContext';
+import { useAttendance } from '@/contexts/AttendanceContext';
 import type { ClassRoom } from '@/lib/classData';
 
 const DAY_LABEL = ['일', '월', '화', '수', '목', '금', '토'] as const;
@@ -40,6 +41,7 @@ export default function TeacherHome() {
   const { students } = useStudents();
   const { exams, submissions } = useAssessment();
   const { getByTeacher } = useHomework();
+  const { getSession } = useAttendance();
 
   const assignedClassIds = currentUser.assignedClassIds ?? [];
   const assignedStudentIds = currentUser.assignedStudentIds ?? [];
@@ -51,6 +53,8 @@ export default function TeacherHome() {
   const todayClasses = useTodayClasses(assignedClassIds);
   const assignedClasses = classes.filter((c) => assignedClassIds.includes(c.id));
   const assignedStudents = students.filter((s) => assignedStudentIds.includes(s.id));
+
+  const todayDate = new Date().toISOString().slice(0, 10);
 
   const myHomework = getByTeacher(currentUser.id, assignedClassIds);
   const publishedHomework = myHomework.filter((hw) => hw.status === 'published');
@@ -203,22 +207,38 @@ export default function TeacherHome() {
               {todayClasses.slice(0, 2).map((cls) => {
                 const today = DAY_LABEL[new Date().getDay()];
                 const todaySlots = cls.timeSlots.filter((s) => s.day === today);
+                const attSession = getSession(cls.id, todayDate);
+                const attLabel = attSession?.isLocked ? '완료' : attSession ? '진행중' : '미체크';
+                const attStyle = attSession?.isLocked
+                  ? { background: 'oklch(0.92 0.08 145)', color: 'oklch(0.3 0.12 145)' }
+                  : attSession
+                  ? { background: 'oklch(0.95 0.08 80)', color: 'oklch(0.4 0.15 80)' }
+                  : { background: 'oklch(0.95 0.06 25)', color: 'oklch(0.5 0.15 25)' };
                 return (
-                  <div key={cls.id} className="axis-card p-4 flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
-                        {cls.name}
+                  <Link key={cls.id} href="/teacher/attendance" style={{ display: 'block' }}>
+                    <div className="axis-card p-4 flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                          {cls.name}
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                          <Clock size={11} />
+                          {todaySlots.map((s) => `${s.startTime}–${s.endTime}`).join(', ')}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 mt-0.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                        <Clock size={11} />
-                        {todaySlots.map((s) => `${s.startTime}–${s.endTime}`).join(', ')}
+                      <div className="flex flex-col items-end gap-1.5">
+                        <div className="text-xs px-2 py-0.5 rounded-full font-medium" style={attStyle}>
+                          출결 {attLabel}
+                        </div>
+                        <div
+                          className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: 'oklch(0.94 0.06 250)', color: 'oklch(0.4 0.15 250)' }}
+                        >
+                          {cls.enrolledCount}명
+                        </div>
                       </div>
                     </div>
-                    <div className="text-xs px-2 py-1 rounded-full font-medium"
-                      style={{ background: 'oklch(0.94 0.06 250)', color: 'oklch(0.4 0.15 250)' }}>
-                      {cls.enrolledCount}명
-                    </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

@@ -89,7 +89,7 @@ export default function StudentHome() {
         </div>
 
         {/* 빠른 이동 */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {QUICK_ACTIONS.map(({ icon: Icon, label, path, color }) => (
             <Link key={path} href={path} style={{ display: 'block' }}>
               <div className="axis-card p-3 flex flex-col items-center gap-1.5 cursor-pointer">
