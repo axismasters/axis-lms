@@ -1,9 +1,9 @@
-# AXIS LMS v1.2 - University Analysis School Record Input Bridge v1 buildfix
+# AXIS LMS v1.2 - University Analysis Student Context Bridge v1 buildfix
 
 ## ChatGPT QA 판정
 
-원본 zip은 `Student.internalScores`에서 `schoolRecord`를 채우려는 방향은 맞다.
-다만 직전 baseline 38번에서 고친 Phase 5.1 실제 계약 draft 일부를 다시 이전 구조로 되돌렸다.
+원본 zip은 `Student.mockExamScores.grade`에서 `gradeLevel`을 파생하고 명시 `track`만 전달하려는 방향은 맞다.
+다만 직전 baseline 39번에서 고친 Phase 5.1 실제 계약 draft 일부를 다시 이전 구조로 되돌렸다.
 
 따라서 원본 zip 대신 이 buildfix 업로드본을 사용한다.
 
@@ -11,7 +11,7 @@
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/lib/universityAnalysisAdapter.ts` | `buildPhase51AnalyzeRequestDraft`에 `internalScores` 선택 인자 추가, `adaptInternalScoresToSchoolRecordInputDraft` helper 추가 |
+| `src/lib/universityAnalysisAdapter.ts` | `Phase51StudentContextDraft` 추가, `buildPhase51AnalyzeRequestDraft`에 `context` 선택 인자 추가, `deriveGradeLevelFromMockExamScores` helper 추가 |
 
 ## buildfix 기준
 
@@ -28,19 +28,18 @@
 
 | 함수 | 역할 |
 |------|------|
-| `adaptInternalScoresToSchoolRecordInputDraft(scores)` | `Student.internalScores` 배열에서 Phase 5.1 `SchoolRecordInput` draft를 생성 |
+| `deriveGradeLevelFromMockExamScores(scores)` | `Student.mockExamScores[0].grade` 문자열을 `1 | 2 | 3`으로 안전 변환 |
 
 ## 변환 규칙
 
-| draft 필드 | 변환 규칙 |
-|-----------|-----------|
-| `avgGrade` | 전체 `InternalScore.grade` 단순 평균 |
-| `koreanGrade` | 과목명에 `국어`가 포함된 항목의 단순 평균 |
-| `mathGrade` | 과목명에 `수학`이 포함된 항목의 단순 평균 |
-| `note` | 데이터가 있을 때 LMS 기준 단순 평균임을 표시 |
+| 입력 | 출력 |
+|------|------|
+| `고1` | `1` |
+| `고2` | `2` |
+| `고3` | `3` |
+| 그 외 문자열 또는 빈 배열 | `null` |
 
-평균은 소수점 둘째 자리까지 반올림한다. 해당 데이터가 없으면 `null`로 둔다.
-가중 평균, 교과 전형 계산, 대학추천 계산은 수행하지 않는다.
+`track`은 LMS 원데이터에서 추론하지 않는다. `context.track`에 명시된 `'인문' | '자연' | '통합'` 값만 반영한다.
 
 ## QA 확인
 
@@ -69,17 +68,17 @@
 
 업로드 파일:
 
-`axis-lms-v1_2-university-analysis-school-record-input-bridge-v1-buildfix-github-upload.zip`
+`axis-lms-v1_2-university-analysis-student-context-bridge-v1-buildfix-github-upload.zip`
 
 커밋명:
 
-`대학분석 내신입력 브릿지 반영`
+`대학분석 학생컨텍스트 브릿지 반영`
 
 ## baseline 반영 조건
 
 GitHub Actions가 정상 통과하면 baseline에 다음 항목을 추가한다.
 
-39. University Analysis School Record Input Bridge v1 buildfix
+40. University Analysis Student Context Bridge v1 buildfix
 
 ## 보류 유지
 

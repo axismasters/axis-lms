@@ -660,6 +660,16 @@ export interface Phase51AnalyzeRequestDraft {
 }
 
 /**
+ * Phase 5.1 AnalyzeRequest draft 조립 시 호출부가 명시할 수 있는 학생 컨텍스트.
+ *
+ * track은 LMS 원데이터에서 추론하지 않고, 명시된 값만 반영한다.
+ */
+export interface Phase51StudentContextDraft {
+  gradeLevel?: Phase51GradeLevel | null;
+  track?: Phase51Track | null;
+}
+
+/**
  * UniversityAnalysisInput에서 Phase51AnalyzeRequestDraft의 골격을 조립한다.
  *
  * 이 함수는 Phase 5.1 직접 통합 전 placeholder다.
@@ -673,12 +683,19 @@ export function buildPhase51AnalyzeRequestDraft(
   input: UniversityAnalysisInput,
   mockExamScores?: MockExamScore[],
   internalScores?: InternalScore[],
+  context?: Phase51StudentContextDraft,
 ): Phase51AnalyzeRequestDraft {
+  const gradeLevel: Phase51GradeLevel | null =
+    context?.gradeLevel ??
+    (mockExamScores ? deriveGradeLevelFromMockExamScores(mockExamScores) : null);
+
+  const track: Phase51Track | null = context?.track ?? null;
+
   return {
     studentId:                input.studentId,
     studentName:              input.studentName,
-    gradeLevel:               null,
-    track:                    null,
+    gradeLevel,
+    track,
     schoolRecord:             internalScores
       ? adaptInternalScoresToSchoolRecordInputDraft(internalScores)
       : null,
@@ -787,4 +804,33 @@ export function adaptInternalScoresToSchoolRecordInputDraft(
       ? `LMS internalScores ${scores.length}건 기준 단순 평균`
       : undefined,
   };
+}
+
+// ────────────────────────────────────────────────────────────
+// Student Context Bridge v1
+// Student.mockExamScores.grade 문자열 → Phase51GradeLevel 파생 헬퍼.
+// ────────────────────────────────────────────────────────────
+
+/**
+ * `Student.mockExamScores` 배열에서 `Phase51GradeLevel`을 파생한다.
+ *
+ * 변환 규칙:
+ * - '고1' → 1
+ * - '고2' → 2
+ * - '고3' → 3
+ * - 그 외 문자열 또는 빈 배열 → null
+ *
+ * track은 이 함수에서 추론하지 않는다.
+ */
+export function deriveGradeLevelFromMockExamScores(
+  scores: MockExamScore[],
+): Phase51GradeLevel | null {
+  if (scores.length === 0) return null;
+
+  switch (scores[0].grade) {
+    case '고1': return 1;
+    case '고2': return 2;
+    case '고3': return 3;
+    default:    return null;
+  }
 }
