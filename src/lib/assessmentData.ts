@@ -283,6 +283,47 @@ export function getMockAccumulationSummary(results: StudentExamResult[]): MockAc
 }
 
 // ────────────────────────────────────────────────────────────
+// 대학추천 준비 상태 헬퍼 — University Recommendation Readiness Foundation v1
+// 실제 대학명/합격가능성/목표대학 분석은 포함하지 않는다.
+// Admin Back Office(StudentDetail.tsx)에서만 사용한다.
+// ────────────────────────────────────────────────────────────
+export type RecommendationReadinessStatus = '데이터 부족' | '준비 중' | '충분';
+
+export interface UniversityRecommendationReadiness {
+  suneungRounds: number;          // mock-suneung 공개 응시 회차 수
+  hasRecentScore: boolean;        // 최근 실전모의 점수 존재 여부 (1회 이상)
+  hasCumulativeAvg: boolean;      // 누적 평균 산출 가능 여부 (2회 이상)
+  hasLast3Avg: boolean;           // 최근 3회 평균 산출 가능 여부 (3회 이상)
+  status: RecommendationReadinessStatus;
+}
+
+/**
+ * Assessment Engine의 공개 결과(getPublishedResultsForStudent 반환값)를 기반으로
+ * 수능실전모의(mock-suneung) 데이터 준비 상태를 판단한다.
+ * - results: getPublishedResultsForStudent()로 얻은 StudentExamResult[] 전체 전달
+ *   (내부에서 mock-suneung 카테고리만 추출하므로 전체 목록을 그대로 넘긴다)
+ */
+export function getUniversityRecommendationReadiness(
+  results: StudentExamResult[],
+): UniversityRecommendationReadiness {
+  const suneungResults = results.filter((r) => r.categoryId === 'mock-suneung');
+  const rounds = suneungResults.length;
+
+  let status: RecommendationReadinessStatus;
+  if (rounds === 0)      status = '데이터 부족';
+  else if (rounds >= 3)  status = '충분';
+  else                   status = '준비 중';
+
+  return {
+    suneungRounds: rounds,
+    hasRecentScore: rounds >= 1,
+    hasCumulativeAvg: rounds >= 2,
+    hasLast3Avg: rounds >= 3,
+    status,
+  };
+}
+
+// ────────────────────────────────────────────────────────────
 // 더미 데이터
 // ────────────────────────────────────────────────────────────
 function q(no: number, type: QuestionType, points: number, correctAnswer?: string): ExamQuestionDef {
