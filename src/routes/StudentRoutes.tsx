@@ -1,4 +1,4 @@
-// AXIS LMS v1.2 - StudentRoutes (Student Portal Foundation v1)
+// AXIS LMS v1.2 - StudentRoutes (Student Finance View Foundation v1)
 // /student/** — STUDENT 계정 전용. 모든 화면은 읽기 전용.
 
 import { Route, Switch, Redirect } from 'wouter';
@@ -8,6 +8,7 @@ import StudentClasses from '@/pages/student/StudentClasses';
 import StudentGrades from '@/pages/student/StudentGrades';
 import StudentAttendance from '@/pages/student/StudentAttendance';
 import StudentHomework from '@/pages/student/StudentHomework';
+import StudentFinance from '@/pages/student/StudentFinance';
 import StudentLayout from '@/layouts/StudentLayout';
 
 function StudentPlaceholder({ title }: { title: string }) {
@@ -44,6 +45,9 @@ export default function StudentRoutes() {
 
         {/* 내 숙제 */}
         <Route path="/student/homework" component={StudentHomework} />
+
+        {/* 수납 내역 조회 (읽기 전용) */}
+        <Route path="/student/finance" component={StudentFinance} />
 
         {/* 성장 진열장 (Foundation — 홈에서 접근) */}
         <Route path="/student/growth" component={() => <StudentPlaceholder title="성장 진열장" />} />
