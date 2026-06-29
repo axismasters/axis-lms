@@ -39,6 +39,7 @@ import {
   buildPhase51AnalyzeRequestDraftBundle,
   type Phase51Track,
   type Phase51TargetUniversityInputDraft,
+  type Phase51ImprovementScenarioInputDraft,
 } from '@/lib/universityAnalysisAdapter';
 import { nanoid } from 'nanoid';
 import {
@@ -877,6 +878,11 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
   const [draftTrack, setDraftTrack] = useState<Phase51Track | null>(null);
   const [draftTargetUniversities, setDraftTargetUniversities] = useState<Phase51TargetUniversityInputDraft[]>([]);
   const [targetInput, setTargetInput] = useState({ univName: '', deptName: '' });
+  const [draftScenarioInput, setDraftScenarioInput] = useState({
+    mathStdScoreDelta: '',
+    mathPercentileDelta: '',
+    mathGradeUp: '',
+  });
   const { exams, submissions } = useAssessment();
 
   const mockFiltered = useMemo(() => {
@@ -953,6 +959,18 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
   );
   // Draft Preview UI Wiring v1 — buildPhase51AnalyzeRequestDraftBundle
   // Target University Draft Input UI Wiring v1 — draftTargetUniversities 연결
+  // Improvement Scenario Draft Input UI Wiring v1 — draftScenario 파생 및 연결
+  const draftScenario = useMemo<Phase51ImprovementScenarioInputDraft | undefined>(() => {
+    const s: Phase51ImprovementScenarioInputDraft = {};
+    const std = draftScenarioInput.mathStdScoreDelta !== '' ? Number(draftScenarioInput.mathStdScoreDelta) : undefined;
+    const pct = draftScenarioInput.mathPercentileDelta !== '' ? Number(draftScenarioInput.mathPercentileDelta) : undefined;
+    const grd = draftScenarioInput.mathGradeUp !== '' ? Number(draftScenarioInput.mathGradeUp) : undefined;
+    if (std !== undefined && Number.isFinite(std)) s.mathStdScoreDelta = std;
+    if (pct !== undefined && Number.isFinite(pct)) s.mathPercentileDelta = pct;
+    if (grd !== undefined && Number.isFinite(grd)) s.mathGradeUp = grd;
+    return Object.keys(s).length > 0 ? s : undefined;
+  }, [draftScenarioInput]);
+
   const draftBundle = useMemo(
     () => buildPhase51AnalyzeRequestDraftBundle(
       analysisInput,
@@ -960,8 +978,9 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
       student.internalScores,
       draftTrack != null ? { track: draftTrack } : undefined,
       draftTargetUniversities.length > 0 ? draftTargetUniversities : undefined,
+      draftScenario,
     ),
-    [analysisInput, student.mockExamScores, student.internalScores, draftTrack, draftTargetUniversities]
+    [analysisInput, student.mockExamScores, student.internalScores, draftTrack, draftTargetUniversities, draftScenario]
   );
   // ────────────────────────────────────────────────────────
 
@@ -1499,13 +1518,73 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
             )}
           </div>
 
-          {/* IF 개선 시나리오 (placeholder — 다음 단계) */}
-          <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs mb-2"
-            style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.65 0.01 250)' }}
-          >
-            <span>IF 개선 시나리오</span>
-            <span className="ml-auto italic">다음 단계에서 구현 예정</span>
+          {/* ⑧ IF 개선 시나리오 입력 UI — Improvement Scenario Draft Input UI Wiring v1 */}
+          <div className="mb-2">
+            <div className="text-xs font-semibold mb-1.5 flex items-center gap-1.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
+              <Zap size={11} />
+              IF 개선 시나리오
+            </div>
+            <p className="text-xs mb-2 leading-relaxed" style={{ color: 'oklch(0.6 0.01 250)' }}>
+              합격 가능성 변화 계산이 아닌, 수학 점수 향상을 가정하는 입력값입니다.
+            </p>
+
+            {/* 3-field input grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-1.5">
+              {(
+                [
+                  { key: 'mathStdScoreDelta',   label: '표준점수 +Δ', placeholder: '예) 10' },
+                  { key: 'mathPercentileDelta',  label: '백분위 +Δ',   placeholder: '예) 5'  },
+                  { key: 'mathGradeUp',          label: '등급 향상',    placeholder: '예) 1'  },
+                ] as const
+              ).map(({ key, label, placeholder }) => (
+                <div key={key}>
+                  <div className="text-xs mb-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{label}</div>
+                  <input
+                    type="number"
+                    placeholder={placeholder}
+                    value={draftScenarioInput[key]}
+                    onChange={(e) =>
+                      setDraftScenarioInput((prev) => ({ ...prev, [key]: e.target.value }))
+                    }
+                    className="w-full rounded-md px-2 py-1 text-xs border"
+                    style={{
+                      borderColor: 'oklch(0.88 0.008 250)',
+                      background: 'white',
+                      color: 'oklch(0.22 0.02 250)',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* 입력값 반영 안내 + 초기화 */}
+            {draftScenario ? (
+              <div className="flex items-center justify-between">
+                <p className="text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>
+                  payload preview의{' '}
+                  <code style={{ fontFamily: 'monospace', fontSize: '10px' }}>improvementScenario</code>
+                  에 반영됩니다.
+                </p>
+                <button
+                  onClick={() =>
+                    setDraftScenarioInput({ mathStdScoreDelta: '', mathPercentileDelta: '', mathGradeUp: '' })
+                  }
+                  className="text-xs px-2 py-0.5 rounded-md border transition-colors"
+                  style={{
+                    borderColor: 'oklch(0.88 0.008 250)',
+                    color: 'oklch(0.55 0.015 250)',
+                    background: 'white',
+                  }}
+                >
+                  초기화
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs" style={{ color: 'oklch(0.72 0.01 250)' }}>
+                입력하면 payload preview에 반영됩니다.
+              </p>
+            )}
           </div>
 
           <details className="mb-2">
