@@ -1,26 +1,31 @@
-// AXIS LMS v1.2 — University Analysis Phase 5.1 Client Boundary (AnalyzeResponse Type Contract v1)
+// AXIS LMS v1.2 — University Analysis Phase 5.1 Client (API Fetch Connection v1)
 //
 // 목적: LMS와 axis-university-analysis-engine-phase5.1 사이의 API 호출 경계 및
 //       응답 타입 계약을 정의한다.
 //
-// 현재 단계(Type Contract v1):
-//   - Phase51AnalyzeResponse 및 서브타입을 Phase 5.1 API_CONTRACT.md 기준으로 확장
-//   - 실제 fetch 호출 없음 — callPhase51AnalyzeApi는 여전히 stub
+// 현재 단계(API Fetch Connection v1):
+//   - callPhase51AnalyzeApi를 실제 fetch 기반으로 교체
+//   - API base URL: import.meta.env.VITE_PHASE51_API_URL
+//   - POST ${baseUrl}/analyze — body: JSON.stringify(draft)
 //   - 엔진 본체 import 없음
-//   - LMS 본체에서 합격 가능성·추천 순위·대학명을 계산하지 않는다
-//   - 엔진 응답을 표시하기 위한 타입 계약만 준비한다
+//   - LMS 내부에서 합격 가능성·추천 순위·대학명을 계산하지 않는다
+//   - 이 파일의 함수는 아직 LMS 화면에서 호출하지 않는다
 //
 // 다음 단계:
-//   - Stage 3: callPhase51AnalyzeApi를 실제 fetch로 교체 (VITE_PHASE51_API_URL 환경변수)
 //   - Stage 4: LMS UI에 응답 표시 (GradesTab 내부 조건부 렌더)
 //
 // ❌ 엔진 본체 직접 import 금지
-// ❌ 실제 fetch 호출 금지
-// ❌ 합격 가능성 / 추천 순위 / 대학명을 LMS에서 생성 금지
+// ❌ LMS 내부에서 합격 가능성 / 추천 순위 / 대학명 생성 금지
 // ❌ PDF Export 금지
 // ✅ Phase51AnalyzeRequestDraft import 허용 (입력 타입 참조 전용)
 
 import type { Phase51AnalyzeRequestDraft } from '@/lib/universityAnalysisAdapter';
+
+type Phase51ImportMetaEnv = ImportMeta & {
+  readonly env?: {
+    readonly VITE_PHASE51_API_URL?: string;
+  };
+};
 
 // ────────────────────────────────────────────────────────────
 // Phase 5.1 API 상태
@@ -160,20 +165,39 @@ export interface Phase51AnalyzeResponse {
 }
 
 // ────────────────────────────────────────────────────────────
-// Phase 5.1 API client (stub — Stage 3에서 실제 fetch로 교체)
+// Phase 5.1 API client
 // ────────────────────────────────────────────────────────────
 
 /**
- * Phase 5.1 /analyze 엔드포인트 호출 함수 (Stub).
+ * Phase 5.1 /analyze 엔드포인트 호출 함수.
  *
- * 현재 단계에서는 항상 에러를 던진다.
- * 실제 fetch 연결은 Stage 3에서 진행한다.
+ * VITE_PHASE51_API_URL 환경변수가 설정되어 있어야 한다.
+ * 설정되지 않으면 즉시 에러를 던진다.
  *
- * @param _draft Phase51AnalyzeRequestDraft — 엔진에 전달할 요청 payload
- * @throws Error 항상 — Stub 단계이므로 실제 호출하지 않음
+ * 응답은 Phase51AnalyzeResponse 타입으로 반환된다.
+ * LMS는 응답 값을 표시만 하며, 합격 가능성·추천 순위·대학명을 내부에서 계산하지 않는다.
+ *
+ * @param draft Phase51AnalyzeRequestDraft — 엔진에 전달할 요청 payload
+ * @throws Error VITE_PHASE51_API_URL 미설정 시
+ * @throws Error 응답 상태가 !res.ok 일 때 (`Phase 5.1 API error: ${res.status}`)
  */
 export async function callPhase51AnalyzeApi(
-  _draft: Phase51AnalyzeRequestDraft,
+  draft: Phase51AnalyzeRequestDraft,
 ): Promise<Phase51AnalyzeResponse> {
-  throw new Error('Phase 5.1 API not yet connected. Stub only.');
+  const baseUrl = (import.meta as Phase51ImportMetaEnv).env?.VITE_PHASE51_API_URL;
+  if (!baseUrl) {
+    throw new Error('VITE_PHASE51_API_URL is not set.');
+  }
+
+  const res = await fetch(`${baseUrl}/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(draft),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Phase 5.1 API error: ${res.status}`);
+  }
+
+  return res.json() as Promise<Phase51AnalyzeResponse>;
 }
