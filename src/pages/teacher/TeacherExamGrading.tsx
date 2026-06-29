@@ -54,7 +54,7 @@ export default function TeacherExamGrading() {
   // 저장 오류 (per-student)
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // 1. Raw exam (범위 미확인)
+  // 1. Raw exam lookup (범위 미확인 — rawExam)
   const rawExam = examId ? exams.find((e) => e.id === examId) : undefined;
 
   // 2. 담당 학생 submissions (범위 확인 + 채점 데이터)
@@ -65,7 +65,7 @@ export default function TeacherExamGrading() {
   // 3. Scope 강화:
   //    classId 있는 시험 → assignedClassIds 포함 여부
   //    classId 없는 학원 전체 시험 → 담당 학생 submission ≥1
-  const exam = (() => {
+  const visibleExam = (() => {
     if (!rawExam) return undefined;
     if (rawExam.classId) {
       return assignedClassIds.includes(rawExam.classId) ? rawExam : undefined;
@@ -73,8 +73,7 @@ export default function TeacherExamGrading() {
     return mySubmissions.length > 0 ? rawExam : undefined;
   })();
 
-  if (!exam) return <NotFoundScreen />;
-  const visibleExam = exam;
+  if (!visibleExam) return <NotFoundScreen />;
 
   const assignedStudents = students.filter((s) => assignedStudentIds.includes(s.id));
 

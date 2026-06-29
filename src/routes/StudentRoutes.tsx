@@ -1,9 +1,12 @@
-// AXIS LMS v1.2 - StudentRoutes
-// /student/** — STUDENT 계정 전용.
+// AXIS LMS v1.2 - StudentRoutes (Student Portal Foundation v1)
+// /student/** — STUDENT 계정 전용. 모든 화면은 읽기 전용.
 
-import { Route, Switch } from 'wouter';
+import { Route, Switch, Redirect } from 'wouter';
 import { RoleRoute } from './RoleRoute';
 import StudentHome from '@/pages/student/StudentHome';
+import StudentClasses from '@/pages/student/StudentClasses';
+import StudentGrades from '@/pages/student/StudentGrades';
+import StudentAttendance from '@/pages/student/StudentAttendance';
 import StudentLayout from '@/layouts/StudentLayout';
 
 function StudentPlaceholder({ title }: { title: string }) {
@@ -26,10 +29,25 @@ export default function StudentRoutes() {
   return (
     <RoleRoute allow={['STUDENT']}>
       <Switch>
+        {/* 학생 홈 */}
         <Route path="/student" component={StudentHome} />
+
+        {/* 내 반/수업 조회 */}
+        <Route path="/student/classes" component={StudentClasses} />
+
+        {/* 성적 조회 (공개/반영 결과만) */}
+        <Route path="/student/grades" component={StudentGrades} />
+
+        {/* 출결 조회 */}
+        <Route path="/student/attendance" component={StudentAttendance} />
+
+        {/* 성장 진열장 (Foundation — 홈에서 접근) */}
         <Route path="/student/growth" component={() => <StudentPlaceholder title="성장 진열장" />} />
-        <Route path="/student/scores" component={() => <StudentPlaceholder title="성적 조회" />} />
-        <Route path="/student/attendance" component={() => <StudentPlaceholder title="출결 확인" />} />
+
+        {/* 구 경로 하위호환 리다이렉트 */}
+        <Route path="/student/scores" component={() => <Redirect to="/student/grades" />} />
+
+        {/* 404 */}
         <Route component={() => <StudentPlaceholder title="페이지를 찾을 수 없습니다" />} />
       </Switch>
     </RoleRoute>

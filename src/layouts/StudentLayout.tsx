@@ -1,16 +1,16 @@
-// AXIS LMS v1.2 - StudentLayout
-// 학생 전용 레이아웃: 중앙 카드형, Bottom Navigation 기반.
+// AXIS LMS v1.2 - StudentLayout (Student Portal Foundation v1)
+// 학생 전용 레이아웃: 고정 세로 사이드바 없음. Bottom Navigation 4탭.
 
 import { Link, useLocation } from 'wouter';
-import { Home, Trophy, BarChart2, CalendarCheck, GraduationCap } from 'lucide-react';
+import { Home, BookOpen, BarChart2, CalendarCheck, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 
 const STUDENT_NAV = [
-  { path: '/student',          label: '홈',     icon: Home },
-  { path: '/student/growth',   label: '성장',   icon: Trophy },
-  { path: '/student/scores',   label: '성적',   icon: BarChart2 },
-  { path: '/student/attendance', label: '출결', icon: CalendarCheck },
+  { path: '/student',            label: '홈',   icon: Home },
+  { path: '/student/classes',    label: '내 반', icon: BookOpen },
+  { path: '/student/grades',     label: '성적',  icon: BarChart2 },
+  { path: '/student/attendance', label: '출결',  icon: CalendarCheck },
 ];
 
 interface StudentLayoutProps {
@@ -64,7 +64,7 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
         {children}
       </main>
 
-      {/* ⚠ DEV ONLY: 역할 전환기 — 운영 배포 전 제거 */}
+      {/* ⚠ DEV ONLY */}
       <DevRoleSwitcher />
 
       {/* Bottom Navigation */}
@@ -75,13 +75,10 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
         {STUDENT_NAV.map(({ path, label, icon: Icon }) => {
           const active = isActive(path);
           return (
-            <Link key={path} href={path}>
+            <Link key={path} href={path} style={{ flex: 1, display: 'flex' }}>
               <div
-                className="flex-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors"
-                style={{
-                  minWidth: 64,
-                  color: active ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.6 0.015 250)',
-                }}
+                className="flex flex-col items-center justify-center gap-0.5 w-full py-1 cursor-pointer transition-colors"
+                style={{ color: active ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.6 0.015 250)' }}
               >
                 <Icon size={20} />
                 <span className="text-xs font-medium">{label}</span>

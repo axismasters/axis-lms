@@ -1,32 +1,40 @@
-// AXIS LMS v1.2 - StudentHome
-// 학생 전용 홈: 나의 진열장 / 현재 티어 / 누적 SP / 최근 시험 / 수업영상 이어보기 카드.
+// AXIS LMS v1.2 - StudentHome (Student Portal Foundation v1)
+// 학생 홈: 인사 / 빠른 이동 / 나의 진열장 / 최근 공개 성적.
+// 성적은 getPublishedResultsForStudent() 정책에 따라 공개/반영 결과만 표시.
 
-import { Trophy, Play, Zap, Award, BarChart2 } from 'lucide-react';
+import { Link } from 'wouter';
+import { Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGrowth } from '@/contexts/GrowthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
+import { getPublishedResultsForStudent } from '@/lib/assessmentData';
+
+const QUICK_ACTIONS = [
+  { icon: BookOpen,     label: '내 반',  path: '/student/classes',    color: 'oklch(0.511 0.262 276.966)' },
+  { icon: BarChart2,    label: '성적',   path: '/student/grades',     color: 'oklch(0.45 0.15 160)' },
+  { icon: CalendarCheck, label: '출결',  path: '/student/attendance', color: 'oklch(0.55 0.15 80)' },
+];
 
 export default function StudentHome() {
   const { currentUser } = useAuth();
   const { getProfile, getStudentEmblems, emblems } = useGrowth();
   const { exams, submissions } = useAssessment();
 
-  const myStudentId = currentUser.assignedStudentIds[0];
+  const myStudentId = currentUser.assignedStudentIds[0] ?? '';
   const profile = myStudentId ? getProfile(myStudentId) : undefined;
   const myStudentEmblems = myStudentId ? getStudentEmblems(myStudentId) : [];
 
-  // StudentEmblem → 실제 Emblem 조회
   const myEmblemsWithDef = myStudentEmblems
     .filter((se) => se.achieved)
     .map((se) => ({ se, def: emblems.find((e) => e.id === se.emblemId) }))
     .filter((x): x is { se: typeof x.se; def: NonNullable<typeof x.def> } => x.def !== undefined);
 
-  const myResults = submissions
-    .filter((s) => s.studentId === myStudentId && s.status === '채점완료')
-    .slice(-3)
-    .reverse();
+  // 공개/반영된 성적만 (visibility 정책 준수)
+  const publishedResults = myStudentId
+    ? getPublishedResultsForStudent(exams, submissions, myStudentId).slice(0, 3)
+    : [];
 
   const tierColor = profile ? TIER_COLORS[profile.tier] : 'oklch(0.7 0.01 250)';
   const tierLabel = profile ? TIER_LABELS[profile.tier] : '-';
@@ -46,6 +54,18 @@ export default function StudentHome() {
           <div className="text-sm mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>
             오늘도 목표를 향해 나아가요!
           </div>
+        </div>
+
+        {/* 빠른 이동 */}
+        <div className="grid grid-cols-3 gap-2">
+          {QUICK_ACTIONS.map(({ icon: Icon, label, path, color }) => (
+            <Link key={path} href={path} style={{ display: 'block' }}>
+              <div className="axis-card p-3 flex flex-col items-center gap-1.5 cursor-pointer">
+                <Icon size={20} style={{ color }} />
+                <span className="text-xs font-medium" style={{ color: 'oklch(0.3 0.02 250)' }}>{label}</span>
+              </div>
+            </Link>
+          ))}
         </div>
 
         {/* 티어 + SP */}
@@ -109,35 +129,41 @@ export default function StudentHome() {
           </div>
         </section>
 
-        {/* 최근 시험 */}
+        {/* 최근 공개 성적 */}
         <section>
-          <div className="flex items-center gap-2 mb-2 px-1">
-            <BarChart2 size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
-            <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 시험</span>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center gap-2">
+              <BarChart2 size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+              <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 성적</span>
+            </div>
+            <Link href="/student/grades">
+              <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>전체 보기</span>
+            </Link>
           </div>
-          {myResults.length === 0 ? (
+          {publishedResults.length === 0 ? (
             <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
-              최근 채점된 시험이 없습니다
+              공개된 성적이 없습니다
             </div>
           ) : (
             <div className="space-y-2">
-              {myResults.map((sub) => {
-                const exam = exams.find((e) => e.id === sub.examId);
-                if (!exam) return null;
-                const total = exam.questions.reduce((s, q) => s + q.points, 0);
-                const score = sub.totalScore ?? 0;
-                const pct = total > 0 ? Math.round((score / total) * 100) : 0;
+              {publishedResults.map((r) => {
+                const pct = r.totalPoints > 0 ? Math.round((r.earnedScore / r.totalPoints) * 100) : 0;
                 return (
-                  <div key={sub.id} className="axis-card p-4 flex items-center justify-between">
+                  <div key={r.examId} className="axis-card p-4 flex items-center justify-between">
                     <div>
-                      <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</div>
-                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{exam.subject} · {exam.examDate}</div>
+                      <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{r.title}</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                        {r.examDate}
+                      </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold tabular-nums" style={{
-                        color: pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)',
-                      }}>
-                        {score}/{total}
+                      <div
+                        className="font-bold tabular-nums text-sm"
+                        style={{
+                          color: pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)',
+                        }}
+                      >
+                        {r.earnedScore}/{r.totalPoints}
                       </div>
                       <div className="text-xs tabular-nums" style={{ color: 'oklch(0.6 0.015 250)' }}>{pct}%</div>
                     </div>
@@ -146,19 +172,6 @@ export default function StudentHome() {
               })}
             </div>
           )}
-        </section>
-
-        {/* 수업영상 이어보기 */}
-        <section>
-          <div className="flex items-center gap-2 mb-2 px-1">
-            <Play size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
-            <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>수업영상 이어보기</span>
-          </div>
-          <div className="axis-card p-4 text-center" style={{ color: 'oklch(0.6 0.015 250)' }}>
-            <Play size={28} className="mx-auto mb-2" style={{ color: 'oklch(0.8 0.01 250)' }} />
-            <div className="text-sm">수업 영상 콘텐츠는 다음 단계에서 제공됩니다</div>
-            <div className="text-xs mt-1" style={{ color: 'oklch(0.7 0.01 250)' }}>콘텐츠 관리 엔진 v1 예정</div>
-          </div>
         </section>
 
       </div>
