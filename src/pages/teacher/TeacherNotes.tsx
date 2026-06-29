@@ -1,38 +1,29 @@
-// AXIS LMS v1.2 - TeacherNotes (Workflow Foundation v1)
-// 강사 전용 수업노트 작성/조회 화면.
-// - 담당 반만 선택 가능 (assignedClassIds 기준)
-// - mock/local state 저장
+// AXIS LMS v1.2 - TeacherNotes (Teacher Content Engine v1)
+// 강사 전용 수업노트 작성/조회 — ContentContext 기반 저장.
+// - 담당 반만 선택 가능 (assignedClassIds 스코프 가드)
+// - 새로고침 시 초기화 (Context state — DB 연동은 다음 단계)
 
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { FileText, Edit2, Plus } from 'lucide-react';
+import { FileText, Edit2, Plus, Trash2 } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClasses } from '@/contexts/ClassContext';
+import { useContent } from '@/contexts/ContentContext';
 import { getLocalDateStr } from '@/utils/dateUtils';
-
-interface NoteEntry {
-  id: string;
-  classId: string;
-  className: string;
-  date: string;
-  topic: string;
-  content: string;
-  homework: string;
-}
 
 const todayStr = getLocalDateStr();
 
 export default function TeacherNotes() {
   const { currentUser } = useAuth();
   const { classes } = useClasses();
+  const { addContent, deleteContent, getByTeacher } = useContent();
 
   const assignedClassIds = currentUser.assignedClassIds ?? [];
   const activeClasses = classes.filter(
     (c) => assignedClassIds.includes(c.id) && c.status === '운영중'
   );
 
-  const [notes, setNotes] = useState<NoteEntry[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [form, setForm] = useState({
@@ -43,47 +34,60 @@ export default function TeacherNotes() {
     homework: '',
   });
 
-  const canSave = form.topic.trim().length > 0 && form.content.trim().length > 0 && form.classId;
+  // ContentContext에서 본인 수업노트 조회
+  const myNotes = getByTeacher(currentUser.id, assignedClassIds, 'note');
+
+  const canSave =
+    form.topic.trim().length > 0 &&
+    form.content.trim().length > 0 &&
+    !!form.classId;
 
   function handleSave() {
     if (!canSave) return;
-    const cls = activeClasses.find((c) => c.id === form.classId);
-    setNotes((prev) => [
-      {
-        id: `note-${Date.now()}`,
-        classId: form.classId,
-        className: cls?.name ?? '',
-        date: form.date,
-        topic: form.topic.trim(),
-        content: form.content.trim(),
-        homework: form.homework.trim(),
-      },
-      ...prev,
-    ]);
-    setForm({ classId: activeClasses[0]?.id ?? '', date: todayStr, topic: '', content: '', homework: '' });
+    // 스코프 가드: classId가 assignedClassIds에 포함된 경우만 저장
+    if (!assignedClassIds.includes(form.classId)) return;
+
+    addContent({
+      type: 'note',
+      classId: form.classId,
+      teacherId: currentUser.id,
+      title: form.topic.trim(),
+      content: form.content.trim(),
+      homework: form.homework.trim() || undefined,
+      date: form.date,
+      visibility: 'teacherOnly',  // v1: 학생·학부모 포털 미노출
+    });
+
+    setForm({
+      classId: activeClasses[0]?.id ?? '',
+      date: todayStr,
+      topic: '',
+      content: '',
+      homework: '',
+    });
     setShowForm(false);
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 3000);
+  }
+
+  function handleDelete(id: string) {
+    deleteContent(id);
   }
 
   return (
     <TeacherLayout title="수업노트">
       <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
 
-        {/* 수업영상 / 수업노트 탭 전환 */}
+        {/* 수업영상 / 수업노트 탭 */}
         <div className="grid grid-cols-2 gap-1 p-1 rounded-lg" style={{ background: 'oklch(0.93 0.006 250)' }}>
           <Link href="/teacher/videos">
-            <div
-              className="py-2 rounded-md text-center text-sm font-medium cursor-pointer w-full"
-              style={{ color: 'oklch(0.5 0.015 250)' }}
-            >
+            <div className="py-2 rounded-md text-center text-sm font-medium cursor-pointer w-full"
+              style={{ color: 'oklch(0.5 0.015 250)' }}>
               수업영상
             </div>
           </Link>
-          <div
-            className="py-2 rounded-md text-center text-sm font-medium"
-            style={{ background: 'white', color: 'oklch(0.511 0.262 276.966)', boxShadow: '0 1px 3px oklch(0 0 0 / 0.1)' }}
-          >
+          <div className="py-2 rounded-md text-center text-sm font-medium"
+            style={{ background: 'white', color: 'oklch(0.511 0.262 276.966)', boxShadow: '0 1px 3px oklch(0 0 0 / 0.1)' }}>
             수업노트
           </div>
         </div>
@@ -107,12 +111,10 @@ export default function TeacherNotes() {
               </button>
             )}
 
-            {/* 저장 완료 안내 */}
+            {/* 저장 완료 */}
             {savedFlash && (
-              <div
-                className="axis-card px-4 py-3 text-sm text-center"
-                style={{ color: 'oklch(0.35 0.12 160)', background: 'oklch(0.96 0.04 160)' }}
-              >
+              <div className="axis-card px-4 py-3 text-sm text-center"
+                style={{ color: 'oklch(0.35 0.12 160)', background: 'oklch(0.96 0.04 160)' }}>
                 ✓ 수업노트가 저장되었습니다.
               </div>
             )}
@@ -216,9 +218,9 @@ export default function TeacherNotes() {
             {/* 수업노트 목록 */}
             <section>
               <div className="text-xs font-semibold mb-2 px-1" style={{ color: 'oklch(0.45 0.015 250)' }}>
-                최근 수업노트{notes.length > 0 ? ` (${notes.length}건)` : ''}
+                최근 수업노트{myNotes.length > 0 ? ` (${myNotes.length}건)` : ''}
               </div>
-              {notes.length === 0 ? (
+              {myNotes.length === 0 ? (
                 <div className="axis-card p-8 text-center">
                   <Edit2 size={22} className="mx-auto mb-2" style={{ color: 'oklch(0.8 0.01 250)' }} />
                   <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>수업노트가 아직 없습니다.</div>
@@ -228,33 +230,48 @@ export default function TeacherNotes() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {notes.map((note) => (
-                    <div key={note.id} className="axis-card p-4">
-                      <div className="flex items-start justify-between mb-1">
-                        <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
-                          {note.topic}
+                  {myNotes.map((note) => {
+                    const cls = activeClasses.find(c => c.id === note.classId);
+                    return (
+                      <div key={note.id} className="axis-card p-4">
+                        <div className="flex items-start justify-between mb-1">
+                          <div className="font-semibold text-sm flex-1 min-w-0 pr-2" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                            {note.title}
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>{note.date}</div>
+                            <button
+                              onClick={() => handleDelete(note.id)}
+                              className="p-1 rounded hover:bg-red-50 transition-colors"
+                              title="삭제"
+                            >
+                              <Trash2 size={12} style={{ color: 'oklch(0.65 0.15 27)' }} />
+                            </button>
+                          </div>
                         </div>
-                        <div className="text-xs ml-2 flex-shrink-0" style={{ color: 'oklch(0.6 0.015 250)' }}>
-                          {note.date}
+                        <div className="text-xs mb-2" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                          {cls?.name ?? note.classId}
                         </div>
+                        <div className="text-sm whitespace-pre-wrap" style={{ color: 'oklch(0.35 0.02 250)' }}>
+                          {note.content}
+                        </div>
+                        {note.homework && (
+                          <div
+                            className="mt-2 text-xs px-3 py-1.5 rounded-lg"
+                            style={{ background: 'oklch(0.96 0.01 250)', color: 'oklch(0.5 0.015 250)' }}
+                          >
+                            📌 {note.homework}
+                          </div>
+                        )}
                       </div>
-                      <div className="text-xs mb-2" style={{ color: 'oklch(0.55 0.015 250)' }}>{note.className}</div>
-                      <div className="text-sm" style={{ color: 'oklch(0.35 0.02 250)' }}>{note.content}</div>
-                      {note.homework && (
-                        <div
-                          className="mt-2 text-xs px-3 py-1.5 rounded-lg"
-                          style={{ background: 'oklch(0.96 0.01 250)', color: 'oklch(0.5 0.015 250)' }}
-                        >
-                          📌 {note.homework}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </section>
           </>
         )}
+
       </div>
     </TeacherLayout>
   );

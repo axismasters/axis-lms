@@ -604,3 +604,135 @@ const visibleExam = scopedExam;   // visibleExam: Exam — 클로저에서도 un
 
 ### npm run typecheck
 - 수정 후 타입 오류 0건 (ClassList.tsx pre-existing 2건 제외)
+
+---
+
+## Admin Back Office QA Cleanup v1
+
+**작업명**: Admin Back Office QA Cleanup v1
+
+### 점검 결과 요약
+
+| 항목 | 결과 |
+|------|------|
+| 대시보드 독립 메뉴 | ✅ 없음 (AdminLayout NAV_ITEMS에 미포함) |
+| 상담관리 독립 메뉴 | ✅ 없음 (StudentDetail 내부 운영메모 구조로만 유지) |
+| 조교 직급 | ✅ 없음 (Position 타입 및 POSITION_LABEL에 미포함) |
+| 재무 접근 정책 | ✅ SUPER_ADMIN/DIRECTOR/STAFF만 `finance.view` 보유. 부원장/실장/팀장/강사 미포함 — 원장·행정 기준 충돌 없음 |
+| 내신성적 조회 | ✅ StudentList.tsx 빠른 조회에 유지 (`?tab=grades&gradeType=naesin`) |
+| 모의고사 성적 조회 | ✅ StudentList.tsx 빠른 조회에 유지 (`?tab=grades&gradeType=mock`) |
+| 죽은 라우트/링크 | ✅ 없음 — AdminRoutes 전 경로 정상 연결 |
+| AdminLayout 미사용 import | ✅ 없음 |
+
+### 수정한 파일
+
+| 파일 | 수정 내용 |
+|------|-----------|
+| `src/pages/ClassList.tsx` | `subjectList`/`levelList` 에 `string[]` 명시적 타입 추가 → **pre-existing 타입 오류 2건 완전 해소** |
+| `src/routes/AdminRoutes.tsx` | 미사용 `import NotFound from '@/pages/NotFound'` 제거 (`NotFound`는 `App.tsx`에서만 사용) |
+
+### 수정 상세
+
+**ClassList.tsx**  
+`SubjectType`는 string literal union인데, `Array.from(new Set(...))` 추론 결과가 `SelectItem`의 `value: string` 요구와 충돌해 `unknown` 오류 발생.
+```ts
+// 수정 전 (오류)
+const subjectList = Array.from(new Set(visibleClasses.map(c => c.subject)));
+const levelList   = Array.from(new Set(visibleClasses.map(c => c.level)));
+
+// 수정 후 (clean)
+const subjectList: string[] = Array.from(new Set(visibleClasses.map((c) => c.subject as string)));
+const levelList: string[]   = Array.from(new Set(visibleClasses.map((c) => c.level)));
+```
+
+**AdminRoutes.tsx**  
+`NotFound`는 `App.tsx` root에서만 사용. `AdminRoutes.tsx`에서는 미사용 → import 제거.
+
+### 점검했으나 변경 없는 항목
+
+- `AdminLayout.tsx` NAV_ITEMS — 대시보드/상담관리 독립 메뉴 없음 확인. 변경 불필요.
+- `rbac.ts` POSITIONS — 조교 없음 확인. 변경 불필요.
+- `financeData.ts` `canManageFinance` — SUPER_ADMIN/DIRECTOR/STAFF 기준 충돌 없음.
+- `StudentDetail.tsx` 주석 — "상담기록 독립 탭은 두지 않는다" 확인. 변경 불필요.
+- `PermissionSettings.tsx` 주석 — "조교 직급 없음" 확인. 변경 불필요.
+
+### typecheck 결과
+- 수정 전: `ClassList.tsx(219,57)`, `(233,55)` 타입 오류 2건 (pre-existing)
+- 수정 후: **위 2건 완전 제거**. 잔여 오류는 전부 `Cannot find module` (node_modules 미설치)
+
+### scopedExam baseline 유지
+- `TeacherExamGrading.tsx` — `scopedExam → visibleExam` 패턴 ✅ 유지
+- Student/Parent Portal 파일 — ✅ 변경 없음
+
+---
+
+## Teacher Content Engine v1
+
+**작업명**: Teacher Content Engine v1
+
+### 신규/수정 파일
+
+| 파일 | 종류 | 내용 |
+|------|------|------|
+| `src/lib/contentData.ts` | **신규** | ContentItem 타입, ContentType, ContentVisibility, AddContentInput, INITIAL_CONTENT |
+| `src/contexts/ContentContext.tsx` | **신규** | ContentProvider, useContent hook — CRUD + getByTeacher + getVisibleForClass |
+| `src/App.tsx` | 수정 | ContentProvider import 추가, GrowthProvider 내부 / AuthBoundary 외부에 ContentProvider 삽입 |
+| `src/pages/teacher/TeacherNotes.tsx` | 수정 | local useState 제거 → useContent().addContent/deleteContent/getByTeacher 전환 |
+| `src/pages/teacher/TeacherVideos.tsx` | 수정 | placeholder 제거 → ContentContext 기반 video/material 등록·목록 화면 |
+
+### ContentContext 구조
+
+```typescript
+interface ContentContextType {
+  items: ContentItem[];
+  addContent(input: AddContentInput): ContentItem;
+  updateContent(id: string, patch: UpdateContentInput): void;
+  deleteContent(id: string): void;
+  // 강사 본인 콘텐츠 조회 (teacherId + classIds + type 필터)
+  getByTeacher(teacherId, classIds?, type?): ContentItem[];
+  // 학생·학부모 포털용 공개 콘텐츠 조회 (v1 미사용, visibility 구조 준비)
+  getVisibleForClass(classId, minVisibility): ContentItem[];
+}
+```
+
+### ContentItem 필드
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | `string` | 자동 생성 |
+| `type` | `'note' \| 'video' \| 'material'` | 콘텐츠 종류 |
+| `classId` | `string` | 담당 반 ID |
+| `teacherId` | `string` | 강사 ID |
+| `title` | `string` | 제목/주제 |
+| `content` | `string?` | 노트 본문 |
+| `homework` | `string?` | 과제/다음수업 안내 (노트용) |
+| `url` | `string?` | 외부 링크 (영상/자료용) |
+| `date` | `string` | 수업 날짜 (YYYY-MM-DD) |
+| `visibility` | `ContentVisibility` | 공개 범위 |
+| `createdAt` | `string` | ISO datetime |
+| `updatedAt` | `string` | ISO datetime |
+
+### 스코프 가드 원칙
+- `addContent` 호출 전 `assignedClassIds.includes(form.classId)` 확인 (페이지 레벨)
+- `getByTeacher(currentUser.id, assignedClassIds, type)` — 자기 반 + 자기 콘텐츠만 노출
+
+### Provider 트리 위치
+```
+GrowthProvider
+  └── ContentProvider    ← 추가
+        └── AuthBoundary
+```
+
+### 학생·학부모 포털 미노출 (v1)
+- visibility 기본값: `teacherOnly`
+- `getVisibleForClass` 함수는 구현 완료 — 다음 단계 포털 연동 시 사용
+- 학생/학부모 포털 파일 변경 없음
+
+### typecheck 결과
+- 실제 타입 오류 0건 (Cannot find module = node_modules 미설치만 잔존)
+- TeacherExamGrading.tsx scopedExam 패턴 유지 확인
+
+### 다음 개선점
+- ContentContext state → DB/Supabase 영속화
+- 학생 포털: `getVisibleForClass(classId, 'studentVisible')` 연동
+- 학부모 포털: `getVisibleForClass(classId, 'parentVisible')` 연동
