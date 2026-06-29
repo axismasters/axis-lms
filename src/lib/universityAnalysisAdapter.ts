@@ -685,6 +685,7 @@ export function buildPhase51AnalyzeRequestDraft(
   internalScores?: InternalScore[],
   context?: Phase51StudentContextDraft,
   targetUniversities?: Phase51TargetUniversityInputDraft[],
+  improvementScenario?: Phase51ImprovementScenarioInputDraft,
 ): Phase51AnalyzeRequestDraft {
   const gradeLevel: Phase51GradeLevel | null =
     context?.gradeLevel ??
@@ -706,6 +707,9 @@ export function buildPhase51AnalyzeRequestDraft(
     targetUniversities:       targetUniversities
       ? sanitizeTargetUniversities(targetUniversities)
       : [],
+    improvementScenario:      improvementScenario
+      ? sanitizeImprovementScenarioInput(improvementScenario)
+      : undefined,
     draftCreatedAt:           new Date().toISOString(),
     sourceAdapterSnapshotAt:  input.snapshotAt,
   };
@@ -954,4 +958,41 @@ export function sanitizeTargetUniversities(
       entry.univName.length > 0 &&
       entry.deptName.length > 0
     ));
+}
+
+// ────────────────────────────────────────────────────────────
+// Improvement Scenario Bridge v1
+// Phase51AnalyzeRequestDraft.improvementScenario 단일값 정제 헬퍼.
+// ────────────────────────────────────────────────────────────
+
+function finiteNumberOrUndefined(value: number | undefined): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+/**
+ * 사용자가 명시 입력한 수학 개선 시나리오 draft를 정제한다.
+ *
+ * 개선 시나리오를 자동 계산하거나 추천하지 않는다.
+ * 합격 가능성 변화, 추천 순위 변화, 대학추천 계산은 수행하지 않는다.
+ */
+export function sanitizeImprovementScenarioInput(
+  input: Phase51ImprovementScenarioInputDraft,
+): Phase51ImprovementScenarioInputDraft | undefined {
+  const scenario: Phase51ImprovementScenarioInputDraft = {};
+
+  const mathStdScoreDelta = finiteNumberOrUndefined(input.mathStdScoreDelta);
+  const mathPercentileDelta = finiteNumberOrUndefined(input.mathPercentileDelta);
+  const mathGradeUp = finiteNumberOrUndefined(input.mathGradeUp);
+
+  if (mathStdScoreDelta !== undefined) {
+    scenario.mathStdScoreDelta = mathStdScoreDelta;
+  }
+  if (mathPercentileDelta !== undefined) {
+    scenario.mathPercentileDelta = mathPercentileDelta;
+  }
+  if (mathGradeUp !== undefined) {
+    scenario.mathGradeUp = mathGradeUp;
+  }
+
+  return Object.keys(scenario).length > 0 ? scenario : undefined;
 }
