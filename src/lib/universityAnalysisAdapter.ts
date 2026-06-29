@@ -406,3 +406,66 @@ export function getMissingUniversityAnalysisFields(
 ): UniversityAnalysisMissingField[] {
   return getUniversityAnalysisInputQuality(input).missingFields;
 }
+
+// ────────────────────────────────────────────────────────────
+// Payload Preview Bridge v1 — 엔진 전달 전 payload 요약 미리보기
+// ────────────────────────────────────────────────────────────
+
+/**
+ * 실제 엔진 호출 전에 확인할 수 있는 payload 요약 미리보기 타입.
+ *
+ * UniversityAnalysisInput과 품질 평가 결과를 한 객체로 압축한다.
+ * 대학명 / 합격 가능성 / 추천 순위는 포함하지 않으며,
+ * 입력 데이터의 상태·항목 수·경고만 담는다.
+ */
+export interface UniversityAnalysisPayloadPreview {
+  /** 학생 식별 정보 */
+  studentId: string;
+  studentName: string;
+  /** 어댑터 입력 상태 (input.readiness.adapterStatus와 동일) */
+  adapterStatus: UniversityAnalysisAdapterStatus;
+  /** 내신 데이터 존재 여부 */
+  hasInternalGrades: boolean;
+  /** 수능실전모의 공개 응시 회차 */
+  suneungRounds: number;
+  /** 포함된 모의 요약 카테고리 수 (0~2: mock-suneung / mock-school) */
+  mockSummaryCount: number;
+  /** 누락/불충분 항목 목록 */
+  missingFields: UniversityAnalysisMissingField[];
+  /** 사람이 읽을 수 있는 경고 목록 */
+  warnings: string[];
+  /** 원본 페이로드(UniversityAnalysisInput)의 snapshotAt 그대로 전달 */
+  snapshotAt: string;
+}
+
+/**
+ * UniversityAnalysisInput과 품질 평가 결과를 합쳐
+ * UniversityAnalysisPayloadPreview를 생성한다.
+ *
+ * - 내부에서 getUniversityAnalysisInputQuality()를 호출해 missingFields / warnings를 채운다.
+ * - snapshotAt은 원본 input의 값을 그대로 유지한다.
+ * - 반환값에 대학명 / 합격 가능성 / 추천 순위가 포함되지 않는다.
+ *
+ * 사용 흐름 예시:
+ *   const input   = safeAssembleUniversityAnalysisInput(...);
+ *   const preview = buildUniversityAnalysisPayloadPreview(input);
+ *   // preview.adapterStatus, preview.warnings 로 UI에 입력 구성 상태 표시
+ *
+ * @param input safeAssembleUniversityAnalysisInput() 결과
+ */
+export function buildUniversityAnalysisPayloadPreview(
+  input: UniversityAnalysisInput,
+): UniversityAnalysisPayloadPreview {
+  const quality = getUniversityAnalysisInputQuality(input);
+  return {
+    studentId:        input.studentId,
+    studentName:      input.studentName,
+    adapterStatus:    quality.overallStatus,
+    hasInternalGrades: input.internalGrades.hasData,
+    suneungRounds:    input.readiness.suneungRounds,
+    mockSummaryCount: input.mockSummaries.length,
+    missingFields:    quality.missingFields,
+    warnings:         quality.warnings,
+    snapshotAt:       input.snapshotAt,
+  };
+}

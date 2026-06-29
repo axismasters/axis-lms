@@ -34,6 +34,7 @@ import {
   adaptMockSummaryFromLms,
   safeAssembleUniversityAnalysisInput,
   getUniversityAnalysisInputQuality,
+  buildUniversityAnalysisPayloadPreview,
 } from '@/lib/universityAnalysisAdapter';
 import {
   getActiveClasses, getPastClasses, resolveClassView, timeSlotsToSchedule, ClassView,
@@ -934,6 +935,10 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
     () => getUniversityAnalysisInputQuality(analysisInput),
     [analysisInput]
   );
+  const payloadPreview = useMemo(
+    () => buildUniversityAnalysisPayloadPreview(analysisInput),
+    [analysisInput]
+  );
   // ────────────────────────────────────────────────────────
 
   // 현재 표시 중인 평가 결과 목록 (기타평가 필터)
@@ -1235,7 +1240,23 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                 ))}
               </ul>
             )}
-            <p className="text-xs mt-2" style={{ color: 'oklch(0.7 0.01 250)' }}>
+            <div className="mt-2 flex items-center gap-1.5 text-xs" style={{ color: 'oklch(0.6 0.012 250)' }}>
+              <span>페이로드:</span>
+              <span style={{
+                color: payloadPreview.adapterStatus === 'ready'
+                  ? 'oklch(0.4 0.12 160)'
+                  : payloadPreview.adapterStatus === 'partial'
+                  ? 'oklch(0.5 0.12 80)'
+                  : 'oklch(0.55 0.015 250)',
+              }}>
+                {payloadPreview.adapterStatus === 'ready'
+                  ? '페이로드 구성 완료'
+                  : payloadPreview.adapterStatus === 'partial'
+                  ? '데이터 보완 권장'
+                  : '데이터 입력 필요'}
+              </span>
+            </div>
+            <p className="text-xs mt-1" style={{ color: 'oklch(0.7 0.01 250)' }}>
               입력 조립 결과 — 실제 추천 계산은 포함되지 않습니다.
             </p>
           </div>

@@ -1,42 +1,40 @@
-# AXIS LMS v1.2 - University Analysis Adapter Data Quality Bridge v1 buildfix
+# AXIS LMS v1.2 - University Analysis Adapter Payload Preview Bridge v1 buildfix
 
 ## ChatGPT QA 판정
 
-이번 zip은 `UniversityAnalysisInput`을 기준으로 실제 추천 계산 전에 입력 품질과 부족 데이터를 판단하는 helper를 추가하는 단계다.
+이번 zip은 `UniversityAnalysisInput`과 입력 품질 결과를 바탕으로 실제 추천 계산 전 확인 가능한 payload preview helper를 추가하는 단계다.
 
-원본 방향은 AXIS LMS v1.2 기준에 맞지만, `StudentDetail.tsx`에서 직전 Preview Bridge buildfix의 배열 타입 명시가 다시 `const list = []`로 회귀했다. GitHub Actions 타입 위험을 줄이기 위해 buildfix 업로드본을 따로 만든다.
+원본 방향은 AXIS LMS v1.2 기준에 맞지만, `StudentDetail.tsx`에서 직전 buildfix의 배열 타입 명시가 다시 `const list = []`로 회귀했다. 또한 UI 문구 `엔진 전달 가능`은 실제 Phase 5.1 통합 전 단계치고 강하게 보일 수 있어 `페이로드 구성 완료`로 완화했다.
 
 ## 변경 파일
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/lib/universityAnalysisAdapter.ts` | 입력 품질 판단 타입 2종과 helper 2종 추가 |
-| `src/pages/StudentDetail.tsx` | 분석 입력 구성 상태 섹션에 warning 목록 표시, 배열 타입 회귀 복구 |
+| `src/lib/universityAnalysisAdapter.ts` | Payload preview 타입 1종과 helper 1종 추가 |
+| `src/pages/StudentDetail.tsx` | payload preview 상태 한 줄 표시, 배열 타입 회귀 복구, 문구 완화 |
 
 ## 추가된 adapter helper
 
 | 항목 | 역할 |
 |------|------|
-| `UniversityAnalysisMissingField` | 누락/불충분 항목 태그 타입 |
-| `UniversityAnalysisInputQuality` | 입력 품질 결과 타입 |
-| `getUniversityAnalysisInputQuality(input)` | 내신, 수능실전모의, 모의 요약의 부족 상태와 warning 반환 |
-| `getMissingUniversityAnalysisFields(input)` | `missingFields`만 반환하는 편의 함수 |
+| `UniversityAnalysisPayloadPreview` | 추천 결과가 아닌 입력 payload 요약 타입 |
+| `buildUniversityAnalysisPayloadPreview(input)` | 학생 식별 정보, adapterStatus, 데이터 존재 여부, missingFields, warnings, snapshotAt을 요약 |
 
 ## buildfix 내용
 
-원본:
-
-```ts
-const list = [];
-```
-
-수정:
+배열 타입 회귀 복구:
 
 ```ts
 const list: ReturnType<typeof adaptMockSummaryFromLms>[] = [];
 ```
 
-이 수정은 런타임 동작을 바꾸지 않고 TypeScript 배열 추론 위험만 줄인다.
+UI 문구 완화:
+
+```text
+엔진 전달 가능 -> 페이로드 구성 완료
+```
+
+adapter 주석도 실제 엔진 전달 결정이 아니라 입력 구성 상태 표시 용도로 정리했다.
 
 ## QA 확인
 
@@ -68,17 +66,17 @@ const list: ReturnType<typeof adaptMockSummaryFromLms>[] = [];
 
 업로드 파일:
 
-`axis-lms-v1_2-university-analysis-adapter-data-quality-bridge-v1-buildfix-github-upload.zip`
+`axis-lms-v1_2-university-analysis-adapter-payload-preview-bridge-v1-buildfix-github-upload.zip`
 
 커밋명:
 
-`대학분석 입력품질 브릿지 반영`
+`대학분석 페이로드 미리보기 반영`
 
 ## baseline 반영 조건
 
 GitHub Actions가 정상 통과하면 baseline에 다음 항목을 추가한다.
 
-34. University Analysis Adapter Data Quality Bridge v1 buildfix
+35. University Analysis Adapter Payload Preview Bridge v1 buildfix
 
 ## 보류 유지
 
