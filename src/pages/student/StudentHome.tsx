@@ -3,11 +3,15 @@
 // 성적은 getPublishedResultsForStudent() 정책에 따라 공개/반영 결과만 표시.
 
 import { Link } from 'wouter';
-import { Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck, ClipboardList } from 'lucide-react';
+import { Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck, ClipboardList, CalendarClock, CheckCircle2 } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStudents } from '@/contexts/StudentContext';
+import { useClasses } from '@/contexts/ClassContext';
 import { useGrowth } from '@/contexts/GrowthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
+import { useHomework } from '@/contexts/HomeworkContext';
+import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 
@@ -20,10 +24,18 @@ const QUICK_ACTIONS = [
 
 export default function StudentHome() {
   const { currentUser } = useAuth();
+  const { students } = useStudents();
+  const { classes } = useClasses();
   const { getProfile, getStudentEmblems, emblems } = useGrowth();
   const { exams, submissions } = useAssessment();
+  const { getForStudent } = useHomework();
+  const { getStatus } = useHomeworkStatus();
 
   const myStudentId = currentUser.assignedStudentIds[0] ?? '';
+  const student = students.find((s) => s.id === myStudentId);
+  const enrolledClassIds =
+    student?.classes.filter((c) => c.status === '수강중').map((c) => c.id) ?? [];
+
   const profile = myStudentId ? getProfile(myStudentId) : undefined;
   const myStudentEmblems = myStudentId ? getStudentEmblems(myStudentId) : [];
 
@@ -36,6 +48,25 @@ export default function StudentHome() {
   const publishedResults = myStudentId
     ? getPublishedResultsForStudent(exams, submissions, myStudentId).slice(0, 3)
     : [];
+
+  const myHomework = getForStudent(enrolledClassIds);
+  const incompleteHomework = myHomework.filter((hw) => {
+    const status = myStudentId ? getStatus(hw.id, myStudentId) : null;
+    return status?.status !== 'completed';
+  });
+  const upcomingHomework = [...incompleteHomework]
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .slice(0, 3);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const classNameOf = (classId: string) =>
+    classes.find((c) => c.id === classId)?.name ?? classId;
+  const dueBadge = (dueDate: string) => {
+    if (dueDate < today) return { label: '마감', color: 'oklch(0.55 0.015 250)' };
+    if (dueDate === today) return { label: '오늘 마감', color: 'oklch(0.577 0.245 27.325)' };
+    const diff = Math.ceil((new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000);
+    return { label: `D-${diff}`, color: 'oklch(0.511 0.262 276.966)' };
+  };
 
   const tierColor = profile ? TIER_COLORS[profile.tier] : 'oklch(0.7 0.01 250)';
   const tierLabel = profile ? TIER_LABELS[profile.tier] : '-';
@@ -68,6 +99,63 @@ export default function StudentHome() {
             </Link>
           ))}
         </div>
+
+        {/* 숙제 요약 */}
+        <section>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center gap-2">
+              <ClipboardList size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
+              <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>숙제</span>
+              {incompleteHomework.length > 0 && (
+                <span
+                  className="text-xs px-1.5 py-0.5 rounded-full font-bold text-white"
+                  style={{ background: 'oklch(0.577 0.245 27.325)' }}
+                >
+                  {incompleteHomework.length}
+                </span>
+              )}
+            </div>
+            <Link href="/student/homework">
+              <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>내 숙제 보기</span>
+            </Link>
+          </div>
+
+          {myHomework.length === 0 ? (
+            <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+              배정된 숙제가 없습니다
+            </div>
+          ) : incompleteHomework.length === 0 ? (
+            <div className="axis-card p-4 flex items-center gap-2">
+              <CheckCircle2 size={16} style={{ color: 'oklch(0.45 0.15 160)' }} />
+              <span className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>미완료 숙제가 없습니다</span>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {upcomingHomework.map((hw) => {
+                const badge = dueBadge(hw.dueDate);
+                return (
+                  <Link key={hw.id} href="/student/homework" style={{ display: 'block' }}>
+                    <div className="axis-card p-4 flex items-center justify-between">
+                      <div className="min-w-0">
+                        <div className="font-medium text-sm truncate" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                          {hw.title}
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                          <CalendarClock size={11} />
+                          {classNameOf(hw.classId)} · {hw.dueDate}
+                        </div>
+                      </div>
+                      <div className="text-xs px-2 py-1 rounded-full font-medium shrink-0 ml-2"
+                        style={{ background: 'oklch(0.95 0.005 250)', color: badge.color }}>
+                        {badge.label}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
         {/* 티어 + SP */}
         <div className="grid grid-cols-2 gap-3">

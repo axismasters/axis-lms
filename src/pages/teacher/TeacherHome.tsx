@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useStudents } from '@/contexts/StudentContext';
+import { useHomework } from '@/contexts/HomeworkContext';
 import type { ClassRoom } from '@/lib/classData';
 
 const DAY_LABEL = ['일', '월', '화', '수', '목', '금', '토'] as const;
@@ -38,6 +39,7 @@ export default function TeacherHome() {
   const { classes } = useClasses();
   const { students } = useStudents();
   const { exams, submissions } = useAssessment();
+  const { getByTeacher } = useHomework();
 
   const assignedClassIds = currentUser.assignedClassIds ?? [];
   const assignedStudentIds = currentUser.assignedStudentIds ?? [];
@@ -49,6 +51,15 @@ export default function TeacherHome() {
   const todayClasses = useTodayClasses(assignedClassIds);
   const assignedClasses = classes.filter((c) => assignedClassIds.includes(c.id));
   const assignedStudents = students.filter((s) => assignedStudentIds.includes(s.id));
+
+  const myHomework = getByTeacher(currentUser.id, assignedClassIds);
+  const publishedHomework = myHomework.filter((hw) => hw.status === 'published');
+  const draftHomework = myHomework.filter((hw) => hw.status === 'draft');
+  const recentHomework = [...myHomework]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 3);
+  const classNameOf = (classId: string) =>
+    classes.find((c) => c.id === classId)?.name ?? classId;
 
   // 담당 반 시험 또는 학원 전체 시험 후보
   const candidateExams = exams.filter(
@@ -105,6 +116,75 @@ export default function TeacherHome() {
                 </div>
               </Link>
             ))}
+          </div>
+        </section>
+
+        {/* 숙제 요약 */}
+        <section>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center gap-2">
+              <ClipboardList size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
+              <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>숙제</span>
+              {myHomework.length > 0 && (
+                <span
+                  className="text-xs px-1.5 py-0.5 rounded-full font-bold text-white"
+                  style={{ background: 'oklch(0.45 0.15 160)' }}
+                >
+                  {myHomework.length}
+                </span>
+              )}
+            </div>
+            <Link href="/teacher/homework">
+              <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>숙제 관리</span>
+            </Link>
+          </div>
+
+          <div className="axis-card p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span
+                className="text-xs px-2 py-1 rounded-full font-medium"
+                style={{ background: 'oklch(0.92 0.06 145)', color: 'oklch(0.3 0.1 145)' }}
+              >
+                공개 {publishedHomework.length}건
+              </span>
+              <span
+                className="text-xs px-2 py-1 rounded-full font-medium"
+                style={{ background: 'oklch(0.92 0.01 250)', color: 'oklch(0.5 0.01 250)' }}
+              >
+                미공개 {draftHomework.length}건
+              </span>
+            </div>
+
+            {recentHomework.length === 0 ? (
+              <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>등록된 숙제가 없습니다</div>
+            ) : (
+              <div className="space-y-2">
+                {recentHomework.map((hw) => (
+                  <Link key={hw.id} href="/teacher/homework" style={{ display: 'block' }}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-medium text-sm truncate" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                          {hw.title}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                          {classNameOf(hw.classId)} · 마감 {hw.dueDate}
+                        </div>
+                      </div>
+                      <span
+                        className="text-xs px-2 py-1 rounded-full font-medium shrink-0"
+                        style={
+                          hw.status === 'published'
+                            ? { background: 'oklch(0.92 0.06 145)', color: 'oklch(0.3 0.1 145)' }
+                            : { background: 'oklch(0.92 0.01 250)', color: 'oklch(0.5 0.01 250)' }
+                        }
+                      >
+                        {hw.status === 'published' ? '공개' : '미공개'}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
