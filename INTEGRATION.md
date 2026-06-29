@@ -1,60 +1,60 @@
-# AXIS LMS v1.2 - University Analysis Phase5.1 Request Draft Adapter Spec v1 buildfix
+# AXIS LMS v1.2 - University Analysis Mock Exam Subject Detail Bridge v1 buildfix
 
 ## ChatGPT QA 판정
 
-이번 zip은 Phase 5.1 본체를 import하거나 실행하지 않고, 현재 LMS `universityAnalysisAdapter.ts` 안에 Phase 5.1 `AnalyzeRequest` 대응 draft 타입만 추가하는 단계다.
+원본 zip은 `Student.mockExamScores`를 Phase 5.1 request draft에 연결하려는 방향은 맞다.
+다만 직전 baseline 37번에서 실제 Phase 5.1 계약 기준으로 고친 `AnalyzeRequest` draft 타입을 다시 이전 추론형 구조로 되돌렸다.
 
-원본 방향은 맞지만, 문서와 draft 타입 일부가 실제 Phase 5.1 `AnalyzeRequest` 계약과 어긋났다. 따라서 실제 `docs/API_CONTRACT.md`, `src/api/types.ts`, `src/adapters/lmsAdapter.ts` 기준으로 buildfix 업로드본을 따로 만든다.
+따라서 원본 zip 대신 이 buildfix 업로드본을 사용한다.
 
 ## 변경 파일
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/lib/universityAnalysisAdapter.ts` | Phase 5.1 AnalyzeRequest 대응 LMS 내부 draft 타입과 placeholder 조립 함수 추가 |
+| `src/lib/universityAnalysisAdapter.ts` | `MockExamScore` 타입 import, `mockExamScores` 선택 인자 추가, 과목별 모의고사 draft 변환 helper 추가 |
 
-## 실제 Phase 5.1 계약 기준
+## buildfix 기준
 
-참조한 Phase 5.1 파일:
+| 항목 | 기준 |
+|------|------|
+| `Phase51GradeLevel` | `1 | 2 | 3` 유지 |
+| `Phase51Track` | `'인문' | '자연' | '통합'` 유지 |
+| `schoolRecord` | `Phase51SchoolRecordInputDraft | null` 유지 |
+| `targetUniversities` | `Phase51TargetUniversityInputDraft[]` 유지 |
+| `improvementScenario` | 단일 `Phase51ImprovementScenarioInputDraft` 유지 |
+| `mockExamRecords` | 실제 Phase 5.1 `MockExamRecord` 대응 평면 필드 구조 유지 |
 
-| 파일 | 확인 내용 |
-|------|-----------|
-| `docs/API_CONTRACT.md` | `AnalyzeRequest`, `AnalyzeResponse`, 연동 주의사항 |
-| `src/api/types.ts` | `SchoolRecordInput`, `MockExamRecord`, `TargetUniversityInput`, `ImprovementScenarioInput` |
-| `src/adapters/lmsAdapter.ts` | Phase 5.1이 기대하는 LMS 변환 페이로드 |
-
-## 추가된 타입
-
-| 타입 | 실제 Phase 5.1 대응 |
-|------|---------------------|
-| `Phase51GradeLevel` | `1 | 2 | 3` |
-| `Phase51Track` | `'인문' | '자연' | '통합'` |
-| `Phase51KoreanSubjectType` | `'화작' | '언매'` |
-| `Phase51MathSubjectType` | `'확통' | '미적분' | '기하'` |
-| `Phase51InquiryArea` | `'사탐' | '과탐' | '직탐'` |
-| `Phase51SchoolRecordInputDraft` | `SchoolRecordInput` draft |
-| `Phase51MockExamRecordDraft` | `MockExamRecord` draft |
-| `Phase51TargetUniversityInputDraft` | `TargetUniversityInput` draft |
-| `Phase51ImprovementScenarioInputDraft` | `ImprovementScenarioInput` draft |
-| `Phase51AnalyzeRequestDraft` | `AnalyzeRequest` draft |
-
-## 추가된 함수
+## 추가 함수
 
 | 함수 | 역할 |
 |------|------|
-| `buildPhase51AnalyzeRequestDraft(input)` | `UniversityAnalysisInput`에서 Phase 5.1 request draft 골격만 조립 |
+| `adaptMockExamScoreToRecordDraft(score)` | `Student.mockExamScores` 단일 항목을 `Phase51MockExamRecordDraft`로 변환 |
+| `adaptMockExamScoresToRecordDrafts(scores)` | `Student.mockExamScores` 배열 전체를 draft 배열로 변환 |
 
-현재 `UniversityAnalysisInput`만으로는 `gradeLevel`, `track`, 과목별 `mockExamRecords`, `targetUniversities`를 만들 수 없으므로 placeholder 함수는 해당 필드를 `null` 또는 빈 배열로 둔다.
+## 변환 규칙
 
-## buildfix 정리
+| LMS 원자료 | draft 필드 |
+|-----------|------------|
+| `examName` | `examLabel` |
+| `examDate` 또는 `examName`의 연도 | `year` |
+| `korean.standardScore` | `koreanStdScore` |
+| `korean.percentile` | `koreanPercentile` |
+| `korean.grade` | `koreanGrade` |
+| `math.standardScore` | `mathStdScore` |
+| `math.percentile` | `mathPercentile` |
+| `math.grade` | `mathGrade` |
+| `english.grade` | `englishGrade` |
+| `inquiry1.subject` | `inquiry1Name` |
+| `inquiry1.standardScore` | `inquiry1StdScore` |
+| `inquiry1.percentile` | `inquiry1Percentile` |
+| `inquiry1.grade` | `inquiry1Grade` |
+| `inquiry2.subject` | `inquiry2Name` |
+| `inquiry2.standardScore` | `inquiry2StdScore` |
+| `inquiry2.percentile` | `inquiry2Percentile` |
+| `inquiry2.grade` | `inquiry2Grade` |
+| `history.grade` | `koreanHistoryGrade` |
 
-| 항목 | buildfix 기준 |
-|------|---------------|
-| Phase 5.1 계약 근거 | 실제 계약 파일 기준 |
-| `gradeLevel` | `1 | 2 | 3` |
-| `track` | `'인문' | '자연' | '통합'` |
-| 내신 구조 | Phase 5.1 `SchoolRecordInput` draft 중심 |
-| 목표대학 | `targetUniversities` |
-| 향상 시나리오 | Phase 5.1 `ImprovementScenarioInput` draft |
+LMS에 없는 과목 선택값(`koreanSubjectType`, `mathSubjectType`)과 탐구 영역(`inquiry1Area`, `inquiry2Area`)은 추론하지 않고 비워 둔다.
 
 ## QA 확인
 
@@ -75,8 +75,6 @@
 
 로컬 검사 폴더에는 프로젝트 의존성이 설치되어 있지 않아 `npm run build`가 `tsc: not found`로 중단된다.
 
-이전과 동일하게 `npm install`도 레지스트리 정책으로 `@tailwindcss/vite` 다운로드가 403 차단되는 환경이라 로컬 빌드 완료까지는 확인하지 못했다.
-
 최종 main 반영은 GitHub Actions 통과 기준으로 승인한다.
 
 ## 업로드 판단
@@ -85,17 +83,17 @@
 
 업로드 파일:
 
-`axis-lms-v1_2-university-analysis-phase5_1-request-draft-adapter-spec-v1-buildfix-github-upload.zip`
+`axis-lms-v1_2-university-analysis-mock-exam-subject-detail-bridge-v1-buildfix-github-upload.zip`
 
 커밋명:
 
-`대학분석 요청초안 어댑터 명세 반영`
+`대학분석 모의고사 과목상세 브릿지 반영`
 
 ## baseline 반영 조건
 
 GitHub Actions가 정상 통과하면 baseline에 다음 항목을 추가한다.
 
-37. University Analysis Phase5.1 Request Draft Adapter Spec v1 buildfix
+38. University Analysis Mock Exam Subject Detail Bridge v1 buildfix
 
 ## 보류 유지
 

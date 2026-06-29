@@ -17,7 +17,7 @@
 //   - 실제 엔진 호출은 phase5.1 직접 통합 단계에서 별도 구현한다.
 
 // ── LMS 내부 타입 import (Input Bridge v1에서만 허용) ──────
-import type { InternalScore } from '@/lib/dummyData';
+import type { InternalScore, MockExamScore } from '@/lib/dummyData';
 import type {
   UniversityRecommendationReadiness,
   MockAccumulationSummary,
@@ -671,6 +671,7 @@ export interface Phase51AnalyzeRequestDraft {
  */
 export function buildPhase51AnalyzeRequestDraft(
   input: UniversityAnalysisInput,
+  mockExamScores?: MockExamScore[],
 ): Phase51AnalyzeRequestDraft {
   return {
     studentId:                input.studentId,
@@ -678,9 +679,72 @@ export function buildPhase51AnalyzeRequestDraft(
     gradeLevel:               null,
     track:                    null,
     schoolRecord:             null,
-    mockExamRecords:          [],
+    mockExamRecords:          mockExamScores
+      ? adaptMockExamScoresToRecordDrafts(mockExamScores)
+      : [],
     targetUniversities:       [],
     draftCreatedAt:           new Date().toISOString(),
     sourceAdapterSnapshotAt:  input.snapshotAt,
   };
+}
+
+// ────────────────────────────────────────────────────────────
+// Mock Exam Subject Detail Bridge v1
+// Student.mockExamScores → Phase51MockExamRecordDraft[] 변환 헬퍼.
+// ────────────────────────────────────────────────────────────
+
+function parseMockExamYear(score: MockExamScore): number {
+  const dateYear = Number(score.examDate.slice(0, 4));
+  if (Number.isFinite(dateYear) && dateYear > 0) return dateYear;
+
+  const labelYear = score.examName.match(/20\d{2}/)?.[0];
+  return labelYear ? Number(labelYear) : 0;
+}
+
+/**
+ * `Student.mockExamScores` 단일 항목을 실제 Phase 5.1 MockExamRecord draft로 변환한다.
+ *
+ * LMS에 없는 과목 선택값(koreanSubjectType / mathSubjectType)과 탐구 영역은
+ * 추론하지 않고 undefined로 둔다.
+ */
+export function adaptMockExamScoreToRecordDraft(
+  score: MockExamScore,
+): Phase51MockExamRecordDraft {
+  return {
+    examLabel: score.examName,
+    year: parseMockExamYear(score),
+
+    koreanStdScore: score.korean?.standardScore,
+    koreanPercentile: score.korean?.percentile ?? null,
+    koreanGrade: score.korean?.grade,
+
+    mathStdScore: score.math?.standardScore,
+    mathPercentile: score.math?.percentile ?? null,
+    mathGrade: score.math?.grade,
+
+    englishGrade: score.english?.grade ?? null,
+
+    inquiry1Name: score.inquiry1?.subject,
+    inquiry1StdScore: score.inquiry1?.standardScore,
+    inquiry1Percentile: score.inquiry1?.percentile ?? null,
+    inquiry1Grade: score.inquiry1?.grade,
+
+    inquiry2Name: score.inquiry2?.subject,
+    inquiry2StdScore: score.inquiry2?.standardScore,
+    inquiry2Percentile: score.inquiry2?.percentile,
+    inquiry2Grade: score.inquiry2?.grade,
+
+    koreanHistoryGrade: score.history?.grade,
+  };
+}
+
+/**
+ * `Student.mockExamScores` 배열 전체를 `Phase51MockExamRecordDraft[]`로 변환한다.
+ *
+ * 입력 순서를 유지한다. 정렬이 필요하면 호출부에서 처리한다.
+ */
+export function adaptMockExamScoresToRecordDrafts(
+  scores: MockExamScore[],
+): Phase51MockExamRecordDraft[] {
+  return scores.map(adaptMockExamScoreToRecordDraft);
 }
