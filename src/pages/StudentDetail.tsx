@@ -1020,7 +1020,12 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
         setApiStatus('success');
       })
       .catch((e: unknown) => {
-        setApiError(e instanceof Error ? e.message : '알 수 없는 에러');
+        const message = e instanceof Error ? e.message : '알 수 없는 에러';
+        setApiError(
+          message === 'Phase 5.1 API request timed out.'
+            ? 'Phase 5.1 응답 시간이 30초를 초과했습니다. 잠시 후 다시 시도해 주세요.'
+            : message,
+        );
         setApiStatus('error');
       });
   };
@@ -1761,6 +1766,49 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                 <div className="px-3 py-2 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
                   <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>추천 밴드 요약</div>
                   <p className="text-xs" style={{ color: 'oklch(0.35 0.015 250)' }}>{apiResponse.recommendationBand.summary}</p>
+                </div>
+
+                {/* recommendationBand.items — 밴드별 추천 대학/학과 목록 (읽기 전용) */}
+                <div className="px-3 py-2 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
+                  <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.45 0.015 250)' }}>추천 대학/학과</div>
+                  {(apiResponse.recommendationBand.items ?? []).length > 0 ? (
+                    (['reach', 'target', 'safety'] as const).map((band) => {
+                      const bandLabel = { reach: '소신', target: '적정', safety: '안정' }[band];
+                      const items = (apiResponse.recommendationBand.items ?? []).filter((i) => i.band === band);
+                      if (items.length === 0) return null;
+                      return (
+                        <div key={band} className="mb-2 last:mb-0">
+                          <div
+                            className="text-xs font-medium mb-1"
+                            style={{ color: 'oklch(0.511 0.262 276.966)' }}
+                          >
+                            {bandLabel}
+                          </div>
+                          <ul className="space-y-0.5">
+                            {items.map((item, idx) => (
+                              <li
+                                key={`${item.univId}-${item.deptName}-${idx}`}
+                                className="flex items-start gap-1.5 text-xs"
+                                style={{ color: 'oklch(0.35 0.015 250)' }}
+                              >
+                                <span className="flex-shrink-0 mt-px" style={{ color: 'oklch(0.65 0.01 250)' }}>·</span>
+                                <span>
+                                  {item.univName} — {item.deptName}
+                                  {item.admissionType && (
+                                    <span style={{ color: 'oklch(0.55 0.015 250)' }}> ({item.admissionType})</span>
+                                  )}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>
+                      표시할 추천 목록이 없습니다.
+                    </p>
+                  )}
                 </div>
               </div>
             )}

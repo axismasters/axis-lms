@@ -175,17 +175,22 @@ export interface Phase51AnalyzeResponse {
 // Phase 5.1 API client
 // ────────────────────────────────────────────────────────────
 
+/** POST /analyze 요청 타임아웃 (ms). 초과 시 AbortController로 중단. */
+const PHASE51_REQUEST_TIMEOUT_MS = 30_000;
+
 /**
  * Phase 5.1 /analyze 엔드포인트 호출 함수.
  *
  * VITE_PHASE51_API_URL 환경변수가 설정되어 있어야 한다.
  * 설정되지 않으면 즉시 에러를 던진다.
  *
- * 응답은 Phase51AnalyzeResponse 타입으로 반환된다.
+ * PHASE51_REQUEST_TIMEOUT_MS(30초) 이내에 응답이 없으면 AbortController로 요청을 취소한다.
+ *
  * LMS는 응답 값을 표시만 하며, 합격 가능성·추천 순위·대학명을 내부에서 계산하지 않는다.
  *
  * @param draft Phase51AnalyzeRequestDraft — 엔진에 전달할 요청 payload
  * @throws Error VITE_PHASE51_API_URL 미설정 시
+ * @throws Error 타임아웃 시 (`Phase 5.1 API request timed out.`)
  * @throws Error 응답 상태가 !res.ok 일 때 (`Phase 5.1 API error: ${res.status}`)
  */
 export async function callPhase51AnalyzeApi(
@@ -196,15 +201,31 @@ export async function callPhase51AnalyzeApi(
     throw new Error('VITE_PHASE51_API_URL is not set.');
   }
 
-  const res = await fetch(`${baseUrl}/analyze`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(draft),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PHASE51_REQUEST_TIMEOUT_MS);
 
-  if (!res.ok) {
-    throw new Error(`Phase 5.1 API error: ${res.status}`);
+  try {
+    const res = await fetch(`${baseUrl}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(draft),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      throw new Error(`Phase 5.1 API error: ${res.status}`);
+    }
+
+    return res.json() as Promise<Phase51AnalyzeResponse>;
+  } catch (e) {
+    const errorName = typeof e === 'object' && e !== null && 'name' in e
+      ? String((e as { name?: unknown }).name)
+      : '';
+    if (errorName === 'AbortError') {
+      throw new Error('Phase 5.1 API request timed out.');
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return res.json() as Promise<Phase51AnalyzeResponse>;
 }
