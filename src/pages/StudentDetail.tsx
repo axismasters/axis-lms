@@ -5,7 +5,7 @@
 // 출결현황·재무상태 탭은 조회 전용(입력은 출결관리/재무관리 엔진). 재무는 권한자에게만 노출.
 // 반 데이터(반유형·요일·시간·강의실·강사·수강료)는 ClassContext(실제 반)에서 연결한다.
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { toast } from 'sonner';
 import {
@@ -1024,6 +1024,13 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
         setApiStatus('error');
       });
   };
+
+  // Stale Response Reset v1 — draftBundle.draft 변경 시 이전 응답 초기화
+  useEffect(() => {
+    setApiStatus('idle');
+    setApiResponse(null);
+    setApiError(null);
+  }, [draftBundle.draft]);
 
   // 현재 표시 중인 평가 결과 목록 (기타평가 필터)
   const currentEvalResults = useMemo(() => {

@@ -1,59 +1,83 @@
-# AXIS LMS v1.2 — University Analysis Phase51 Response UI Wiring v1 buildfix
+# AXIS LMS v1.2 — University Analysis Phase51 Stale Response Reset v1
 
-## 개요
+## 문서 개요
 
-Phase 5.1 API 응답을 `StudentDetail` 성적조회 탭 내부에서 사용자 명시 클릭으로만 확인하는 UI wiring 단계입니다.
+Response UI Safety QA v1에서 발견된 stale response 위험을 해소하는 단계다.
 
-- `callPhase51AnalyzeApi(draft)` 호출은 버튼 클릭 시에만 발생합니다.
-- 페이지 진입/탭 진입 자동 호출은 없습니다.
-- 추천 대학/학과 목록 전체, 합격 가능성, 추천 순위는 표시하지 않습니다.
-- 표시 범위는 `reportSummary`, `counselingComment`, `dataConfidence`, `recommendationBand.summary`, `targetGap` 개수, `subjectWeakness` 개수로 제한합니다.
-- Phase 5.1 엔진 본체 import는 없습니다.
+`draftBundle.draft` 변경 시 이전 Phase 5.1 응답 상태를 자동으로 초기화하는
+`useEffect` 1개를 GradesTab 내부에 추가했다.
 
-## 원본 산출물에서 잘못된 부분
+- `src/lib/universityAnalysisAdapter.ts` 변경 없음
+- `src/lib/universityAnalysisClient.ts` 변경 없음
+- 실제 API fetch 로직 변경 없음
+- 새 버튼/CTA 없음
 
-| 항목 | 내용 |
+## 변경 파일
+
+| 파일 | 변경 내용 |
 |---|---|
-| 이전 buildfix 회귀 | IF 개선 시나리오 입력 grid가 `grid-cols-1 sm:grid-cols-3`에서 `grid-cols-3`으로 되돌아갔습니다. |
-| 안전 가드 부족 | 버튼은 disabled 처리되어 있으나, handler 내부에서 `validation.status !== 'ready'` 가드가 없었습니다. |
+| `src/pages/StudentDetail.tsx` | `useEffect` react import 추가, stale reset `useEffect` 1개 추가 |
 
-## ChatGPT buildfix 수정
+## 변경 상세
 
-| 파일 | 수정 내용 |
-|---|---|
-| `src/pages/StudentDetail.tsx` | IF 개선 시나리오 입력 grid를 `grid grid-cols-1 sm:grid-cols-3 gap-2 mb-1.5`로 복구했습니다. |
-| `src/pages/StudentDetail.tsx` | `handleRequestAnalysis`에 `draftBundle.validation.status !== 'ready'` guard를 추가했습니다. |
-| `src/lib/universityAnalysisClient.ts` | 원본의 fetch 연결 및 `Phase51ImportMetaEnv` 안전 캐스팅 구조를 유지했습니다. |
+### ① react import
+
+```typescript
+// 변경 전
+import { useMemo, useState } from 'react';
+
+// 변경 후
+import { useMemo, useState, useEffect } from 'react';
+```
+
+### ② useEffect 추가 (handleRequestAnalysis 직후)
+
+```typescript
+// Stale Response Reset v1 — draftBundle.draft 변경 시 이전 응답 초기화
+useEffect(() => {
+  setApiStatus('idle');
+  setApiResponse(null);
+  setApiError(null);
+}, [draftBundle.draft]);
+```
+
+`draftBundle`은 `useMemo`로 파생된다. 입력 변경
+(draftGradeLevel / draftTrack / draftTargetUniversities / draftScenario) →
+useMemo 재계산 → 새 `draft` 객체 참조 → useEffect 트리거 흐름이 성립한다.
+
+## 동작 흐름
+
+```
+사용자가 학년/계열/목표대학/시나리오 변경
+  → draftContext / draftScenario useMemo 재계산
+  → draftBundle useMemo 재계산 → 새 draft 객체
+  → useEffect deps [draftBundle.draft] 변경 감지
+  → setApiStatus('idle'), setApiResponse(null), setApiError(null)
+  → 이전 success/error 응답 화면에서 사라짐
+```
 
 ## 유지 확인
 
 | 항목 | 상태 |
 |---|---|
-| Phase 5.1 엔진 직접 import | 없음 |
-| 실제 API 호출 위치 | `callPhase51AnalyzeApi` 내부 + `StudentDetail` 버튼 클릭 handler로 제한 |
-| 자동 호출 | 없음 |
-| 신규 route / Provider | 없음 |
-| PDF Export | 없음 |
-| AI 분석 / 추천 실행 CTA | 없음 |
-| 추천 대학 목록 전체 렌더링 | 없음 |
-| 합격 가능성 / 추천 순위 표시 | 없음 |
-| `src/lib/universityAnalysisAdapter.ts` | 변경 없음 |
-| `TeacherExamGrading.tsx` | 변경 없음 |
-| `adapterMockSummaries` 타입픽스 | 유지 필요: `const list: ReturnType<typeof adaptMockSummaryFromLms>[] = [];` |
-
-## 성능/구조 원칙
-
-- 대학분석 UI와 API 호출 상태는 `GradesTab` 내부에만 둡니다.
-- 학생 상세 첫 진입 시 Phase 5.1 API를 자동 호출하지 않습니다.
-- LMS 본체는 입력/검증/표시만 담당하고, 무거운 분석은 Phase 5.1 API 뒤쪽 엔진에 둡니다.
-- PDF/문제은행/NGD/OCR은 LMS 본체에 포함하지 않습니다.
+| `universityAnalysisAdapter.ts` | 변경 없음 (md5: `1eddaef5cf427e00666be685ea16f32f`) ✅ |
+| `universityAnalysisClient.ts` | 변경 없음 ✅ |
+| `TeacherExamGrading.tsx` scopedExam | md5 동일 ✅ |
+| `adapterMockSummaries` ReturnType 타입픽스 | 라인 950 유지 ✅ |
+| `handleRequestAnalysis` 가드 | `apiStatus === 'pending' \|\| draftBundle.validation.status !== 'ready'` 유지 ✅ |
+| IF 개선 시나리오 grid | `grid-cols-1 sm:grid-cols-3` 유지 ✅ |
+| `Phase51ImportMetaEnv` env 캐스팅 | 유지 ✅ |
+| 새 버튼 / CTA | 없음 ✅ |
+| 신규 route / Provider | 없음 ✅ |
 
 ## 검증 메모
 
-- 현재 검사 환경에서는 npm registry 제한으로 로컬 `npm install`/빌드 재현이 불가합니다.
-- 정적 검사 기준으로 `StudentDetail.tsx`, `universityAnalysisClient.ts`, `INTEGRATION.md`만 포함합니다.
-- GitHub Actions 통과 기준으로 main 반영을 승인합니다.
+- `npm install`은 현재 환경 레지스트리 403으로 실패. 정적 검증 수행.
+- `useEffect`의 deps `[draftBundle.draft]`는 객체 참조 비교. `draftBundle`이
+  `useMemo`로 파생되므로 입력 변경 시 새 객체를 반환 → 정상 트리거.
+- `useEffect` 내부는 순수 state setter 3개 → 사이드 이펙트 없음.
+- 최초 GradesTab 마운트 시에도 한 번 실행됨 (apiStatus='idle' → 변화 없음).
 
 ## 산출물
 
-`axis-lms-v1_2-university-analysis-phase51-response-ui-wiring-v1-buildfix-github-upload.zip`
+`axis-lms-v1_2-university-analysis-phase51-stale-response-reset-v1.zip`
