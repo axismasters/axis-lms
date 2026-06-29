@@ -273,6 +273,23 @@ const exam3Questions: ExamQuestionDef[] = [
   q(3, '증명형', 50),
 ];
 
+// 더미 시험 4: 내신대비모의고사 (학원 전체, 공개완료) — Mock Exam Result Foundation v1
+const exam4Questions: ExamQuestionDef[] = [
+  q(1, '객관식', 25, '2'),
+  q(2, '객관식', 25, '3'),
+  q(3, '객관식', 25, '1'),
+  q(4, '객관식', 25, '4'),
+];
+
+// 더미 시험 5: 수능실전모의고사 (학원 전체, 공개완료) — Mock Exam Result Foundation v1
+const exam5Questions: ExamQuestionDef[] = [
+  q(1, '객관식', 20, '3'),
+  q(2, '객관식', 20, '1'),
+  q(3, '객관식', 20, '4'),
+  q(4, '객관식', 20, '2'),
+  q(5, '객관식', 20, '3'),
+];
+
 export const DUMMY_EXAMS: Exam[] = [
   {
     id: 'exam-001',
@@ -312,6 +329,38 @@ export const DUMMY_EXAMS: Exam[] = [
     status: '준비중',
     createdBy: '원장님',
     createdAt: '2024-06-20T11:00:00',
+  },
+  // exam-004: 내신대비모의고사 (학원 전체, 공개완료) — Mock Exam Result Foundation v1
+  {
+    id: 'exam-004',
+    title: '3월 전국연합 대비 내신모의고사 (수학)',
+    categoryId: 'mock-school',
+    classId: undefined,
+    subject: '수학',
+    examDate: '2024-03-15',
+    totalScore: exam4Questions.reduce((s, q) => s + q.points, 0),
+    questions: exam4Questions,
+    status: '공개완료',
+    createdBy: '원장님',
+    createdAt: '2024-03-01T09:00:00',
+    publishedBy: '원장님',
+    publishedAt: '2024-03-20T14:00:00',
+  },
+  // exam-005: 수능실전모의고사 (학원 전체, 공개완료) — Mock Exam Result Foundation v1
+  {
+    id: 'exam-005',
+    title: '4월 수능실전모의고사 (수학)',
+    categoryId: 'mock-suneung',
+    classId: undefined,
+    subject: '수학',
+    examDate: '2024-04-20',
+    totalScore: exam5Questions.reduce((s, q) => s + q.points, 0),
+    questions: exam5Questions,
+    status: '공개완료',
+    createdBy: '한태준',
+    createdAt: '2024-04-05T09:00:00',
+    publishedBy: '한태준',
+    publishedAt: '2024-04-25T16:00:00',
   },
 ];
 
@@ -367,6 +416,16 @@ const RAW_SUBMISSIONS: ExamSubmission[] = [
   // exam-003 (준비중) — 응시 전이라 제출 데이터 없음(응시예정 상태만)
   { id: 'sub-007', examId: 'exam-003', studentId: 'stu-001', status: '응시예정', answers: exam3Questions.map((qq) => ({ questionId: qq.id })), totalScore: undefined, corrections: [] },
   { id: 'sub-008', examId: 'exam-003', studentId: 'stu-002', status: '응시예정', answers: exam3Questions.map((qq) => ({ questionId: qq.id })), totalScore: undefined, corrections: [] },
+
+  // exam-004 (내신대비모의고사, 공개완료) — Mock Exam Result Foundation v1
+  { id: 'sub-009', examId: 'exam-004', studentId: 'stu-001', status: '채점완료', answers: makeGradedAnswers(exam4Questions, 'high'), totalScore: undefined, corrections: [] },
+  { id: 'sub-010', examId: 'exam-004', studentId: 'stu-002', status: '채점완료', answers: makeGradedAnswers(exam4Questions, 'mid'),  totalScore: undefined, corrections: [] },
+  { id: 'sub-011', examId: 'exam-004', studentId: 'stu-003', status: '채점완료', answers: makeGradedAnswers(exam4Questions, 'low'),  totalScore: undefined, corrections: [] },
+
+  // exam-005 (수능실전모의고사, 공개완료) — Mock Exam Result Foundation v1
+  { id: 'sub-012', examId: 'exam-005', studentId: 'stu-001', status: '채점완료', answers: makeGradedAnswers(exam5Questions, 'mid'),  totalScore: undefined, corrections: [] },
+  { id: 'sub-013', examId: 'exam-005', studentId: 'stu-002', status: '채점완료', answers: makeGradedAnswers(exam5Questions, 'high'), totalScore: undefined, corrections: [] },
+  { id: 'sub-014', examId: 'exam-005', studentId: 'stu-003', status: '채점완료', answers: makeGradedAnswers(exam5Questions, 'low'),  totalScore: undefined, corrections: [] },
 ];
 
 export const DUMMY_SUBMISSIONS: ExamSubmission[] = RAW_SUBMISSIONS.map((sub) => recalcTotalScore(sub));

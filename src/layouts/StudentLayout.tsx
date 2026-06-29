@@ -1,16 +1,17 @@
 // AXIS LMS v1.2 - StudentLayout (Student Portal Foundation v1)
-// 학생 전용 레이아웃: 고정 세로 사이드바 없음. Bottom Navigation 4탭.
+// 학생 전용 레이아웃: 고정 세로 사이드바 없음. Bottom Navigation 5탭.
 
 import { Link, useLocation } from 'wouter';
-import { Home, BookOpen, BarChart2, CalendarCheck, GraduationCap } from 'lucide-react';
+import { Home, BookOpen, BarChart2, CalendarCheck, TrendingUp, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 
 const STUDENT_NAV = [
-  { path: '/student',            label: '홈',   icon: Home },
-  { path: '/student/classes',    label: '내 반', icon: BookOpen },
-  { path: '/student/grades',     label: '성적',  icon: BarChart2 },
-  { path: '/student/attendance', label: '출결',  icon: CalendarCheck },
+  { path: '/student',              label: '홈',    icon: Home },
+  { path: '/student/classes',      label: '내 반',  icon: BookOpen },
+  { path: '/student/grades',       label: '성적',   icon: BarChart2 },
+  { path: '/student/attendance',   label: '출결',   icon: CalendarCheck },
+  { path: '/student/mock-exams',   label: '모의고사', icon: TrendingUp },
 ];
 
 interface StudentLayoutProps {

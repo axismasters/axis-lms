@@ -7,6 +7,7 @@ import ParentHome from '@/pages/parent/ParentHome';
 import ParentAttendance from '@/pages/parent/ParentAttendance';
 import ParentGrades from '@/pages/parent/ParentGrades';
 import ParentFinance from '@/pages/parent/ParentFinance';
+import ParentMockExams from '@/pages/parent/ParentMockExams';
 import ParentLayout from '@/layouts/ParentLayout';
 
 function ParentPlaceholder({ title }: { title: string }) {
@@ -40,6 +41,9 @@ export default function ParentRoutes() {
 
         {/* 자녀 수납 내역 조회 (읽기 전용) */}
         <Route path="/parent/finance" component={ParentFinance} />
+
+        {/* 자녀 모의고사 결과 조회 (읽기 전용) */}
+        <Route path="/parent/mock-exams" component={ParentMockExams} />
 
         {/* 404 */}
         <Route component={() => <ParentPlaceholder title="페이지를 찾을 수 없습니다" />} />

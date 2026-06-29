@@ -1,17 +1,18 @@
 // AXIS LMS v1.2 - ParentLayout (Parent Portal Foundation v1)
-// 보호자 전용 레이아웃. Bottom Navigation 4탭.
+// 보호자 전용 레이아웃. Bottom Navigation 5탭.
 // 라이벌/엠블럼/경쟁 정보 노출 금지 원칙 유지.
 
 import { Link, useLocation } from 'wouter';
-import { Home, CalendarCheck, BarChart2, CreditCard, GraduationCap } from 'lucide-react';
+import { Home, CalendarCheck, BarChart2, CreditCard, TrendingUp, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 
 const PARENT_NAV = [
-  { path: '/parent',             label: '홈',  icon: Home },
-  { path: '/parent/attendance',  label: '출결', icon: CalendarCheck },
-  { path: '/parent/grades',      label: '성적', icon: BarChart2 },
-  { path: '/parent/finance',     label: '수납', icon: CreditCard },
+  { path: '/parent',             label: '홈',    icon: Home },
+  { path: '/parent/attendance',  label: '출결',   icon: CalendarCheck },
+  { path: '/parent/grades',      label: '성적',   icon: BarChart2 },
+  { path: '/parent/finance',     label: '수납',   icon: CreditCard },
+  { path: '/parent/mock-exams',  label: '모의고사', icon: TrendingUp },
 ];
 
 interface ParentLayoutProps {
