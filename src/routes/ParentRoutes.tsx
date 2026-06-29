@@ -1,4 +1,4 @@
-// AXIS LMS v1.2 - ParentRoutes (Parent Portal Foundation v1)
+// AXIS LMS v1.2 - ParentRoutes (Parent Finance View Foundation v1)
 // /parent/** — GUARDIAN 계정 전용. 모든 화면은 읽기 전용.
 
 import { Route, Switch } from 'wouter';
@@ -6,6 +6,7 @@ import { RoleRoute } from './RoleRoute';
 import ParentHome from '@/pages/parent/ParentHome';
 import ParentAttendance from '@/pages/parent/ParentAttendance';
 import ParentGrades from '@/pages/parent/ParentGrades';
+import ParentFinance from '@/pages/parent/ParentFinance';
 import ParentLayout from '@/layouts/ParentLayout';
 
 function ParentPlaceholder({ title }: { title: string }) {
@@ -37,8 +38,8 @@ export default function ParentRoutes() {
         {/* 자녀 성적 조회 (공개/반영 결과만) */}
         <Route path="/parent/grades" component={ParentGrades} />
 
-        {/* 수납 내역 요약 (Foundation placeholder) */}
-        <Route path="/parent/finance" component={() => <ParentPlaceholder title="수납 내역" />} />
+        {/* 자녀 수납 내역 조회 (읽기 전용) */}
+        <Route path="/parent/finance" component={ParentFinance} />
 
         {/* 404 */}
         <Route component={() => <ParentPlaceholder title="페이지를 찾을 수 없습니다" />} />

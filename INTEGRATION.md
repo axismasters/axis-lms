@@ -98,6 +98,58 @@ Claude 원본 `axis-lms-v1_2-homework-qa-cleanup-v1.zip`은 `StudentHome.tsx`, `
 
 ---
 
+# AXIS LMS v1.2 — Parent Finance View Foundation v1
+
+## 변경 파일
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/pages/parent/ParentFinance.tsx` | 학부모 전용 수납 내역 조회 화면 추가 |
+| `src/routes/ParentRoutes.tsx` | `/parent/finance` placeholder를 실제 `ParentFinance` 화면으로 연결 |
+
+## 구현 범위
+
+학부모가 본인에게 연결된 자녀(`currentUser.assignedStudentIds`)의 청구/수납 내역만 조회할 수 있도록 한다.
+
+수납 데이터는 기존 `FinanceContext`의 `getInvoicesByStudent`, `getUnpaidAmount`, `getPaymentsByInvoice`를 사용한다. 새 Provider나 새 재무 데이터 구조는 추가하지 않는다.
+
+## QA 확인
+
+| 항목 | 상태 |
+|------|------|
+| 학부모 자녀 범위가 `assignedStudentIds` 기준으로 제한됨 | 정상 |
+| 취소 청구서(`CANCELED`)는 목록에서 제외 | 정상 |
+| 청구액/완납액/미납액 요약 표시 | 정상 |
+| 수납 내역은 조회 전용으로 표시 | 정상 |
+| 납부 등록/환불 요청/수정/삭제 버튼 없음 | 정상 |
+| 기존 학부모 홈/출결/성적/숙제/공개자료 흐름 유지 | 정상 |
+| 학부모 화면에 라이벌/경쟁/엠블럼 정보 미노출 | 정상 |
+
+## 변경하지 않은 파일
+
+- `src/pages/parent/ParentHome.tsx`
+- `src/pages/parent/ParentAttendance.tsx`
+- `src/pages/parent/ParentGrades.tsx`
+- `src/pages/teacher/TeacherExamGrading.tsx`
+- Context / Layout / Provider 전체
+- Admin Back Office 전체
+
+## 보류 유지
+
+- 실제 결제/PG 연동 없음
+- 환불 신청 기능 없음
+- 영수증 PDF 출력 없음
+- 카카오 알림톡/수납 알림 추가 없음
+- NGD2 연동 없음
+- 문제은행 연동 없음
+- Rival / Emblem / IF 분석 직접 구현 없음
+
+## TeacherExamGrading 타입픽스 유지
+
+`src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.
+
+---
+
 # AXIS LMS v1.2 — Assessment Home Bridge QA v1
 
 ## ChatGPT QA 판정
@@ -264,64 +316,6 @@ Claude 원본 `axis-lms-v1_2-homework-qa-cleanup-v1.zip`은 `StudentHome.tsx`, `
 - `src/pages/parent/ParentGrades.tsx`
 - `src/pages/parent/ParentHome.tsx`
 - `src/pages/teacher/TeacherExamGrading.tsx`
-- Context / Layout / Route / Provider 전체
-- Admin Back Office 전체
-
-## 보류 유지
-
-- NGD2 연동 없음
-- 문제은행 연동 없음
-- 시험/성적 엔진 구조 변경 없음
-- 성적 산식/공개 정책 변경 없음
-- 숙제 제출/파일 업로드/자동채점 없음
-- 알림 기능 추가 없음
-- Admin Back Office 변경 없음
-- Rival / Emblem / IF 분석 직접 구현 없음
-
-## TeacherExamGrading 타입픽스 유지
-
-`src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam → if (!scopedExam) return → const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.
-
----
-
-# AXIS LMS v1.2 — Teacher Portal Scope QA v1
-
-## ChatGPT QA 판정
-
-강사 포털 상세 화면의 담당 범위 스코프를 검사한 결과, 현재 구현이 기준을 충족한다. 코드 변경 없이 QA 기록만 남긴다.
-
-## QA 확인
-
-| 항목 | 상태 |
-|------|------|
-| `TeacherClasses.tsx`가 `assignedClassIds` 기준 담당 반만 조회 | 정상 |
-| `TeacherStudents.tsx`가 `assignedStudentIds` 기준 담당 학생만 조회 | 정상 |
-| `TeacherStudentDetail.tsx`가 담당 학생 외 접근을 조기 차단 | 정상 |
-| `TeacherStudentDetail.tsx`의 수업/시험/출결 요약이 담당 반 범위로 제한 | 정상 |
-| `TeacherAttendance.tsx`가 담당 운영 반만 선택지로 노출 | 정상 |
-| `TeacherAttendance.tsx`가 담당 학생과 수강중 학생 교집합만 출결 대상으로 사용 | 정상 |
-| `TeacherExams.tsx`가 담당 반 시험 또는 담당 학생 제출이 있는 전체 시험만 표시 | 정상 |
-| `TeacherExams.tsx` 채점 링크가 `/teacher/exams/:examId/grading` 유지 | 정상 |
-| `TeacherExamGrading.tsx`가 `scopedExam` 타입픽스 구조 유지 | 정상 |
-| `TeacherExamGrading.tsx`가 담당 학생 submissions만 표시하고 저장 | 정상 |
-| `TeacherGrades.tsx`가 담당 학생 submissions 기준으로 성적 집계 | 정상 |
-| `TeacherHomework.tsx`가 `getByTeacher(currentUser.id, assignedClassIds)` 정책 유지 | 정상 |
-| `TeacherHomework.tsx`가 저장 시 담당 반 `classId` 가드 유지 | 정상 |
-| `TeacherNotes.tsx`가 담당 반 콘텐츠만 조회/생성하고 기본 공개값 `teacherOnly` 유지 | 정상 |
-| `TeacherVideos.tsx`가 담당 반 콘텐츠만 조회/생성하고 기본 공개값 `teacherOnly` 유지 | 정상 |
-
-## 변경하지 않은 파일
-
-- `src/pages/teacher/TeacherClasses.tsx`
-- `src/pages/teacher/TeacherStudents.tsx`
-- `src/pages/teacher/TeacherStudentDetail.tsx`
-- `src/pages/teacher/TeacherAttendance.tsx`
-- `src/pages/teacher/TeacherExams.tsx`
-- `src/pages/teacher/TeacherExamGrading.tsx`
-- `src/pages/teacher/TeacherGrades.tsx`
-- `src/pages/teacher/TeacherHomework.tsx`
-- `src/pages/teacher/TeacherNotes.tsx`
-- `src/pages/teacher/TeacherVideos.tsx`
 - Context / Layout / Route / Provider 전체
 - Admin Back Office 전체
 
