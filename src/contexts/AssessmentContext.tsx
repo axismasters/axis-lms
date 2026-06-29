@@ -15,8 +15,10 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import {
   Exam, ExamSubmission, ExamQuestionDef, SubmissionStatus, ScoreCorrectionLog,
+  StudentExamResult,
   DUMMY_EXAMS, DUMMY_SUBMISSIONS,
   applyAutoGrading, recalcTotalScore, canPublishExam, isSubmissionGraded, requiresPublishAction,
+  getPublishedResultsForStudent as filterPublishedResultsForStudent,
 } from '@/lib/assessmentData';
 import { useNotification } from '@/contexts/NotificationContext';
 import { useStudents } from '@/contexts/StudentContext';
@@ -61,6 +63,11 @@ interface AssessmentContextType {
 
   // 정정 — 공개완료 후 점수를 바꿀 때 사용. 직접 덮어쓰지 않고 이력을 남긴다.
   correctScore: (examId: string, studentId: string, questionId: string | undefined, newScore: number, reason: string, correctedBy: string) => void;
+
+  // ── 학생/보호자 포털 전용 — 공개 필터 ─────────────────────────────
+  // 공개 기준: 반 단위 시험은 채점완료 시, 학원 전체 시험은 publishedAt 확정 후.
+  // 결석/미채점은 항상 제외. 포털 화면은 반드시 이 함수를 통해 성적을 조회한다.
+  getPublishedResultsForStudent: (studentId: string) => StudentExamResult[];
 
   // ── 강사 포털 전용 ──────────────────────────────────────────────
   // 총점 직접 입력 방식 채점 — 문항별 breakdown 없이 totalScore만 지정한다.
@@ -274,6 +281,15 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
     }));
   }, [exams]);
 
+  // ── 학생/보호자 포털 전용: 공개 필터 ────────────────────────────
+  // isResultVisibleForStudent()를 내부에서 호출하므로, 호출부(StudentGrades/ParentGrades 등)는
+  // exams/submissions를 직접 다룰 필요가 없다.
+  const getPublishedResultsForStudentMemo = useCallback(
+    (studentId: string): StudentExamResult[] =>
+      filterPublishedResultsForStudent(exams, submissions, studentId),
+    [exams, submissions]
+  );
+
   // ── 강사 포털 전용: 총점 직접 입력 채점 ────────────────────────────
   // 문항별 breakdown 없이 totalScore를 직접 지정해 채점완료 상태로 전환한다.
   // 관리자 채점(gradeAnswer)과 별개 경로이므로 기존 로직에 영향 없음.
@@ -321,6 +337,7 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
       autoGradeSubmission, gradeAnswer, setStudentAnswer,
       canPublish, publishExam,
       correctScore,
+      getPublishedResultsForStudent: getPublishedResultsForStudentMemo,
       gradeSubmissionByTeacher,
     }}>
       {children}
