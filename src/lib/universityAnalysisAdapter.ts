@@ -548,3 +548,139 @@ export function getUniversityAnalysisHandoffGate(
     snapshotAt:    preview.snapshotAt,
   };
 }
+
+// ────────────────────────────────────────────────────────────
+// Request Draft Adapter Spec v1 — Phase 5.1 AnalyzeRequest draft
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Phase 5.1 AnalyzeRequest.gradeLevel 대응 draft 타입.
+ * 실제 Phase 5.1 계약은 1 | 2 | 3 숫자 학년을 사용한다.
+ */
+export type Phase51GradeLevel = 1 | 2 | 3;
+
+/**
+ * Phase 5.1 AnalyzeRequest.track 대응 draft 타입.
+ * 실제 Phase 5.1 계약은 "인문" | "자연" | "통합"을 사용한다.
+ */
+export type Phase51Track = '인문' | '자연' | '통합';
+
+export type Phase51KoreanSubjectType = '화작' | '언매';
+export type Phase51MathSubjectType = '확통' | '미적분' | '기하';
+export type Phase51InquiryArea = '사탐' | '과탐' | '직탐';
+
+/**
+ * Phase 5.1 SchoolRecordInput 대응 draft 타입.
+ *
+ * 실제 계약:
+ * - avgGrade / koreanGrade / mathGrade 는 number | null
+ * - note 는 선택 필드
+ */
+export interface Phase51SchoolRecordInputDraft {
+  avgGrade: number | null;
+  koreanGrade: number | null;
+  mathGrade: number | null;
+  note?: string;
+}
+
+/**
+ * Phase 5.1 MockExamRecord 대응 draft 타입.
+ *
+ * 실제 Phase 5.1 계약은 koreanPercentile, mathPercentile, englishGrade,
+ * inquiry1Percentile을 필수로 요구한다. 다만 LMS 준비 단계에서는 아직
+ * 과목별 원자료가 부족할 수 있으므로 draft에서는 null을 허용해
+ * 부족 항목을 명시적으로 표현한다.
+ */
+export interface Phase51MockExamRecordDraft {
+  examLabel: string;
+  year: number;
+  koreanStdScore?: number;
+  koreanPercentile: number | null;
+  koreanGrade?: number;
+  koreanSubjectType?: Phase51KoreanSubjectType;
+  mathStdScore?: number;
+  mathPercentile: number | null;
+  mathGrade?: number;
+  mathSubjectType?: Phase51MathSubjectType;
+  englishGrade: number | null;
+  inquiry1Name?: string;
+  inquiry1Area?: Phase51InquiryArea;
+  inquiry1StdScore?: number;
+  inquiry1Percentile: number | null;
+  inquiry1Grade?: number;
+  inquiry2Name?: string;
+  inquiry2Area?: Phase51InquiryArea;
+  inquiry2StdScore?: number;
+  inquiry2Percentile?: number | null;
+  inquiry2Grade?: number;
+  koreanHistoryGrade?: number;
+}
+
+/**
+ * Phase 5.1 TargetUniversityInput 대응 draft 타입.
+ *
+ * 이 값은 추천 결과가 아니라 사용자가 분석 대상으로 지정한 목표대학 입력이다.
+ * 실제 추천 대학/학과 산출은 이 draft의 범위가 아니다.
+ */
+export interface Phase51TargetUniversityInputDraft {
+  univId: string;
+  univName: string;
+  deptName: string;
+}
+
+/**
+ * Phase 5.1 ImprovementScenarioInput 대응 draft 타입.
+ */
+export interface Phase51ImprovementScenarioInputDraft {
+  mathStdScoreDelta?: number;
+  mathPercentileDelta?: number;
+  mathGradeUp?: number;
+}
+
+/**
+ * Phase 5.1 AnalyzeRequest 대응 LMS 내부 draft 타입.
+ *
+ * 실제 Phase 5.1 타입을 import하지 않고, API_CONTRACT.md / src/api/types.ts
+ * 기준으로 LMS 내부에서만 사용하는 draft 계약을 정의한다.
+ *
+ * gradeLevel / track 은 실제 계약과 동일한 값으로만 채울 수 있지만,
+ * 현재 LMS adapter에는 아직 이 정보가 없으므로 null을 허용한다.
+ */
+export interface Phase51AnalyzeRequestDraft {
+  studentId: string;
+  studentName: string;
+  gradeLevel: Phase51GradeLevel | null;
+  track: Phase51Track | null;
+  schoolRecord: Phase51SchoolRecordInputDraft | null;
+  mockExamRecords: Phase51MockExamRecordDraft[];
+  targetUniversities: Phase51TargetUniversityInputDraft[];
+  improvementScenario?: Phase51ImprovementScenarioInputDraft;
+  draftCreatedAt: string;
+  sourceAdapterSnapshotAt: string;
+}
+
+/**
+ * UniversityAnalysisInput에서 Phase51AnalyzeRequestDraft의 골격을 조립한다.
+ *
+ * 이 함수는 Phase 5.1 직접 통합 전 placeholder다.
+ * 현재 UniversityAnalysisInput만으로는 gradeLevel, track, 과목별 mockExamRecords,
+ * targetUniversities를 만들 수 없으므로 null 또는 빈 배열로 둔다.
+ *
+ * Phase 5.1 직접 통합 전 별도 bridge에서 Student.internalScores 전체,
+ * Student.mockExamScores 과목별 원자료, 목표대학 선택값을 받아 보강해야 한다.
+ */
+export function buildPhase51AnalyzeRequestDraft(
+  input: UniversityAnalysisInput,
+): Phase51AnalyzeRequestDraft {
+  return {
+    studentId:                input.studentId,
+    studentName:              input.studentName,
+    gradeLevel:               null,
+    track:                    null,
+    schoolRecord:             null,
+    mockExamRecords:          [],
+    targetUniversities:       [],
+    draftCreatedAt:           new Date().toISOString(),
+    sourceAdapterSnapshotAt:  input.snapshotAt,
+  };
+}

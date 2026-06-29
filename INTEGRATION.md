@@ -1,63 +1,75 @@
-# AXIS LMS v1.2 - University Analysis Adapter Handoff Gate Bridge v1 buildfix
+# AXIS LMS v1.2 - University Analysis Phase5.1 Request Draft Adapter Spec v1 buildfix
 
 ## ChatGPT QA 판정
 
-이번 zip은 `UniversityAnalysisPayloadPreview`를 기준으로 실제 엔진 호출 전 연동 준비 조건 충족 여부만 판단하는 gate helper를 추가하는 단계다.
+이번 zip은 Phase 5.1 본체를 import하거나 실행하지 않고, 현재 LMS `universityAnalysisAdapter.ts` 안에 Phase 5.1 `AnalyzeRequest` 대응 draft 타입만 추가하는 단계다.
 
-원본 코드 방향은 AXIS LMS v1.2 기준에 맞고, 직전 buildfix의 `adapterMockSummaries` 배열 타입 명시도 유지되어 있다. 다만 원본 `INTEGRATION.md`가 이전 단계 문서를 모두 누적하고 있고, 일부 주석/화면 문구가 실제 Phase 5.1 통합 전 단계치고 강하게 보일 수 있어 buildfix 업로드본을 따로 만든다.
+원본 방향은 맞지만, 문서와 draft 타입 일부가 실제 Phase 5.1 `AnalyzeRequest` 계약과 어긋났다. 따라서 실제 `docs/API_CONTRACT.md`, `src/api/types.ts`, `src/adapters/lmsAdapter.ts` 기준으로 buildfix 업로드본을 따로 만든다.
 
 ## 변경 파일
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/lib/universityAnalysisAdapter.ts` | Handoff gate 타입 2종과 helper 1종 추가, 주석 문구 완화 |
-| `src/pages/StudentDetail.tsx` | handoff gate 상태 한 줄 표시, 화면 문구 완화 |
+| `src/lib/universityAnalysisAdapter.ts` | Phase 5.1 AnalyzeRequest 대응 LMS 내부 draft 타입과 placeholder 조립 함수 추가 |
 
-## 추가된 adapter helper
+## 실제 Phase 5.1 계약 기준
 
-| 항목 | 역할 |
+참조한 Phase 5.1 파일:
+
+| 파일 | 확인 내용 |
+|------|-----------|
+| `docs/API_CONTRACT.md` | `AnalyzeRequest`, `AnalyzeResponse`, 연동 주의사항 |
+| `src/api/types.ts` | `SchoolRecordInput`, `MockExamRecord`, `TargetUniversityInput`, `ImprovementScenarioInput` |
+| `src/adapters/lmsAdapter.ts` | Phase 5.1이 기대하는 LMS 변환 페이로드 |
+
+## 추가된 타입
+
+| 타입 | 실제 Phase 5.1 대응 |
+|------|---------------------|
+| `Phase51GradeLevel` | `1 | 2 | 3` |
+| `Phase51Track` | `'인문' | '자연' | '통합'` |
+| `Phase51KoreanSubjectType` | `'화작' | '언매'` |
+| `Phase51MathSubjectType` | `'확통' | '미적분' | '기하'` |
+| `Phase51InquiryArea` | `'사탐' | '과탐' | '직탐'` |
+| `Phase51SchoolRecordInputDraft` | `SchoolRecordInput` draft |
+| `Phase51MockExamRecordDraft` | `MockExamRecord` draft |
+| `Phase51TargetUniversityInputDraft` | `TargetUniversityInput` draft |
+| `Phase51ImprovementScenarioInputDraft` | `ImprovementScenarioInput` draft |
+| `Phase51AnalyzeRequestDraft` | `AnalyzeRequest` draft |
+
+## 추가된 함수
+
+| 함수 | 역할 |
 |------|------|
-| `UniversityAnalysisHandoffGateStatus` | `'blocked' | 'needs-data' | 'ready'` 상태 타입 |
-| `UniversityAnalysisHandoffGate` | 연동 준비 조건 판단 결과 타입 |
-| `getUniversityAnalysisHandoffGate(preview)` | payload preview 기준으로 status, canPrepareHandoff, reasons, missingFields, snapshotAt 반환 |
+| `buildPhase51AnalyzeRequestDraft(input)` | `UniversityAnalysisInput`에서 Phase 5.1 request draft 골격만 조립 |
 
-## buildfix 내용
+현재 `UniversityAnalysisInput`만으로는 `gradeLevel`, `track`, 과목별 `mockExamRecords`, `targetUniversities`를 만들 수 없으므로 placeholder 함수는 해당 필드를 `null` 또는 빈 배열로 둔다.
 
-직전 타입픽스 유지 확인:
+## buildfix 정리
 
-```ts
-const list: ReturnType<typeof adaptMockSummaryFromLms>[] = [];
-```
-
-주석 완화:
-
-```text
-엔진 전달 여부 결정 -> 입력 구성 상태 표시
-연동 준비를 시작할 수 있는 상태 -> 연동 준비 조건을 충족한 상태
-```
-
-UI 문구 완화:
-
-```text
-연동 준비 완료 -> 준비 조건 충족
-```
+| 항목 | buildfix 기준 |
+|------|---------------|
+| Phase 5.1 계약 근거 | 실제 계약 파일 기준 |
+| `gradeLevel` | `1 | 2 | 3` |
+| `track` | `'인문' | '자연' | '통합'` |
+| 내신 구조 | Phase 5.1 `SchoolRecordInput` draft 중심 |
+| 목표대학 | `targetUniversities` |
+| 향상 시나리오 | Phase 5.1 `ImprovementScenarioInput` draft |
 
 ## QA 확인
 
 | 항목 | 판정 |
 |------|------|
 | 원본 zip 래퍼 폴더 없음 | 정상 |
-| 실제 엔진 import 없음 | 정상 |
-| phase5.1 코드 복사 없음 | 정상 |
-| 신규 라우트 추가 없음 | 정상 |
-| Provider/Layout 구조 변경 없음 | 정상 |
-| 학부모 화면 변경 없음 | 정상 |
-| PDF Export 추가 없음 | 정상 |
-| AI 분석 버튼 추가 없음 | 정상 |
+| 실제 Phase 5.1 import 없음 | 정상 |
+| Phase 5.1 실행 없음 | 정상 |
+| 실제 대학추천 계산 없음 | 정상 |
 | 대학명/학과명/합격 가능성/추천 순위 산출 없음 | 정상 |
-| `TeacherExamGrading.tsx` 변경 없음 | 정상 |
+| PDF Export 없음 | 정상 |
+| AI 분석 버튼 없음 | 정상 |
+| 신규 라우트/Provider/UI 변경 없음 | 정상 |
+| `TeacherExamGrading.tsx` scopedExam 타입픽스 유지 | 정상 |
 | `StudentDetail.tsx` 배열 타입 명시 유지 | 정상 |
-| `universityAnalysisAdapter.ts` 기존 타입 구조 유지 | 정상 |
 
 ## 빌드 확인
 
@@ -65,7 +77,7 @@ UI 문구 완화:
 
 이전과 동일하게 `npm install`도 레지스트리 정책으로 `@tailwindcss/vite` 다운로드가 403 차단되는 환경이라 로컬 빌드 완료까지는 확인하지 못했다.
 
-대신 변경 파일의 import, 참조 변수, 타입 필드, `TeacherExamGrading.tsx` 고정 패턴, `StudentDetail.tsx` 배열 타입 명시는 정적으로 확인했다. 최종 main 반영은 GitHub Actions 통과 기준으로 승인한다.
+최종 main 반영은 GitHub Actions 통과 기준으로 승인한다.
 
 ## 업로드 판단
 
@@ -73,30 +85,24 @@ UI 문구 완화:
 
 업로드 파일:
 
-`axis-lms-v1_2-university-analysis-adapter-handoff-gate-bridge-v1-buildfix-github-upload.zip`
+`axis-lms-v1_2-university-analysis-phase5_1-request-draft-adapter-spec-v1-buildfix-github-upload.zip`
 
 커밋명:
 
-`대학분석 연동게이트 브릿지 반영`
+`대학분석 요청초안 어댑터 명세 반영`
 
 ## baseline 반영 조건
 
 GitHub Actions가 정상 통과하면 baseline에 다음 항목을 추가한다.
 
-36. University Analysis Adapter Handoff Gate Bridge v1 buildfix
+37. University Analysis Phase5.1 Request Draft Adapter Spec v1 buildfix
 
 ## 보류 유지
 
 - `axis-university-analysis-engine-phase5.1` 직접 통합 없음
 - 실제 대학추천 계산 없음
-- 대학명/학과명 추천 없음
-- 합격 가능성 계산 없음
-- 추천 순위 산출 없음
+- 대학명 / 학과명 / 합격 가능성 / 추천 순위 계산 없음
 - PDF Export 없음
 - AI 분석 없음
-- 문제은행/NGD2 연동 없음
+- 문제은행 / NGD2 연동 없음
 - Rival / Emblem / IF 분석 직접 구현 없음
-
-## TeacherExamGrading 타입픽스 유지
-
-`src/pages/teacher/TeacherExamGrading.tsx`의 `scopedExam -> if (!scopedExam) return -> const visibleExam = scopedExam` 패턴은 이번 작업에서 변경하지 않는다.
