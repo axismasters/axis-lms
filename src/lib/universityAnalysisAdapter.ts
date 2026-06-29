@@ -1,18 +1,27 @@
-// AXIS LMS v1.2 — University Analysis Adapter Spec v1
+// AXIS LMS v1.2 — University Analysis Adapter (Input Bridge v1)
 //
 // 목적: LMS 내부 데이터와 axis-university-analysis-engine-phase5.1 사이의
-//       어댑터 명세(타입 + placeholder 함수)를 정의한다.
+//       어댑터 명세(타입 + 변환 bridge 함수)를 정의한다.
 //
-// ❌ 실제 엔진 import 금지
-// ❌ 외부 LMS 파일 import 금지
+// ❌ 실제 엔진(phase5.1) import 금지
 // ❌ phase5.1 코드 직접 복사 금지
 // ❌ 대학명 / 학과명 / 합격 가능성 / 추천 순위 타입 포함 금지
-// ✅ 타입/문서/placeholder 수준 명세만
+// ✅ Input Bridge v1: LMS 내부 타입 import 허용 (bridge 함수 전용)
+// ✅ 타입 / 변환 helper / placeholder 수준 명세
 //
 // 사용 예정:
-//   - UniversityAnalysisInput은 StudentDetail.tsx 또는 별도 리포트 화면에서
-//     LMS 데이터를 조합해 생성한 뒤, 엔진 연동 시 전달한다.
-//   - 실제 변환 함수(buildUniversityAnalysisInput 등)는 엔진 연동 단계에서 구현한다.
+//   - adaptReadinessFromLms / adaptInternalGradesFromLms / adaptMockSummaryFromLms:
+//     LMS 데이터를 어댑터 타입으로 변환해 safeAssembleUniversityAnalysisInput에 전달한다.
+//   - safeAssembleUniversityAnalysisInput:
+//     null/undefined 입력에도 안전하게 UniversityAnalysisInput을 조립한다.
+//   - 실제 엔진 호출은 phase5.1 직접 통합 단계에서 별도 구현한다.
+
+// ── LMS 내부 타입 import (Input Bridge v1에서만 허용) ──────
+import type { InternalScore } from '@/lib/dummyData';
+import type {
+  UniversityRecommendationReadiness,
+  MockAccumulationSummary,
+} from '@/lib/assessmentData';
 
 // ────────────────────────────────────────────────────────────
 // 어댑터 상태 — 입력 데이터가 엔진을 실행하기에 충분한지 판단
@@ -143,9 +152,6 @@ export function emptyInternalGradeSnapshot(): UniversityAnalysisInternalGradeSna
 /**
  * 준비 상태 스냅샷 기본값을 반환한다.
  * 아직 readiness 계산이 수행되지 않은 경우의 placeholder.
- *
- * TODO: 실제 엔진 연동 시 getUniversityRecommendationReadiness() 결과를
- *       이 타입으로 변환하는 어댑터 함수로 교체한다.
  */
 export function emptyReadinessSnapshot(): UniversityAnalysisReadinessSnapshot {
   return {
@@ -160,13 +166,9 @@ export function emptyReadinessSnapshot(): UniversityAnalysisReadinessSnapshot {
 }
 
 /**
- * UniversityAnalysisInput 어댑터 페이로드를 조립한다.
+ * UniversityAnalysisInput 어댑터 페이로드를 조립한다. (Spec v1 placeholder — 유지)
  *
- * TODO: 실제 엔진 연동 시 아래 파라미터를 LMS 컨텍스트 데이터에서
- *       직접 생성하는 로직으로 교체한다.
- *   - readiness: getUniversityRecommendationReadiness() 결과 변환
- *   - internalGrades: Student.internalScores 변환
- *   - mockSummaries: getMockAccumulationSummary() 결과 변환
+ * 실제 LMS 데이터에서 안전하게 조립할 때는 safeAssembleUniversityAnalysisInput을 사용한다.
  */
 export function buildUniversityAnalysisInput(
   studentId: string,
@@ -182,5 +184,130 @@ export function buildUniversityAnalysisInput(
     internalGrades,
     mockSummaries,
     snapshotAt: new Date().toISOString(),
+  };
+}
+
+// ────────────────────────────────────────────────────────────
+// Input Bridge v1 — LMS 데이터 → 어댑터 타입 변환 헬퍼
+// ────────────────────────────────────────────────────────────
+
+/**
+ * LMS UniversityRecommendationReadiness → UniversityAnalysisReadinessSnapshot 변환.
+ *
+ * assessmentData.ts의 getUniversityRecommendationReadiness() 반환값과
+ * 학생 레코드에서 파생한 두 boolean 플래그를 받아 어댑터 스냅샷을 만든다.
+ *
+ * @param r              getUniversityRecommendationReadiness() 결과
+ * @param hasInternalGrades Student.internalScores.length > 0 여부
+ * @param hasMockScores     Student.mockExamScores.length > 0 여부
+ */
+export function adaptReadinessFromLms(
+  r: UniversityRecommendationReadiness,
+  hasInternalGrades: boolean,
+  hasMockScores: boolean,
+): UniversityAnalysisReadinessSnapshot {
+  const partial: Omit<UniversityAnalysisReadinessSnapshot, 'adapterStatus'> = {
+    suneungRounds:    r.suneungRounds,
+    hasRecentScore:   r.hasRecentScore,
+    hasCumulativeAvg: r.hasCumulativeAvg,
+    hasLast3Avg:      r.hasLast3Avg,
+    hasInternalGrades,
+    hasMockScores,
+  };
+  return { ...partial, adapterStatus: checkAdapterStatus(partial) };
+}
+
+/**
+ * Student.internalScores → UniversityAnalysisInternalGradeSnapshot 변환.
+ *
+ * 내신 성적이 없으면 emptyInternalGradeSnapshot()을 반환한다.
+ * 가장 최신 기록은 학년도(year) 내림차순 → 학기(semester) 내림차순 기준으로 결정한다.
+ *
+ * @param scores Student.internalScores 배열 (빈 배열 안전)
+ */
+export function adaptInternalGradesFromLms(
+  scores: InternalScore[],
+): UniversityAnalysisInternalGradeSnapshot {
+  if (scores.length === 0) return emptyInternalGradeSnapshot();
+
+  // year 내림차순 → semester 내림차순 ('2학기' > '1학기' 사전 순)
+  const sorted = [...scores].sort((a, b) => {
+    const yCmp = b.year.localeCompare(a.year);
+    if (yCmp !== 0) return yCmp;
+    return b.semester.localeCompare(a.semester);
+  });
+  const latest = sorted[0];
+
+  return {
+    hasData:        true,
+    latestYear:     latest.year,
+    latestSemester: latest.semester,
+    latestSubject:  latest.subject,
+    latestRawScore: latest.rawScore,
+    latestGrade:    latest.grade,
+  };
+}
+
+/**
+ * getMockAccumulationSummary() 결과 → UniversityAnalysisMockSummary 변환.
+ *
+ * getMockAccumulationSummary는 오름차순 정렬된 StudentExamResult[]를 받으므로,
+ * 호출 전 결과를 오름차순(examDate asc)으로 정렬해서 전달해야 한다.
+ * rounds === 0인 경우(응시 기록 없음)도 안전하게 처리한다.
+ *
+ * @param categoryId  'mock-suneung' | 'mock-school'
+ * @param summary     getMockAccumulationSummary() 반환값
+ */
+export function adaptMockSummaryFromLms(
+  categoryId: 'mock-suneung' | 'mock-school',
+  summary: MockAccumulationSummary,
+): UniversityAnalysisMockSummary {
+  return {
+    categoryId,
+    rounds:           summary.totalRounds,
+    latestPct:        summary.latestPct,
+    bestPct:          summary.bestPct,
+    avgPct:           summary.avgPct,
+    last3AvgPct:      summary.last3AvgPct,
+    firstToLastDelta: summary.firstToLastDelta,
+  };
+}
+
+/**
+ * null/undefined 입력에도 안전하게 UniversityAnalysisInput을 조립한다.
+ *
+ * - readiness / internalGrades 가 null 또는 undefined 이면 empty 기본값으로 대체한다.
+ * - mockSummaries 가 null 또는 undefined 이면 빈 배열로 대체한다.
+ * - studentId / studentName 은 trim() 처리 후 그대로 사용한다.
+ * - snapshotAt 은 호출 시각의 ISO 8601 문자열로 생성한다.
+ *
+ * 실제 호출 흐름 예시 (엔진 연동 단계에서 구현):
+ *   const readiness = adaptReadinessFromLms(lmsReadiness, hasInternal, hasMock);
+ *   const grades    = adaptInternalGradesFromLms(student.internalScores);
+ *   const suneung   = adaptMockSummaryFromLms('mock-suneung', suneungSummary);
+ *   const input     = safeAssembleUniversityAnalysisInput(
+ *                       student.id, student.name, readiness, grades, [suneung],
+ *                     );
+ *
+ * @param studentId      학생 ID
+ * @param studentName    학생 이름
+ * @param readiness      UniversityAnalysisReadinessSnapshot (nullable)
+ * @param internalGrades UniversityAnalysisInternalGradeSnapshot (nullable)
+ * @param mockSummaries  UniversityAnalysisMockSummary[] (nullable)
+ */
+export function safeAssembleUniversityAnalysisInput(
+  studentId: string,
+  studentName: string,
+  readiness?: UniversityAnalysisReadinessSnapshot | null,
+  internalGrades?: UniversityAnalysisInternalGradeSnapshot | null,
+  mockSummaries?: UniversityAnalysisMockSummary[] | null,
+): UniversityAnalysisInput {
+  return {
+    studentId:     studentId.trim(),
+    studentName:   studentName.trim(),
+    readiness:     readiness     ?? emptyReadinessSnapshot(),
+    internalGrades: internalGrades ?? emptyInternalGradeSnapshot(),
+    mockSummaries: mockSummaries  ?? [],
+    snapshotAt:    new Date().toISOString(),
   };
 }
