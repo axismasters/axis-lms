@@ -37,6 +37,8 @@ import {
   buildUniversityAnalysisPayloadPreview,
   getUniversityAnalysisHandoffGate,
   buildPhase51AnalyzeRequestDraftBundle,
+  deriveGradeLevelFromMockExamScores,
+  type Phase51GradeLevel,
   type Phase51Track,
   type Phase51TargetUniversityInputDraft,
   type Phase51ImprovementScenarioInputDraft,
@@ -876,6 +878,7 @@ function MonthCalendar({ ym, records }: { ym: string; records: { date: string; s
 function GradesTab({ student, initialGradeType }: { student: Student; initialGradeType: GradeType }) {
   const [gradeType, setGradeType] = useState<GradeType>(initialGradeType);
   const [draftTrack, setDraftTrack] = useState<Phase51Track | null>(null);
+  const [draftGradeLevel, setDraftGradeLevel] = useState<Phase51GradeLevel | null>(null);
   const [draftTargetUniversities, setDraftTargetUniversities] = useState<Phase51TargetUniversityInputDraft[]>([]);
   const [targetInput, setTargetInput] = useState({ univName: '', deptName: '' });
   const [draftScenarioInput, setDraftScenarioInput] = useState({
@@ -960,6 +963,19 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
   // Draft Preview UI Wiring v1 — buildPhase51AnalyzeRequestDraftBundle
   // Target University Draft Input UI Wiring v1 — draftTargetUniversities 연결
   // Improvement Scenario Draft Input UI Wiring v1 — draftScenario 파생 및 연결
+  // GradeLevel Input UI Wiring v1 — derivedGradeLevel 자동 파생 + draftGradeLevel 우선 적용
+  const derivedGradeLevel = useMemo<Phase51GradeLevel | null>(
+    () => deriveGradeLevelFromMockExamScores(student.mockExamScores),
+    [student.mockExamScores]
+  );
+
+  const draftContext = useMemo(
+    () => (draftGradeLevel != null || draftTrack != null)
+      ? { gradeLevel: draftGradeLevel, track: draftTrack }
+      : undefined,
+    [draftGradeLevel, draftTrack]
+  );
+
   const draftScenario = useMemo<Phase51ImprovementScenarioInputDraft | undefined>(() => {
     const s: Phase51ImprovementScenarioInputDraft = {};
     const std = draftScenarioInput.mathStdScoreDelta !== '' ? Number(draftScenarioInput.mathStdScoreDelta) : undefined;
@@ -976,11 +992,11 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
       analysisInput,
       student.mockExamScores,
       student.internalScores,
-      draftTrack != null ? { track: draftTrack } : undefined,
+      draftContext,
       draftTargetUniversities.length > 0 ? draftTargetUniversities : undefined,
       draftScenario,
     ),
-    [analysisInput, student.mockExamScores, student.internalScores, draftTrack, draftTargetUniversities, draftScenario]
+    [analysisInput, student.mockExamScores, student.internalScores, draftContext, draftTargetUniversities, draftScenario]
   );
   // ────────────────────────────────────────────────────────
 
@@ -1321,6 +1337,34 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
           <div className="text-xs font-semibold mb-2.5 flex items-center gap-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
             <FileText size={11} />
             Phase 5.1 Draft 검증 미리보기
+          </div>
+
+          {/* ⑤ 학년 선택 — GradeLevel Input UI Wiring v1 */}
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>학년 선택 (선택)</div>
+              {draftGradeLevel === null && derivedGradeLevel !== null && (
+                <span className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>
+                  (예: 고{derivedGradeLevel} 자동파생)
+                </span>
+              )}
+            </div>
+            <div className="flex gap-1.5">
+              {([1, 2, 3] as Phase51GradeLevel[]).map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setDraftGradeLevel(g === draftGradeLevel ? null : g)}
+                  className="px-2.5 py-1 rounded-md text-xs font-medium border transition-colors"
+                  style={{
+                    background:  draftGradeLevel === g ? 'oklch(0.511 0.262 276.966)' : 'white',
+                    color:       draftGradeLevel === g ? 'white' : 'oklch(0.45 0.015 250)',
+                    borderColor: draftGradeLevel === g ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.9 0.008 250)',
+                  }}
+                >
+                  고{g}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* 계열 선택 */}
