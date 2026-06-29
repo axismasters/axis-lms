@@ -1,4 +1,5 @@
 // AXIS LMS v1.2 - StudentWeeklyMocks (Senior Weekly Mock Routine Foundation v1)
+// ✅ Senior Mock Accumulation Bridge v1: 누적 요약 섹션 추가
 // 학생 전용 고3 수능실전 주간 루틴 조회 — 읽기 전용.
 // ✅ mock-suneung 카테고리 공개 결과만 표시 (주간 루틴 기준)
 // ✅ getPublishedResultsForStudent() 공개 필터 경유 (미공개/미채점/결석 제외)
@@ -11,6 +12,7 @@ import { TrendingUp, TrendingDown, Minus, ChevronLeft } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
+import { getMockAccumulationSummary } from '@/lib/assessmentData';
 
 function scoreColor(pct: number): string {
   return pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)';
@@ -78,6 +80,9 @@ export default function StudentWeeklyMocks() {
     ? Math.round((latest.earnedScore / latest.totalPoints) * 100)
     : null;
 
+  // 누적 요약 헬퍼 — Senior Mock Accumulation Bridge v1
+  const summary = getMockAccumulationSummary(weeklyResults);
+
   return (
     <StudentLayout title="수능실전 주간 루틴">
       <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
@@ -122,6 +127,54 @@ export default function StudentWeeklyMocks() {
                   <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{label}</div>
                 </div>
               ))}
+            </div>
+
+            {/* 누적 요약 — Senior Mock Accumulation Bridge v1 */}
+            <div className="axis-card p-4">
+              <div className="text-xs font-semibold mb-3" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                누적 요약
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <div>
+                  <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>평균 점수</div>
+                  <div className="font-bold text-sm tabular-nums mt-0.5" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                    {summary.avgPct !== null ? `${summary.avgPct}%` : '-'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 3회 평균</div>
+                  <div className="font-bold text-sm tabular-nums mt-0.5" style={{ color: 'oklch(0.45 0.15 160)' }}>
+                    {summary.last3AvgPct !== null ? `${summary.last3AvgPct}%` : '-'}
+                  </div>
+                </div>
+              </div>
+              {weeklyResults.length >= 2 && summary.firstToLastDelta !== null && (
+                <div className="mt-3 pt-3 border-t" style={{ borderColor: 'oklch(0.93 0.006 250)' }}>
+                  <div className="text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>첫 회차 대비</div>
+                  <div className="flex items-center gap-1">
+                    {summary.firstToLastDelta > 0 ? (
+                      <>
+                        <TrendingUp size={14} style={{ color: 'oklch(0.45 0.15 160)' }} />
+                        <span className="font-bold text-sm" style={{ color: 'oklch(0.45 0.15 160)' }}>
+                          +{summary.firstToLastDelta}점 향상
+                        </span>
+                      </>
+                    ) : summary.firstToLastDelta < 0 ? (
+                      <>
+                        <TrendingDown size={14} style={{ color: 'oklch(0.55 0.2 27)' }} />
+                        <span className="font-bold text-sm" style={{ color: 'oklch(0.55 0.2 27)' }}>
+                          {summary.firstToLastDelta}점
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Minus size={14} style={{ color: 'oklch(0.6 0.015 250)' }} />
+                        <span className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>변화 없음</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 회차 목록 — 오름차순(오래된 것 → 최신 순) */}

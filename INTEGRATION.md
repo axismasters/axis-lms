@@ -1,10 +1,10 @@
-# AXIS LMS v1.2 — Senior Weekly Mock Routine Foundation v1
+# AXIS LMS v1.2 — Senior Mock Accumulation Bridge v1
 
 ## ChatGPT QA 판정
 
-이번 zip은 `INTEGRATION.md`만 있는 QA 기록이 아니라, 고3 수능실전모의 주간 루틴 조회 화면을 학생/학부모 포털에 추가하는 실제 기능 Foundation 단계다.
+이번 zip은 고3 수능실전 주간 루틴 결과를 누적 요약하는 실제 Bridge 단계다.
 
-원본 zip의 코드 변경 방향은 적절하다. 다만 업로드본은 현재 확정 baseline을 명확히 하고, 변경 파일만 포함하도록 정리한다.
+대학추천 본체, 목표대학 분석, AI 분석, PDF Export는 구현하지 않고, 기존 공개 결과를 요약하는 순수 헬퍼와 UI 카드만 추가한다.
 
 ## 현재 확정 baseline
 
@@ -33,60 +33,63 @@
 - Student Finance Home Bridge v1
 - Assessment Publish Stability Bridge v1 buildfix
 - Mock Exam Result Foundation v1
+- Senior Weekly Mock Routine Foundation v1
 
 ## 변경 파일
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/lib/assessmentData.ts` | `mock-suneung` 주간 루틴 더미 시험/응시 결과 추가 |
-| `src/pages/student/StudentWeeklyMocks.tsx` | 학생 수능실전 주간 루틴 조회 화면 추가 |
-| `src/pages/parent/ParentWeeklyMocks.tsx` | 학부모 자녀 수능실전 주간 루틴 조회 화면 추가 |
-| `src/pages/student/StudentMockExams.tsx` | `/student/weekly-mocks` 진입 카드 추가 |
-| `src/pages/parent/ParentMockExams.tsx` | `/parent/weekly-mocks` 진입 카드 추가 |
-| `src/routes/StudentRoutes.tsx` | `/student/weekly-mocks` 라우트 추가 |
-| `src/routes/ParentRoutes.tsx` | `/parent/weekly-mocks` 라우트 추가 |
+| `src/lib/assessmentData.ts` | `MockAccumulationSummary`, `getMockAccumulationSummary()` 추가 |
+| `src/pages/student/StudentWeeklyMocks.tsx` | 학생 주간 루틴 화면에 누적 요약 카드 추가 |
+| `src/pages/parent/ParentWeeklyMocks.tsx` | 학부모 주간 루틴 화면에 누적 요약 카드 추가 |
 
 ## 구현 범위
 
-고3 수능실전모의 주간 루틴을 `mock-suneung` 카테고리의 공개 결과로 조회한다.
+`mock-suneung` 공개 결과로 이미 필터링되고 시험일 오름차순으로 정렬된 `weeklyResults`를 입력받아 누적 요약을 계산한다.
 
-학생은 `currentUser.assignedStudentIds[0]` 기준 본인 결과만 조회한다. 학부모는 `currentUser.assignedStudentIds`로 연결된 자녀만 조회하고, 다자녀 선택을 지원한다.
-
-`AssessmentContext.getPublishedResultsForStudent(studentId)` 공개 필터를 경유하므로 미공개/미채점/결석 결과는 표시하지 않는다.
+요약 항목:
+- 응시 회차 수
+- 최근 점수
+- 최고 점수
+- 평균 점수
+- 최근 3회 평균
+- 첫 회차 대비 변화량
 
 ## QA 확인
 
 | 항목 | 상태 |
 |------|------|
-| 학생 `/student/weekly-mocks` 라우트 추가 | 정상 |
-| 학부모 `/parent/weekly-mocks` 라우트 추가 | 정상 |
-| 기존 `/student/finance`, `/student/mock-exams` 라우트 유지 | 정상 |
-| 기존 `/parent/finance`, `/parent/mock-exams` 라우트 유지 | 정상 |
-| `mock-suneung` 공개 결과만 필터 | 정상 |
-| 회차순 정렬 및 전회 대비 추이 표시 | 정상 |
-| 학생은 본인 데이터만 조회 | 정상 |
-| 학부모는 연결 자녀 데이터만 조회 | 정상 |
+| `AssessmentContext.getPublishedResultsForStudent(studentId)` 공개 필터 유지 | 정상 |
+| 학생은 본인 `assignedStudentIds[0]` 기준만 조회 | 정상 |
+| 학부모는 연결 자녀 `assignedStudentIds` 범위만 조회 | 정상 |
+| 기존 회차별 목록/전회 대비 추이/뒤로가기 유지 | 정상 |
+| 평균 점수/최근 3회 평균 표시 | 정상 |
+| 2회차 이상일 때 첫 회차 대비 변화량 표시 | 정상 |
+| 라우트 변경 없음 | 정상 |
+| Context 변경 없음 | 정상 |
 | `StudentHome.tsx`, `ParentHome.tsx` 미변경 | 정상 |
-| `AssessmentContext.tsx` 미변경 | 정상 |
 | `TeacherExamGrading.tsx` 미변경 | 정상 |
 
 ## 변경하지 않은 파일
 
 - `src/pages/student/StudentHome.tsx`
 - `src/pages/parent/ParentHome.tsx`
+- `src/pages/student/StudentMockExams.tsx`
+- `src/pages/parent/ParentMockExams.tsx`
+- `src/routes/StudentRoutes.tsx`
+- `src/routes/ParentRoutes.tsx`
 - `src/contexts/AssessmentContext.tsx`
 - `src/pages/teacher/TeacherExamGrading.tsx`
-- `src/layouts/StudentLayout.tsx`
-- `src/layouts/ParentLayout.tsx`
 - Finance / Homework / Content / Attendance 전체
 - Admin Back Office 전체
 
 ## 보류 유지
 
+- 대학추천 시스템 구현 없음
+- 목표대학 분석 구현 없음
+- AI 분석 추가 없음
+- PDF Export 추가 없음
 - 등급/백분위/표준점수 계산 없음
-- 대학추천/목표대학 분석 없음
-- AI 분석 없음
-- PDF Export 없음
 - 문제은행/NGD2 연동 없음
 - Rival / Emblem / IF 분석 직접 구현 없음
 

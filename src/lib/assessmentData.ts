@@ -243,6 +243,46 @@ export function getPublishedResultsForStudent(exams: Exam[], submissions: ExamSu
 }
 
 // ────────────────────────────────────────────────────────────
+// 수능실전 주간 루틴 누적 요약 헬퍼 — Senior Mock Accumulation Bridge v1
+// StudentWeeklyMocks / ParentWeeklyMocks 화면에서 사용한다.
+// 대학추천 / 등급 / 백분위 / 표준점수는 포함하지 않는다.
+// ────────────────────────────────────────────────────────────
+export interface MockAccumulationSummary {
+  totalRounds: number;          // 응시 회차 수
+  latestPct: number | null;     // 최근 점수 (백분율)
+  bestPct: number | null;       // 최고 점수 (백분율)
+  avgPct: number | null;        // 전체 평균 점수 (백분율)
+  last3AvgPct: number | null;   // 최근 3회 평균 (백분율)
+  firstToLastDelta: number | null; // 첫 회차 대비 점수 변화량 (점수 단위)
+}
+
+/**
+ * results: mock-suneung 카테고리로 필터된 뒤 examDate 오름차순 정렬된 목록을 전달한다.
+ * (StudentWeeklyMocks / ParentWeeklyMocks의 weeklyResults 배열을 그대로 사용)
+ */
+export function getMockAccumulationSummary(results: StudentExamResult[]): MockAccumulationSummary {
+  if (results.length === 0) {
+    return { totalRounds: 0, latestPct: null, bestPct: null, avgPct: null, last3AvgPct: null, firstToLastDelta: null };
+  }
+
+  const pcts = results.map((r) =>
+    r.totalPoints > 0 ? Math.round((r.earnedScore / r.totalPoints) * 100) : 0
+  );
+  const last3 = pcts.slice(-3);
+  const first = results[0];
+  const latest = results[results.length - 1];
+
+  return {
+    totalRounds: results.length,
+    latestPct: pcts[pcts.length - 1],
+    bestPct: Math.max(...pcts),
+    avgPct: Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length),
+    last3AvgPct: Math.round(last3.reduce((a, b) => a + b, 0) / last3.length),
+    firstToLastDelta: latest.earnedScore - first.earnedScore,
+  };
+}
+
+// ────────────────────────────────────────────────────────────
 // 더미 데이터
 // ────────────────────────────────────────────────────────────
 function q(no: number, type: QuestionType, points: number, correctAnswer?: string): ExamQuestionDef {
