@@ -1,10 +1,10 @@
-# AXIS LMS v1.2 — University Report Preview Foundation v1
+# AXIS LMS v1.2 — University Report Preview UX v1
 
 ## ChatGPT QA 판정
 
-이번 zip은 대학추천 본체가 아니라, Back Office 학생 상세 안에 상담용 리포트 미리보기 섹션을 추가하는 Foundation 단계다.
+이번 zip은 Back Office 학생 상세의 `상담 리포트 미리보기` 섹션을 더 상담 리포트처럼 보이도록 정돈하는 UX 단계다.
 
-실제 대학명 추천, 학과 추천, 합격 가능성 계산, 목표대학 분석, AI 분석, PDF Export는 구현하지 않는다.
+실제 대학추천 본체, 대학명 추천, 학과 추천, 합격 가능성 계산, 목표대학 분석, AI 분석, PDF Export는 구현하지 않는다.
 
 ## 현재 확정 baseline
 
@@ -36,41 +36,39 @@
 - Senior Weekly Mock Routine Foundation v1
 - Senior Mock Accumulation Bridge v1
 - University Recommendation Readiness Foundation v1
+- University Report Preview Foundation v1
 
 ## 변경 파일
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/pages/StudentDetail.tsx` | Back Office 학생 상세의 성적조회 탭에 `상담 리포트 미리보기` 섹션 추가 |
+| `src/pages/StudentDetail.tsx` | `상담 리포트 미리보기` Area 내부 UX 정돈 |
 
 ## 구현 범위
 
-기존 `대학추천 데이터 상태` Area 아래에 읽기 전용 상담 리포트 미리보기 섹션을 추가한다.
+기존 `상담 리포트 미리보기` Area 안에서만 구조를 정돈한다.
 
-표시 항목:
-- 학생명
-- 현재 대학추천 데이터 준비 상태
-- 내신 입력 여부
-- 모의고사 입력 여부
-- 수능실전모의 응시 회차 수
-- 최근 실전모의 데이터 존재 여부
-- 최근 3회 평균 산출 가능 여부
-- 안내 문구: `실제 대학명·합격 가능성·추천 순위는 다음 단계에서 계산됩니다.`
+변경 내용:
+- 리포트 헤더 분리
+- `기본 성적 데이터` 소제목 추가
+- `수능실전모의 데이터` 소제목 추가
+- 안내 문구를 아이콘과 함께 좌정렬로 정돈
+
+표시 항목은 기존 범위를 유지한다.
 
 ## QA 확인
 
 | 항목 | 상태 |
 |------|------|
-| Back Office `StudentDetail.tsx` 내부에만 표시 | 정상 |
+| 기존 `상담 리포트 미리보기` Area 내부에서만 변경 | 정상 |
 | 기존 `대학추천 데이터 상태` Area 유지 | 정상 |
-| 기존 helper만 사용 | 정상 |
 | 학생/학부모 포털 노출 없음 | 정상 |
+| 기존 helper/Context/라우트 변경 없음 | 정상 |
 | 대학명/학과명/합격 가능성/추천 순위 미표시 | 정상 |
 | PDF Export 버튼 없음 | 정상 |
 | AI 분석 버튼 없음 | 정상 |
 | `assessmentData.ts` 변경 없음 | 정상 |
 | `AssessmentContext.tsx` 변경 없음 | 정상 |
-| 라우트 변경 없음 | 정상 |
 | `TeacherExamGrading.tsx` 미변경 | 정상 |
 
 ## 변경하지 않은 파일
@@ -94,6 +92,7 @@
 - AI 분석 추가 없음
 - 문제은행/NGD2 연동 없음
 - Rival / Emblem / IF 분석 직접 구현 없음
+- `axis-university-analysis-engine-phase5.1` 직접 통합 없음
 
 ## TeacherExamGrading 타입픽스 유지
 
