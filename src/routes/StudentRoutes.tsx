@@ -10,6 +10,7 @@ import StudentAttendance from '@/pages/student/StudentAttendance';
 import StudentHomework from '@/pages/student/StudentHomework';
 import StudentFinance from '@/pages/student/StudentFinance';
 import StudentMockExams from '@/pages/student/StudentMockExams';
+import StudentWeeklyMocks from '@/pages/student/StudentWeeklyMocks';
 import StudentLayout from '@/layouts/StudentLayout';
 
 function StudentPlaceholder({ title }: { title: string }) {
@@ -52,6 +53,9 @@ export default function StudentRoutes() {
 
         {/* 모의고사 결과 조회 (읽기 전용) */}
         <Route path="/student/mock-exams" component={StudentMockExams} />
+
+        {/* 고3 수능실전 주간 루틴 조회 (읽기 전용) */}
+        <Route path="/student/weekly-mocks" component={StudentWeeklyMocks} />
 
         {/* 성장 진열장 (Foundation — 홈에서 접근) */}
         <Route path="/student/growth" component={() => <StudentPlaceholder title="성장 진열장" />} />

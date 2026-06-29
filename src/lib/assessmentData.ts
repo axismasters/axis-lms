@@ -290,6 +290,16 @@ const exam5Questions: ExamQuestionDef[] = [
   q(5, '객관식', 20, '3'),
 ];
 
+// 더미 시험 6~8: 고3 수능실전 주간 루틴 (공개완료) — Senior Weekly Mock Routine Foundation v1
+// 매주 같은 형식, 점수 추이 시연용 (stu-001 상승 추이)
+const weeklyMockQuestions: ExamQuestionDef[] = [
+  q(1, '객관식', 20, '1'),
+  q(2, '객관식', 20, '2'),
+  q(3, '객관식', 20, '3'),
+  q(4, '객관식', 20, '4'),
+  q(5, '객관식', 20, '1'),
+];
+
 export const DUMMY_EXAMS: Exam[] = [
   {
     id: 'exam-001',
@@ -362,6 +372,52 @@ export const DUMMY_EXAMS: Exam[] = [
     publishedBy: '한태준',
     publishedAt: '2024-04-25T16:00:00',
   },
+  // exam-006~008: 고3 수능실전 주간 루틴 (공개완료) — Senior Weekly Mock Routine Foundation v1
+  {
+    id: 'exam-006',
+    title: '고3 수능실전 1주차',
+    categoryId: 'mock-suneung',
+    classId: undefined,
+    subject: '수학',
+    examDate: '2024-03-02',
+    totalScore: weeklyMockQuestions.reduce((s, q) => s + q.points, 0),
+    questions: weeklyMockQuestions,
+    status: '공개완료',
+    createdBy: '한태준',
+    createdAt: '2024-02-25T09:00:00',
+    publishedBy: '한태준',
+    publishedAt: '2024-03-04T15:00:00',
+  },
+  {
+    id: 'exam-007',
+    title: '고3 수능실전 2주차',
+    categoryId: 'mock-suneung',
+    classId: undefined,
+    subject: '수학',
+    examDate: '2024-03-09',
+    totalScore: weeklyMockQuestions.reduce((s, q) => s + q.points, 0),
+    questions: weeklyMockQuestions,
+    status: '공개완료',
+    createdBy: '한태준',
+    createdAt: '2024-03-04T09:00:00',
+    publishedBy: '한태준',
+    publishedAt: '2024-03-11T15:00:00',
+  },
+  {
+    id: 'exam-008',
+    title: '고3 수능실전 3주차',
+    categoryId: 'mock-suneung',
+    classId: undefined,
+    subject: '수학',
+    examDate: '2024-03-16',
+    totalScore: weeklyMockQuestions.reduce((s, q) => s + q.points, 0),
+    questions: weeklyMockQuestions,
+    status: '공개완료',
+    createdBy: '한태준',
+    createdAt: '2024-03-11T09:00:00',
+    publishedBy: '한태준',
+    publishedAt: '2024-03-18T15:00:00',
+  },
 ];
 
 // 더미 응시자/채점 데이터 — Exam.classId가 있으면 그 반 수강생, 없으면 학원 전체 재원생 일부를 대상으로 한다.
@@ -426,6 +482,22 @@ const RAW_SUBMISSIONS: ExamSubmission[] = [
   { id: 'sub-012', examId: 'exam-005', studentId: 'stu-001', status: '채점완료', answers: makeGradedAnswers(exam5Questions, 'mid'),  totalScore: undefined, corrections: [] },
   { id: 'sub-013', examId: 'exam-005', studentId: 'stu-002', status: '채점완료', answers: makeGradedAnswers(exam5Questions, 'high'), totalScore: undefined, corrections: [] },
   { id: 'sub-014', examId: 'exam-005', studentId: 'stu-003', status: '채점완료', answers: makeGradedAnswers(exam5Questions, 'low'),  totalScore: undefined, corrections: [] },
+
+  // exam-006 (고3 수능실전 1주차, 공개완료) — Senior Weekly Mock Routine Foundation v1
+  // stu-001: 저점수 → 이후 상승 추이 시연
+  { id: 'sub-015', examId: 'exam-006', studentId: 'stu-001', status: '채점완료', answers: makeGradedAnswers(weeklyMockQuestions, 'low'),  totalScore: undefined, corrections: [] },
+  { id: 'sub-016', examId: 'exam-006', studentId: 'stu-002', status: '채점완료', answers: makeGradedAnswers(weeklyMockQuestions, 'high'), totalScore: undefined, corrections: [] },
+  { id: 'sub-017', examId: 'exam-006', studentId: 'stu-003', status: '채점완료', answers: makeGradedAnswers(weeklyMockQuestions, 'mid'),  totalScore: undefined, corrections: [] },
+
+  // exam-007 (고3 수능실전 2주차, 공개완료)
+  { id: 'sub-018', examId: 'exam-007', studentId: 'stu-001', status: '채점완료', answers: makeGradedAnswers(weeklyMockQuestions, 'mid'),  totalScore: undefined, corrections: [] },
+  { id: 'sub-019', examId: 'exam-007', studentId: 'stu-002', status: '채점완료', answers: makeGradedAnswers(weeklyMockQuestions, 'mid'),  totalScore: undefined, corrections: [] },
+  { id: 'sub-020', examId: 'exam-007', studentId: 'stu-003', status: '채점완료', answers: makeGradedAnswers(weeklyMockQuestions, 'mid'),  totalScore: undefined, corrections: [] },
+
+  // exam-008 (고3 수능실전 3주차, 공개완료)
+  { id: 'sub-021', examId: 'exam-008', studentId: 'stu-001', status: '채점완료', answers: makeGradedAnswers(weeklyMockQuestions, 'high'), totalScore: undefined, corrections: [] },
+  { id: 'sub-022', examId: 'exam-008', studentId: 'stu-002', status: '채점완료', answers: makeGradedAnswers(weeklyMockQuestions, 'low'),  totalScore: undefined, corrections: [] },
+  { id: 'sub-023', examId: 'exam-008', studentId: 'stu-003', status: '채점완료', answers: makeGradedAnswers(weeklyMockQuestions, 'high'), totalScore: undefined, corrections: [] },
 ];
 
 export const DUMMY_SUBMISSIONS: ExamSubmission[] = RAW_SUBMISSIONS.map((sub) => recalcTotalScore(sub));
