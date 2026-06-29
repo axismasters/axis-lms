@@ -1,17 +1,18 @@
-// AXIS LMS v1.2 - TeacherAttendance (QA Fix)
+// AXIS LMS v1.2 - TeacherAttendance (Persistence v1)
 // 강사 전용 출결 체크 화면.
 // - 담당 반 / 담당 학생만 표시 (assignedClassIds / assignedStudentIds 기준)
 // - 전체 자동 출석 기본값, 예외만 수정
-// - 결석은 사유 필수 — 미입력 시 저장 차단 + 안내 문구 표시
-// - 지각/조퇴/공결 사유는 선택
-// - local state 저장 (mock)
+// - 결석은 사유 필수 — 미입력 시 저장 차단 + 안내 문구
+// - 저장 시 AttendanceContext.saveTeacherAttendance 호출 (Context persistence)
+// - 날짜/반 변경 시 기존 Context 세션 데이터로 초기화 (편집 연속성 지원)
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { CalendarCheck } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useStudents } from '@/contexts/StudentContext';
+import { useAttendance } from '@/contexts/AttendanceContext';
 import type { AttendanceStatus } from '@/lib/attendanceData';
 import { getLocalDateStr } from '@/utils/dateUtils';
 
@@ -28,15 +29,16 @@ const STATUS_STYLE: Record<AttendanceStatus, { bg: string; text: string }> = {
   '공결':    { bg: 'oklch(0.55 0.015 250)', text: 'white' },
 };
 
-/** 사유 입력이 필요한 상태 */
+/** 사유 입력이 표시되는 상태 */
 const REQUIRES_REASON: AttendanceStatus[] = ['지각', '조퇴', '결석', '공결'];
-/** 사유가 필수인 상태 (결석만) */
+/** 사유 입력이 필수인 상태 (결석만) */
 const REASON_MANDATORY: AttendanceStatus[] = ['결석'];
 
 export default function TeacherAttendance() {
   const { currentUser } = useAuth();
   const { classes } = useClasses();
   const { students } = useStudents();
+  const { sessions, saveTeacherAttendance } = useAttendance();
 
   const assignedClassIds = currentUser.assignedClassIds ?? [];
   const assignedStudentIds = new Set(currentUser.assignedStudentIds ?? []);
@@ -50,6 +52,32 @@ export default function TeacherAttendance() {
   const [records, setRecords] = useState<Record<string, LocalRecord>>({});
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // sessions ref: 날짜/반 변경 시 최신 Context 세션을 읽기 위해 사용 (불필요한 effect 재실행 방지)
+  const sessionsRef = useRef(sessions);
+  sessionsRef.current = sessions;
+
+  // 날짜 또는 반 변경 시: Context에 기존 세션이 있으면 그 데이터로 초기화 (편집 연속성)
+  useEffect(() => {
+    const existingSession = sessionsRef.current.find(
+      s => s.classId === selectedClassId && s.date === selectedDate
+    );
+    if (existingSession) {
+      const loaded: Record<string, LocalRecord> = {};
+      existingSession.records.forEach(r => {
+        if (assignedStudentIds.has(r.studentId)) {
+          loaded[r.studentId] = { status: r.status, reason: r.reason ?? '' };
+        }
+      });
+      setRecords(loaded);
+      setSaved(true); // 이미 저장된 데이터
+    } else {
+      setRecords({});
+      setSaved(false);
+    }
+    setSaveError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClassId, selectedDate]);
 
   // 선택한 반의 담당 학생만 (수강중 + 재원)
   const classStudents = students.filter(
@@ -71,18 +99,20 @@ export default function TeacherAttendance() {
 
   function handleClassChange(classId: string) {
     setSelectedClassId(classId);
-    setRecords({});
-    setSaved(false);
-    setSaveError(null);
+    // records/saved/error는 useEffect가 처리
+  }
+
+  function handleDateChange(date: string) {
+    setSelectedDate(date);
+    // records/saved/error는 useEffect가 처리
   }
 
   function handleSave() {
-    // 결석 학생 중 사유 미입력자 검사
+    // 1차: 결석 사유 필수 검사 (UI 레벨)
     const missingReason = classStudents.filter((s) => {
       const rec = getRecord(s.id);
       return REASON_MANDATORY.includes(rec.status) && !rec.reason.trim();
     });
-
     if (missingReason.length > 0) {
       setSaveError(
         `결석 사유를 입력해주세요: ${missingReason.map((s) => s.name).join(', ')}`
@@ -90,8 +120,27 @@ export default function TeacherAttendance() {
       return;
     }
 
-    setSaveError(null);
-    setSaved(true);
+    // 출결 기록 맵 구성
+    const recordMap: Record<string, { status: AttendanceStatus; reason: string }> = {};
+    classStudents.forEach((s) => {
+      recordMap[s.id] = getRecord(s.id);
+    });
+
+    // Context mutation 호출 (Context에서 2차 방어)
+    const result = saveTeacherAttendance(
+      selectedClassId,
+      selectedDate,
+      classStudents.map((s) => s.id),
+      recordMap,
+      currentUser.name,
+    );
+
+    if (result.ok) {
+      setSaveError(null);
+      setSaved(true);
+    } else {
+      setSaveError(result.reason ?? '저장에 실패했습니다.');
+    }
   }
 
   return (
@@ -112,7 +161,7 @@ export default function TeacherAttendance() {
                 <input
                   type="date"
                   value={selectedDate}
-                  onChange={(e) => { setSelectedDate(e.target.value); setSaved(false); setSaveError(null); }}
+                  onChange={(e) => handleDateChange(e.target.value)}
                   className="w-full text-sm rounded-md px-3 py-2 border"
                   style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.2 0.02 250)' }}
                 />
@@ -165,7 +214,7 @@ export default function TeacherAttendance() {
                           : {}
                       }
                     >
-                      {/* 학생명 + 현재 상태 */}
+                      {/* 학생명 + 현재 상태 배지 */}
                       <div className="flex items-center justify-between mb-2.5">
                         <div className="flex items-center gap-2">
                           <div
@@ -186,7 +235,7 @@ export default function TeacherAttendance() {
                         </span>
                       </div>
 
-                      {/* 상태 버튼 */}
+                      {/* 상태 선택 버튼 */}
                       <div className="flex flex-wrap gap-1.5 mb-2">
                         {STATUS_OPTIONS.map((s) => {
                           const isSelected = rec.status === s;
@@ -217,10 +266,9 @@ export default function TeacherAttendance() {
                             placeholder={isMandatory ? '결석 사유 입력 (필수)' : '사유 입력 (선택)'}
                             className="w-full text-xs rounded-md px-3 py-1.5 border"
                             style={{
-                              borderColor:
-                                missingMandatory
-                                  ? 'oklch(0.577 0.245 27.325)'
-                                  : 'oklch(0.9 0.008 250)',
+                              borderColor: missingMandatory
+                                ? 'oklch(0.577 0.245 27.325)'
+                                : 'oklch(0.9 0.008 250)',
                               color: 'oklch(0.3 0.02 250)',
                             }}
                           />
@@ -241,7 +289,11 @@ export default function TeacherAttendance() {
             {saveError && (
               <div
                 className="axis-card px-4 py-3 text-xs font-medium"
-                style={{ borderLeft: '3px solid oklch(0.577 0.245 27.325)', color: 'oklch(0.5 0.2 27)', background: 'oklch(0.98 0.02 27)' }}
+                style={{
+                  borderLeft: '3px solid oklch(0.577 0.245 27.325)',
+                  color: 'oklch(0.5 0.2 27)',
+                  background: 'oklch(0.98 0.02 27)',
+                }}
               >
                 {saveError}
               </div>

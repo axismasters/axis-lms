@@ -34,6 +34,17 @@ interface AttendanceContextType {
   // 알림 발송 시뮬레이션
   sendNotification: (sessionId: string, studentId: string) => void;
 
+  // ── 강사 포털 전용 ──────────────────────────────────────────────
+  // 담당 반/담당 학생 범위는 호출 측(TeacherAttendance)이 1차 검증하고,
+  // Context는 2차로 잠금 여부·결석사유 누락을 방어한다.
+  saveTeacherAttendance: (
+    classId: string,
+    date: string,
+    studentIds: string[],
+    recordMap: Record<string, { status: AttendanceStatus; reason: string }>,
+    by: string,
+  ) => { ok: boolean; reason?: string };
+
   // 통계 계산
   getStats: (classId: string, from?: string, to?: string) => {
     total: number;
@@ -213,6 +224,140 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  // ── 강사 포털 전용: 출결 일괄 저장 ────────────────────────────────
+  // 담당 반/학생 범위 검증은 TeacherAttendance.tsx에서 1차 처리.
+  // Context는 잠금 여부·결석사유 누락을 2차 방어한다.
+  const saveTeacherAttendance = (
+    classId: string,
+    date: string,
+    studentIds: string[],
+    recordMap: Record<string, { status: AttendanceStatus; reason: string }>,
+    by: string,
+  ): { ok: boolean; reason?: string } => {
+    // 2차 방어: 결석 사유 누락
+    const missingReason = studentIds.filter(id => {
+      const r = recordMap[id];
+      return r?.status === '결석' && !r.reason.trim();
+    });
+    if (missingReason.length > 0) {
+      return { ok: false, reason: '결석 사유가 없는 학생이 있습니다.' };
+    }
+
+    // 잠금 세션 확인 (현재 렌더 closure의 sessions 기준)
+    const existingSession = getSession(classId, date);
+    if (existingSession?.isLocked) {
+      return { ok: false, reason: '잠금된 출결 세션은 수정할 수 없습니다.' };
+    }
+
+    const now = new Date().toISOString();
+
+    setSessions(prev => {
+      const existing = prev.find(s => s.classId === classId && s.date === date);
+
+      if (existing) {
+        // 기존 세션: 레코드 업데이트 + 미포함 학생 추가
+        const existingStudentIds = new Set(existing.records.map(r => r.studentId));
+        const updatedRecords = existing.records.map(rec => {
+          const override = recordMap[rec.studentId];
+          if (!override) return rec;
+          const isAttend = override.status === '출석';
+          return {
+            ...rec,
+            status: override.status,
+            reason: isAttend ? undefined : (override.reason.trim() || undefined),
+            updatedAt: now,
+            updatedBy: by,
+          };
+        });
+        const addedRecords: AttendanceRecord[] = studentIds
+          .filter(id => !existingStudentIds.has(id))
+          .map((stuId, i) => {
+            const override = recordMap[stuId];
+            const status: AttendanceStatus = override?.status ?? '출석';
+            const isAttend = status === '출석';
+            return {
+              id: `att-t-${classId}-${date}-add-${i}`,
+              classId,
+              studentId: stuId,
+              date,
+              status,
+              reason: isAttend ? undefined : (override?.reason.trim() || undefined),
+              notified: false,
+              createdBy: by,
+              createdAt: now,
+            };
+          });
+        return prev.map(s =>
+          s.id === existing.id
+            ? { ...existing, records: [...updatedRecords, ...addedRecords] }
+            : s
+        );
+      }
+
+      // 새 세션 생성 (전체 자동 출석 후 예외만 override)
+      const newRecords: AttendanceRecord[] = studentIds.map((stuId, i) => {
+        const override = recordMap[stuId];
+        const status: AttendanceStatus = override?.status ?? '출석';
+        const isAttend = status === '출석';
+        return {
+          id: `att-t-${classId}-${date}-${i}`,
+          classId,
+          studentId: stuId,
+          date,
+          status,
+          reason: isAttend ? undefined : (override?.reason.trim() || undefined),
+          notified: false,
+          createdBy: by,
+          createdAt: now,
+        };
+      });
+      return [
+        ...prev,
+        {
+          id: `sess-t-${classId}-${date}`,
+          classId,
+          date,
+          isLocked: false,
+          records: newRecords,
+        },
+      ];
+    });
+
+    // 결석/조퇴 알림 발송 (기존 updateRecord 패턴 동일)
+    const sessionId = existingSession?.id ?? `sess-t-${classId}-${date}`;
+    studentIds.forEach(stuId => {
+      const r = recordMap[stuId];
+      if (!r) return;
+      const notifType =
+        r.status === '결석' ? ('ATTENDANCE_ABSENCE' as const)
+        : r.status === '조퇴' ? ('ATTENDANCE_EARLY_LEAVE' as const)
+        : null;
+      if (!notifType || !shouldAutoSend(notifType)) return;
+      const student = students.find(s => s.id === stuId);
+      const klass = classes.find(c => c.id === classId);
+      const guardian = student?.guardians?.[0];
+      createNotificationFromEvent(notifType, {
+        studentId: stuId,
+        studentName: student?.name,
+        guardianName: guardian?.name,
+        guardianPhone: guardian?.phone,
+        className: klass?.name,
+        relatedEntityType: 'ATTENDANCE',
+        relatedEntityId: sessionId,
+        requestedBy: by,
+        vars: {
+          날짜: date,
+          출결상태: r.status,
+          반명: klass?.name,
+          학생명: student?.name,
+          보호자명: guardian?.name,
+        },
+      });
+    });
+
+    return { ok: true };
+  };
+
   // 통계
   const getStats = (classId: string, from?: string, to?: string) => {
     const classSessions = getSessionsByClass(classId).filter(s => {
@@ -249,6 +394,7 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
       lockSession,
       unlockSession,
       sendNotification,
+      saveTeacherAttendance,
       getStats,
     }}>
       {children}

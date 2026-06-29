@@ -100,11 +100,18 @@ export interface ExamSubmission {
   answers: AnswerRecord[];
   totalScore?: number;             // 모든 문항 채점 완료 시 합산 점수
   corrections: ScoreCorrectionLog[]; // 정정 이력(비어있으면 정정된 적 없음)
+  teacherNote?: string;            // 강사 채점 코멘트 (강사 포털 채점 시 입력)
 }
 
-// 응시자(submission)가 모든 문항에서 채점이 끝났는지 판별 — 공개 가능 여부 판단에 사용
+// 응시자(submission)가 채점 완료 상태인지 판별 — 공개 가능 여부 판단에 사용
+// 문항별 채점 경로: answers.every(a.score !== undefined)
+// 강사 총점 직접 채점 경로: status='채점완료' && totalScore !== undefined
+// 결석: 항상 처리 완료 취급
 export function isSubmissionGraded(sub: ExamSubmission): boolean {
   if (sub.status === '결석') return true; // 결석은 채점 대상 자체가 없으므로 "처리 완료" 취급
+  // 강사 총점 직접 채점(gradeSubmissionByTeacher): 문항별 breakdown 없이 totalScore가 확정되면 완료
+  if (sub.status === '채점완료' && sub.totalScore !== undefined) return true;
+  // 기존 문항별 채점 경로
   return sub.answers.every((a) => a.score !== undefined);
 }
 
@@ -184,6 +191,16 @@ export function applyAutoGrading(sub: ExamSubmission, questions: ExamQuestionDef
 // 남는 문제가 있었다 — 결석 처리 시 점수 잔존 버그).
 export function recalcTotalScore(sub: ExamSubmission): ExamSubmission {
   if (sub.status === '결석') return { ...sub, totalScore: undefined };
+
+  // 강사 총점 직접 채점 경로 보호:
+  // 문항별 채점이 완료되지 않았지만 status='채점완료'이고 totalScore가 직접 지정된 경우,
+  // answers 합산으로 totalScore를 덮어쓰지 않는다.
+  // 문항별 채점이 모두 완료되면 아래 regular path에서 answers 합산으로 자연히 교체된다.
+  const allAnswersGraded = sub.answers.length > 0 && sub.answers.every(a => a.score !== undefined);
+  if (!allAnswersGraded && sub.status === '채점완료' && sub.totalScore !== undefined) {
+    return sub; // 강사 직접 채점 totalScore 보존
+  }
+
   const graded = isSubmissionGraded(sub);
   if (!graded) return { ...sub, totalScore: undefined };
   const total = sub.answers.reduce((sum, a) => sum + (a.score ?? 0), 0);

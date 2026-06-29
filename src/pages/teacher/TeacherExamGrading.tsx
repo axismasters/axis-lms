@@ -1,10 +1,10 @@
-// AXIS LMS v1.2 - TeacherExamGrading (QA Fix)
+// AXIS LMS v1.2 - TeacherExamGrading (Persistence v1)
 // 강사 전용 채점 상세 화면.
 // - 담당 학생 submissions만 표시 (assignedStudentIds 기준)
-// - Scope 강화: classId 있는 시험 → assignedClassIds 포함 여부 확인
-//              classId 없는 학원 전체 시험 → 담당 학생 submission 1개 이상일 때만 허용
-// - mock/local state 저장 후 "채점 대기" → "채점 완료" 섹션으로 즉시 이동 (UX 반영)
+// - AssessmentContext.gradeSubmissionByTeacher 호출 → Context state 업데이트 → 화면 자동 반영
+// - local state는 입력 폼값(score/comment)만 관리, 저장 상태는 Context submissions에서 파생
 // - exam.status 내부값 노출 금지
+// - classId 없는 학원 전체 시험: 담당 학생 submission 1개 이상일 때만 허용
 
 import { useState } from 'react';
 import { useParams, Link } from 'wouter';
@@ -14,13 +14,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useStudents } from '@/contexts/StudentContext';
 
-interface LocalGrade {
-  score: string;
-  comment: string;
-  saved: boolean;
-}
+type FormInput = { score: string; comment: string };
 
-/** 접근 불가/시험 없음 화면 */
 function NotFoundScreen() {
   return (
     <TeacherLayout title="채점">
@@ -36,7 +31,7 @@ function NotFoundScreen() {
             시험을 찾을 수 없습니다.
           </div>
           <div className="text-xs mt-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
-            담당 범위에 없거나 응시 데이터가 없습니다.
+            담당 범위에 없거나 담당 학생 응시 데이터가 없습니다.
           </div>
         </div>
       </div>
@@ -47,32 +42,34 @@ function NotFoundScreen() {
 export default function TeacherExamGrading() {
   const { examId } = useParams<{ examId: string }>();
   const { currentUser } = useAuth();
-  const { exams, submissions } = useAssessment();
+  const { exams, submissions, gradeSubmissionByTeacher } = useAssessment();
   const { students } = useStudents();
 
   const assignedClassIds = currentUser.assignedClassIds ?? [];
   const assignedStudentIds = currentUser.assignedStudentIds ?? [];
   const myStudentIds = new Set(assignedStudentIds);
 
-  const [grades, setGrades] = useState<Record<string, LocalGrade>>({});
+  // 폼 입력값 (ephemeral): 저장 완료 시 해당 항목 제거
+  const [inputs, setInputs] = useState<Record<string, FormInput>>({});
+  // 저장 오류 (per-student)
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // 1. Raw exam (ID만 매칭, 범위 미확인)
+  // 1. Raw exam (범위 미확인)
   const rawExam = examId ? exams.find((e) => e.id === examId) : undefined;
 
-  // 2. 담당 학생의 이 시험 submissions (범위 확인용 + 채점용)
+  // 2. 담당 학생 submissions (범위 확인 + 채점 데이터)
   const mySubmissions = submissions.filter(
     (s) => s.examId === examId && myStudentIds.has(s.studentId)
   );
 
   // 3. Scope 강화:
-  //    - classId 있는 시험: assignedClassIds에 포함될 때만 허용
-  //    - classId 없는 학원 전체 시험: 담당 학생 submission 1개 이상일 때만 허용
+  //    classId 있는 시험 → assignedClassIds 포함 여부
+  //    classId 없는 학원 전체 시험 → 담당 학생 submission ≥1
   const exam = (() => {
     if (!rawExam) return undefined;
     if (rawExam.classId) {
       return assignedClassIds.includes(rawExam.classId) ? rawExam : undefined;
     }
-    // 학원 전체 시험: 담당 학생 submission이 있어야 함
     return mySubmissions.length > 0 ? rawExam : undefined;
   })();
 
@@ -80,38 +77,48 @@ export default function TeacherExamGrading() {
 
   const assignedStudents = students.filter((s) => assignedStudentIds.includes(s.id));
 
-  // 4. 실제 미채점 (채점중) — 로컬 저장된 것은 제외
-  const ungradedSubs = mySubmissions.filter(
-    (s) => s.status === '채점중' && !grades[s.studentId]?.saved
-  );
+  // Context에서 파생 — 저장 즉시 Context 업데이트 → 자동 반영
+  const ungradedSubs = mySubmissions.filter((s) => s.status === '채점중');
+  const gradedSubs = mySubmissions.filter((s) => s.status === '채점완료');
 
-  // 5. 로컬에서 방금 채점 저장한 제출 (원래 채점중이었던 것)
-  const locallyGradedSubs = mySubmissions.filter(
-    (s) => s.status === '채점중' && grades[s.studentId]?.saved
-  );
-
-  // 6. 실제 채점완료
-  const realGradedSubs = mySubmissions.filter((s) => s.status === '채점완료');
-
-  const pendingCount = ungradedSubs.length;
-  const completedCount = realGradedSubs.length + locallyGradedSubs.length;
-
-  function getGrade(studentId: string): LocalGrade {
-    return grades[studentId] ?? { score: '', comment: '', saved: false };
+  function getInput(studentId: string): FormInput {
+    return inputs[studentId] ?? { score: '', comment: '' };
   }
 
-  function updateGrade(studentId: string, updates: Partial<LocalGrade>) {
-    setGrades((prev) => ({
-      ...prev,
-      [studentId]: { ...getGrade(studentId), ...updates, saved: false },
-    }));
+  function updateInput(studentId: string, updates: Partial<FormInput>) {
+    setInputs((prev) => ({ ...prev, [studentId]: { ...getInput(studentId), ...updates } }));
+    // 입력 변경 시 해당 학생 오류 초기화
+    if (errors[studentId]) {
+      setErrors((prev) => { const n = { ...prev }; delete n[studentId]; return n; });
+    }
   }
 
-  function saveGrade(studentId: string) {
-    setGrades((prev) => ({
-      ...prev,
-      [studentId]: { ...getGrade(studentId), saved: true },
-    }));
+  function handleGrade(studentId: string) {
+    const inp = getInput(studentId);
+    const scoreNum = parseFloat(inp.score);
+    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > exam.totalScore) {
+      setErrors((prev) => ({
+        ...prev,
+        [studentId]: `0~${exam.totalScore}점 범위의 숫자를 입력해주세요.`,
+      }));
+      return;
+    }
+
+    const result = gradeSubmissionByTeacher(
+      exam.id,
+      studentId,
+      scoreNum,
+      currentUser.name,
+      inp.comment.trim() || undefined,
+    );
+
+    if (result.ok) {
+      // 입력 폼 초기화 — Context 업데이트로 UI가 자동 반영됨
+      setInputs((prev) => { const n = { ...prev }; delete n[studentId]; return n; });
+      setErrors((prev) => { const n = { ...prev }; delete n[studentId]; return n; });
+    } else {
+      setErrors((prev) => ({ ...prev, [studentId]: result.reason ?? '저장에 실패했습니다.' }));
+    }
   }
 
   return (
@@ -126,7 +133,7 @@ export default function TeacherExamGrading() {
           </div>
         </Link>
 
-        {/* 시험 정보 (담당 학생 기준 counts) */}
+        {/* 시험 정보 헤더 (담당 학생 기준 counts) */}
         <div className="axis-card p-4">
           <div className="font-semibold text-base" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</div>
           <div className="text-xs mt-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
@@ -134,17 +141,20 @@ export default function TeacherExamGrading() {
           </div>
           <div className="flex gap-4 mt-2 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
             <span className="flex items-center gap-1">
-              <AlertCircle size={11} style={{ color: pendingCount > 0 ? 'oklch(0.577 0.245 27.325)' : 'oklch(0.7 0.01 250)' }} />
-              미채점 {pendingCount}명
+              <AlertCircle
+                size={11}
+                style={{ color: ungradedSubs.length > 0 ? 'oklch(0.577 0.245 27.325)' : 'oklch(0.7 0.01 250)' }}
+              />
+              미채점 {ungradedSubs.length}명
             </span>
             <span className="flex items-center gap-1">
               <CheckCircle2 size={11} style={{ color: 'oklch(0.5 0.15 160)' }} />
-              채점완료 {completedCount}명
+              채점완료 {gradedSubs.length}명
             </span>
           </div>
         </div>
 
-        {/* 담당 학생 응시 데이터 없음 */}
+        {/* 응시 데이터 없음 */}
         {mySubmissions.length === 0 && (
           <div className="axis-card p-8 text-center">
             <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
@@ -153,7 +163,7 @@ export default function TeacherExamGrading() {
           </div>
         )}
 
-        {/* ── 채점 대기: 미채점이고 로컬 미저장인 학생 ── */}
+        {/* ── 채점 대기 ── */}
         {ungradedSubs.length > 0 && (
           <section>
             <div className="text-xs font-semibold mb-2 px-1" style={{ color: 'oklch(0.45 0.015 250)' }}>
@@ -163,9 +173,11 @@ export default function TeacherExamGrading() {
               {ungradedSubs.map((sub) => {
                 const student = assignedStudents.find((s) => s.id === sub.studentId);
                 if (!student) return null;
-                const g = getGrade(sub.studentId);
-                const scoreNum = parseFloat(g.score);
-                const isValidScore = !isNaN(scoreNum) && scoreNum >= 0 && scoreNum <= exam.totalScore;
+                const inp = getInput(sub.studentId);
+                const scoreNum = parseFloat(inp.score);
+                const isValidScore =
+                  !isNaN(scoreNum) && scoreNum >= 0 && scoreNum <= exam.totalScore;
+                const errMsg = errors[sub.studentId];
                 return (
                   <div key={sub.studentId} className="axis-card p-4">
                     <div className="flex items-center gap-2 mb-3">
@@ -188,26 +200,36 @@ export default function TeacherExamGrading() {
                           type="number"
                           min={0}
                           max={exam.totalScore}
-                          value={g.score}
-                          onChange={(e) => updateGrade(sub.studentId, { score: e.target.value })}
+                          value={inp.score}
+                          onChange={(e) => updateInput(sub.studentId, { score: e.target.value })}
                           placeholder="점수 입력"
                           className="w-full text-sm rounded-md px-3 py-2 border"
-                          style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.2 0.02 250)' }}
+                          style={{
+                            borderColor: errMsg ? 'oklch(0.577 0.245 27.325)' : 'oklch(0.9 0.008 250)',
+                            color: 'oklch(0.2 0.02 250)',
+                          }}
                         />
+                        {errMsg && (
+                          <div className="mt-0.5 text-xs" style={{ color: 'oklch(0.55 0.2 27)' }}>
+                            {errMsg}
+                          </div>
+                        )}
                       </div>
                       <div>
-                        <label className="text-xs block mb-1" style={{ color: 'oklch(0.5 0.015 250)' }}>코멘트 (선택)</label>
+                        <label className="text-xs block mb-1" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                          코멘트 (선택)
+                        </label>
                         <input
                           type="text"
-                          value={g.comment}
-                          onChange={(e) => updateGrade(sub.studentId, { comment: e.target.value })}
+                          value={inp.comment}
+                          onChange={(e) => updateInput(sub.studentId, { comment: e.target.value })}
                           placeholder="간단한 피드백"
                           className="w-full text-sm rounded-md px-3 py-2 border"
                           style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.2 0.02 250)' }}
                         />
                       </div>
                       <button
-                        onClick={() => saveGrade(sub.studentId)}
+                        onClick={() => handleGrade(sub.studentId)}
                         disabled={!isValidScore}
                         className="w-full py-2 rounded-lg text-sm font-medium text-white"
                         style={{
@@ -225,71 +247,42 @@ export default function TeacherExamGrading() {
           </section>
         )}
 
-        {/* ── 채점 완료: local 저장됨 + 실제 채점완료 ── */}
-        {(locallyGradedSubs.length > 0 || realGradedSubs.length > 0) && (
+        {/* ── 채점 완료 (Context state 기반) ── */}
+        {gradedSubs.length > 0 && (
           <section>
             <div className="text-xs font-semibold mb-2 px-1" style={{ color: 'oklch(0.45 0.015 250)' }}>
-              채점 완료 ({completedCount}명)
+              채점 완료 ({gradedSubs.length}명)
             </div>
             <div className="space-y-2">
-              {/* 로컬에서 방금 저장한 항목 (mock 채점) */}
-              {locallyGradedSubs.map((sub) => {
+              {gradedSubs.map((sub) => {
                 const student = assignedStudents.find((s) => s.id === sub.studentId);
                 if (!student) return null;
-                const g = grades[sub.studentId];
                 return (
-                  <div key={sub.studentId} className="axis-card p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-white text-xs"
-                        style={{ background: 'oklch(0.45 0.15 160)' }}
-                      >
-                        {student.name.charAt(0)}
-                      </div>
-                      <div>
+                  <div key={sub.studentId} className="axis-card p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-white text-xs"
+                          style={{ background: 'oklch(0.45 0.15 160)' }}
+                        >
+                          {student.name.charAt(0)}
+                        </div>
                         <span className="text-sm font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>
                           {student.name}
                         </span>
-                        <span
-                          className="ml-2 text-xs px-1.5 py-0.5 rounded-full"
-                          style={{ background: 'oklch(0.96 0.04 160)', color: 'oklch(0.35 0.12 160)' }}
-                        >
-                          저장됨
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 size={14} style={{ color: 'oklch(0.45 0.15 160)' }} />
+                        <span className="text-sm font-bold tabular-nums" style={{ color: 'oklch(0.3 0.02 250)' }}>
+                          {sub.totalScore ?? '?'}/{exam.totalScore}
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle2 size={14} style={{ color: 'oklch(0.45 0.15 160)' }} />
-                      <span className="text-sm font-bold tabular-nums" style={{ color: 'oklch(0.3 0.02 250)' }}>
-                        {g?.score}/{exam.totalScore}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-              {/* 실제 채점완료 항목 */}
-              {realGradedSubs.map((sub) => {
-                const student = assignedStudents.find((s) => s.id === sub.studentId);
-                if (!student) return null;
-                return (
-                  <div key={sub.studentId} className="axis-card p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-white text-xs"
-                        style={{ background: 'oklch(0.45 0.15 160)' }}
-                      >
-                        {student.name.charAt(0)}
+                    {sub.teacherNote && (
+                      <div className="mt-1.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                        💬 {sub.teacherNote}
                       </div>
-                      <span className="text-sm font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>
-                        {student.name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle2 size={14} style={{ color: 'oklch(0.45 0.15 160)' }} />
-                      <span className="text-sm font-bold tabular-nums" style={{ color: 'oklch(0.3 0.02 250)' }}>
-                        {sub.totalScore ?? '?'}/{exam.totalScore}
-                      </span>
-                    </div>
+                    )}
                   </div>
                 );
               })}

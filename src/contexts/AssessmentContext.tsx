@@ -61,6 +61,18 @@ interface AssessmentContextType {
 
   // 정정 — 공개완료 후 점수를 바꿀 때 사용. 직접 덮어쓰지 않고 이력을 남긴다.
   correctScore: (examId: string, studentId: string, questionId: string | undefined, newScore: number, reason: string, correctedBy: string) => void;
+
+  // ── 강사 포털 전용 ──────────────────────────────────────────────
+  // 총점 직접 입력 방식 채점 — 문항별 breakdown 없이 totalScore만 지정한다.
+  // 담당 학생 범위 검증은 TeacherExamGrading.tsx에서 1차 처리.
+  // Context는 점수 범위·결석 여부를 2차 방어한다.
+  gradeSubmissionByTeacher: (
+    examId: string,
+    studentId: string,
+    totalScore: number,
+    gradedBy: string,
+    note?: string,
+  ) => { ok: boolean; reason?: string };
 }
 
 const AssessmentContext = createContext<AssessmentContextType | null>(null);
@@ -262,6 +274,44 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
     }));
   }, [exams]);
 
+  // ── 강사 포털 전용: 총점 직접 입력 채점 ────────────────────────────
+  // 문항별 breakdown 없이 totalScore를 직접 지정해 채점완료 상태로 전환한다.
+  // 관리자 채점(gradeAnswer)과 별개 경로이므로 기존 로직에 영향 없음.
+  const gradeSubmissionByTeacher = useCallback((
+    examId: string,
+    studentId: string,
+    totalScore: number,
+    gradedBy: string,
+    note?: string,
+  ): { ok: boolean; reason?: string } => {
+    const exam = exams.find(e => e.id === examId);
+    if (!exam) return { ok: false, reason: '시험을 찾을 수 없습니다.' };
+
+    const sub = submissions.find(s => s.examId === examId && s.studentId === studentId);
+    if (!sub) return { ok: false, reason: '응시 기록을 찾을 수 없습니다.' };
+    if (sub.status === '결석') return { ok: false, reason: '결석 처리된 학생은 채점할 수 없습니다.' };
+
+    // 점수 범위 검증 — silent clamp 없이 명시적 오류 반환
+    if (totalScore < 0 || totalScore > exam.totalScore) {
+      return {
+        ok: false,
+        reason: `점수는 0 이상 ${exam.totalScore}점 이하여야 합니다. (입력: ${totalScore})`,
+      };
+    }
+
+    setSubmissions(prev => prev.map(s => {
+      if (s.examId !== examId || s.studentId !== studentId) return s;
+      return {
+        ...s,
+        totalScore,
+        status: '채점완료' as SubmissionStatus,
+        teacherNote: note?.trim() || s.teacherNote,
+      };
+    }));
+
+    return { ok: true };
+  }, [exams, submissions]);
+
   return (
     <AssessmentContext.Provider value={{
       exams, submissions,
@@ -271,6 +321,7 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
       autoGradeSubmission, gradeAnswer, setStudentAnswer,
       canPublish, publishExam,
       correctScore,
+      gradeSubmissionByTeacher,
     }}>
       {children}
     </AssessmentContext.Provider>
