@@ -469,3 +469,82 @@ export function buildUniversityAnalysisPayloadPreview(
     snapshotAt:       input.snapshotAt,
   };
 }
+
+// ────────────────────────────────────────────────────────────
+// Handoff Gate Bridge v1 — 엔진 연동 준비 가능 여부 판단
+// ────────────────────────────────────────────────────────────
+
+/**
+ * 엔진 연동 준비 가능 여부 상태.
+ *
+ * - 'ready'      : 입력 데이터가 충분해 연동 준비 조건을 충족한 상태
+ * - 'needs-data' : 일부 데이터가 있으나 보완이 필요한 상태
+ * - 'blocked'    : 필수 데이터가 없어 연동 준비를 시작할 수 없는 상태
+ */
+export type UniversityAnalysisHandoffGateStatus = 'blocked' | 'needs-data' | 'ready';
+
+/**
+ * 엔진 연동 준비 가능 여부 판단 결과.
+ *
+ * 실제 엔진 실행 / 대학명 / 합격 가능성 / 추천 순위를 포함하지 않으며,
+ * 연동 준비 조건을 충족했는지만 판단한다.
+ */
+export interface UniversityAnalysisHandoffGate {
+  /** 연동 준비 가능 여부 상태 */
+  status: UniversityAnalysisHandoffGateStatus;
+  /**
+   * 엔진 연동 준비 조건을 충족한 상태인지.
+   * status === 'ready' 일 때만 true.
+   */
+  canPrepareHandoff: boolean;
+  /** 상태 판단 근거 — 한국어 목록. 준비 완료 시 확인 메시지, 아닐 경우 보완 안내 */
+  reasons: string[];
+  /** 원본 payload preview의 missingFields 그대로 전달 */
+  missingFields: UniversityAnalysisMissingField[];
+  /** 원본 payload preview의 snapshotAt 그대로 전달 */
+  snapshotAt: string;
+}
+
+/**
+ * UniversityAnalysisPayloadPreview를 기반으로 엔진 연동 준비 가능 여부를 판단한다.
+ *
+ * status 판단 기준:
+ * - adapterStatus === 'ready'     → 'ready'      (canPrepareHandoff: true)
+ * - adapterStatus === 'partial'   → 'needs-data' (canPrepareHandoff: false)
+ * - adapterStatus === 'not-ready' → 'blocked'    (canPrepareHandoff: false)
+ *
+ * reasons:
+ * - 'ready' 시: 확인 메시지 1건
+ * - 그 외: preview.warnings를 그대로 전달
+ *
+ * 반환값에 대학명 / 합격 가능성 / 추천 순위가 포함되지 않는다.
+ *
+ * @param preview buildUniversityAnalysisPayloadPreview() 결과
+ */
+export function getUniversityAnalysisHandoffGate(
+  preview: UniversityAnalysisPayloadPreview,
+): UniversityAnalysisHandoffGate {
+  let status: UniversityAnalysisHandoffGateStatus;
+  if (preview.adapterStatus === 'ready') {
+    status = 'ready';
+  } else if (preview.adapterStatus === 'partial') {
+    status = 'needs-data';
+  } else {
+    status = 'blocked';
+  }
+
+  const canPrepareHandoff = status === 'ready';
+
+  const reasons: string[] =
+    status === 'ready'
+      ? ['내신 성적과 수능실전모의 데이터가 충분합니다.']
+      : [...preview.warnings];
+
+  return {
+    status,
+    canPrepareHandoff,
+    reasons,
+    missingFields: preview.missingFields,
+    snapshotAt:    preview.snapshotAt,
+  };
+}

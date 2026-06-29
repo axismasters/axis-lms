@@ -35,6 +35,7 @@ import {
   safeAssembleUniversityAnalysisInput,
   getUniversityAnalysisInputQuality,
   buildUniversityAnalysisPayloadPreview,
+  getUniversityAnalysisHandoffGate,
 } from '@/lib/universityAnalysisAdapter';
 import {
   getActiveClasses, getPastClasses, resolveClassView, timeSlotsToSchedule, ClassView,
@@ -939,6 +940,10 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
     () => buildUniversityAnalysisPayloadPreview(analysisInput),
     [analysisInput]
   );
+  const handoffGate = useMemo(
+    () => getUniversityAnalysisHandoffGate(payloadPreview),
+    [payloadPreview]
+  );
   // ────────────────────────────────────────────────────────
 
   // 현재 표시 중인 평가 결과 목록 (기타평가 필터)
@@ -1241,17 +1246,17 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
               </ul>
             )}
             <div className="mt-2 flex items-center gap-1.5 text-xs" style={{ color: 'oklch(0.6 0.012 250)' }}>
-              <span>페이로드:</span>
+              <span>게이트:</span>
               <span style={{
-                color: payloadPreview.adapterStatus === 'ready'
+                color: handoffGate.status === 'ready'
                   ? 'oklch(0.4 0.12 160)'
-                  : payloadPreview.adapterStatus === 'partial'
+                  : handoffGate.status === 'needs-data'
                   ? 'oklch(0.5 0.12 80)'
                   : 'oklch(0.55 0.015 250)',
               }}>
-                {payloadPreview.adapterStatus === 'ready'
-                  ? '페이로드 구성 완료'
-                  : payloadPreview.adapterStatus === 'partial'
+                {handoffGate.status === 'ready'
+                  ? '준비 조건 충족'
+                  : handoffGate.status === 'needs-data'
                   ? '데이터 보완 권장'
                   : '데이터 입력 필요'}
               </span>
