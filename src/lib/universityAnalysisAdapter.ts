@@ -684,6 +684,7 @@ export function buildPhase51AnalyzeRequestDraft(
   mockExamScores?: MockExamScore[],
   internalScores?: InternalScore[],
   context?: Phase51StudentContextDraft,
+  targetUniversities?: Phase51TargetUniversityInputDraft[],
 ): Phase51AnalyzeRequestDraft {
   const gradeLevel: Phase51GradeLevel | null =
     context?.gradeLevel ??
@@ -702,7 +703,9 @@ export function buildPhase51AnalyzeRequestDraft(
     mockExamRecords:          mockExamScores
       ? adaptMockExamScoresToRecordDrafts(mockExamScores)
       : [],
-    targetUniversities:       [],
+    targetUniversities:       targetUniversities
+      ? sanitizeTargetUniversities(targetUniversities)
+      : [],
     draftCreatedAt:           new Date().toISOString(),
     sourceAdapterSnapshotAt:  input.snapshotAt,
   };
@@ -920,4 +923,35 @@ export function validatePhase51AnalyzeRequestDraft(
         : 'needs-data';
 
   return { status, missingFields, messages };
+}
+
+// ────────────────────────────────────────────────────────────
+// Target University Input Bridge v1
+// Phase51AnalyzeRequestDraft.targetUniversities 배열 정제 헬퍼.
+// ────────────────────────────────────────────────────────────
+
+function cleanTargetText(value: string): string {
+  return value.trim();
+}
+
+/**
+ * 사용자가 명시 입력한 목표대학 draft 배열에서 불완전 항목을 제거한다.
+ *
+ * 대학명, 학과명, 합격 가능성, 추천 순위는 새로 생성하지 않는다.
+ * `univId`, `univName`, `deptName` 중 하나라도 비어 있으면 제외한다.
+ */
+export function sanitizeTargetUniversities(
+  entries: Phase51TargetUniversityInputDraft[],
+): Phase51TargetUniversityInputDraft[] {
+  return entries
+    .map((entry) => ({
+      univId:   cleanTargetText(entry.univId),
+      univName: cleanTargetText(entry.univName),
+      deptName: cleanTargetText(entry.deptName),
+    }))
+    .filter((entry) => (
+      entry.univId.length > 0 &&
+      entry.univName.length > 0 &&
+      entry.deptName.length > 0
+    ));
 }
