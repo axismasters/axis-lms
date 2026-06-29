@@ -30,6 +30,10 @@ export default function TeacherLayout({ children, title }: TeacherLayoutProps) {
     if (path === '/teacher/videos') {
       return location.startsWith('/teacher/videos') || location.startsWith('/teacher/notes');
     }
+    // 채점 탭: /teacher/exams (채점 목록/상세) 와 /teacher/grades 모두 active
+    if (path === '/teacher/exams') {
+      return location.startsWith('/teacher/exams') || location.startsWith('/teacher/grades');
+    }
     return location.startsWith(path);
   };
 

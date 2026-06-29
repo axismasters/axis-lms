@@ -1,13 +1,15 @@
-// AXIS LMS v1.2 - TeacherRoutes (강사 포털 Foundation v1)
+// AXIS LMS v1.2 - TeacherRoutes (Workflow Foundation v1)
 // /teacher/** — TEACHER 역할 전용.
-// TEACHER 외 역할: RoleRoute가 해당 역할의 홈으로 리다이렉트.
 
 import { Route, Switch, Redirect } from 'wouter';
 import { RoleRoute } from './RoleRoute';
 import TeacherHome from '@/pages/teacher/TeacherHome';
 import TeacherClasses from '@/pages/teacher/TeacherClasses';
 import TeacherStudents from '@/pages/teacher/TeacherStudents';
+import TeacherStudentDetail from '@/pages/teacher/TeacherStudentDetail';
+import TeacherAttendance from '@/pages/teacher/TeacherAttendance';
 import TeacherExams from '@/pages/teacher/TeacherExams';
+import TeacherExamGrading from '@/pages/teacher/TeacherExamGrading';
 import TeacherGrades from '@/pages/teacher/TeacherGrades';
 import TeacherVideos from '@/pages/teacher/TeacherVideos';
 import TeacherNotes from '@/pages/teacher/TeacherNotes';
@@ -41,8 +43,17 @@ export default function TeacherRoutes() {
         {/* 담당 반 */}
         <Route path="/teacher/classes" component={TeacherClasses} />
 
-        {/* 담당 학생 */}
+        {/* 출결 체크 */}
+        <Route path="/teacher/attendance" component={TeacherAttendance} />
+
+        {/* 담당 학생 상세 (목록보다 먼저 등록) */}
+        <Route path="/teacher/students/:studentId" component={TeacherStudentDetail} />
+
+        {/* 담당 학생 목록 */}
         <Route path="/teacher/students" component={TeacherStudents} />
+
+        {/* 채점 상세 (목록보다 먼저 등록) */}
+        <Route path="/teacher/exams/:examId/grading" component={TeacherExamGrading} />
 
         {/* 내 시험 / 미채점 */}
         <Route path="/teacher/exams" component={TeacherExams} />
@@ -56,8 +67,7 @@ export default function TeacherRoutes() {
         {/* 내 수업노트 */}
         <Route path="/teacher/notes" component={TeacherNotes} />
 
-        {/* 구 경로 → 신규 경로 리다이렉트 (하위호환) */}
-        <Route path="/teacher/attendance" component={() => <Redirect to="/teacher" />} />
+        {/* 구 경로 하위호환 리다이렉트 */}
         <Route path="/teacher/scores" component={() => <Redirect to="/teacher/grades" />} />
 
         {/* 404 */}

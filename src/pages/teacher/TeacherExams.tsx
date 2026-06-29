@@ -5,7 +5,8 @@
 // - 담당 학생 데이터 없는 학원 전체 시험은 전체 탭에서 제외
 
 import { useState } from 'react';
-import { BarChart2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Link } from 'wouter';
+import { BarChart2, CheckCircle2, AlertCircle, ChevronRight } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
@@ -132,17 +133,24 @@ export default function TeacherExams() {
 
                   {/* 담당 학생 기준 세부 정보 */}
                   {pendingCount > 0 && (
-                    <div className="mt-2 flex items-center gap-4 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                      <span className="flex items-center gap-1">
-                        <AlertCircle size={11} style={{ color: 'oklch(0.577 0.245 27.325)' }} />
-                        미채점 {pendingCount}명
-                      </span>
-                      {gradedCount > 0 && (
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
                         <span className="flex items-center gap-1">
-                          <CheckCircle2 size={11} style={{ color: 'oklch(0.5 0.15 160)' }} />
-                          완료 {gradedCount}명
+                          <AlertCircle size={11} style={{ color: 'oklch(0.577 0.245 27.325)' }} />
+                          미채점 {pendingCount}명
                         </span>
-                      )}
+                        {gradedCount > 0 && (
+                          <span className="flex items-center gap-1">
+                            <CheckCircle2 size={11} style={{ color: 'oklch(0.5 0.15 160)' }} />
+                            완료 {gradedCount}명
+                          </span>
+                        )}
+                      </div>
+                      <Link href={`/teacher/exams/${exam.id}/grading`}>
+                        <div className="flex items-center gap-0.5 text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                          채점하기 <ChevronRight size={12} />
+                        </div>
+                      </Link>
                     </div>
                   )}
                   {pendingCount === 0 && gradedCount > 0 && (

@@ -208,3 +208,123 @@ const mySubmissions = submissions.filter(s => myStudentIds.has(s.studentId));
 ### npm run build 결과
 환경 egress 차단으로 `npm install` 불가. 글로벌 tsc 검증: 신규 수정 파일 4개 타입 오류 0건.
 로컬에서 `npm install && npm run build` 통과 예상.
+
+---
+
+## Teacher Portal Workflow Foundation v1
+
+**작업명**: Teacher Portal Workflow Foundation v1
+**기반**: Teacher Foundation v1 Scope Guard Fix
+
+### 신규 파일
+| 파일 | 역할 |
+|------|------|
+| `src/pages/teacher/TeacherAttendance.tsx` | 출결 체크 화면 (`/teacher/attendance`) |
+| `src/pages/teacher/TeacherExamGrading.tsx` | 채점 상세 화면 (`/teacher/exams/:examId/grading`) |
+| `src/pages/teacher/TeacherStudentDetail.tsx` | 담당 학생 상세 (`/teacher/students/:studentId`) |
+
+### 수정 파일
+| 파일 | 주요 변경 |
+|------|-----------|
+| `src/layouts/TeacherLayout.tsx` | 채점 탭 active 조건: `/teacher/exams` OR `/teacher/grades` 추가 |
+| `src/routes/TeacherRoutes.tsx` | 신규 3개 라우트 추가, `/teacher/attendance` 리다이렉트 제거 |
+| `src/pages/teacher/TeacherHome.tsx` | 빠른 실행 5카드(출결/채점/학생/노트/자료) 추가, 미채점 시험 카드에 채점 링크 |
+| `src/pages/teacher/TeacherNotes.tsx` | 수업노트 작성 폼(반/날짜/주제/내용/과제) + local state 목록 추가 |
+| `src/pages/teacher/TeacherStudents.tsx` | 각 학생 행 → `/teacher/students/:studentId` 링크 연결, ChevronRight 추가 |
+| `src/pages/teacher/TeacherExams.tsx` | 미채점 항목에 "채점하기 →" 링크(`/teacher/exams/:examId/grading`) 추가 |
+
+### 강사 포털 전체 라우트 (Workflow Foundation v1 기준)
+```
+/teacher               → 홈 (빠른 실행 5카드)
+/teacher/classes       → 담당 반 목록
+/teacher/attendance    → 출결 체크 (담당 반/담당 학생 기준)
+/teacher/students      → 담당 학생 목록 (각 항목 → 상세 링크)
+/teacher/students/:id  → 담당 학생 상세 (읽기 전용, 범위 가드)
+/teacher/exams         → 내 시험/미채점 (채점하기 링크)
+/teacher/exams/:id/grading → 채점 상세 (담당 학생 기준)
+/teacher/grades        → 성적 확인
+/teacher/videos        → 수업영상
+/teacher/notes         → 수업노트 (작성 폼 + 목록)
+```
+
+### TeacherLayout Bottom Nav active 조건 (최종)
+| 탭 | active 경로 |
+|----|------------|
+| 홈 | `/teacher` (exact) |
+| 담당반 | `/teacher/classes/*` |
+| 학생 | `/teacher/students/*` |
+| 채점 | `/teacher/exams/*` OR `/teacher/grades/*` |
+| 자료 | `/teacher/videos/*` OR `/teacher/notes/*` |
+
+### 담당 범위 제한 유지
+- TeacherAttendance: 담당 반 + 담당 학생만 출결 체크 가능
+- TeacherExamGrading: `myStudentIds.has(s.studentId)` 필터로 담당 학생 submissions만
+- TeacherStudentDetail: `myStudentIds.has(studentId)` 검사 후 미허가 시 접근 불가 화면
+- TeacherHome/Exams/Grades: 기존 scope guard 유지
+
+### 관리자 Back Office 영향
+없음. 신규/수정 파일 모두 `src/pages/teacher/` 및 `src/layouts/TeacherLayout.tsx`, `src/routes/TeacherRoutes.tsx`에 한정.
+
+### npm run build 결과
+환경 egress 차단으로 `npm install` 불가. 글로벌 tsc 검증: 신규/수정 teacher 파일 전체 타입 오류 0건 (ClassList.tsx pre-existing 오류 2건 제외). 로컬 `npm install && npm run build` 통과 예상.
+
+---
+
+## Teacher Workflow Foundation v1 QA Fix
+
+**작업명**: Teacher Workflow Foundation v1 QA Fix
+**기반**: Teacher Portal Workflow Foundation v1
+
+### 수정 파일
+| 파일 | 내용 |
+|------|------|
+| `src/utils/dateUtils.ts` | **(신규)** `getLocalDateStr()` 헬퍼 — 한국 로컬 기준 YYYY-MM-DD 반환 |
+| `src/pages/teacher/TeacherAttendance.tsx` | 결석 사유 필수 검증 + 저장 차단 + 오류 안내 문구 / `getLocalDateStr()` 적용 |
+| `src/pages/teacher/TeacherNotes.tsx` | `getLocalDateStr()` 적용 (toISOString 제거) |
+| `src/pages/teacher/TeacherExamGrading.tsx` | Scope 강화 (classId 있는 시험↔없는 시험 분리 검증) / local 저장 후 "채점 대기" → "채점 완료" 즉시 이동 UX |
+
+### 항목별 수정 내용
+
+**1. 결석 사유 필수 검증 (TeacherAttendance)**
+- `REASON_MANDATORY = ['결석']` 상수 정의
+- `handleSave()` 내 결석 사유 미입력자 필터 → 저장 차단
+- `saveError` 상태로 오류 안내 문구 표시 (이름 열거)
+- 사유 입력란 테두리 강조 (빨간색)
+- 지각/조퇴/공결은 사유 입력란 노출, 필수 아님
+
+**2. 날짜 처리 표준화**
+- `new Date().toISOString().slice(0, 10)` → `getLocalDateStr()` 로 대체
+- `src/utils/dateUtils.ts` 에 `formatLocalDate` (attendanceData.ts)와 동일한 구현
+- TeacherAttendance, TeacherNotes 모두 적용
+
+**3. TeacherExamGrading scope 강화**
+- 시험 찾기 로직을 두 단계로 분리:
+  - rawExam: ID만 매칭 (unfiltered)
+  - exam: scope 확인 후 `undefined` 반환 가능
+- classId 있는 시험: `assignedClassIds.includes(rawExam.classId)` 만족 시만 허용
+- classId 없는 학원 전체 시험: `mySubmissions.length > 0` 만족 시만 허용
+- 접근 불가 시: `NotFoundScreen` 컴포넌트로 일관된 에러 화면 표시
+
+**4. TeacherExamGrading mock UX 개선**
+- `ungradedSubs`: `!grades[s.studentId]?.saved` 필터 추가 → 로컬 저장 즉시 제외
+- `locallyGradedSubs`: 로컬 저장된 항목 별도 추적
+- header counts: `pendingCount = ungradedSubs.length`, `completedCount = realGraded + locallyGraded`
+- "채점 완료" 섹션에 로컬 저장 항목 "저장됨" 뱃지와 함께 즉시 표시
+
+### mock/local state 범위 (명확히 기록)
+다음 기능은 현재 local React state 수준이며 실제 DB/API 연동 시 교체 필요:
+- `TeacherAttendance`: 출결 저장 (AssessmentContext/AttendanceContext 미연동)
+- `TeacherExamGrading`: 채점 저장 (AssessmentContext mutations 미연동)
+- `TeacherNotes`: 수업노트 저장 (별도 NoteContext/DB 미연동)
+- 위 데이터는 페이지 새로고침 시 초기화됨
+
+### npm run typecheck / npm run build
+- typecheck: 신규/수정 파일 타입 오류 0건 (ClassList.tsx pre-existing 2건 제외)
+- build: 로컬 `npm install && npm run build` 통과 예상 (환경 egress 차단으로 직접 실행 불가)
+
+### 관리자 Back Office 영향
+없음. 수정 범위: `src/utils/dateUtils.ts`, `src/pages/teacher/` 3개 파일.
+
+### 다음 단계 제안
+- **Teacher Workflow Persistence v1**: AssessmentContext에 강사용 채점 mutation 추가, 출결 저장 AttendanceContext 연동
+- **Teacher Content Engine v1**: TeacherVideos/TeacherNotes 실제 업로드/저장 기능, ContentContext 구현
