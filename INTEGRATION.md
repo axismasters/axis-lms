@@ -1,9 +1,9 @@
-# AXIS LMS v1.2 - University Analysis Student Context Bridge v1 buildfix
+# AXIS LMS v1.2 - University Analysis Request Draft Validation Bridge v1 buildfix
 
 ## ChatGPT QA 판정
 
-원본 zip은 `Student.mockExamScores.grade`에서 `gradeLevel`을 파생하고 명시 `track`만 전달하려는 방향은 맞다.
-다만 직전 baseline 39번에서 고친 Phase 5.1 실제 계약 draft 일부를 다시 이전 구조로 되돌렸다.
+원본 zip은 `Phase51AnalyzeRequestDraft` 제출 전 부족 입력을 판단하는 방향은 맞다.
+다만 직전 baseline 40번에서 고친 Phase 5.1 실제 계약 draft 일부를 다시 이전 구조로 되돌렸다.
 
 따라서 원본 zip 대신 이 buildfix 업로드본을 사용한다.
 
@@ -11,7 +11,7 @@
 
 | 파일 | 변경 내용 |
 |------|-----------|
-| `src/lib/universityAnalysisAdapter.ts` | `Phase51StudentContextDraft` 추가, `buildPhase51AnalyzeRequestDraft`에 `context` 선택 인자 추가, `deriveGradeLevelFromMockExamScores` helper 추가 |
+| `src/lib/universityAnalysisAdapter.ts` | `Phase51DraftValidationStatus`, `Phase51DraftMissingField`, `Phase51DraftValidationResult`, `validatePhase51AnalyzeRequestDraft` 추가 |
 
 ## buildfix 기준
 
@@ -21,25 +21,31 @@
 | `Phase51Track` | `'인문' | '자연' | '통합'` 유지 |
 | `Phase51MockExamRecordDraft` | 실제 Phase 5.1 `MockExamRecord` 대응 평면 필드 구조 유지 |
 | `Phase51SchoolRecordInputDraft` | `avgGrade`, `koreanGrade`, `mathGrade`, `note?` 구조 유지 |
+| `schoolRecord` | `Phase51SchoolRecordInputDraft | null` 유지 |
 | `targetUniversities` | `Phase51TargetUniversityInputDraft[]` 유지 |
 | `improvementScenario` | 단일 `Phase51ImprovementScenarioInputDraft` 유지 |
 
-## 추가 함수
+## validation 기준
 
-| 함수 | 역할 |
+| 항목 | 판단 |
 |------|------|
-| `deriveGradeLevelFromMockExamScores(scores)` | `Student.mockExamScores[0].grade` 문자열을 `1 | 2 | 3`으로 안전 변환 |
+| `gradeLevel` | `null`이면 누락 |
+| `track` | `null`이면 누락 |
+| `schoolRecord` | `null`이면 누락 |
+| `mockExamRecords` | 빈 배열이면 누락 |
+| `targetUniversities` | 빈 배열이면 누락 |
 
-## 변환 규칙
+`targetUniversities`는 아직 목표대학 선택 UI가 없으므로 `missingFields`에는 포함하지만 `status` 계산에는 반영하지 않는다.
 
-| 입력 | 출력 |
-|------|------|
-| `고1` | `1` |
-| `고2` | `2` |
-| `고3` | `3` |
-| 그 외 문자열 또는 빈 배열 | `null` |
+## status 기준
 
-`track`은 LMS 원데이터에서 추론하지 않는다. `context.track`에 명시된 `'인문' | '자연' | '통합'` 값만 반영한다.
+| status | 조건 |
+|--------|------|
+| `ready` | `gradeLevel`과 `track`이 있고, `schoolRecord` 또는 `mockExamRecords` 중 하나 이상 있음 |
+| `blocked` | 성적 데이터와 학생 컨텍스트가 모두 없음 |
+| `needs-data` | 나머지 모든 경우 |
+
+대학추천 계산, 합격 가능성 계산, 추천 순위 산출은 수행하지 않는다.
 
 ## QA 확인
 
@@ -68,17 +74,17 @@
 
 업로드 파일:
 
-`axis-lms-v1_2-university-analysis-student-context-bridge-v1-buildfix-github-upload.zip`
+`axis-lms-v1_2-university-analysis-request-draft-validation-bridge-v1-buildfix-github-upload.zip`
 
 커밋명:
 
-`대학분석 학생컨텍스트 브릿지 반영`
+`대학분석 요청초안 검증 브릿지 반영`
 
 ## baseline 반영 조건
 
 GitHub Actions가 정상 통과하면 baseline에 다음 항목을 추가한다.
 
-40. University Analysis Student Context Bridge v1 buildfix
+41. University Analysis Request Draft Validation Bridge v1 buildfix
 
 ## 보류 유지
 

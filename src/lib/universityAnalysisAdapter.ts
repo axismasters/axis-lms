@@ -834,3 +834,90 @@ export function deriveGradeLevelFromMockExamScores(
     default:    return null;
   }
 }
+
+// ────────────────────────────────────────────────────────────
+// Request Draft Validation Bridge v1
+// Phase51AnalyzeRequestDraft 제출 전 입력 항목 완비 여부 판단.
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Phase 5.1 request draft 검증 상태.
+ */
+export type Phase51DraftValidationStatus = 'ready' | 'needs-data' | 'blocked';
+
+/**
+ * Phase 5.1 request draft에서 누락되었거나 비어 있는 항목.
+ */
+export type Phase51DraftMissingField =
+  | 'gradeLevel'
+  | 'track'
+  | 'schoolRecord'
+  | 'mockExamRecords'
+  | 'targetUniversities';
+
+/**
+ * Phase 5.1 request draft 검증 결과.
+ *
+ * 반환값에 대학명, 합격 가능성, 추천 순위는 포함하지 않는다.
+ */
+export interface Phase51DraftValidationResult {
+  status: Phase51DraftValidationStatus;
+  missingFields: Phase51DraftMissingField[];
+  messages: string[];
+}
+
+/**
+ * `Phase51AnalyzeRequestDraft`를 실제 엔진에 전달하기 전 입력 완비 여부만 확인한다.
+ *
+ * `targetUniversities`가 비어 있으면 missingFields에는 포함하지만,
+ * 아직 목표대학 선택 UI가 없으므로 status 계산에는 반영하지 않는다.
+ */
+export function validatePhase51AnalyzeRequestDraft(
+  draft: Phase51AnalyzeRequestDraft,
+): Phase51DraftValidationResult {
+  const missingFields: Phase51DraftMissingField[] = [];
+  const messages: string[] = [];
+
+  if (draft.gradeLevel === null) {
+    missingFields.push('gradeLevel');
+    messages.push('학년이 설정되지 않았습니다.');
+  }
+
+  if (draft.track === null) {
+    missingFields.push('track');
+    messages.push('계열이 설정되지 않았습니다.');
+  }
+
+  if (draft.schoolRecord === null) {
+    missingFields.push('schoolRecord');
+    messages.push('내신 성적 데이터가 없습니다.');
+  }
+
+  if (draft.mockExamRecords.length === 0) {
+    missingFields.push('mockExamRecords');
+    messages.push('모의고사 데이터가 없습니다.');
+  }
+
+  if (draft.targetUniversities.length === 0) {
+    missingFields.push('targetUniversities');
+    messages.push('목표대학 입력이 없습니다.');
+  }
+
+  const hasAcademicData =
+    draft.schoolRecord !== null || draft.mockExamRecords.length > 0;
+
+  const hasContext =
+    draft.gradeLevel !== null || draft.track !== null;
+
+  const hasRequiredContext =
+    draft.gradeLevel !== null && draft.track !== null;
+
+  const status: Phase51DraftValidationStatus =
+    hasRequiredContext && hasAcademicData
+      ? 'ready'
+      : !hasAcademicData && !hasContext
+        ? 'blocked'
+        : 'needs-data';
+
+  return { status, missingFields, messages };
+}
