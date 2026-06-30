@@ -1,18 +1,18 @@
-// AXIS LMS v1.2 - 수납관리 화면 (Finance Foundation v3)
-// Design: Structured Authority
-// 재무관리의 기본 화면. 청구(Invoice)는 학생이 아니라 수강(Enrollment) 단위로 관리되므로, 한 학생이
-// 여러 반을 동시에 수강하면 반마다 별도의 청구 행이 표시된다.
+// AXIS LMS v1.2 - 수납관리 화면 (Finance Payments Filter v1)
+// 청구(Invoice)는 학생이 아니라 수강(Enrollment) 단위로 관리된다.
+// 한 학생이 여러 반을 수강하면 반마다 별도의 청구 행이 표시된다.
+//
+// Payments Filter v1 추가 사항:
+// 1. 담당강사 필터(filterTeacher) 추가 — ClassRoom.teacher 기준으로 필터링한다.
+//    반 목록의 teacher 필드에서 고유 강사명을 추출해 Select로 제공한다.
+// 2. URL query string preselect — ?invoiceId=... 가 있으면 마운트 시 해당 Invoice의
+//    수납 등록 모달을 자동으로 열어 준다. FinanceUnpaid에서 "수납 등록" 버튼을 눌러 이 페이지로
+//    이동했을 때 모달이 바로 열리도록 한다(신규 route 없음, useSearch 활용).
 //
 // 권한: canManageFinance(can)로 페이지 진입 자체를 가드(SUPER_ADMIN/DIRECTOR/STAFF만 통과).
 // 수납 등록은 canCreatePayment, 영수증 발급/조회는 canIssueReceipt로 별도 게이트한다.
-//
-// Finance Foundation v3: 상단 요약은 공용 FinanceSummaryCards(청구금액/수납완료/미납금액/환불금액)로
-// 표준화했다 — 정산관리·통계 화면과 항상 같은 계산식을 사용한다(calculateMonthlySettlement 공유).
-// 기존에 있던 "수납 완료 건수"/"환불 요청액(대기)" 정보는 삭제하지 않고 보조 카드로 그대로 유지한다.
-// 수납 등록 시 영수증이 자동 발급되므로(FinanceContext), "발급" 버튼은 영수증이 아직 없는 레거시
-// 결제에 대해서만 의미를 가지며, 발급된 영수증은 "보기"로 번호/금액/발급일을 확인할 수 있다.
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFinance } from '@/contexts/FinanceContext';
@@ -35,18 +35,20 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Search, Receipt, StickyNote, CreditCard, Info, Eye, Send } from 'lucide-react';
 
-function thisMonthStr() {
-  return currentBillingMonth();
-}
-function won(n: number) {
-  return `${n.toLocaleString()}원`;
+function thisMonthStr() { return currentBillingMonth(); }
+function won(n: number) { return `${n.toLocaleString()}원`; }
+
+
+function getClassTeacherName(cls: unknown): string {
+  const record = cls as { teacher?: string; teacherName?: string; instructorName?: string; mainTeacher?: string } | null | undefined;
+  return record?.teacher ?? record?.teacherName ?? record?.instructorName ?? record?.mainTeacher ?? '';
 }
 
 const STATUS_STYLE: Record<InvoiceStatus, { bg: string; text: string }> = {
-  UNPAID: { bg: 'oklch(0.96 0.08 27)', text: 'oklch(0.5 0.18 27)' },
-  PARTIAL: { bg: 'oklch(0.96 0.06 60)', text: 'oklch(0.45 0.13 60)' },
-  PAID: { bg: 'oklch(0.94 0.08 160)', text: 'oklch(0.3 0.13 160)' },
-  CANCELED: { bg: 'oklch(0.95 0.005 250)', text: 'oklch(0.55 0.015 250)' },
+  UNPAID:   { bg: 'oklch(0.96 0.08 27)',    text: 'oklch(0.5 0.18 27)' },
+  PARTIAL:  { bg: 'oklch(0.96 0.06 60)',    text: 'oklch(0.45 0.13 60)' },
+  PAID:     { bg: 'oklch(0.94 0.08 160)',   text: 'oklch(0.3 0.13 160)' },
+  CANCELED: { bg: 'oklch(0.95 0.005 250)',  text: 'oklch(0.55 0.015 250)' },
 };
 
 export default function FinancePayments() {
@@ -57,22 +59,87 @@ export default function FinancePayments() {
   const { enrollments } = useEnrollment();
   const { createNotificationFromEvent } = useNotification();
 
-  const [filterMonth, setFilterMonth] = useState(thisMonthStr());
+  // URL query string (?invoiceId=...) 읽기 — wouter 버전 차이를 피하기 위해 window.location.search를 사용한다.
+  const searchStr = typeof window !== 'undefined' ? window.location.search : '';
+
+  // 필터 상태 — 담당강사(filterTeacher) 추가
+  const [filterMonth,   setFilterMonth]   = useState(thisMonthStr());
   const [filterStudent, setFilterStudent] = useState('');
-  const [filterClass, setFilterClass] = useState('all');
-  const [filterStatus, setFilterStatus] = useState<InvoiceStatus | 'all'>('all');
-  const [filterMethod, setFilterMethod] = useState<PaymentMethod | 'all'>('all');
+  const [filterClass,   setFilterClass]   = useState('all');
+  const [filterTeacher, setFilterTeacher] = useState('all'); // ★ 담당강사 필터
+  const [filterStatus,  setFilterStatus]  = useState<InvoiceStatus | 'all'>('all');
+  const [filterMethod,  setFilterMethod]  = useState<PaymentMethod | 'all'>('all');
 
   const [paymentModal, setPaymentModal] = useState<{ invoice: Invoice; remaining: number } | null>(null);
   const [payAmount, setPayAmount] = useState('');
   const [payMethod, setPayMethod] = useState<PaymentMethod>('CASH');
-  const [payMemo, setPayMemo] = useState('');
+  const [payMemo,   setPayMemo]   = useState('');
 
-  const [memoModal, setMemoModal] = useState<Invoice | null>(null);
-  const [receiptViewInvoiceId, setReceiptViewInvoiceId] = useState<string | null>(null);
+  const [memoModal,             setMemoModal]             = useState<Invoice | null>(null);
+  const [receiptViewInvoiceId, setReceiptViewInvoiceId]  = useState<string | null>(null);
 
-  const studentMap = useMemo(() => new Map(students.map(s => [s.id, s])), [students]);
+  const studentMap    = useMemo(() => new Map(students.map(s => [s.id, s])),    [students]);
   const enrollmentMap = useMemo(() => new Map(enrollments.map(e => [e.id, e])), [enrollments]);
+
+  // 담당강사 목록 — 반 데이터에서 고유 강사명을 정렬해 추출한다
+  const teachers = useMemo(
+    () => Array.from(new Set(classes.map(c => getClassTeacherName(c)).filter(Boolean))).sort(),
+    [classes],
+  );
+
+  // FinanceUnpaid에서 ?invoiceId=... 로 이동했을 때 수납 등록 모달을 자동으로 연다
+  useEffect(() => {
+    const params = new URLSearchParams(searchStr);
+    const preId  = params.get('invoiceId');
+    if (!preId) return;
+    const inv = invoices.find(i => i.id === preId);
+    if (!inv) return;
+    if (inv.status === 'PAID' || inv.status === 'CANCELED') return; // 이미 완납/취소된 건은 열지 않음
+    const remaining = Math.max(0, inv.finalAmount - getPaidAmount(inv.id));
+    if (remaining <= 0) return;
+    setPaymentModal({ invoice: inv, remaining });
+    setPayAmount(String(remaining));
+    setPayMethod('CASH');
+    setPayMemo('');
+  }, [searchStr, invoices, getPaidAmount]);
+
+  const canPay     = canCreatePayment(can);
+  const canReceipt = canIssueReceipt(can);
+
+  // 필터링된 청구 목록
+  const filtered = useMemo(() => {
+    return invoices.filter(inv => {
+      if (filterMonth && inv.billingMonth !== filterMonth) return false;
+      if (filterStudent) {
+        const stu = studentMap.get(inv.studentId);
+        if (!stu || !stu.name.includes(filterStudent)) return false;
+      }
+      if (filterClass !== 'all' && inv.classId !== filterClass) return false;
+      // ★ 담당강사 필터: Invoice.classId → ClassRoom.teacher 로 비교
+      if (filterTeacher !== 'all') {
+        const cls = getClass(inv.classId);
+        if (!cls || getClassTeacherName(cls) !== filterTeacher) return false;
+      }
+      if (filterStatus !== 'all' && inv.status !== filterStatus) return false;
+      if (filterMethod !== 'all') {
+        const pays = getPaymentsByInvoice(inv.id);
+        if (!pays.some(p => p.paymentMethod === filterMethod)) return false;
+      }
+      return true;
+    }).sort((a, b) => b.billingMonth.localeCompare(a.billingMonth));
+  }, [invoices, filterMonth, filterStudent, filterClass, filterTeacher, filterStatus, filterMethod, studentMap, getClass, getPaymentsByInvoice]);
+
+  // 이번 달 기준 요약 카드 (필터와 무관하게 "이번 달" 고정)
+  const summary = useMemo(() => {
+    const thisMonth    = thisMonthStr();
+    const monthInvoices = invoices.filter(i => i.billingMonth === thisMonth);
+    const billed        = monthInvoices.reduce((s, i) => s + i.finalAmount, 0);
+    const paid          = monthInvoices.reduce((s, i) => s + getPaidAmount(i.id), 0);
+    const unpaid        = monthInvoices.reduce((s, i) => s + Math.max(0, i.finalAmount - getPaidAmount(i.id)), 0);
+    const refundRequested = refunds.filter(r => r.status === 'REQUESTED').reduce((s, r) => s + r.requestedAmount, 0);
+    const paidCount     = monthInvoices.filter(i => i.status === 'PAID').length;
+    return { billed, paid, unpaid, refundRequested, paidCount };
+  }, [invoices, getPaidAmount, refunds]);
 
   if (!canManageFinance(can)) {
     return (
@@ -83,43 +150,10 @@ export default function FinancePayments() {
       </AdminLayout>
     );
   }
-  const canPay = canCreatePayment(can);
-  const canReceipt = canIssueReceipt(can);
-
-  // 필터링된 목록
-  const filtered = useMemo(() => {
-    return invoices.filter(inv => {
-      if (filterMonth && inv.billingMonth !== filterMonth) return false;
-      if (filterStudent) {
-        const stu = studentMap.get(inv.studentId);
-        if (!stu || !stu.name.includes(filterStudent)) return false;
-      }
-      if (filterClass !== 'all' && inv.classId !== filterClass) return false;
-      if (filterStatus !== 'all' && inv.status !== filterStatus) return false;
-      if (filterMethod !== 'all') {
-        const pays = getPaymentsByInvoice(inv.id);
-        if (!pays.some(p => p.paymentMethod === filterMethod)) return false;
-      }
-      return true;
-    }).sort((a, b) => b.billingMonth.localeCompare(a.billingMonth));
-  }, [invoices, filterMonth, filterStudent, filterClass, filterStatus, filterMethod, studentMap, getPaymentsByInvoice]);
-
-  // 이번 달 기준 요약 카드(필터와 무관하게 "이번 달" 고정 — 운영자가 항상 현재 상황을 한눈에 보도록)
-  const summary = useMemo(() => {
-    const thisMonth = thisMonthStr();
-    const monthInvoices = invoices.filter(i => i.billingMonth === thisMonth);
-    const billed = monthInvoices.reduce((s, i) => s + i.finalAmount, 0);
-    const paid = monthInvoices.reduce((s, i) => s + getPaidAmount(i.id), 0);
-    const unpaid = monthInvoices.reduce((s, i) => s + Math.max(0, i.finalAmount - getPaidAmount(i.id)), 0);
-    const refundRequested = refunds.filter(r => r.status === 'REQUESTED').reduce((s, r) => s + r.requestedAmount, 0);
-    const paidCount = monthInvoices.filter(i => i.status === 'PAID').length;
-    return { billed, paid, unpaid, refundRequested, paidCount };
-  }, [invoices, getPaidAmount, refunds]);
-
   const openPaymentModal = (inv: Invoice) => {
-    const remaining = inv.finalAmount - getPaidAmount(inv.id);
+    const remaining = Math.max(0, inv.finalAmount - getPaidAmount(inv.id));
     setPaymentModal({ invoice: inv, remaining });
-    setPayAmount(String(Math.max(0, remaining)));
+    setPayAmount(String(remaining));
     setPayMethod('CASH');
     setPayMemo('');
   };
@@ -135,41 +169,32 @@ export default function FinancePayments() {
   };
 
   const handleIssueReceipt = (invoiceId: string) => {
-    const pays = getPaymentsByInvoice(invoiceId);
+    const pays  = getPaymentsByInvoice(invoiceId);
     const target = pays.find(p => !p.receiptIssued);
     if (!target) { toast.info('이미 발급된 영수증입니다.'); return; }
     issueReceipt(target.id);
     toast.success('영수증이 발급되었습니다.');
   };
 
-  // 청구 안내 발송 — 개별 청구서 1건에 대해 FINANCE_INVOICE_ISSUED mock 알림 이력 생성.
-  // 대량 자동 발송 방지를 위해 버튼 클릭(수동) 방식만 제공한다.
-  // 기존 이력은 삭제하지 않으며 재발송 시 이력이 추가된다.
   const handleInvoiceNotify = (invoiceId: string) => {
-    const inv = invoices.find(i => i.id === invoiceId);
+    const inv      = invoices.find(i => i.id === invoiceId);
     if (!inv) return;
-    const stu = studentMap.get(inv.studentId);
-    const cls = getClass(inv.classId);
+    const stu      = studentMap.get(inv.studentId);
+    const cls      = getClass(inv.classId);
     const guardian = stu?.guardians?.[0];
     createNotificationFromEvent('FINANCE_INVOICE_ISSUED', {
-      studentId: inv.studentId,
-      studentName: stu?.name,
-      guardianName: guardian?.name,
-      guardianPhone: guardian?.phone,
+      studentId: inv.studentId, studentName: stu?.name,
+      guardianName: guardian?.name, guardianPhone: guardian?.phone,
       className: cls?.name,
-      relatedEntityType: 'FINANCE',
-      relatedEntityId: invoiceId,
+      relatedEntityType: 'FINANCE', relatedEntityId: invoiceId,
       requestedBy: currentUser.name,
       vars: {
-        학생명: stu?.name,
-        보호자명: guardian?.name,
-        청구월: inv.billingMonth,
-        청구금액: inv.finalAmount.toLocaleString(),
-        납부기한: inv.dueDate,
-        반명: cls?.name,
+        학생명: stu?.name, 보호자명: guardian?.name,
+        청구월: inv.billingMonth, 청구금액: inv.finalAmount.toLocaleString(),
+        납부기한: inv.dueDate, 반명: cls?.name,
       },
     });
-    toast.success(`청구 안내를 발송했습니다. (mock — 실제 카카오/SMS 연동 없음)`);
+    toast.success('청구 안내를 발송했습니다(mock — 실제 카카오/SMS 연동 없음).');
   };
 
   return (
@@ -181,12 +206,10 @@ export default function FinancePayments() {
         </p>
       </div>
 
-      {/* 요약 카드 — Finance Foundation v3: 공용 FinanceSummaryCards(청구금액/수납완료/미납금액/환불금액)를
-          사용한다. 정산관리·통계 화면과 동일한 calculateMonthlySettlement를 공유하므로 숫자가 항상 일치한다. */}
+      {/* 이번 달 요약 카드 */}
       <div className="mb-3">
         <FinanceSummaryCards month={thisMonthStr()} label="이번 달 청구금액" />
       </div>
-      {/* 기존 v1/v2의 고유 보조 정보 — 삭제하지 않고 작은 보조 카드로 그대로 유지 */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="axis-card p-3 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>이번 달 수납 완료 건수</div>
@@ -198,68 +221,88 @@ export default function FinancePayments() {
         </div>
       </div>
 
-      {/* 필터 */}
+      {/* 필터 — ★ 담당강사 필터 추가 */}
       <div className="axis-card p-4 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
-          <input type="month" value={filterMonth} onChange={e => setFilterMonth(e.target.value)} className="h-9 px-2 rounded border text-sm" style={{ borderColor: 'oklch(0.9 0.005 250)' }} />
+          <input
+            type="month"
+            value={filterMonth}
+            onChange={e => setFilterMonth(e.target.value)}
+            className="h-9 px-2 rounded border text-sm"
+            style={{ borderColor: 'oklch(0.9 0.005 250)' }}
+          />
           <div className="relative">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.65 0.01 250)' }} />
-            <Input value={filterStudent} onChange={e => setFilterStudent(e.target.value)} placeholder="학생명 검색" className="h-9 w-40 pl-8 text-sm" />
+            <Input value={filterStudent} onChange={e => setFilterStudent(e.target.value)} placeholder="학생명 검색" className="h-9 w-36 pl-8 text-sm" />
           </div>
           <Select value={filterClass} onValueChange={setFilterClass}>
-            <SelectTrigger className="h-9 w-40 text-xs"><SelectValue placeholder="반 전체" /></SelectTrigger>
+            <SelectTrigger className="h-9 w-36 text-xs"><SelectValue placeholder="반 전체" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">반 전체</SelectItem>
               {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {/* ★ 담당강사 필터 */}
+          <Select value={filterTeacher} onValueChange={setFilterTeacher}>
+            <SelectTrigger className="h-9 w-32 text-xs"><SelectValue placeholder="강사 전체" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">강사 전체</SelectItem>
+              {teachers.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={v => setFilterStatus(v as InvoiceStatus | 'all')}>
             <SelectTrigger className="h-9 w-28 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">상태 전체</SelectItem>
-              {(['UNPAID', 'PARTIAL', 'PAID', 'CANCELED'] as InvoiceStatus[]).map(s => <SelectItem key={s} value={s}>{INVOICE_STATUS_LABEL[s]}</SelectItem>)}
+              {(['UNPAID', 'PARTIAL', 'PAID', 'CANCELED'] as InvoiceStatus[]).map(s => (
+                <SelectItem key={s} value={s}>{INVOICE_STATUS_LABEL[s]}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select value={filterMethod} onValueChange={v => setFilterMethod(v as PaymentMethod | 'all')}>
             <SelectTrigger className="h-9 w-28 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">결제수단 전체</SelectItem>
-              {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as PaymentMethod[]).map(m => <SelectItem key={m} value={m}>{PAYMENT_METHOD_LABEL[m]}</SelectItem>)}
+              {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as PaymentMethod[]).map(m => (
+                <SelectItem key={m} value={m}>{PAYMENT_METHOD_LABEL[m]}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* 목록 */}
+      {/* 수납 목록 */}
       <div className="axis-card overflow-hidden">
         {filtered.length === 0 ? (
           <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>조회 조건에 해당하는 청구 내역이 없습니다.</div>
         ) : (
           <div className="axis-table-wrap">
-            <table className="w-full text-sm" style={{ minWidth: 1100 }}>
+            <table className="w-full text-sm" style={{ minWidth: 1160 }}>
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
-                  {['청구월', '학생명', '반명', '수강상태', '청구금액', '수납금액', '미납금액', '상태', '납부일', '영수증', '청구 안내', '관리'].map(h => (
+                  {['청구월', '학생명', '반명', '담당강사', '수강상태', '청구금액', '수납금액', '미납금액', '상태', '납부일', '영수증', '청구 안내', '관리'].map(h => (
                     <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(inv => {
-                  const stu = studentMap.get(inv.studentId);
-                  const cls = getClass(inv.classId);
-                  const enr = enrollmentMap.get(inv.enrollmentId);
-                  const paid = getPaidAmount(inv.id);
+                  const stu       = studentMap.get(inv.studentId);
+                  const cls       = getClass(inv.classId);
+                  const enr       = enrollmentMap.get(inv.enrollmentId);
+                  const paid      = getPaidAmount(inv.id);
                   const remaining = Math.max(0, inv.finalAmount - paid);
-                  const pays = getPaymentsByInvoice(inv.id);
+                  const pays      = getPaymentsByInvoice(inv.id);
                   const lastPaidAt = pays.length > 0 ? pays[pays.length - 1].paidAt.slice(0, 10) : '-';
-                  const style = STATUS_STYLE[inv.status];
+                  const style     = STATUS_STYLE[inv.status];
                   const hasUnissuedReceipt = pays.some(p => !p.receiptIssued);
                   return (
                     <tr key={inv.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.015 250)' }}>{inv.billingMonth}</td>
                       <td className="px-3 py-2.5 text-xs font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{stu?.name ?? '-'}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{cls?.name ?? '-'}</td>
+                      {/* ★ 담당강사 컬럼 */}
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{cls ? getClassTeacherName(cls) || '-' : '-'}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>{enr?.status ?? '-'}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(inv.finalAmount)}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(paid)}</td>
@@ -282,12 +325,7 @@ export default function FinancePayments() {
                         )}
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        {/* 청구 안내 발송 — FINANCE_INVOICE_ISSUED mock 이력 생성 (1건씩 수동 발송) */}
-                        <button
-                          onClick={() => handleInvoiceNotify(inv.id)}
-                          className="flex items-center gap-1 text-xs hover:underline"
-                          style={{ color: 'oklch(0.55 0.18 145)' }}
-                        >
+                        <button onClick={() => handleInvoiceNotify(inv.id)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.55 0.18 145)' }}>
                           <Send size={11} /> 발송
                         </button>
                       </td>
@@ -332,7 +370,9 @@ export default function FinancePayments() {
               <Select value={payMethod} onValueChange={v => setPayMethod(v as PaymentMethod)}>
                 <SelectTrigger className="h-9 text-sm w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as PaymentMethod[]).map(m => <SelectItem key={m} value={m}>{PAYMENT_METHOD_LABEL[m]}</SelectItem>)}
+                  {(['CASH', 'CARD', 'TRANSFER', 'OTHER'] as PaymentMethod[]).map(m => (
+                    <SelectItem key={m} value={m}>{PAYMENT_METHOD_LABEL[m]}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -351,7 +391,7 @@ export default function FinancePayments() {
         </DialogContent>
       </Dialog>
 
-      {/* 메모 보기 모달(청구서 메모 — 단순 조회, Foundation 단계라 수정은 만들지 않음) */}
+      {/* 메모 보기 모달 */}
       <Dialog open={!!memoModal} onOpenChange={o => !o && setMemoModal(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle className="text-sm">청구 메모</DialogTitle></DialogHeader>
@@ -361,7 +401,8 @@ export default function FinancePayments() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* 영수증 보기 모달 — 데이터 구조만 표시한다(PDF 출력은 다음 단계로 미룬다) */}
+
+      {/* 영수증 보기 모달 */}
       <Dialog open={!!receiptViewInvoiceId} onOpenChange={o => !o && setReceiptViewInvoiceId(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle className="text-sm">영수증</DialogTitle></DialogHeader>
@@ -391,7 +432,7 @@ export default function FinancePayments() {
               );
             })}
             <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
-              <Info size={11} /> PDF 출력은 다음 단계에서 제공됩니다. 현재는 영수증 데이터 구조만 확인할 수 있습니다.
+              <Info size={11} /> PDF 출력은 다음 단계에서 제공됩니다.
             </p>
           </div>
           <DialogFooter>

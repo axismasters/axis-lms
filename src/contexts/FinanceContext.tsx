@@ -26,6 +26,7 @@ import {
   DUMMY_INVOICES, DUMMY_PAYMENTS, DUMMY_REFUNDS, DUMMY_SETTLEMENTS, DUMMY_RECEIPTS,
   getInvoicePaidAmount, getInvoiceUnpaidAmount, getRefundableAmount, calculateInvoiceStatus,
   generateMonthlyInvoices, generateReceiptNumber, currentBillingMonth,
+  calculateMonthlySettlement,
 } from '@/lib/financeData';
 import { useEnrollment } from '@/contexts/EnrollmentContext';
 import { useNotification } from '@/contexts/NotificationContext';
@@ -80,6 +81,11 @@ interface FinanceContextType {
   // 매월 1일 자동 청구서 생성 — enrollments 변경 시 Context가 자동으로 호출하지만, 화면에서 "지금
   // 다시 동기화" 같은 수동 트리거도 둘 수 있도록 같은 함수를 노출한다(idempotent라 몇 번 눌러도 안전).
   generateInvoicesForMonth: (month: string) => number; // 새로 생성된 청구서 수를 반환
+
+  // 정산 레코드 자동 생성 — invoices가 존재하지만 Settlement 레코드가 없는 달을 보충한다.
+  // 이미 레코드가 있으면 기존 레코드를 그대로 반환(idempotent).
+  // 정산 화면에서 "누락된 달 정산 생성" 버튼을 통해 호출한다.
+  generateSettlementForMonth: (month: string) => Settlement;
 }
 
 const FinanceContext = createContext<FinanceContextType | null>(null);
@@ -351,6 +357,27 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, [settlements]);
 
+  // 정산 레코드 자동 생성 — invoices는 있지만 Settlement 레코드가 없는 달을 보충한다.
+  // calculateMonthlySettlement로 실시간 합산값을 총계로 사용하고 DRAFT 상태로 생성한다.
+  // idempotent: 이미 레코드가 있으면 기존 레코드를 그대로 반환한다.
+  const generateSettlementForMonth = useCallback((month: string): Settlement => {
+    const existing = settlements.find(s => s.month === month);
+    if (existing) return existing;
+
+    const amounts = calculateMonthlySettlement(month, invoices, payments, refunds);
+    const newSettlement: Settlement = {
+      id: `stl-auto-${month}`,
+      month,
+      totalBilled:   amounts.totalBilled,
+      totalPaid:     amounts.totalPaid,
+      totalUnpaid:   amounts.totalUnpaid,
+      totalRefunded: amounts.totalRefunded,
+      status: 'DRAFT',
+    };
+    setSettlements(prev => [...prev, newSettlement]);
+    return newSettlement;
+  }, [settlements, invoices, payments, refunds]);
+
   return (
     <FinanceContext.Provider value={{
       invoices, payments, refunds, settlements, receipts,
@@ -358,7 +385,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       getPaidAmount, getUnpaidAmount, getRefundable, getReceiptByPayment,
       addPayment, issueReceipt,
       requestRefund, approveRefund, rejectRefund, completeRefund,
-      confirmSettlement, generateInvoicesForMonth,
+      confirmSettlement, generateInvoicesForMonth, generateSettlementForMonth,
     }}>
       {children}
     </FinanceContext.Provider>

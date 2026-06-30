@@ -1,15 +1,15 @@
-// AXIS LMS v1.2 - 미납관리 화면 (Finance Stability v1)
+// AXIS LMS v1.2 - 미납관리 화면 (Finance Payments Filter v1)
 // 미납(UNPAID) 또는 부분납(PARTIAL)인 청구만 모아서 보여주는 조회 중심 화면.
 //
-// Stability v1 추가 사항:
-// - useEnrollment를 추가해 enrollmentMap을 구성하고 "수강상태" 컬럼을 테이블에 표시한다.
-//   이미 퇴원/종료된 학생의 미납이 남아 있는 경우 운영자가 즉시 인지할 수 있어야 하기 때문이다.
-//   수강 상태가 '퇴원'/'종료'인 행은 별도 색상으로 표시해 주의를 끈다.
-//
-// 알림 발송은 실제 카카오/SMS 연동 없이 mock 처리만 한다(이 화면에서 "발송 여부"를 로컬로만 표시 —
-// Invoice 데이터 모델 자체에는 알림 필드를 추가하지 않았다, Foundation 단계의 최소 범위를 지키기 위함).
+// Payments Filter v1 추가 사항:
+// - "수납 등록" 버튼 추가 — 미납/부분납 건에서 수납관리 화면으로 이동하면서
+//   ?invoiceId=... query string을 전달해 수납 등록 모달이 자동으로 열리도록 한다.
+//   신규 route 없음, useLocation(wouter) 활용.
+// - Stability v1의 수강상태 컬럼 및 enrollmentMap 유지.
+// - 모든 hook은 canManageFinance early return 이전에 위치한다.
 
 import { useState, useMemo } from 'react';
+import { useLocation } from 'wouter';
 import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFinance } from '@/contexts/FinanceContext';
@@ -17,9 +17,9 @@ import { useStudents } from '@/contexts/StudentContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useEnrollment } from '@/contexts/EnrollmentContext';
 import { useNotification } from '@/contexts/NotificationContext';
-import { canManageFinance, daysOverdue } from '@/lib/financeData';
+import { canManageFinance, canCreatePayment, daysOverdue } from '@/lib/financeData';
 import { toast } from 'sonner';
-import { Send, AlertTriangle } from 'lucide-react';
+import { Send, AlertTriangle, CreditCard } from 'lucide-react';
 
 function won(n: number) { return `${n.toLocaleString()}원`; }
 
@@ -35,8 +35,9 @@ export default function FinanceUnpaid() {
   const studentMap    = useMemo(() => new Map(students.map(s => [s.id, s])), [students]);
   const enrollmentMap = useMemo(() => new Map(enrollments.map(e => [e.id, e])), [enrollments]);
   const { createNotificationFromEvent } = useNotification();
+  const [, navigate] = useLocation();
 
-  const hasFinanceAccess = canManageFinance(can);
+  const canPay = canCreatePayment(can);
 
   const unpaidList = useMemo(() => {
     return invoices
@@ -61,7 +62,7 @@ export default function FinanceUnpaid() {
     return { totalUnpaid, studentCount, count, over7, over30 };
   }, [unpaidList]);
 
-  if (!hasFinanceAccess) {
+  if (!canManageFinance(can)) {
     return (
       <AdminLayout breadcrumbs={[{ label: '재무관리' }, { label: '미납관리' }]}>
         <div className="axis-card p-12 text-center">
@@ -193,14 +194,27 @@ export default function FinanceUnpaid() {
                         {notified ? '발송됨(mock)' : '미발송'}
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <button
-                          onClick={() => handleNotify(inv.id, inv.studentId, stu?.name ?? '')}
-                          disabled={notified}
-                          className="flex items-center gap-1 text-xs hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
-                          style={{ color: 'oklch(0.511 0.262 276.966)' }}
-                        >
-                          <Send size={11} /> {notified ? '발송완료' : '알림 발송'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleNotify(inv.id, inv.studentId, stu?.name ?? '')}
+                            disabled={notified}
+                            className="flex items-center gap-1 text-xs hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
+                            style={{ color: 'oklch(0.511 0.262 276.966)' }}
+                          >
+                            <Send size={11} /> {notified ? '발송완료' : '알림 발송'}
+                          </button>
+                          {/* ★ 수납 등록 — 수납관리 화면으로 이동하면서 invoiceId를 query string으로 전달
+                              FinancePayments에서 useSearch로 이 값을 받아 모달을 자동으로 연다. */}
+                          {canPay && (
+                            <button
+                              onClick={() => navigate(`/admin/finance/payments?invoiceId=${inv.id}`)}
+                              className="flex items-center gap-1 text-xs hover:underline"
+                              style={{ color: 'oklch(0.38 0.18 250)' }}
+                            >
+                              <CreditCard size={11} /> 수납 등록
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
