@@ -1,0 +1,31 @@
+# AXIS LMS v1.2 Netlify Staging 설정
+# Vercel 대신 Netlify를 사용할 경우 이 파일을 repo 루트에 둔다.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  VITE_APP_MODE = "staging"
+  VITE_APP_VERSION = "1.2.0-rc"
+
+# SPA 라우팅 — wouter의 브라우저 히스토리 API 지원
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 보안 헤더
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

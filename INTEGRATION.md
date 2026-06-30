@@ -1,97 +1,84 @@
-# AXIS LMS v1.2 — MVP RC Manual QA Execution v1 buildfix
+# AXIS LMS v1.2 — MVP RC Live Manual QA v1 (Staging Handoff)
 
-## 작업 개요
+## 이번 작업 성격
 
-baseline 58 기준 코드 상태에서 실제 QA를 실행하고, 발견된 hooks rule 위반을 수정한다.
-
-ChatGPT buildfix에서는 원본 산출물의 단순 hook 이동을 보강했다.
-권한 없는 사용자가 재무 통계 계산 hooks를 실행하지 않도록 `FinanceStatistics`를 권한 gate wrapper와
-`FinanceStatisticsContent` inner 컴포넌트로 분리했다.
+Staging 배포 설정 파일 + QA 체크리스트 handoff.  
+이 ZIP을 repo에 추가하고 Vercel/Netlify에 연결하면 Staging URL이 생성된다.
 
 ## 현재 기준 baseline
 
 ```
-58. RBAC Global Permission QA and Freeze v1 buildfix
+59. MVP RC Manual QA Execution v1 buildfix
 ```
 
-Global MVP Smoke QA / MVP RC Handoff는 baseline에 반영하지 않았다.
+## 왜 Staging URL을 직접 생성하지 못했는가
 
-## 실행한 명령 및 환경
+이 실행 환경에서 npmjs.org, vercel.com 모두 네트워크 egress 차단 상태다:
 
-| 명령 | 결과 |
+```
+HTTP/2 403 — x-deny-reason: host_not_allowed
+```
+
+- `npm install` 실패 (패키지 다운로드 불가)
+- `npm run build` 실행 불가
+- Vercel/Netlify 직접 배포 불가
+
+## 이 ZIP으로 가능한 것
+
+사용자가 GitHub에 이 파일들을 push하면:
+
+1. **Vercel 대시보드에서 repo 연결 → 자동 Staging URL 생성** (약 10분)
+2. GitHub Actions `staging-deploy.yml`로 push마다 자동 재배포
+
+## 이 앱의 Staging 특징
+
+| 항목 | 내용 |
 |---|---|
-| `node --version` | v22.22.2 |
-| `npm --version` | 10.9.7 |
-| `npm install` | **실행 불가** — npmjs.org 네트워크 차단 (egress allowlist 미설정) |
-| `npx tsc -b --noEmit` | **실행 불가** — node_modules 없음 |
-| `npm run build` | **실행 불가** — node_modules 없음 |
+| DB | mock Context 기반 (DB 설정 불필요) |
+| 인증 | DEV 역할 전환 드롭다운 (실제 로그인 없음) |
+| 결제 | mock (PG 연동 없음) |
+| 알림 | mock toast (카카오/SMS 없음) |
+| 개인정보 | 샘플 데이터만 (실제 개인정보 입력 금지) |
 
-> build/typecheck를 실행할 수 없었다. 대신 파일 정적 분석(grep, diff, md5)으로 검증했다.  
-> 실제 브라우저 실행 및 UI 동작 확인은 이 환경에서 불가하다.
+## 산출물 파일 목록
 
-## 발견된 실패 항목
+| 파일 | 역할 |
+|---|---|
+| `vercel.json` | SPA 라우팅 rewrite + 보안 헤더 + 빌드 설정 |
+| `netlify.toml` | Netlify 대안 설정 (Vercel 미사용 시) |
+| `.env.staging` | 환경변수 템플릿 (Vercel/Netlify 환경변수 설정 참조용) |
+| `.github/workflows/staging-deploy.yml` | GitHub Actions CI/CD (push → 자동 배포) |
+| `docs/STAGING_DEPLOYMENT_GUIDE.md` | 단계별 배포 가이드 (Vercel/Netlify/Actions) |
+| `docs/STAGING_QA_CHECKLIST.md` | Staging 접속 후 실제 클릭 체크리스트 |
 
-### FAIL: FinanceStatistics.tsx — React hooks rule 위반
+## 빠른 시작 (Vercel 기준)
 
 ```
-파일: src/pages/FinanceStatistics.tsx
-위반 라인:
-  24: if (!canManageFinance(can)) { return (...) }   ← early return
-  35: const monthlyStats = useMemo(...)               ← hooks rule 위반
-  43: const classStats = useMemo(...)                 ← hooks rule 위반
-  57: const typeStats = useMemo(...)                  ← hooks rule 위반
+1. 이 ZIP 파일들을 repo 루트에 추가하고 git push
+2. vercel.com 접속 → GitHub 로그인 → "Add New Project" → repo 연결
+3. 환경변수: VITE_APP_MODE=staging, VITE_APP_VERSION=1.2.0-rc
+4. "Deploy" 클릭 → 약 3분 후 URL 생성
+5. docs/STAGING_QA_CHECKLIST.md 기준으로 QA 수행
 ```
 
-3개의 useMemo가 canManageFinance early return 이후에 위치해 React hooks rule을 위반했다.
+## 내장 테스트 계정
 
-**원본 수정:** 3개 useMemo를 early return 이전으로 이동.
+별도 계정 생성 불필요. 드롭다운으로 전환:
 
-**ChatGPT buildfix 수정:** 권한 gate를 wrapper 컴포넌트에 두고, `monthlyStats/classStats/typeStats` useMemo는
-권한 통과 후 렌더링되는 `FinanceStatisticsContent`에서만 실행하도록 변경.
-
-## 변경 파일 목록
-
-| 파일 | 변경 유형 | 내용 |
+| 계정명 | 역할 | 특이사항 |
 |---|---|---|
-| `src/pages/FinanceStatistics.tsx` | hooks 위치 수정 | 권한 gate wrapper + 통계 계산 inner 컴포넌트로 분리 |
-| `INTEGRATION.md` | 신규 | 이번 QA 결과 문서 |
-| `docs/MVP_RC_MANUAL_QA_RESULT.md` | 신규 | 역할별/route별/freeze QA 결과표 |
+| 한태준 | 최고관리자 (SUPER_ADMIN) | 전체 권한 |
+| 원장님 | 원장 (DIRECTOR) | 재무 포함 전체 |
+| 행정 담당 | 행정 (STAFF) | 정산확정/환불승인 불가 |
+| 김민준 | 강사 (TEACHER) | cls-001/002 담당, 재무 불가 |
+| 학생 데모 | 학생 (STUDENT) | 학생 포털만, stu-001 |
+| 보호자 데모 | 학부모 (GUARDIAN) | 학부모 포털만, stu-001/003 |
+
+## 코드 수정 여부
+
+없음.
 
 ## GitHub 업로드 여부
 
-**코드 수정이 있으므로 필요하다.**
-
-원본 zip 대신 buildfix zip을 압축 해제 후 같은 경로로 덮어쓴다:
-- `src/pages/FinanceStatistics.tsx`
-
-## 코드 정적 분석 결과 요약
-
-| 항목 | 결과 |
-|---|---|
-| AdminRoutes — 모든 import 파일 존재 | PASS (26개 전체) |
-| TeacherRoutes — 모든 import 파일 존재 | PASS (11개 전체) |
-| StudentRoutes — 모든 import 파일 존재 | PASS (8개 전체) |
-| ParentRoutes — 모든 import 파일 존재 | PASS (6개 전체) |
-| FinancePayments hooks 위치 | PASS — 마지막 hook(132) < early return(150) |
-| FinanceRefunds hooks 위치 | PASS — 마지막 hook(82) < early return(95) |
-| FinanceUnpaid hooks 위치 | PASS — 마지막 hook(58) < early return(67) |
-| FinanceSettlements hooks 위치 | PASS — 마지막 hook(57) < early return(59) |
-| FinanceStatistics hooks 위치 | **FAIL → buildfix 수정 완료** |
-| classData.ts 원본 유지 | PASS (md5: 126d9e5e314de186bf1df0a63b3abf82) |
-| universityAnalysisAdapter.ts 불변 | PASS (md5: 1eddaef5cf427e00666be685ea16f32f) |
-| App.tsx 불변 | PASS (md5: 387bbf48a3d87ff63ce10d6dbc8bf33c) |
-| AdminRoutes.tsx 불변 | PASS (md5: 39126572dd124fc12ff9309dff81aa15) |
-
-## 확인하지 못한 범위
-
-- npm run build 실제 실행 결과
-- 브라우저에서의 실제 렌더링
-- DEV 역할 전환 UI 동작
-- 각 페이지 내부 UI 요소별 동작
-- NotificationContext mock 발송 동작
-
-## 커밋명 후보
-
-```text
-FinanceStatistics useMemo hooks 위치 수정
-```
+**필요**. 이 ZIP의 파일들을 repo에 추가해야 배포 설정이 적용된다.  
+단, 코드 변경이 없으므로 별도 baseline 번호는 추가하지 않는다.
