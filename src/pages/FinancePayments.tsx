@@ -1,14 +1,11 @@
-// AXIS LMS v1.2 - 수납관리 화면 (Finance MVP QA v1)
+// AXIS LMS v1.2 - 수납관리 화면 (RBAC Global Permission QA v1 buildfix)
 // 청구(Invoice)는 학생이 아니라 수강(Enrollment) 단위로 관리된다.
 // 한 학생이 여러 반을 수강하면 반마다 별도의 청구 행이 표시된다.
 //
-// QA v1 수정 사항:
-// 1. wouter useSearch → window.location.search 기반으로 변경.
-//    (useSearch의 wouter 버전별 export 불안정 이슈 대응)
-// 2. filtered/summary useMemo를 canManageFinance early return 이전으로 이동.
-//    React hooks rule: 모든 hook은 조건부 return 이전에 위치해야 한다.
-// 3. cls.teacher 직접 접근 → 로컬 getClassTeacherName(cls) helper 사용.
-//    classData.ts 전체 덮어쓰기 없이 Finance 화면 내부에서 안전화.
+// RBAC QA buildfix 반영:
+// 1. classData.ts 전체 덮어쓰기 없이 담당강사 표시를 파일 내부 helper로 유지.
+// 2. helper는 unknown 안전 접근 방식으로 유지해 ClassRoom 타입/필드명 변동에 따른 build 회귀를 줄인다.
+// 3. wouter useSearch 제거 및 hook early return 이전 배치는 이전 buildfix 상태를 유지한다.
 //
 // 권한: canManageFinance(can)로 페이지 진입 자체를 가드(SUPER_ADMIN/DIRECTOR/STAFF만 통과).
 // 수납 등록은 canCreatePayment, 영수증 발급/조회는 canIssueReceipt로 별도 게이트한다.
@@ -36,13 +33,16 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Search, Receipt, StickyNote, CreditCard, Info, Eye, Send } from 'lucide-react';
 
-function thisMonthStr() { return currentBillingMonth(); }
-function won(n: number) { return `${n.toLocaleString()}원`; }
-
-function getClassTeacherName(cls: unknown): string {
+// ★ 로컬 helper — classData.ts export로 만들지 않는다.
+//   작은 helper 하나를 위해 classData.ts 전체를 덮어쓰면 반 관리 데이터 회귀 위험이 있다.
+//   타입/필드명이 달라져도 Finance 화면이 깨지지 않도록 unknown 안전 접근을 유지한다.
+function getTeacherName(cls: unknown): string {
   const record = cls as { teacher?: string; teacherName?: string; instructorName?: string; mainTeacher?: string } | null | undefined;
   return record?.teacher ?? record?.teacherName ?? record?.instructorName ?? record?.mainTeacher ?? '';
 }
+
+function thisMonthStr() { return currentBillingMonth(); }
+function won(n: number) { return `${n.toLocaleString()}원`; }
 
 const STATUS_STYLE: Record<InvoiceStatus, { bg: string; text: string }> = {
   UNPAID:   { bg: 'oklch(0.96 0.08 27)',    text: 'oklch(0.5 0.18 27)' },
@@ -78,9 +78,9 @@ export default function FinancePayments() {
   const studentMap    = useMemo(() => new Map(students.map(s => [s.id, s])),    [students]);
   const enrollmentMap = useMemo(() => new Map(enrollments.map(e => [e.id, e])), [enrollments]);
 
-  // ★ QA v1 buildfix: cls.teacher 직접 접근 → 로컬 getClassTeacherName(cls) helper 사용
+  // ★ 로컬 helper getTeacherName 기반으로 고유 강사명 추출
   const teachers = useMemo(
-    () => Array.from(new Set(classes.map(c => getClassTeacherName(c)).filter(Boolean))).sort(),
+    () => Array.from(new Set(classes.map(c => getTeacherName(c)).filter(Boolean))).sort(),
     [classes],
   );
 
@@ -95,7 +95,7 @@ export default function FinancePayments() {
       if (filterClass !== 'all' && inv.classId !== filterClass) return false;
       if (filterTeacher !== 'all') {
         const cls = getClass(inv.classId);
-        if (getClassTeacherName(cls) !== filterTeacher) return false;
+        if (getTeacherName(cls) !== filterTeacher) return false;
       }
       if (filterStatus !== 'all' && inv.status !== filterStatus) return false;
       if (filterMethod !== 'all') {
@@ -242,7 +242,7 @@ export default function FinancePayments() {
               {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
             </SelectContent>
           </Select>
-          {/* 담당강사 필터 — getClassTeacherName helper 기반 */}
+          {/* 담당강사 필터 — 로컬 getTeacherName helper 기반 */}
           <Select value={filterTeacher} onValueChange={setFilterTeacher}>
             <SelectTrigger className="h-9 w-32 text-xs"><SelectValue placeholder="강사 전체" /></SelectTrigger>
             <SelectContent>
@@ -301,8 +301,8 @@ export default function FinancePayments() {
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.015 250)' }}>{inv.billingMonth}</td>
                       <td className="px-3 py-2.5 text-xs font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{stu?.name ?? '-'}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{cls?.name ?? '-'}</td>
-                      {/* ★ QA v1: getClassTeacherName helper 사용 */}
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{getClassTeacherName(cls) || '-'}</td>
+                      {/* 로컬 helper getTeacherName 사용 — classData.ts export 불필요 */}
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{getTeacherName(cls) || '-'}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>{enr?.status ?? '-'}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(inv.finalAmount)}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(paid)}</td>
