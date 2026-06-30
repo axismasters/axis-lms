@@ -1,4 +1,4 @@
-// AXIS LMS v1.2 - 통계 화면 (Finance Foundation v2)
+// AXIS LMS v1.2 - 통계 화면 (Finance Foundation v2 / RC QA buildfix)
 // 차트 라이브러리가 프로젝트에 없으므로(package.json 확인) 새로 추가하지 않고, 표 + 요약 카드 +
 // 막대 형태의 간단한 바(div width%)로만 구현한다(이번 단계는 "간단 통계"까지만).
 //
@@ -6,6 +6,9 @@
 // 옮겼다(정산관리 화면의 calculateMonthlySettlement와 동일한 합산 로직을 공유). 이전 버전은 환불액을
 // APPROVED(아직 완료 전)까지 합산해 과대 집계되는 문제가 있었는데, 공통 helper로 옮기면서
 // COMPLETED 상태만 정확히 집계하도록 함께 고쳐졌다.
+//
+// RC QA buildfix: 권한 게이트를 wrapper 컴포넌트에 두고, 통계 계산 hooks는 권한 통과 후
+// inner 컴포넌트에서만 실행한다. hook rule을 지키면서 권한 없는 사용자의 통계 계산도 피한다.
 
 import { useMemo } from 'react';
 import AdminLayout from '@/components/AdminLayout';
@@ -18,8 +21,6 @@ function won(n: number) { return `${n.toLocaleString()}원`; }
 
 export default function FinanceStatistics() {
   const { can } = useAuth();
-  const { invoices, payments, refunds, getPaidAmount } = useFinance();
-  const { classes, getClass } = useClasses();
 
   if (!canManageFinance(can)) {
     return (
@@ -30,6 +31,13 @@ export default function FinanceStatistics() {
       </AdminLayout>
     );
   }
+
+  return <FinanceStatisticsContent />;
+}
+
+function FinanceStatisticsContent() {
+  const { invoices, payments, refunds, getPaidAmount } = useFinance();
+  const { getClass } = useClasses();
 
   // 월별 집계(청구/수납/미납/환불) — 정산관리와 동일한 calculateMonthlySettlement 로직을 그대로 공유한다.
   const monthlyStats = useMemo(
