@@ -1,13 +1,14 @@
-// AXIS LMS v1.2 - 수납관리 화면 (Finance Payments Filter v1)
+// AXIS LMS v1.2 - 수납관리 화면 (Finance MVP QA v1)
 // 청구(Invoice)는 학생이 아니라 수강(Enrollment) 단위로 관리된다.
 // 한 학생이 여러 반을 수강하면 반마다 별도의 청구 행이 표시된다.
 //
-// Payments Filter v1 추가 사항:
-// 1. 담당강사 필터(filterTeacher) 추가 — ClassRoom.teacher 기준으로 필터링한다.
-//    반 목록의 teacher 필드에서 고유 강사명을 추출해 Select로 제공한다.
-// 2. URL query string preselect — ?invoiceId=... 가 있으면 마운트 시 해당 Invoice의
-//    수납 등록 모달을 자동으로 열어 준다. FinanceUnpaid에서 "수납 등록" 버튼을 눌러 이 페이지로
-//    이동했을 때 모달이 바로 열리도록 한다(신규 route 없음, useSearch 활용).
+// QA v1 수정 사항:
+// 1. wouter useSearch → window.location.search 기반으로 변경.
+//    (useSearch의 wouter 버전별 export 불안정 이슈 대응)
+// 2. filtered/summary useMemo를 canManageFinance early return 이전으로 이동.
+//    React hooks rule: 모든 hook은 조건부 return 이전에 위치해야 한다.
+// 3. cls.teacher 직접 접근 → 로컬 getClassTeacherName(cls) helper 사용.
+//    classData.ts 전체 덮어쓰기 없이 Finance 화면 내부에서 안전화.
 //
 // 권한: canManageFinance(can)로 페이지 진입 자체를 가드(SUPER_ADMIN/DIRECTOR/STAFF만 통과).
 // 수납 등록은 canCreatePayment, 영수증 발급/조회는 canIssueReceipt로 별도 게이트한다.
@@ -38,7 +39,6 @@ import { Search, Receipt, StickyNote, CreditCard, Info, Eye, Send } from 'lucide
 function thisMonthStr() { return currentBillingMonth(); }
 function won(n: number) { return `${n.toLocaleString()}원`; }
 
-
 function getClassTeacherName(cls: unknown): string {
   const record = cls as { teacher?: string; teacherName?: string; instructorName?: string; mainTeacher?: string } | null | undefined;
   return record?.teacher ?? record?.teacherName ?? record?.instructorName ?? record?.mainTeacher ?? '';
@@ -59,14 +59,11 @@ export default function FinancePayments() {
   const { enrollments } = useEnrollment();
   const { createNotificationFromEvent } = useNotification();
 
-  // URL query string (?invoiceId=...) 읽기 — wouter 버전 차이를 피하기 위해 window.location.search를 사용한다.
-  const searchStr = typeof window !== 'undefined' ? window.location.search : '';
-
-  // 필터 상태 — 담당강사(filterTeacher) 추가
+  // ── 모든 hook은 canManageFinance early return 이전에 위치한다 ──────────
   const [filterMonth,   setFilterMonth]   = useState(thisMonthStr());
   const [filterStudent, setFilterStudent] = useState('');
   const [filterClass,   setFilterClass]   = useState('all');
-  const [filterTeacher, setFilterTeacher] = useState('all'); // ★ 담당강사 필터
+  const [filterTeacher, setFilterTeacher] = useState('all');
   const [filterStatus,  setFilterStatus]  = useState<InvoiceStatus | 'all'>('all');
   const [filterMethod,  setFilterMethod]  = useState<PaymentMethod | 'all'>('all');
 
@@ -75,38 +72,19 @@ export default function FinancePayments() {
   const [payMethod, setPayMethod] = useState<PaymentMethod>('CASH');
   const [payMemo,   setPayMemo]   = useState('');
 
-  const [memoModal,             setMemoModal]             = useState<Invoice | null>(null);
-  const [receiptViewInvoiceId, setReceiptViewInvoiceId]  = useState<string | null>(null);
+  const [memoModal,            setMemoModal]            = useState<Invoice | null>(null);
+  const [receiptViewInvoiceId, setReceiptViewInvoiceId] = useState<string | null>(null);
 
   const studentMap    = useMemo(() => new Map(students.map(s => [s.id, s])),    [students]);
   const enrollmentMap = useMemo(() => new Map(enrollments.map(e => [e.id, e])), [enrollments]);
 
-  // 담당강사 목록 — 반 데이터에서 고유 강사명을 정렬해 추출한다
+  // ★ QA v1 buildfix: cls.teacher 직접 접근 → 로컬 getClassTeacherName(cls) helper 사용
   const teachers = useMemo(
     () => Array.from(new Set(classes.map(c => getClassTeacherName(c)).filter(Boolean))).sort(),
     [classes],
   );
 
-  // FinanceUnpaid에서 ?invoiceId=... 로 이동했을 때 수납 등록 모달을 자동으로 연다
-  useEffect(() => {
-    const params = new URLSearchParams(searchStr);
-    const preId  = params.get('invoiceId');
-    if (!preId) return;
-    const inv = invoices.find(i => i.id === preId);
-    if (!inv) return;
-    if (inv.status === 'PAID' || inv.status === 'CANCELED') return; // 이미 완납/취소된 건은 열지 않음
-    const remaining = Math.max(0, inv.finalAmount - getPaidAmount(inv.id));
-    if (remaining <= 0) return;
-    setPaymentModal({ invoice: inv, remaining });
-    setPayAmount(String(remaining));
-    setPayMethod('CASH');
-    setPayMemo('');
-  }, [searchStr, invoices, getPaidAmount]);
-
-  const canPay     = canCreatePayment(can);
-  const canReceipt = canIssueReceipt(can);
-
-  // 필터링된 청구 목록
+  // ★ QA v1: filtered useMemo를 early return 이전으로 이동
   const filtered = useMemo(() => {
     return invoices.filter(inv => {
       if (filterMonth && inv.billingMonth !== filterMonth) return false;
@@ -115,10 +93,9 @@ export default function FinancePayments() {
         if (!stu || !stu.name.includes(filterStudent)) return false;
       }
       if (filterClass !== 'all' && inv.classId !== filterClass) return false;
-      // ★ 담당강사 필터: Invoice.classId → ClassRoom.teacher 로 비교
       if (filterTeacher !== 'all') {
         const cls = getClass(inv.classId);
-        if (!cls || getClassTeacherName(cls) !== filterTeacher) return false;
+        if (getClassTeacherName(cls) !== filterTeacher) return false;
       }
       if (filterStatus !== 'all' && inv.status !== filterStatus) return false;
       if (filterMethod !== 'all') {
@@ -129,9 +106,9 @@ export default function FinancePayments() {
     }).sort((a, b) => b.billingMonth.localeCompare(a.billingMonth));
   }, [invoices, filterMonth, filterStudent, filterClass, filterTeacher, filterStatus, filterMethod, studentMap, getClass, getPaymentsByInvoice]);
 
-  // 이번 달 기준 요약 카드 (필터와 무관하게 "이번 달" 고정)
+  // ★ QA v1: summary useMemo를 early return 이전으로 이동
   const summary = useMemo(() => {
-    const thisMonth    = thisMonthStr();
+    const thisMonth     = thisMonthStr();
     const monthInvoices = invoices.filter(i => i.billingMonth === thisMonth);
     const billed        = monthInvoices.reduce((s, i) => s + i.finalAmount, 0);
     const paid          = monthInvoices.reduce((s, i) => s + getPaidAmount(i.id), 0);
@@ -140,6 +117,26 @@ export default function FinancePayments() {
     const paidCount     = monthInvoices.filter(i => i.status === 'PAID').length;
     return { billed, paid, unpaid, refundRequested, paidCount };
   }, [invoices, getPaidAmount, refunds]);
+
+  // ★ QA v1: wouter useSearch 제거 → window.location.search 기반으로 변경
+  // FinanceUnpaid에서 ?invoiceId=... 로 이동했을 때 수납 등록 모달을 자동으로 연다
+  useEffect(() => {
+    const params = new URLSearchParams(
+      typeof window !== 'undefined' ? window.location.search : '',
+    );
+    const preId = params.get('invoiceId');
+    if (!preId) return;
+    const inv = invoices.find(i => i.id === preId);
+    if (!inv) return;
+    if (inv.status === 'PAID' || inv.status === 'CANCELED') return;
+    const remaining = Math.max(0, inv.finalAmount - getPaidAmount(inv.id));
+    if (remaining <= 0) return;
+    setPaymentModal({ invoice: inv, remaining });
+    setPayAmount(String(remaining));
+    setPayMethod('CASH');
+    setPayMemo('');
+  }, [invoices, getPaidAmount]);
+  // ────────────────────────────────────────────────────────────────────────
 
   if (!canManageFinance(can)) {
     return (
@@ -150,6 +147,9 @@ export default function FinancePayments() {
       </AdminLayout>
     );
   }
+  const canPay     = canCreatePayment(can);
+  const canReceipt = canIssueReceipt(can);
+
   const openPaymentModal = (inv: Invoice) => {
     const remaining = Math.max(0, inv.finalAmount - getPaidAmount(inv.id));
     setPaymentModal({ invoice: inv, remaining });
@@ -169,7 +169,7 @@ export default function FinancePayments() {
   };
 
   const handleIssueReceipt = (invoiceId: string) => {
-    const pays  = getPaymentsByInvoice(invoiceId);
+    const pays   = getPaymentsByInvoice(invoiceId);
     const target = pays.find(p => !p.receiptIssued);
     if (!target) { toast.info('이미 발급된 영수증입니다.'); return; }
     issueReceipt(target.id);
@@ -194,7 +194,7 @@ export default function FinancePayments() {
         납부기한: inv.dueDate, 반명: cls?.name,
       },
     });
-    toast.success('청구 안내를 발송했습니다(mock — 실제 카카오/SMS 연동 없음).');
+    toast.success('청구 안내를 발송했습니다(mock).');
   };
 
   return (
@@ -221,7 +221,7 @@ export default function FinancePayments() {
         </div>
       </div>
 
-      {/* 필터 — ★ 담당강사 필터 추가 */}
+      {/* 필터 */}
       <div className="axis-card p-4 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
           <input
@@ -242,7 +242,7 @@ export default function FinancePayments() {
               {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
             </SelectContent>
           </Select>
-          {/* ★ 담당강사 필터 */}
+          {/* 담당강사 필터 — getClassTeacherName helper 기반 */}
           <Select value={filterTeacher} onValueChange={setFilterTeacher}>
             <SelectTrigger className="h-9 w-32 text-xs"><SelectValue placeholder="강사 전체" /></SelectTrigger>
             <SelectContent>
@@ -301,8 +301,8 @@ export default function FinancePayments() {
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.015 250)' }}>{inv.billingMonth}</td>
                       <td className="px-3 py-2.5 text-xs font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{stu?.name ?? '-'}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{cls?.name ?? '-'}</td>
-                      {/* ★ 담당강사 컬럼 */}
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{cls ? getClassTeacherName(cls) || '-' : '-'}</td>
+                      {/* ★ QA v1: getClassTeacherName helper 사용 */}
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{getClassTeacherName(cls) || '-'}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>{enr?.status ?? '-'}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(inv.finalAmount)}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(paid)}</td>

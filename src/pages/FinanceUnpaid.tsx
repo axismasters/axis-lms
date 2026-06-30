@@ -39,6 +39,8 @@ export default function FinanceUnpaid() {
 
   const canPay = canCreatePayment(can);
 
+  // ★ QA v1: unpaidList/summary useMemo를 canManageFinance early return 이전으로 이동
+  // React hooks rule: 모든 hook(useMemo 포함)은 조건부 return 이전에 위치해야 한다.
   const unpaidList = useMemo(() => {
     return invoices
       .filter(inv => inv.status === 'UNPAID' || inv.status === 'PARTIAL')

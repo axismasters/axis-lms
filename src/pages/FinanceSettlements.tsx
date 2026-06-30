@@ -72,20 +72,18 @@ export default function FinanceSettlements() {
     toast.success(`${month} 정산 레코드가 생성되었습니다.`);
   };
 
+  // ★ QA v1: confirmTarget을 month 기준으로 통일한다.
+  // settlementMap은 month를 키로 사용하므로, confirmTarget에 s!.id(settlement id)가 아닌
+  // month를 저장해야 정상적으로 레코드를 조회할 수 있다.
+  // 흐름: month → settlementMap.get(month) → settlement.id → confirmSettlement(settlement.id)
   const handleConfirm = () => {
     if (!confirmTarget) return;
-
-    // confirmTarget은 settlement id가 아니라 정산월(month)이다.
-    // settlementMap도 month 기준 Map이므로, id/month 혼동으로 `stl-auto-${id}` 같은
-    // 잘못된 월 레코드가 생성되지 않도록 month → settlement.id 순서로 확정한다.
-    const settlement = settlementMap.get(confirmTarget);
+    // confirmTarget은 month (id가 아님)
+    let settlement = settlementMap.get(confirmTarget);
     if (!settlement) {
-      generateSettlementForMonth(confirmTarget);
-      toast.success(`${confirmTarget} 정산 레코드가 생성되었습니다. 생성된 레코드에서 다시 확정할 수 있습니다.`);
-      setConfirmTarget(null);
-      return;
+      // 레코드가 없으면 먼저 생성한 후 확정한다
+      settlement = generateSettlementForMonth(confirmTarget);
     }
-
     const result = confirmSettlement(settlement.id, currentUser.name);
     if (!result.ok) { toast.error(result.reason ?? '정산 확정에 실패했습니다.'); setConfirmTarget(null); return; }
     toast.success('정산이 확정되었습니다.');
@@ -184,6 +182,7 @@ export default function FinanceSettlements() {
                       )}
                       {/* 정산 레코드는 있지만 DRAFT — 확정 버튼 */}
                       {hasRecord && s!.status === 'DRAFT' && canConfirm && (
+                        // ★ QA v1: s!.id(settlement id) 대신 month를 confirmTarget에 저장한다
                         <button onClick={() => setConfirmTarget(month)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
                           <CheckCircle2 size={11} /> 정산 확정
                         </button>

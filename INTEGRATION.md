@@ -1,151 +1,161 @@
-# AXIS LMS v1.2 — Finance Payments Filter and Settlement Auto Generation v1 buildfix
-
-## 검사 결론
-
-원본 `axis-lms-v1_2-finance-payments-filter-settlement-auto-generation-v1.zip`은 repo 루트 기준 경로 구조는 정상이지만, 그대로 GitHub에 업로드하면 React hooks rule 및 정산 확정 로직 회귀 위험이 있다.
-
-ChatGPT buildfix에서 아래 문제를 수정했다.
+# AXIS LMS v1.2 — Finance MVP Acceptance QA and Permission Freeze v1 buildfix
 
 ## 기준 baseline
 
-`55. Finance Engine Monthly Settlement Refund Delinquency Stability v1 buildfix` 이후 기준.
+56. Finance Payments Filter and Settlement Auto Generation v1 buildfix  
+GitHub Actions 정상 통과 완료 상태를 기준으로 진행한다.
 
-## 변경 파일 목록
+## 산출물 성격
 
-| 파일 | 변경 내용 |
+이번 산출물은 재무관리 MVP의 수납 / 미납 / 정산 흐름을 QA하고, 발견된 최소 회귀 위험만 수정하는 freeze 산출물이다.
+대학분석 Phase 5.1은 freeze 상태로 유지하며 변경하지 않는다.
+
+## 원본 zip 검사 결과
+
+| 항목 | 결과 |
 |---|---|
-| `src/contexts/FinanceContext.tsx` | Claude 원본 유지. `generateSettlementForMonth` 추가 구조 유지 |
-| `src/pages/FinancePayments.tsx` | hooks 위치 수정, wouter `useSearch` 의존 제거, 담당강사 필드 접근 안전화 |
-| `src/pages/FinanceRefunds.tsx` | Claude 원본 유지. 20일 초과 환불 차단 및 hooks 위치 정상 |
-| `src/pages/FinanceSettlements.tsx` | 정산 확정 시 month/id 혼동 수정 |
-| `src/pages/FinanceUnpaid.tsx` | hooks 위치 수정 |
-| `INTEGRATION.md` | finance buildfix 전용 문서로 정리 |
+| zip wrapper 폴더 | 없음 |
+| 실제 코드 파일 포함 | 있음 |
+| 문서-only 산출물 여부 | 아님 |
+| TypeScript/TSX 큰 문법 위험 | 발견되지 않음 |
+| React hooks 위치 | FinancePayments / FinanceUnpaid / FinanceSettlements 모두 early return 이전 유지 |
+| 정산 month/id 혼동 | 원본에서 수정 시도됨 |
+| 대학분석 freeze 침범 | 코드 변경 없음 |
+| buildfix 필요 여부 | 필요 |
 
-## 원본 zip 문제 및 buildfix 내용
+## 원본 zip에서 발견한 문제
 
-### 1. `FinancePayments.tsx` hooks 위치 회귀 수정
+### 1. `INTEGRATION.md` 문서 오염
 
-원본은 `canManageFinance(can)` 권한 early return 뒤에 `filtered`, `summary` `useMemo`가 있었다.
+원본 `INTEGRATION.md`에 과거 대학분석 TargetGap buildfix 문서와 이전 재무 stability/payments 문서가 함께 섞여 있었다.
+이 상태로 업로드하면 baseline 기록이 잘못 누적될 수 있다.
 
-React hooks rule 회귀 위험이 있으므로 모든 `useState`, `useMemo`, `useEffect`가 권한 return 이전에 호출되도록 이동했다.
+### 2. `src/lib/classData.ts` 전체 덮어쓰기 위험
 
-### 2. `FinanceUnpaid.tsx` hooks 위치 회귀 수정
+원본은 담당강사 helper 하나를 추가하기 위해 `src/lib/classData.ts` 전체 파일을 포함했다.
+하지만 이번 작업의 핵심 범위는 Finance QA freeze이며, 반 관리 더미 데이터 파일 전체를 덮어쓰면 다른 모듈의 반 데이터/타입 변경을 회귀시킬 위험이 있다.
 
-원본은 권한 early return 뒤에 `unpaidList`, `summary` `useMemo`가 있었다.
+ChatGPT buildfix에서는 `classData.ts`를 산출물에서 제외하고, `FinancePayments.tsx` 내부에 로컬 `getClassTeacherName(cls: unknown)` helper를 둬서 동일 목적을 달성했다.
 
-buildfix에서 두 `useMemo`를 early return 이전으로 이동했다.
+### 3. 담당강사 helper 안정성
 
-### 3. `FinanceSettlements.tsx` 정산 확정 month/id 혼동 수정
+원본 `classData.ts`의 helper는 실제로 `cls?.teacher`만 읽었다.
+이전 buildfix 취지는 `teacher`, `teacherName`, `instructorName`, `mainTeacher` 중 존재하는 값을 안전하게 읽는 것이었다.
 
-원본 `handleConfirm`은 `confirmTarget`에 settlement id를 넣어두고, `settlementMap.has(confirmTarget)`을 검사했다.
+ChatGPT buildfix에서는 기존 안전 helper 형태를 유지했다.
 
-그러나 `settlementMap`은 month 기준 Map이므로, DRAFT 정산 확정 시 다음과 같은 잘못된 흐름이 발생할 수 있었다.
-
-```text
-confirmTarget = settlement.id
-settlementMap.has(settlement.id) = false
-generateSettlementForMonth(settlement.id) 호출
-```
-
-즉 `stl-auto-${id}` 형태의 잘못된 월 정산 레코드가 생성될 위험이 있었다.
-
-buildfix에서는 `confirmTarget`을 settlement id가 아니라 month로 통일했다.
-
-```text
-setConfirmTarget(month)
-settlementMap.get(confirmTarget)
-confirmSettlement(settlement.id, currentUser.name)
-```
-
-레코드가 없는 달은 먼저 `generateSettlementForMonth(month)`로 생성하고, 재렌더 후 확정하도록 처리했다.
-
-### 4. `FinancePayments.tsx` `useSearch` 의존 제거
-
-원본은 `wouter`의 `useSearch`를 사용했다.
-
-프로젝트 wouter 버전에 따라 export 여부가 다를 수 있어 build risk가 있으므로, buildfix에서는 `window.location.search`를 안전 가드와 함께 사용했다.
-
-```typescript
-const searchStr = typeof window !== 'undefined' ? window.location.search : '';
-```
-
-신규 route는 추가하지 않았고, 기존 `/admin/finance/payments?invoiceId=...` 흐름은 유지했다.
-
-### 5. 담당강사 필드 접근 안전화
-
-원본은 `ClassRoom.teacher` 직접 접근을 사용했다.
-
-현재 repo의 ClassRoom 타입이 `teacher`, `teacherName`, `instructorName`, `mainTeacher` 중 어느 필드를 쓰는지 확정되지 않은 상태에서 직접 접근하면 타입 오류 위험이 있다.
-
-buildfix에서는 helper로 안전화했다.
-
-```typescript
+```ts
 function getClassTeacherName(cls: unknown): string {
   const record = cls as { teacher?: string; teacherName?: string; instructorName?: string; mainTeacher?: string } | null | undefined;
   return record?.teacher ?? record?.teacherName ?? record?.instructorName ?? record?.mainTeacher ?? '';
 }
 ```
 
-## AXIS LMS v1.2 재무 원칙 준수 확인
+## buildfix 변경 파일
 
-| 원칙 | 상태 |
+| 파일 | 변경 내용 |
 |---|---|
-| 재무는 Enrollment 기준 | 유지 |
-| 학생 1명 복수 수강 시 수강별 청구 구분 | 유지 |
-| 미납 → 수납 등록 연결 | 유지 |
-| 월별 Settlement 누락 감지 및 생성 | 유지 |
-| 정산 확정은 원장/최고관리자만 | 유지 |
-| 행정은 정산 확정 불가 | 유지 |
-| 퇴원 20일 초과 환불 요청 차단 | 유지 |
-| 알림/카카오 실제 연동 없음 | 유지 |
-| 신규 route 추가 없음 | 유지 |
-| PDF Export 없음 | 유지 |
+| `src/pages/FinancePayments.tsx` | `classData.ts` import 제거, 로컬 담당강사 helper 유지, hook early return 이전 유지 |
+| `src/pages/FinanceUnpaid.tsx` | 원본 QA 수정 유지, hook early return 이전 유지 |
+| `src/pages/FinanceSettlements.tsx` | 원본 QA 수정 유지, confirmTarget을 month 기준으로 유지 |
+| `INTEGRATION.md` | 이번 Finance QA freeze 전용 문서로 정리 |
 
-## 회귀 방지 확인
+## 유지된 Finance QA 항목
+
+### 수납관리
+
+- Enrollment 기준 청구/수납 행 유지
+- 학생 1명 복수 수강 시 수강별 청구 구분 유지
+- 월 / 반 / 담당강사 / 학생명 / 수납상태 / 수납수단 필터 유지
+- 미납관리에서 `/admin/finance/payments?invoiceId=...` 이동 시 수납 등록 모달 자동 오픈 유지
+- 완납/취소/잔여 0원 청구서 자동 오픈 방지 유지
+- 수납금액 잔여 미납액 초과 방지 유지
+- 영수증 발급/보기 흐름 유지
+
+### 미납관리
+
+- `UNPAID`, `PARTIAL` 청구만 표시 유지
+- 수강상태 컬럼 유지
+- 퇴원/종료 수강 미납 식별 유지
+- 수납 등록 버튼은 `canCreatePayment(can)` 권한 기반으로 노출
+- 실제 카카오/SMS 발송 없이 mock 알림 placeholder 유지
+
+### 정산관리
+
+- 월별 총 청구액 / 총 수납액 / 총 미납액 / 총 환불액 / 순매출 표시 유지
+- Settlement 레코드 없는 월 감지 유지
+- 정산 생성 버튼 유지
+- 정산 확정 버튼은 원장/최고관리자 권한만 가능
+- `confirmTarget`은 settlement id가 아니라 month 기준으로 유지
+- 확정된 정산의 수정/삭제 기능 추가 없음
+
+## AXIS LMS v1.2 재무 권한 확인
+
+| 권한 항목 | 상태 |
+|---|---|
+| 원장/최고관리자 재무 접근 | 유지 |
+| 행정 재무 접근 | 유지 |
+| 부원장/실장/강사/학생/학부모 재무 접근 차단 | 유지 |
+| 행정 수납 등록 가능 | 유지 |
+| 행정 환불 요청 가능 | 기존 구조 유지 |
+| 행정 영수증 발급 가능 | 유지 |
+| 행정 미납 관리/조회 가능 | 유지 |
+| 행정 정산 확정 불가 | 유지 |
+| 행정 환불 최종 승인 불가 | 기존 구조 유지 |
+| 원장/최고관리자 정산 확정 가능 | 유지 |
+
+## 절대 회귀 금지 확인
 
 | 항목 | 상태 |
 |---|---|
-| `src/pages/teacher/TeacherExamGrading.tsx` 미포함/미변경 | 유지 |
-| `src/pages/StudentDetail.tsx` 미포함/미변경 | 유지 |
-| 대학분석 Phase 5.1 파일 미포함/미변경 | 유지 |
-| `FinanceRefunds.tsx` 20일 초과 직접 입력 우회 없음 | 유지 |
-| `FinancePayments.tsx` hooks early return 전 위치 | 수정 완료 |
-| `FinanceUnpaid.tsx` hooks early return 전 위치 | 수정 완료 |
-| `FinanceSettlements.tsx` id/month 혼동 제거 | 수정 완료 |
-
-## 자체 검사
-
-- zip wrapper 폴더 없음
-- repo 루트 기준 경로 정상
-- TypeScript `transpileModule` 문법 검사 통과
-- hooks 위치 정적 점검 통과
-- 전체 `npm run build`는 전체 repo가 없어 실행 불가
+| `TeacherExamGrading.tsx` scopedExam → visibleExam 타입픽스 | 이번 zip에서 변경 없음 |
+| `StudentDetail.tsx` adapterMockSummaries `ReturnType` 타입픽스 | 이번 zip에서 변경 없음 |
+| 대학분석 Phase 5.1 API 연동 | 변경 없음 |
+| recommendationBand.items UI | 변경 없음 |
+| targetGap 상세 UI | 변경 없음 |
+| PDF Export | 추가 없음 |
+| LMS 내부 대학추천 계산/합격률 계산 | 추가 없음 |
+| 실제 PG 결제 연동 | 추가 없음 |
+| 실제 카카오/SMS 발송 | 추가 없음 |
+| `wouter useSearch` 재도입 | 없음 |
+| `cls.teacher` 직접 접근 | 없음 |
+| 정산 month/id 혼동 | 없음 |
 
 ## GitHub 업로드 여부
 
 필요 있음.
 
-원본 zip이 아니라 buildfix zip을 압축 해제한 뒤 내부 파일을 같은 경로에 덮어쓴다.
+단, 원본 zip이 아니라 ChatGPT buildfix zip을 사용한다.
 
-업로드 대상 파일:
+덮어쓸 파일:
 
 ```text
-src/contexts/FinanceContext.tsx
 src/pages/FinancePayments.tsx
-src/pages/FinanceRefunds.tsx
-src/pages/FinanceSettlements.tsx
 src/pages/FinanceUnpaid.tsx
+src/pages/FinanceSettlements.tsx
 INTEGRATION.md
+```
+
+업로드 방식:
+
+```text
+zip 파일 자체를 GitHub에 올리지 말고,
+압축 해제 후 내부 파일을 같은 경로에 덮어쓴다.
 ```
 
 ## 커밋명 후보
 
 ```text
-수납관리 필터 정산 자동생성 반영
+재무 MVP 권한 QA 동결 반영
 ```
 
 ## baseline 추가
 
 ```text
-56. Finance Payments Filter and Settlement Auto Generation v1 buildfix
+57. Finance MVP Acceptance QA and Permission Freeze v1 buildfix
 ```
+
+## 다음 작업 후보
+
+재무관리 MVP는 이번 baseline에서 1차 freeze 처리 가능하다.
+다음 단계는 전체 운영 투입 전 QA 또는 권한/RBAC 전역 점검이 적절하다.
