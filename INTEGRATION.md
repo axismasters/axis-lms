@@ -1,73 +1,57 @@
-# AXIS LMS v1.2 — University Analysis Phase51 TargetGap Detail UI v1 buildfix
+# AXIS LMS v1.2 — Finance Engine Monthly Settlement Refund Delinquency Stability v1 buildfix
 
 ## 검사 결과
 
-원본 zip(`axis-lms-v1_2-university-analysis-phase51-targetgap-detail-ui-v1.zip`)은 문서와 코드 추가분 스니펫만 포함되어 있어 GitHub에 그대로 업로드하기 어렵다.
+Claude 원본 zip(`axis-lms-v1_2-finance-monthly-settlement-refund-delinquency-stability-v1.zip`)은 repo 루트 기준 경로 구조는 정상이나, AXIS LMS v1.2 재무 원칙과 일부 충돌 및 회귀 위험이 있어 ChatGPT buildfix를 생성했다.
 
-- 원본 포함 파일
-  - `INTEGRATION.md`
-  - `src/pages/StudentDetail_targetGap_additions.tsx`
-- 문제점
-  - 실제 경로 `src/pages/StudentDetail.tsx`가 없음
-  - 기존 파일에 자동 반영된 결과물이 아님
-  - targetGap을 `{ count, summary, items }` 형태로 가정했으나 현재 `Phase51AnalyzeResponse.targetGap` 계약은 `Phase51TargetGapEntry[]` 배열임
+## 원본 zip 포함 파일
 
-따라서 ChatGPT buildfix에서 최신 buildfix baseline 기준 `src/pages/StudentDetail.tsx`에 실제 반영 가능한 형태로 수정했다.
+- `src/lib/financeData.ts`
+- `src/pages/FinanceRefunds.tsx`
+- `src/pages/FinanceUnpaid.tsx`
+- `INTEGRATION.md`
+
+## 원본 문제점
+
+1. `퇴원 20일 이내만 일할 환불` 원칙을 `자동 제안 20일 이내 / 20일 초과 직접 입력 허용`으로 해석했다.
+   - AXIS LMS v1.2 원칙은 20일 초과 시 일할 환불 불가 또는 제한 안내다.
+   - 따라서 20일 초과 퇴원 건은 이번 MVP에서 환불 요청 등록을 막도록 수정했다.
+2. `FinanceRefunds.tsx`, `FinanceUnpaid.tsx`에서 일부 hook이 권한 early return 뒤에 있어 React hooks rule/lint 회귀 위험이 있었다.
+   - hook 호출을 모두 권한 return 이전으로 이동했다.
+3. `INTEGRATION.md` 상단에 이전 대학분석 buildfix 문서가 섞여 있어 baseline 기록 혼동 위험이 있었다.
+   - finance buildfix 전용 문서로 정리했다.
 
 ## 기준 baseline
 
-`Phase51 Recommendation List UI and Fetch Timeout buildfix` 이후 기준.
+`54. University Analysis Phase51 TargetGap Detail UI v1 buildfix`
 
-## 변경 파일
+## buildfix 변경 파일
 
 | 파일 | 변경 내용 |
 |---|---|
-| `src/pages/StudentDetail.tsx` | `renderTargetGapItems` helper 추가, success 블록에 목표대학 갭 상세 읽기 전용 UI 추가 |
-| `INTEGRATION.md` | 검사 결과 및 buildfix 내용 기록 |
+| `src/lib/financeData.ts` | 퇴원 20일 초과 시 일할 환불 요청 제한 정책 문구 정정 |
+| `src/pages/FinanceRefunds.tsx` | 20일 초과 퇴원 건 환불 요청 등록 차단, 입력 비활성화, 제한 안내 문구 적용, hook 순서 안정화 |
+| `src/pages/FinanceUnpaid.tsx` | 권한 early return 이전으로 hook 호출 이동 |
+| `INTEGRATION.md` | finance buildfix 전용 문서로 정리 |
 
-## 구현 내용
-
-### 1. targetGap 상세 helper 추가
-
-`Phase51AnalyzeResponse['targetGap']` 타입을 그대로 사용한다.
-
-- LMS 내부 gap 계산 없음
-- Phase 5.1 엔진 응답 배열을 읽기 전용으로 표시
-- `mathGapPercentile`, `koreanGapPercentile` 같은 수치 필드는 표시하지 않음
-- 표시 항목은 `univName`, `deptName`, `gapSummary` 중심
-
-### 2. targetGap empty state 추가
-
-`targetGap` 배열이 비어 있으면 아래 문구를 표시한다.
-
-```text
-상세 갭 항목이 없습니다.
-```
-
-### 3. success 블록 확장
-
-기존 `목표 갭 N건` 요약은 유지하고, 바로 아래에 `목표대학 갭 상세` 블록을 추가했다.
-
-## 절대 유지 확인
+## 구현/정책 확인
 
 | 항목 | 상태 |
 |---|---|
-| `src/lib/universityAnalysisAdapter.ts` 변경 없음 | ✅ |
-| `src/lib/universityAnalysisClient.ts` 변경 없음 | ✅ |
-| Phase51ImportMetaEnv 안전 캐스팅 유지 | ✅ |
-| AbortController 30초 timeout 유지 | ✅ |
-| timeout 한국어 메시지 유지 | ✅ |
-| 추천 목록 empty state 유지 | ✅ |
-| recommendationBand.items 소신/적정/안정 그룹화 유지 | ✅ |
-| TeacherExamGrading scopedExam 타입픽스 영향 없음 | ✅ |
-| adapterMockSummaries ReturnType 타입픽스 유지 | ✅ |
-| handleRequestAnalysis pending/ready 가드 유지 | ✅ |
-| stale response reset 유지 | ✅ |
-| 신규 route / Provider 없음 | ✅ |
-| Phase 5.1 엔진 본체 import 없음 | ✅ |
+| zip wrapper 폴더 없음 | ✅ |
+| repo 루트 기준 덮어쓰기 가능 | ✅ |
+| 재무는 Enrollment 기준 | ✅ |
+| 퇴원 20일 이내 일할 환불 정책 | ✅ |
+| 20일 초과 퇴원 건 제한 안내 및 요청 등록 차단 | ✅ |
+| 환불 승인/반려는 canApproveRefund 기준 | ✅ |
+| 미납관리 수강상태 컬럼 표시 | ✅ |
+| Notification 직접 발송 없음, mock 이벤트 수준 | ✅ |
+| 대학분석 freeze 범위 변경 없음 | ✅ |
 | PDF Export 없음 | ✅ |
-| LMS 내부 추천 순위 계산 없음 | ✅ |
-| LMS 내부 합격 가능성 계산 없음 | ✅ |
+| 문제은행/NGD/OCR 없음 | ✅ |
+| 신규 route / Provider 없음 | ✅ |
+| TeacherExamGrading 타입픽스 영향 없음 | ✅ |
+| StudentDetail adapterMockSummaries 타입픽스 영향 없음 | ✅ |
 
 ## GitHub 업로드 여부
 
@@ -78,11 +62,17 @@
 ## 커밋명 후보
 
 ```text
-대학분석 목표대학 갭 상세 반영
+재무 월별정산 환불 미납 안정화 반영
 ```
 
 ## baseline 추가
 
 ```text
-54. University Analysis Phase51 TargetGap Detail UI v1 buildfix
+55. Finance Engine Monthly Settlement Refund Delinquency Stability v1 buildfix
 ```
+
+## 다음 작업 후보
+
+1. Finance Payments 필터 안정화
+2. 정산관리 Settlement 자동 생성
+3. 미납 알림 mock → Notification Engine 정책 정합성 QA

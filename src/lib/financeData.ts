@@ -342,6 +342,26 @@ export function calculateWithdrawalRefundAmount(
   return Math.max(0, Math.round(monthlyAmount) - usedAmount);
 }
 
+// ────────────────────────────────────────────────────────────
+// AXIS 재무 원칙: 퇴원 20일 이내 일할 환불 정책
+// 퇴원 후 20일을 초과하면 일할 환불 요청을 제한한다. 예외 환불은 향후 별도 승인 워크플로우로
+// 분리해야 하며, 이번 MVP에서는 “20일 초과 퇴원 건”을 일반 환불 요청으로 등록하지 않는다.
+// 이 상수를 변경하면 FinanceRefunds.tsx의 handleSelectInvoice / saveRequest 로직과 함께 즉시 반영된다.
+// ────────────────────────────────────────────────────────────
+export const WITHDRAWAL_REFUND_WINDOW_DAYS = 20;
+
+/**
+ * 퇴원 후 환불 자동 제안 유효 기간(20일) 이내인지 판단한다.
+ * - endDate 로부터 today까지 경과일이 20일 이하이면 true(일할 환불 가능 기간 내)를 반환한다.
+ * - 퇴원일 당일을 0일로 계산하므로, 퇴원일(0일) ~ 퇴원일+20일이 일할 환불 가능 기간이다.
+ * - 20일 초과 퇴원 건은 이번 MVP에서 일할 환불 요청 등록을 제한한다.
+ */
+export function isWithinWithdrawalRefundWindow(endDate: string, today: Date = new Date()): boolean {
+  const end = new Date(endDate);
+  const diffDays = Math.floor((today.getTime() - end.getTime()) / 86400000);
+  return diffDays <= WITHDRAWAL_REFUND_WINDOW_DAYS;
+}
+
 // Finance Foundation v3: 영수증 자동 발급 구조 — 번호만 생성한다(실제 PDF 렌더링은 다음 단계).
 // 형식: RCT-YYYYMM-#### (그 달의 발급 순번, 4자리). sequence는 호출부(Context)가 누적 발급 건수로 넘긴다.
 export function generateReceiptNumber(issuedAt: string, sequence: number): string {
