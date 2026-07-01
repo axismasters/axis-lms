@@ -1,5 +1,30 @@
 # APPLY_ORDER_PHASE3D.md
 
+## v3-r9-r4 적용 안내
+
+단일 zip(`axis-lms-v1_2-phase3d-if-analysis-engine-detail-flow-v3-r9-r4-github-upload.zip`,
+내부 루트 `axis-lms-main/`)으로 제공한다.
+
+### 적용 순서
+
+1. zip 압축 해제 후 로컬 저장소 폴더 내용을 전체 교체한다.
+   - `src/assets/brand/axis-hero-dark.png`가 새 이미지로 교체됐는지 확인.
+2. GitHub Desktop에서 변경 사항 확인 — 수정 파일 3개(`axis-hero-dark.png`,
+   `index.css`, `brandColors.ts`).
+3. 커밋 메시지: "Phase 3D v3-r9-r4 login hero image and sidebar navy refresh"
+   (별도 GitHub Desktop Summary 지시가 없어 자체 작성함 — 원하는 문구가
+   있으면 알려달라).
+4. Push 후 GitHub Actions Build Check 결과 확인.
+5. **불변 파일 3종은 이번에도 손대지 않았다.**
+
+### 적용 후 수동 확인 권장 항목
+
+- 로그인 화면 히어로 이미지가 중앙에 잘 정렬되어 보이는지(원래 지적 사항).
+- 관리자 사이드바 배경색 — 육안으로는 이전과 거의 동일하게 보일 것이다(색차가
+  매우 작음, 정상).
+
+---
+
 ## v3-r9-r3 적용 안내
 
 단일 zip(`axis-lms-v1_2-phase3d-if-analysis-engine-detail-flow-v3-r9-r3-github-upload.zip`,
