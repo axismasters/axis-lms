@@ -1,5 +1,30 @@
 # APPLY_ORDER_PHASE3D.md
 
+## v3-r9-r3 적용 안내
+
+단일 zip(`axis-lms-v1_2-phase3d-if-analysis-engine-detail-flow-v3-r9-r3-github-upload.zip`,
+내부 루트 `axis-lms-main/`)으로 제공한다. **v3-r9-r2는 반려된 산출물**이므로
+GitHub에 반영되지 않았어야 한다 — 혹시 반영했다면 이번 zip으로 덮어쓸 것.
+
+### 적용 순서
+
+1. zip 압축 해제 후 로컬 저장소 폴더 내용을 전체 교체한다.
+2. GitHub Desktop에서 변경 사항 확인 — **수정 파일은 `src/index.css` 1개뿐**이다.
+   `.axis-sidebar` 배경색 한 줄만 바뀐다.
+3. 커밋 메시지: "Phase 3D v3-r9-r3 AXIS navy token cleanup"
+4. Push 후 GitHub Actions Build Check 통과 확인(필수 조건).
+5. **불변 파일 3종은 이번에도 손대지 않았다.**
+
+### 적용 후 수동 확인 권장 항목
+
+- 좌측 사이드바(관리자 화면) 배경색이 이제 앱의 다른 네이비 요소(버튼, 배지 등)와
+  같은 톤으로 보이는지 확인 — v3-r9-r2에서 `--brand-navy` 토큰과 대부분의
+  하드코딩은 새 짙은 톤(#040D1E)으로 갱신됐지만, 이 사이드바 배경만 옛
+  값(#081F4D, 더 밝음)에 그대로 머물러 있었다. 이번 수정으로 사이드바도
+  같은 톤으로 맞춰졌어야 정상이다.
+
+---
+
 ## v3-r9-r2 적용 안내
 
 단일 zip(`axis-lms-v1_2-phase3d-if-analysis-engine-detail-flow-v3-r9-r2-github-upload.zip`,

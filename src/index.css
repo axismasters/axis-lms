@@ -160,10 +160,11 @@
 
   /* AXIS LMS Custom Styles */
   .axis-sidebar {
-    /* [Phase 3D v3-r7-r1] AXIS 브랜드 Navy(#081F4D)로 통일 — 사이드바는 좌측 내비게이션
-       레일로만 기능하고, 메인 콘텐츠 영역은 항상 밝은 Ivory/Warm White를 유지한다
-       (화면 전체를 다크 테마로 만들지 않는다). */
-    background-color: #081F4D;
+    /* [Phase 3D v3-r9-r3] 하드코딩된 #081F4D 리터럴이 여기 남아있었다 — v3-r9-r2의
+       전역 색상 치환이 .tsx/.ts 파일만 대상으로 했고 .css 파일은 빠뜨렸던 것이
+       원인. 토큰(var(--brand-navy))으로 교체해 앞으로 같은 문제가 재발하지
+       않도록 했다(다음에 --brand-navy 값이 또 바뀌어도 이 줄은 자동 반영됨). */
+    background-color: var(--brand-navy);
     width: 240px;
     /* Phase 3D v3-r4: 사이드바를 뷰포트 높이에 고정(100vh/100dvh)하고 자체 overflow는 숨긴다.
        내부 메뉴 영역(nav.min-h-0.overflow-y-auto)만 스크롤되어, 짧은 화면에서도
