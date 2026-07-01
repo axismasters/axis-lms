@@ -9,10 +9,10 @@ import TeacherStudents from '@/pages/teacher/TeacherStudents';
 import TeacherStudentDetail from '@/pages/teacher/TeacherStudentDetail';
 import TeacherAttendance from '@/pages/teacher/TeacherAttendance';
 import TeacherExams from '@/pages/teacher/TeacherExams';
+import TeacherExamScores from '@/pages/teacher/TeacherExamScores';
 import TeacherExamGrading from '@/pages/teacher/TeacherExamGradingGuard';
 import TeacherGrades from '@/pages/teacher/TeacherGrades';
-import TeacherVideos from '@/pages/teacher/TeacherVideos';
-import TeacherNotes from '@/pages/teacher/TeacherNotes';
+import TeacherMaterials from '@/pages/teacher/TeacherMaterials';
 import TeacherHomework from '@/pages/teacher/TeacherHomework';
 import TeacherStudentGrowth from '@/pages/teacher/TeacherStudentGrowth';
 // ─── Phase 3A-1: 대학추천 데이터 관리 ─────────────────────────────────
@@ -61,7 +61,10 @@ export default function TeacherRoutes() {
         {/* 채점 상세 (목록보다 먼저 등록) */}
         <Route path="/teacher/exams/:examId/grading" component={TeacherExamGrading} />
 
-        {/* 내 시험 / 미채점 */}
+        {/* Phase 3D v3: 학생별 성적(조회+정정) — 목록보다 먼저 등록 */}
+        <Route path="/teacher/exams/:examId/scores" component={TeacherExamScores} />
+
+        {/* 내 시험지 관리 / 미채점 */}
         <Route path="/teacher/exams" component={TeacherExams} />
 
         {/* 담당 학생 성적 확인 */}
@@ -75,11 +78,11 @@ export default function TeacherRoutes() {
         <Route path="/teacher/academic-input" component={() => <Redirect to="/teacher/university-data" />} />
         <Route path="/teacher/university-data" component={TeacherUniversityData} />
 
-        {/* 내 수업영상 */}
-        <Route path="/teacher/videos" component={TeacherVideos} />
-
-        {/* 내 수업노트 */}
-        <Route path="/teacher/notes" component={TeacherNotes} />
+        {/* Phase 3D v3: 수업영상+수업노트 통합 화면 (탭으로 전환) */}
+        <Route path="/teacher/materials" component={TeacherMaterials} />
+        {/* 구 경로 하위호환 — 각각 대응 탭으로 진입 */}
+        <Route path="/teacher/videos" component={() => <Redirect to="/teacher/materials?tab=videos" />} />
+        <Route path="/teacher/notes" component={() => <Redirect to="/teacher/materials?tab=notes" />} />
 
         {/* 숙제 관리 */}
         <Route path="/teacher/homework" component={TeacherHomework} />

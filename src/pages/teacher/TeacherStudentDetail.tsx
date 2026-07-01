@@ -6,9 +6,10 @@
 
 import { useState } from 'react';
 import { useParams, Link } from 'wouter';
-import { ChevronLeft, BarChart2, CalendarCheck, FileText, MessageSquare, Plus, X } from 'lucide-react';
+import { ChevronLeft, BarChart2, CalendarCheck, FileText, MessageSquare, Plus, X, KeyRound, UserCog } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
@@ -18,11 +19,13 @@ import {
   COUNSELING_TYPES, COUNSELING_TARGETS,
   getCounselingRecordsForStudent, addCounselingRecord,
 } from '@/lib/counselingData';
+import { resetStudentNickname } from '@/lib/studentProfile';
+import { logAccountAction } from '@/lib/accountActionLog';
 import { getLocalDateStr } from '@/utils/dateUtils';
 
 export default function TeacherStudentDetail() {
   const { studentId } = useParams<{ studentId: string }>();
-  const { currentUser, activeMode } = useAuth();
+  const { currentUser, activeMode, canResetPassword, canResetNickname } = useAuth();
   const { students } = useStudents();
   const { exams, submissions } = useAssessment();
   const { sessions } = useAttendance();
@@ -39,6 +42,8 @@ export default function TeacherStudentDetail() {
     target: COUNSELING_TARGETS[0] as CounselingTarget,
     content: '',
   });
+  // Phase 3D v3: 비밀번호/닉네임 초기화 확인 모달 상태(마찬가지로 조기 return보다 앞에 선언)
+  const [confirmAction, setConfirmAction] = useState<'password' | 'nickname' | null>(null);
 
   const assignedClassIds = currentUser.assignedClassIds ?? [];
   const assignedStudentIds = currentUser.assignedStudentIds ?? [];
@@ -120,6 +125,36 @@ export default function TeacherStudentDetail() {
     setShowCounselingForm(false);
   };
 
+  // Phase 3D v3: 비밀번호 초기화 — 기존 비밀번호는 절대 보여주지 않는다(데모 환경에서도
+  // "새 비밀번호는 휴대폰 뒤 4자리로 초기화됩니다" 같은 안내만 하고 실제 값을 노출하지 않음).
+  const handleConfirmPasswordReset = () => {
+    logAccountAction({
+      action: 'PASSWORD_RESET',
+      targetStudentId: student.id,
+      targetStudentName: student.name,
+      actorId: currentUser.id,
+      actorName: currentUser.name,
+      activeMode,
+    });
+    toast.success(`${student.name} 학생의 비밀번호가 초기화되었습니다.`);
+    setConfirmAction(null);
+  };
+
+  // 닉네임 초기화 — 닉네임을 비우고 14일 제한도 함께 해제해 학생이 바로 다시 설정할 수 있게 한다.
+  const handleConfirmNicknameReset = () => {
+    resetStudentNickname(student.id);
+    logAccountAction({
+      action: 'NICKNAME_RESET',
+      targetStudentId: student.id,
+      targetStudentName: student.name,
+      actorId: currentUser.id,
+      actorName: currentUser.name,
+      activeMode,
+    });
+    toast.success(`${student.name} 학생의 닉네임이 초기화되었습니다. 학생이 다시 설정할 수 있습니다.`);
+    setConfirmAction(null);
+  };
+
   return (
     <TeacherLayout title="학생 상세">
       <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
@@ -154,6 +189,25 @@ export default function TeacherStudentDetail() {
             {student.status}
           </span>
         </div>
+
+        {/* 계정 관리 — Phase 3D v3 신규. 본인 담당 학생에게만 실행 가능(canAccessStudent 스코프). */}
+        {(canResetPassword('', 'STUDENT', student.id) || canResetNickname(student.id)) && (
+          <div className="axis-card p-4">
+            <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.45 0.015 250)' }}>계정 관리</div>
+            <div className="flex gap-2 flex-wrap">
+              {canResetPassword('', 'STUDENT', student.id) && (
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setConfirmAction('password')}>
+                  <KeyRound size={13} /> 비밀번호 초기화
+                </Button>
+              )}
+              {canResetNickname(student.id) && (
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setConfirmAction('nickname')}>
+                  <UserCog size={13} /> 닉네임 초기화
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 담당 수업 */}
         <section>
@@ -369,6 +423,44 @@ export default function TeacherStudentDetail() {
             <div className="flex justify-end gap-2 p-5 border-t" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
               <Button variant="outline" onClick={() => setShowCounselingForm(false)}>취소</Button>
               <Button onClick={handleAddCounseling} style={{ background: 'oklch(0.511 0.262 276.966)' }}>저장</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 비밀번호/닉네임 초기화 확인 모달 — 실행 전 반드시 확인을 받는다 */}
+      {confirmAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.45)' }}
+          onClick={() => setConfirmAction(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
+              <h2 className="font-bold text-base" style={{ color: 'oklch(0.15 0.02 250)' }}>
+                {confirmAction === 'password' ? '비밀번호 초기화' : '닉네임 초기화'}
+              </h2>
+              <Button variant="ghost" size="icon" onClick={() => setConfirmAction(null)} className="h-8 w-8" aria-label="닫기">
+                <X size={17} style={{ color: 'oklch(0.5 0.015 250)' }} />
+              </Button>
+            </div>
+            <div className="p-5 text-sm space-y-2" style={{ color: 'oklch(0.3 0.02 250)' }}>
+              <p><b>{student.name}</b> 학생의 {confirmAction === 'password' ? '비밀번호' : '닉네임'}을 초기화합니다.</p>
+              {confirmAction === 'password' ? (
+                <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                  기존 비밀번호는 표시되지 않습니다. 초기화 후 학생에게 새 비밀번호 안내가 필요합니다.
+                </p>
+              ) : (
+                <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                  현재 닉네임이 비워지고, 14일 변경 제한도 함께 해제되어 학생이 즉시 새 닉네임을 설정할 수 있습니다.
+                </p>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 p-5 border-t" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
+              <Button variant="outline" onClick={() => setConfirmAction(null)}>취소</Button>
+              <Button
+                onClick={confirmAction === 'password' ? handleConfirmPasswordReset : handleConfirmNicknameReset}
+                style={{ background: 'oklch(0.577 0.245 27.325)' }}
+              >
+                초기화 실행
+              </Button>
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@
 
 import { Link } from 'wouter';
 import {
-  CalendarCheck, BarChart2, Users, Play, FileText,
+  CalendarCheck, BarChart2, Users, Play,
   Clock, CheckCircle2, AlertCircle, ClipboardList,
 } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
@@ -28,10 +28,9 @@ function useTodayClasses(assignedClassIds: string[]): ClassRoom[] {
 
 const QUICK_ACTIONS = [
   { icon: CalendarCheck, label: '출결 체크', path: '/teacher/attendance', color: 'oklch(0.45 0.15 160)' },
-  { icon: BarChart2,     label: '시험 채점', path: '/teacher/exams',      color: 'oklch(0.577 0.245 27.325)' },
+  { icon: BarChart2,     label: '내 시험지', path: '/teacher/exams',      color: 'oklch(0.577 0.245 27.325)' },
   { icon: Users,         label: '담당 학생', path: '/teacher/students',   color: 'oklch(0.511 0.262 276.966)' },
-  { icon: FileText,      label: '수업노트',  path: '/teacher/notes',      color: 'oklch(0.511 0.262 276.966)' },
-  { icon: Play,          label: '수업자료',  path: '/teacher/videos',     color: 'oklch(0.511 0.262 276.966)' },
+  { icon: Play,          label: '수업자료',  path: '/teacher/materials',  color: 'oklch(0.511 0.262 276.966)' },
   { icon: ClipboardList, label: '숙제 관리', path: '/teacher/homework',   color: 'oklch(0.45 0.15 160)' },
 ];
 
@@ -264,7 +263,7 @@ export default function TeacherHome() {
               )}
             </div>
             <Link href="/teacher/exams">
-              <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>채점하기</span>
+              <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>내 시험지 보기</span>
             </Link>
           </div>
           {ungradedExams.length === 0 ? (

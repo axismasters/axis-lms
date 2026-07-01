@@ -1,5 +1,6 @@
-// AXIS LMS v1.2 - TeacherExams (Phase 3C: 개인 시험지 생성 추가)
-// 강사 전용 내 시험 / 미채점 시험 화면.
+// AXIS LMS v1.2 - TeacherExams (Phase 3D v3: "내 시험지 관리"로 개편)
+// 강사 전용 내 시험지 관리 화면 — 시험지를 만들고, 학생별 성적을 확인하고, 필요하면 채점까지
+// 이어지는 공간이다. "채점"은 더 이상 화면 제목이 아니라 시험지 내부 액션 중 하나일 뿐이다.
 // - 모든 counts/stats는 담당 학생(assignedStudentIds) submissions 기준
 // - exam.status 내부값 노출 금지 → 현장 친화적 표현 사용
 // - 담당 학생 데이터 없는 학원 전체 시험은 전체 탭에서 제외
@@ -7,8 +8,8 @@
 //   다른 교사의 TEACHER_PRIVATE 시험은 이 화면에 절대 나타나지 않는다.
 
 import { useState } from 'react';
-import { Link } from 'wouter';
-import { BarChart2, CheckCircle2, AlertCircle, ChevronRight, Plus, Lock } from 'lucide-react';
+import { Link, useLocation } from 'wouter';
+import { CheckCircle2, AlertCircle, ChevronRight, Plus, Lock, Users } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
@@ -38,6 +39,7 @@ function getExamBadge(examId: string, mySubmissions: ExamSubmission[]) {
 export default function TeacherExams() {
   const { currentUser } = useAuth();
   const { exams, submissions } = useAssessment();
+  const [, navigate] = useLocation();
   const [tab, setTab] = useState<Tab>('미채점');
   const [formOpen, setFormOpen] = useState(false);
 
@@ -73,7 +75,7 @@ export default function TeacherExams() {
   const displayExams = tab === '미채점' ? ungradedExams : allMyExams;
 
   return (
-    <TeacherLayout title="채점">
+    <TeacherLayout title="내 시험지 관리">
       <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
 
         {/* Phase 3C: 내 시험 만들기 */}
@@ -127,7 +129,14 @@ export default function TeacherExams() {
               const badge = getExamBadge(exam.id, mySubmissions);
 
               return (
-                <div key={exam.id} className="axis-card p-4">
+                <div
+                  key={exam.id}
+                  className="axis-card axis-card-clickable p-4"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/teacher/exams/${exam.id}/scores`)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/teacher/exams/${exam.id}/scores`); }}
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm flex items-center gap-1.5" style={{ color: 'oklch(0.2 0.02 250)' }}>
@@ -166,15 +175,20 @@ export default function TeacherExams() {
                         )}
                       </div>
                       <Link href={`/teacher/exams/${exam.id}/grading`}>
-                        <Button size="sm" className="h-7 text-xs gap-0.5" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+                        <Button size="sm" className="h-7 text-xs gap-0.5" onClick={(e) => e.stopPropagation()} style={{ background: 'oklch(0.511 0.262 276.966)' }}>
                           채점하기 <ChevronRight size={12} />
                         </Button>
                       </Link>
                     </div>
                   )}
                   {pendingCount === 0 && gradedCount > 0 && (
-                    <div className="mt-2 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                      담당 학생 {gradedCount}명 채점 완료 · 만점 {exam.totalScore}점
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                        담당 학생 {gradedCount}명 채점 완료 · 만점 {exam.totalScore}점
+                      </div>
+                      <span className="inline-flex items-center gap-0.5 text-xs font-medium" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                        <Users size={11} /> 학생별 성적 <ChevronRight size={11} />
+                      </span>
                     </div>
                   )}
                   {myExamSubs.length === 0 && (

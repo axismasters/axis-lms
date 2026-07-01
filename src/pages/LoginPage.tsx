@@ -88,7 +88,7 @@ export default function LoginPage() {
                   inputMode="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="010-0000-0000"
+                  placeholder="01000000000 (하이픈 없이 입력 가능)"
                   className="w-full h-11 pl-9 pr-3 rounded-lg text-sm outline-none transition-colors"
                   style={{ border: '1px solid oklch(0.88 0.006 250)' }}
                   onFocus={(e) => (e.currentTarget.style.borderColor = 'oklch(0.15 0.02 250)')}
@@ -155,8 +155,10 @@ export default function LoginPage() {
         >
           <Info size={13} className="flex-shrink-0 mt-0.5" />
           <span>
-            데모 환경: 등록된 휴대폰번호 + 비밀번호(번호 뒤 4자리)로 로그인할 수 있습니다.
-            예) 010-0000-0002 / 0002(원장), 010-0000-0007 / 0007(부원장), 010-0000-0004 / 0004(강사).
+            데모 환경: 등록된 휴대폰번호(하이픈 있어도, 없어도 됩니다) + 비밀번호(번호 뒤 4자리)로
+            로그인할 수 있습니다.
+            예) 01000000002 또는 010-0000-0002 / 0002(원장), 01000000007 / 0007(부원장),
+            01000000004 / 0004(강사).
           </span>
         </div>
       </div>

@@ -4,6 +4,7 @@
 import { Link } from 'wouter';
 import { Users, ChevronRight } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useClasses } from '@/contexts/ClassContext';
@@ -55,36 +56,38 @@ export default function TeacherStudents() {
         ) : (
           <div className="space-y-2">
             {assignedStudents.map((student) => (
-              <Link key={student.id} href={`/teacher/students/${student.id}`} style={{ display: 'block' }}>
-                <div className="axis-card p-4 flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
-                    style={{
-                      background: student.status === '재원'
-                        ? 'oklch(0.511 0.262 276.966)'
-                        : 'oklch(0.7 0.01 250)',
-                    }}
-                  >
-                    {student.name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{student.name}</div>
-                    <div className="text-xs mt-0.5 truncate" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                      {getStudentClassNames(student, assignedClasses)}
-                    </div>
-                  </div>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={{
-                      background: student.status === '재원' ? 'oklch(0.94 0.08 160)' : 'oklch(0.95 0.005 250)',
-                      color: student.status === '재원' ? 'oklch(0.35 0.12 160)' : 'oklch(0.5 0.015 250)',
-                    }}
-                  >
-                    {student.status}
-                  </span>
-                  <ChevronRight size={15} style={{ color: 'oklch(0.7 0.01 250)', flexShrink: 0 }} />
+              <div key={student.id} className="axis-card p-4 flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
+                  style={{
+                    background: student.status === '재원'
+                      ? 'oklch(0.511 0.262 276.966)'
+                      : 'oklch(0.7 0.01 250)',
+                  }}
+                >
+                  {student.name.charAt(0)}
                 </div>
-              </Link>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{student.name}</div>
+                  <div className="text-xs mt-0.5 truncate" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                    {getStudentClassNames(student, assignedClasses)}
+                  </div>
+                </div>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
+                  style={{
+                    background: student.status === '재원' ? 'oklch(0.94 0.08 160)' : 'oklch(0.95 0.005 250)',
+                    color: student.status === '재원' ? 'oklch(0.35 0.12 160)' : 'oklch(0.5 0.015 250)',
+                  }}
+                >
+                  {student.status}
+                </span>
+                <Link href={`/teacher/students/${student.id}`}>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-0.5 flex-shrink-0">
+                    상세보기 <ChevronRight size={12} />
+                  </Button>
+                </Link>
+              </div>
             ))}
           </div>
         )}

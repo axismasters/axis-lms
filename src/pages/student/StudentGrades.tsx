@@ -368,7 +368,7 @@ function getIfCumulativeSummaryLocal(records: StudentIfRecord[]): {
 }
 
 // ─── 성적표 상세 모달 (IF 채점 포함) ────────────────────────────────
-function ResultDetailModal({
+export function ResultDetailModal({
   result, sameCategoryResults, studentId, onClose,
 }: {
   result: StudentExamResult;

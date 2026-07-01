@@ -10,6 +10,7 @@
 //   - 합격률/합격 가능성/합격 보장/불합격 표현 금지
 //   - 학생 화면에 수납/재무/청구/미납/환불 노출 금지
 
+import { useState } from 'react';
 import { Link } from 'wouter';
 import {
   Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck,
@@ -26,9 +27,11 @@ import { useHomework } from '@/contexts/HomeworkContext';
 import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
+import type { StudentExamResult } from '@/lib/assessmentData';
 import { STUDENT_HIDDEN_CATEGORY_IDS } from '@/lib/phase2dData';
 import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
 import { loadStudentProfile, canUseRival } from '@/lib/studentProfile';
+import { ResultDetailModal } from '@/pages/student/StudentGrades';
 
 export default function StudentHome() {
   const { currentUser } = useAuth();
@@ -60,9 +63,13 @@ export default function StudentHome() {
   const tierLabel = profile ? TIER_LABELS[profile.tier] : '-';
 
   // 최근 성적 (입학테스트 제외)
-  const publishedResults = getPublishedResultsForStudent(exams, submissions, myStudentId)
-    .filter(r => !STUDENT_HIDDEN_CATEGORY_IDS.includes(r.categoryId as any))
-    .slice(0, 3);
+  const allPublishedResults = getPublishedResultsForStudent(exams, submissions, myStudentId)
+    .filter(r => !STUDENT_HIDDEN_CATEGORY_IDS.includes(r.categoryId as any));
+  const publishedResults = allPublishedResults.slice(0, 3);
+
+  // Phase 3D v3: 최근 성적 카드를 클릭하면 "테스트" 메뉴로 다시 들어가지 않고 바로 성적표
+  // 상세(IF 요약 포함, 조회 전용)가 열리도록 한다.
+  const [selectedResult, setSelectedResult] = useState<StudentExamResult | null>(null);
 
   // 숙제
   const myHomework = getForStudent(enrolledClassIds);
@@ -287,7 +294,12 @@ export default function StudentHome() {
               {publishedResults.map(r => {
                 const pct = r.totalPoints > 0 ? Math.round((r.earnedScore / r.totalPoints) * 100) : 0;
                 return (
-                  <div key={r.examId} className="axis-card p-4 flex items-center justify-between">
+                  <button
+                    key={r.examId}
+                    type="button"
+                    onClick={() => setSelectedResult(r)}
+                    className="axis-card axis-card-clickable p-4 w-full flex items-center justify-between text-left"
+                  >
                     <div>
                       <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{r.title}</div>
                       <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{r.examDate}</div>
@@ -299,7 +311,7 @@ export default function StudentHome() {
                       </div>
                       <div className="text-xs tabular-nums" style={{ color: 'oklch(0.6 0.015 250)' }}>{pct}%</div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -307,6 +319,18 @@ export default function StudentHome() {
         </section>
 
       </div>
+
+      {/* Phase 3D v3: 홈에서 바로 성적표 상세(IF 요약 포함) — "테스트" 메뉴를 다시 거치지 않는다 */}
+      {selectedResult && (
+        <ResultDetailModal
+          result={selectedResult}
+          sameCategoryResults={allPublishedResults
+            .filter(r => r.categoryId === selectedResult.categoryId)
+            .sort((a, b) => a.examDate.localeCompare(b.examDate))}
+          studentId={myStudentId}
+          onClose={() => setSelectedResult(null)}
+        />
+      )}
     </StudentLayout>
   );
 }

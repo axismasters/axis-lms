@@ -19,9 +19,10 @@ import { useStudents } from '@/contexts/StudentContext';
 import { useGrowth } from '@/contexts/GrowthContext';
 import {
   loadStudentProfile,
-  saveStudentProfile,
   validateNickname,
   canUseRival,
+  canChangeNicknameNow,
+  setStudentNickname,
   NICKNAME_MAX_LEN,
 } from '@/lib/studentProfile';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
@@ -54,6 +55,11 @@ export default function StudentMyPage() {
   }, [myStudentId]);
 
   function handleEditNick() {
+    const gate = canChangeNicknameNow(myStudentId);
+    if (!gate.allowed) {
+      setNickError(`닉네임은 ${gate.daysRemaining}일 후에 다시 변경할 수 있습니다.`);
+      return;
+    }
     setNickInput(storedProfile.nickname ?? '');
     setNickError('');
     setEditingNick(true);
@@ -62,9 +68,9 @@ export default function StudentMyPage() {
   function handleSaveNick() {
     const result = validateNickname(nickInput);
     if (!result.valid) { setNickError(result.reason ?? ''); return; }
-    const updated = { ...storedProfile, nickname: nickInput.trim() };
-    saveStudentProfile(updated);
-    setStoredProfile(updated);
+    const saveResult = setStudentNickname(myStudentId, nickInput);
+    if (!saveResult.ok) { setNickError(saveResult.reason ?? '지금은 닉네임을 변경할 수 없습니다.'); return; }
+    setStoredProfile(loadStudentProfile(myStudentId));
     setEditingNick(false);
   }
 
@@ -77,6 +83,7 @@ export default function StudentMyPage() {
   const tierColor = profile ? TIER_COLORS[profile.tier] : 'oklch(0.7 0.01 250)';
   const tierLabel = profile ? TIER_LABELS[profile.tier] : '-';
   const hasNickname = canUseRival(myStudentId);
+  const nickGate = canChangeNicknameNow(myStudentId);
 
   // 전화번호 마스킹
   const maskedPhone = student?.phone
@@ -182,12 +189,19 @@ export default function StudentMyPage() {
                   </div>
                 )}
                 <div className="text-xs mt-0.5" style={{ color: 'oklch(0.65 0.015 250)' }}>
-                  Rival 화면에서 실명 대신 닉네임으로 표시됩니다
+                  닉네임은 Rival, Emblem, 성적 진열장에서 사용됩니다. 닉네임은 2주에 한 번만 변경할 수 있습니다.
                 </div>
+                {!nickGate.allowed && (
+                  <div className="text-xs mt-1 font-medium" style={{ color: 'oklch(0.55 0.15 60)' }}>
+                    다음 변경까지 {nickGate.daysRemaining}일 남았습니다.
+                  </div>
+                )}
               </div>
-              <button type="button" onClick={handleEditNick}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.4 0.1 250)' }}>
+              <button type="button" onClick={handleEditNick} disabled={!nickGate.allowed}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0"
+                style={nickGate.allowed
+                  ? { background: 'oklch(0.95 0.04 250)', color: 'oklch(0.4 0.1 250)', cursor: 'pointer' }
+                  : { background: 'oklch(0.96 0.005 250)', color: 'oklch(0.75 0.01 250)', cursor: 'not-allowed' }}>
                 <Edit3 size={12} />
                 {storedProfile.nickname ? '수정' : '설정'}
               </button>

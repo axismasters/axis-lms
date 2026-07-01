@@ -14,7 +14,7 @@ import { useParams, useLocation } from 'wouter';
 import { toast } from 'sonner';
 import {
   ChevronLeft, Phone, User, CreditCard, CalendarCheck, BookOpen, BarChart2,
-  Users, KeyRound, Power, Plus, ArrowRightLeft, Receipt, Target, FileText,
+  Users, KeyRound, UserCog, Power, Plus, ArrowRightLeft, Receipt, Target, FileText,
   Bell, CheckCircle2, XCircle, AlertTriangle, Info, Link2, StickyNote, X,
   Trophy, Zap, Star, Swords, Award, MessageSquare,
 } from 'lucide-react';
@@ -62,6 +62,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useGrowth } from '@/contexts/GrowthContext';
 import { getCounselingRecordsForStudent } from '@/lib/counselingData';
+import { resetStudentNickname } from '@/lib/studentProfile';
+import { logAccountAction } from '@/lib/accountActionLog';
 import {
   TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
   CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
@@ -321,15 +323,18 @@ function SummaryCards({ student, showFinance, onJump }: { student: Student; show
 // ════════════════════════════════════════════════════════════
 function BasicInfoTab({ student }: { student: Student }) {
   const { setStudentStatus, addOperationMemo } = useStudents();
-  const { currentUser, can, canResetPassword } = useAuth();
+  const { currentUser, can, canResetPassword, canResetNickname, activeMode } = useAuth();
   const showMemo = isBackOfficeType(currentUser.accountType);
   const canEdit = can('student.update');
   const canWithdraw = can('student.withdraw');
   // 학생 계정 비밀번호 초기화 가능 여부: student.passwordReset 또는 system.passwordReset + canResetPassword(대상,계정유형,학생id)
   const allowResetPw = canResetPassword(`student-account-${student.id}`, 'STUDENT', student.id);
+  // Phase 3D v3: 닉네임 초기화 가능 여부(원장/부원장/최고관리자는 dataScope가 ALL_ACADEMY라 사실상 전체 가능)
+  const allowResetNickname = canResetNickname(student.id);
 
   const [memoText, setMemoText] = useState('');
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [nicknameResetConfirmOpen, setNicknameResetConfirmOpen] = useState(false);
 
   const changeStatus = (status: StudentStatus) => {
     if (!canEdit) { toast.error('재원 상태 변경 권한이 없습니다.'); return; }
@@ -344,7 +349,20 @@ function BasicInfoTab({ student }: { student: Student }) {
   };
   const confirmResetPw = () => {
     setResetConfirmOpen(false);
+    logAccountAction({
+      action: 'PASSWORD_RESET', targetStudentId: student.id, targetStudentName: student.name,
+      actorId: currentUser.id, actorName: currentUser.name, activeMode,
+    });
     toast.success(`${student.name} 학생 계정의 비밀번호가 초기화되었습니다. (안내 발송 — 시스템설정 연동 예정)`);
+  };
+  const confirmResetNickname = () => {
+    setNicknameResetConfirmOpen(false);
+    resetStudentNickname(student.id);
+    logAccountAction({
+      action: 'NICKNAME_RESET', targetStudentId: student.id, targetStudentName: student.name,
+      actorId: currentUser.id, actorName: currentUser.name, activeMode,
+    });
+    toast.success(`${student.name} 학생의 닉네임이 초기화되었습니다. 학생이 다시 설정할 수 있습니다.`);
   };
   const addMemo = () => {
     if (!memoText.trim()) return;
@@ -390,6 +408,11 @@ function BasicInfoTab({ student }: { student: Student }) {
               </button>
             ) : (
               <p className="mt-3 text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 비밀번호 초기화 권한이 없습니다.</p>
+            )}
+            {allowResetNickname && (
+              <button onClick={() => setNicknameResetConfirmOpen(true)} className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>
+                <UserCog size={13} /> 닉네임 초기화
+              </button>
             )}
           </Area>
 
@@ -458,6 +481,28 @@ function BasicInfoTab({ student }: { student: Student }) {
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setResetConfirmOpen(false)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
               <button onClick={confirmResetPw} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>초기화 실행</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 3D v3: 닉네임 초기화 확인 모달 */}
+      {nicknameResetConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'oklch(0 0 0 / 0.4)' }} onClick={() => setNicknameResetConfirmOpen(false)}>
+          <div className="bg-white rounded-lg w-full max-w-sm modal-enter" onClick={(e) => e.stopPropagation()} style={{ boxShadow: '0 20px 50px oklch(0 0 0 / 0.25)' }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
+              <h3 className="text-sm font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>닉네임 초기화</h3>
+              <button onClick={() => setNicknameResetConfirmOpen(false)}><X size={16} style={{ color: 'oklch(0.5 0.015 250)' }} /></button>
+            </div>
+            <div className="p-4">
+              <p className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>
+                <b>{student.name}</b> 학생의 닉네임을 초기화합니다.
+              </p>
+              <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 현재 닉네임이 비워지고 14일 변경 제한도 함께 해제되어, 학생이 즉시 새 닉네임을 설정할 수 있습니다.</p>
+            </div>
+            <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
+              <button onClick={() => setNicknameResetConfirmOpen(false)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
+              <button onClick={confirmResetNickname} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>초기화 실행</button>
             </div>
           </div>
         </div>

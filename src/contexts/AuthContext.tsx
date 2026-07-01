@@ -86,9 +86,17 @@ function clearPersistedUserId() {
   } catch { /* noop */ }
 }
 
+/** 휴대폰번호 비교/비밀번호 계산용 — 하이픈·공백 등 숫자가 아닌 문자를 전부 제거한다.
+ *  (모바일 tel 키패드는 보통 '-'를 입력할 수 없어 "01000000001"처럼 하이픈 없이 입력되는
+ *  경우가 많다 — 저장된 "010-0000-0001"과 문자열이 정확히 같아야만 로그인되던 v2의 버그를
+ *  이 정규화로 고쳤다.) */
+function normalizePhoneDigits(phone: string): string {
+  return phone.replace(/[^0-9]/g, '');
+}
+
 /** 데모 비밀번호 규칙: 휴대폰번호 숫자만 남긴 뒤 마지막 4자리. 실제 인증 서버 도입 전까지만 사용. */
 function demoPasswordFor(phone: string): string {
-  return phone.replace(/[^0-9]/g, '').slice(-4);
+  return normalizePhoneDigits(phone).slice(-4);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -121,6 +129,7 @@ interface AuthContextType {
   canAccessClass: (classId: string) => boolean;
   canAccessExam: (examId: string, examClassId?: string) => boolean;
   canResetPassword: (targetAccountId: string, targetAccountType: AccountType, targetStudentId?: string) => boolean;
+  canResetNickname: (studentId: string) => boolean; // Phase 3D v3: 학생 닉네임 초기화(선생님은 담당 학생만)
   canViewFinance: (studentId: string) => boolean;
   canPublishExamResult: (examId: string) => boolean;
 }
@@ -148,9 +157,10 @@ export function AuthProvider({ children, initialUserId, students }: { children: 
   const canSwitchMode = canSwitchModeFor(currentUser.position);
 
   const login = (phone: string, password: string, remember: boolean): boolean => {
-    const found = DEV_USERS.find((u) => u.phone === phone.trim());
+    const normalizedInput = normalizePhoneDigits(phone);
+    const found = DEV_USERS.find((u) => normalizePhoneDigits(u.phone) === normalizedInput);
     if (!found || found.status !== '활성') return false;
-    if (password !== demoPasswordFor(found.phone)) return false;
+    if (password.trim() !== demoPasswordFor(found.phone)) return false;
     setUserId(found.id);
     setActiveModeState('ADMIN_MODE'); // 원장은 기본 ADMIN_MODE(요구사항)
     writePersistedUserId(found.id, remember);
@@ -231,6 +241,16 @@ export function AuthProvider({ children, initialUserId, students }: { children: 
     return currentUser.dataScope === 'ALL_ACADEMY';
   };
 
+  // Phase 3D v3: 학생 닉네임 초기화. 대상은 항상 STUDENT이므로 canResetPassword처럼
+  // 계정 유형별 분기가 필요 없다 — student.nicknameReset 권한 + canAccessStudent(dataScope)
+  // 범위만 통과하면 된다(강사는 담당 학생만, 원장/부원장/최고관리자는 dataScope가
+  // ALL_ACADEMY라 범위 제한이 사실상 없다).
+  const canResetNickname = (studentId: string): boolean => {
+    if (currentUser.status !== '활성') return false;
+    if (!can('student.nicknameReset')) return false;
+    return canAccessStudent(studentId);
+  };
+
   // 재무 조회: finance.view 권한 + 해당 학생 접근 범위를 모두 통과해야 함
   const canViewFinance = (studentId: string): boolean => can('finance.view') && canAccessStudent(studentId);
 
@@ -241,7 +261,7 @@ export function AuthProvider({ children, initialUserId, students }: { children: 
       currentUser, isAuthenticated, login, logout,
       devUsers: DEV_USERS, loginAs: setUserId,
       activeMode, canSwitchMode, setActiveMode,
-      can, canAccessStudent, canAccessClass, canAccessExam, canResetPassword, canViewFinance, canPublishExamResult,
+      can, canAccessStudent, canAccessClass, canAccessExam, canResetPassword, canResetNickname, canViewFinance, canPublishExamResult,
     }}>
       {children}
     </AuthContext.Provider>
@@ -257,7 +277,7 @@ export function useAuth(): AuthContextType {
       devUsers: DEV_USERS, loginAs: () => {},
       activeMode: 'ADMIN_MODE', canSwitchMode: false, setActiveMode: () => {},
       can: () => false, canAccessStudent: () => false, canAccessClass: () => false,
-      canAccessExam: () => false, canResetPassword: () => false, canViewFinance: () => false, canPublishExamResult: () => false,
+      canAccessExam: () => false, canResetPassword: () => false, canResetNickname: () => false, canViewFinance: () => false, canPublishExamResult: () => false,
     };
     return fallback;
   }

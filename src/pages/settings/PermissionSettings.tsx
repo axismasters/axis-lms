@@ -55,6 +55,7 @@ const PERM_CATEGORIES: PermCategory[] = [
       { feature: '학생 정보 수정', view: null, create: null, update: 'student.update', remove: null, approve: null, publish: null },
       { feature: '퇴원 처리', view: null, create: null, update: null, remove: 'student.withdraw', approve: null, publish: null },
       { feature: '학생 비밀번호 초기화', view: null, create: null, update: 'student.passwordReset', remove: null, approve: null, publish: null },
+      { feature: '학생 닉네임 초기화', view: null, create: null, update: 'student.nicknameReset', remove: null, approve: null, publish: null },
     ],
   },
   {

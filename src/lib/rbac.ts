@@ -37,7 +37,7 @@ export type DataScope =
 // ────────────────────────────────────────────────────────────
 export const PERMISSION_KEYS = [
   // 학생
-  'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
+  'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset', 'student.nicknameReset',
   // 직원
   'employee.view', 'employee.create', 'employee.update', 'employee.resign', 'employee.passwordReset',
   // 반
@@ -164,7 +164,7 @@ export const DEFAULT_DATA_SCOPE: Record<AccountType, DataScope> = {
 const ALL: PermissionKey[] = [...PERMISSION_KEYS];
 
 const DIRECTOR_PERMS: PermissionKey[] = [
-  'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
+  'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset', 'student.nicknameReset',
   'employee.view', 'employee.create', 'employee.update', 'employee.resign', 'employee.passwordReset',
   'class.view', 'class.create', 'class.update', 'class.assignTeacher',
   // 수강관리 — 원장은 전체 가능
@@ -185,7 +185,7 @@ const DIRECTOR_PERMS: PermissionKey[] = [
 // Finance Foundation v1 확정 원칙: 재무관리는 SUPER_ADMIN/DIRECTOR/STAFF만 접근 가능하며, 부원장/실장/팀장은
 // 기본적으로 재무관리 접근 불가다(필요 시 권한설정에서 개별 부여로 예외 처리할 수 있으나 기본값은 미보유).
 const VICE_DIRECTOR_PERMS: PermissionKey[] = [
-  'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
+  'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset', 'student.nicknameReset',
   'employee.view', 'employee.create', 'employee.update', 'employee.passwordReset',
   'class.view', 'class.create', 'class.update', 'class.assignTeacher',
   // 수강관리 — 부원장: 조회/등록/수정/종료 가능, 퇴원은 보수적 제외(필요 시 권한설정에서 부여)
@@ -202,7 +202,7 @@ const VICE_DIRECTOR_PERMS: PermissionKey[] = [
 
 // 실장: 운영 관리 중심 — 학생/출결/시험 운영 권한, 직원 관리·재무는 제외
 const HEAD_MANAGER_PERMS: PermissionKey[] = [
-  'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
+  'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset', 'student.nicknameReset',
   'employee.view',
   'class.view', 'class.create', 'class.update',
   // 수강관리 — 실장: 조회/수정 가능 (등록/종료/퇴원은 보수적 제외)
@@ -219,7 +219,7 @@ const HEAD_MANAGER_PERMS: PermissionKey[] = [
 
 // 팀장: 실장보다 좁은 범위 — 학생/출결 운영, 시험 결과 조회 위주
 const TEAM_LEAD_PERMS: PermissionKey[] = [
-  'student.view', 'student.update', 'student.passwordReset',
+  'student.view', 'student.update', 'student.passwordReset', 'student.nicknameReset',
   'class.view',
   // 수강관리 — 팀장: 조회만
   'enrollment.view',
@@ -231,7 +231,7 @@ const TEAM_LEAD_PERMS: PermissionKey[] = [
 ];
 
 const STAFF_PERMS: PermissionKey[] = [
-  'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset',
+  'student.view', 'student.create', 'student.update', 'student.withdraw', 'student.passwordReset', 'student.nicknameReset',
   'employee.view',
   'class.view',
   // 수강관리 — 행정: 전체 가능
@@ -251,7 +251,7 @@ const STAFF_PERMS: PermissionKey[] = [
 // 강사: 본인 담당 학생/반/시험 범위만(원칙 5). assessment.create/publish 제외(원칙 4 — 최고관리자/원장 전용).
 //       student.passwordReset은 본인 담당 학생 한정이며, 보호자/타 강사·직원/최고관리자 초기화는 canResetPassword에서 차단(원칙 6/7/9).
 const TEACHER_PERMS: PermissionKey[] = [
-  'student.view', 'student.update', 'student.passwordReset',
+  'student.view', 'student.update', 'student.passwordReset', 'student.nicknameReset',
   'class.view',
   // 수강관리 — 강사: 담당 학생/반 범위에서 조회만 (등록/종료/퇴원 불가, dataScope로 범위 제한)
   'enrollment.view',

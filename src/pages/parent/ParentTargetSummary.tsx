@@ -9,7 +9,7 @@
 //
 // 경로: /parent/target-summary
 
-import { GraduationCap, CheckCircle2, Clock, ChevronRight } from 'lucide-react';
+import { GraduationCap, CheckCircle2, Clock } from 'lucide-react';
 import ParentLayout from '@/layouts/ParentLayout';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -149,23 +149,21 @@ export default function ParentTargetSummary() {
           </div>
           <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
             {isGrade3
-              ? '수능실전 결과 누적 후 선생님과 함께 상담 리포트를 확인하게 됩니다.'
+              ? '수능실전 결과가 누적되면 선생님과 함께 방향을 논의하게 됩니다.'
               : '내신·모의고사 성장 흐름을 바탕으로 앞으로의 목표 방향을 논의하게 됩니다.'}
           </div>
         </div>
 
-        {/* 상담 리포트 안내 */}
-        <div className="axis-card p-4 flex items-center justify-between"
-          style={{ borderLeft: '3px solid #7C3AED' }}>
-          <div>
-            <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
-              상담 리포트는 선생님에게 문의하세요
-            </div>
-            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-              상세 분석 리포트는 선생님이 관리자 화면에서 준비합니다.
-            </div>
+        {/* Phase 3D v3: "상담 리포트"라는 표현이 내부 상담 기록처럼 오해될 수 있어
+            "선생님 안내 필요" 수준으로 조정 — 클릭해도 이동하지 않으므로 클릭 가능한
+            카드처럼 보이는 화살표(ChevronRight)도 제거했다. */}
+        <div className="axis-card p-4" style={{ borderLeft: '3px solid #7C3AED' }}>
+          <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
+            자세한 안내는 선생님에게 문의하세요
           </div>
-          <ChevronRight size={15} style={{ color: '#7C3AED' }} />
+          <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+            자녀의 상세 분석과 학습 방향은 선생님과의 대화를 통해 안내됩니다.
+          </div>
         </div>
 
       </div>
