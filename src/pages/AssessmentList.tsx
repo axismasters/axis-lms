@@ -1,7 +1,11 @@
-// AXIS LMS v1.2 - 성적관리(Assessment Engine) 시험 목록
+// AXIS LMS v1.2 - 시험 및 성적 관리(Assessment Engine) 시험 목록
 // Design: Structured Authority
-// 메뉴는 "성적관리" 1개만 유지한다(하위 메뉴 추가 없음). 시험 등록은 ClassList.tsx와 동일하게
+// 메뉴는 "시험 및 성적 관리" 1개만 유지한다(하위 메뉴 추가 없음). 시험 등록은 ClassList.tsx와 동일하게
 // ?new=1 쿼리로 진입 시 모달이 자동으로 열리는 패턴을 따른다.
+//
+// Phase 3C: 이 화면은 관리자 공통 시험(ACADEMY_COMMON/GRADE_COMMON/COURSE_COMMON)만 관리한다.
+// 선생님 개인 시험(TEACHER_PRIVATE)은 기본 목록에서 항상 제외하고, "교사별 시험 현황" 요약
+// 카드로만 건수를 보여준다(교사 개인 시험을 공통 시험처럼 열람/편집하지 않는다).
 
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
@@ -9,7 +13,8 @@ import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useClasses } from '@/contexts/ClassContext';
-import { EXAM_CATEGORIES, ExamPhase, getExamPhase, categoryLabel } from '@/lib/assessmentData';
+import { useEmployees } from '@/contexts/EmployeeContext';
+import { EXAM_CATEGORIES, ExamPhase, getExamPhase, categoryLabel, ExamScope, EXAM_SCOPE_LABELS } from '@/lib/assessmentData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,6 +38,7 @@ export default function AssessmentList() {
   const { currentUser, can, canAccessExam, canAccessClass } = useAuth();
   const { exams, getSubmissionsByExam } = useAssessment();
   const { classes, getClass } = useClasses();
+  const { getEmployeeByAccountId } = useEmployees();
 
   const canCreate = can('assessment.create'); // 최고관리자/원장만(AXIS 확정 원칙 4)
 
@@ -41,6 +47,7 @@ export default function AssessmentList() {
   const [filterClass, setFilterClass] = useState('all'); // 'all' | 'academy'(학원 전체 대상만) | classId
   const [filterPhase, setFilterPhase] = useState<ExamPhase | 'all'>('all');
   const [filterSubject, setFilterSubject] = useState('all'); // 과목 필터
+  const [filterScope, setFilterScope] = useState<ExamScope | 'all'>('all'); // Phase 3C: 공통 시험 종류 필터
 
   const [formOpen, setFormOpen] = useState(false);
 
@@ -61,7 +68,26 @@ export default function AssessmentList() {
 
   // 강사는 본인 담당 반 대상 시험만 본다(canAccessExam — 학원 전체 대상 시험은 classId가 없어
   // ASSIGNED_CLASSES 범위에서는 항상 false가 되므로, 강사 화면에는 자연히 보이지 않는다).
-  const visibleExams = useMemo(() => exams.filter((e) => canAccessExam(e.id, e.classId)), [exams, canAccessExam]);
+  // Phase 3C: 관리자 화면은 항상 공통 시험(ACADEMY_COMMON/GRADE_COMMON/COURSE_COMMON)만 다룬다.
+  // 교사 개인 시험(TEACHER_PRIVATE)은 여기 목록에 절대 섞이지 않는다 — 아래 요약 카드로만 건수 표시.
+  const visibleExams = useMemo(
+    () => exams.filter((e) => canAccessExam(e.id, e.classId) && e.scope !== 'TEACHER_PRIVATE'),
+    [exams, canAccessExam]
+  );
+
+  // 교사별 시험 현황 요약(선택 항목) — 교사 개인 시험을 열람/편집하지 않고 건수만 집계한다.
+  const teacherPrivateSummary = useMemo(() => {
+    const map = new Map<string, number>();
+    exams.filter((e) => e.scope === 'TEACHER_PRIVATE').forEach((e) => {
+      const key = e.ownerTeacherId ?? e.createdBy;
+      map.set(key, (map.get(key) ?? 0) + 1);
+    });
+    return Array.from(map.entries()).map(([teacherId, count]) => ({
+      teacherId,
+      name: getEmployeeByAccountId(teacherId)?.name ?? teacherId,
+      count,
+    }));
+  }, [exams, getEmployeeByAccountId]);
 
   // 대상 반 필터 선택지 — canAccessClass를 통과하는 반만 노출한다(강사가 본인 담당 외 반명까지
   // 보지 못하도록 방어). 최고관리자/원장/행정 등 ALL_ACADEMY 범위는 canAccessClass가 항상 true이므로
@@ -89,9 +115,10 @@ export default function AssessmentList() {
       if (filterClass !== 'all' && filterClass !== 'academy' && e.classId !== filterClass) return false;
       if (filterPhase !== 'all' && examPhases.get(e.id) !== filterPhase) return false;
       if (filterSubject !== 'all' && e.subject !== filterSubject) return false;
+      if (filterScope !== 'all' && e.scope !== filterScope) return false;
       return true;
     }).sort((a, b) => b.examDate.localeCompare(a.examDate));
-  }, [visibleExams, search, filterCategory, filterClass, filterPhase, filterSubject, examPhases]);
+  }, [visibleExams, search, filterCategory, filterClass, filterPhase, filterSubject, filterScope, examPhases]);
 
   // AXIS 확정 정책: 상태 카드 대신 파생 정보(전체/미채점 있음/채점 완료/공개 완료)로 보여준다.
   const stats = useMemo(() => ({
@@ -104,21 +131,21 @@ export default function AssessmentList() {
   // 직접 URL 접근 보강 — 메뉴는 RBAC로 숨겨지지만, /scores 직접 진입 시에도 assessment.view를 확인한다.
   if (!can('assessment.view')) {
     return (
-      <AdminLayout title="성적관리" breadcrumbs={[{ label: '성적관리' }]}>
+      <AdminLayout title="시험 및 성적 관리" breadcrumbs={[{ label: '시험 및 성적 관리' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>성적관리 조회 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>시험 및 성적 관리 조회 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout title="성적관리" breadcrumbs={[{ label: '성적관리' }]}>
+    <AdminLayout title="시험 및 성적 관리" breadcrumbs={[{ label: '시험 및 성적 관리' }]}>
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>성적관리</h1>
+          <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>시험 및 성적 관리</h1>
           <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-            시험 생성 · 채점 · 결과 공개를 관리합니다.
+            학원 전체·학년·과정 공통 시험을 관리합니다. 선생님 개인 시험지는 포함되지 않습니다.
           </p>
         </div>
         {canCreate && (
@@ -148,6 +175,22 @@ export default function AssessmentList() {
         </div>
       </div>
 
+      {/* Phase 3C: 교사별 시험 현황 요약(건수만 — 열람/편집 불가) */}
+      {teacherPrivateSummary.length > 0 && (
+        <div className="axis-card p-4 mb-4">
+          <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.5 0.015 250)' }}>
+            교사별 시험 현황 (선생님 개인 시험지 — 이 목록에는 표시되지 않음, 건수만)
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {teacherPrivateSummary.map(({ teacherId, name, count }) => (
+              <span key={teacherId} className="text-xs px-2.5 py-1 rounded-full" style={{ background: 'oklch(0.96 0.02 250)', color: 'oklch(0.45 0.015 250)' }}>
+                {name} · {count}건
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 필터 */}
       <div className="axis-card p-4 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
@@ -160,6 +203,15 @@ export default function AssessmentList() {
             <SelectContent>
               <SelectItem value="all">시험종류 전체</SelectItem>
               {EXAM_CATEGORIES.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterScope} onValueChange={(v) => setFilterScope(v as ExamScope | 'all')}>
+            <SelectTrigger className="h-9 w-32 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">범위 전체</SelectItem>
+              <SelectItem value="ACADEMY_COMMON">{EXAM_SCOPE_LABELS.ACADEMY_COMMON}</SelectItem>
+              <SelectItem value="GRADE_COMMON">{EXAM_SCOPE_LABELS.GRADE_COMMON}</SelectItem>
+              <SelectItem value="COURSE_COMMON">{EXAM_SCOPE_LABELS.COURSE_COMMON}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={filterClass} onValueChange={setFilterClass}>

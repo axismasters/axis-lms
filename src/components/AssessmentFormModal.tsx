@@ -9,8 +9,10 @@ import { useState, useEffect } from 'react';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useStudents } from '@/contexts/StudentContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   ExamQuestionDef, QuestionType, EXAM_CATEGORIES, AUTO_GRADED_TYPES, MANUAL_GRADED_TYPES, isAutoGraded,
+  ExamScope, EXAM_SCOPE_LABELS,
 } from '@/lib/assessmentData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,6 +30,9 @@ interface Props {
   open: boolean;
   onClose: () => void;
   createdBy: string; // 현재 로그인 사용자 이름(AuthContext) — 호출부에서 전달
+  // Phase 3C: 'teacher'면 항상 TEACHER_PRIVATE로 고정하고, 대상 반을 본인 담당 반으로만 제한한다.
+  // 기본값은 'admin'(기존 동작 그대로 — 공통 시험 3종 중 선택, 전체 반 대상 가능).
+  mode?: 'admin' | 'teacher';
 }
 
 const QUESTION_TYPES: QuestionType[] = [...AUTO_GRADED_TYPES, ...MANUAL_GRADED_TYPES];
@@ -46,22 +51,36 @@ const EMPTY_FORM = {
   classId: '', // '' = 학원 전체 대상
   subject: '수학' as string,
   examDate: '',
+  scope: 'ACADEMY_COMMON' as ExamScope, // Phase 3C: 관리자는 공통 시험 3종(전체/학년/과정)만 생성
+  targetGrade: '',
+  targetCourseId: '',
 };
 
-export default function AssessmentFormModal({ open, onClose, createdBy }: Props) {
+// 관리자 화면에서 선택 가능한 공통 시험 scope만 노출(TEACHER_PRIVATE는 교사 전용 화면에서만 생성)
+const ADMIN_SELECTABLE_SCOPES: ExamScope[] = ['ACADEMY_COMMON', 'GRADE_COMMON', 'COURSE_COMMON'];
+
+export default function AssessmentFormModal({ open, onClose, createdBy, mode = 'admin' }: Props) {
   const { addExam } = useAssessment();
-  const { classes, getClassStudents } = useClasses();
+  const { classes: allClasses, getClassStudents } = useClasses();
   const { students } = useStudents();
+  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>('basic');
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [questions, setQuestions] = useState<ExamQuestionDef[]>([emptyQuestion(1)]);
 
+  const isTeacherMode = mode === 'teacher';
+  // 교사 모드: 본인 담당 반만 대상 반 선택지로 노출(다른 반/다른 교사 반이 섞이지 않도록)
+  const classes = isTeacherMode
+    ? allClasses.filter((c) => (currentUser.assignedClassIds ?? []).includes(c.id))
+    : allClasses;
+
   useEffect(() => {
     if (open) {
       setActiveTab('basic');
-      setForm({ ...EMPTY_FORM });
+      setForm({ ...EMPTY_FORM, scope: isTeacherMode ? 'TEACHER_PRIVATE' : 'ACADEMY_COMMON' });
       setQuestions([emptyQuestion(1)]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const totalScore = questions.reduce((sum, q) => sum + (q.points || 0), 0);
@@ -82,18 +101,32 @@ export default function AssessmentFormModal({ open, onClose, createdBy }: Props)
       return;
     }
 
-    // 대상 학생 결정: 반을 선택했으면 그 반 수강생, 아니면(학원 전체) 재원 중인 전체 학생.
+    // 대상 학생 결정:
+    //   - 반을 선택했으면 그 반 수강생.
+    //   - 반 미선택 시: 관리자 모드는 재원 중인 전체 학생(학원 전체 대상),
+    //     교사 모드는 본인 담당 학생 전체(다른 교사 학생이 섞이지 않도록 — 학원 전체 개념 없음).
     const targetStudentIds = form.classId
       ? getClassStudents(form.classId)
-      : students.filter((s) => s.status === '재원').map((s) => s.id);
+      : isTeacherMode
+        ? (currentUser.assignedStudentIds ?? [])
+        : students.filter((s) => s.status === '재원').map((s) => s.id);
 
     if (targetStudentIds.length === 0) {
-      toast.error('대상 학생이 없습니다. 반 수강생 또는 재원 학생을 확인하세요.');
+      toast.error(isTeacherMode
+        ? '대상 학생이 없습니다. 담당 반 또는 담당 학생을 확인하세요.'
+        : '대상 학생이 없습니다. 반 수강생 또는 재원 학생을 확인하세요.');
       return;
     }
 
     const exam = addExam(
-      { title: form.title.trim(), categoryId: form.categoryId, classId: form.classId || undefined, subject: form.subject || undefined, examDate: form.examDate, questions, createdBy },
+      {
+        title: form.title.trim(), categoryId: form.categoryId, classId: form.classId || undefined,
+        subject: form.subject || undefined, examDate: form.examDate, questions, createdBy,
+        scope: isTeacherMode ? 'TEACHER_PRIVATE' : form.scope,
+        ownerTeacherId: isTeacherMode ? currentUser.id : undefined,
+        targetGrade: !isTeacherMode && form.scope === 'GRADE_COMMON' ? (form.targetGrade || undefined) : undefined,
+        targetCourseId: !isTeacherMode && form.scope === 'COURSE_COMMON' ? (form.targetCourseId || undefined) : undefined,
+      },
       targetStudentIds
     );
     toast.success(`"${exam.title}" 시험이 생성되었습니다. (응시 대상 ${targetStudentIds.length}명)`);
@@ -104,7 +137,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy }: Props)
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>시험 등록</DialogTitle>
+          <DialogTitle>{isTeacherMode ? '내 시험 만들기' : '시험 등록'}</DialogTitle>
         </DialogHeader>
 
         {/* 탭 */}
@@ -160,17 +193,50 @@ export default function AssessmentFormModal({ open, onClose, createdBy }: Props)
                 style={{ borderColor: 'oklch(0.9 0.005 250)' }}
               />
             </div>
+            {!isTeacherMode && (
+              <div>
+                <Label className="text-xs font-semibold mb-1.5 block">시험 범위</Label>
+                <Select value={form.scope} onValueChange={(v) => setForm((f) => ({ ...f, scope: v as ExamScope }))}>
+                  <SelectTrigger className="h-9 text-sm w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ADMIN_SELECTABLE_SCOPES.map((s) => (
+                      <SelectItem key={s} value={s}>{EXAM_SCOPE_LABELS[s]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                  <Info size={11} /> 여기서 만드는 시험은 항상 관리자 공통 시험입니다. 선생님 개인 시험지는 강사 화면에서 별도로 생성합니다.
+                </p>
+                {form.scope === 'GRADE_COMMON' && (
+                  <input type="text" placeholder="대상 학년(예: 고3)" value={form.targetGrade}
+                    onChange={(e) => setForm((f) => ({ ...f, targetGrade: e.target.value }))}
+                    className="h-9 w-full px-2 mt-2 rounded border text-sm" style={{ borderColor: 'oklch(0.9 0.005 250)' }} />
+                )}
+                {form.scope === 'COURSE_COMMON' && (
+                  <input type="text" placeholder="대상 과정 id" value={form.targetCourseId}
+                    onChange={(e) => setForm((f) => ({ ...f, targetCourseId: e.target.value }))}
+                    className="h-9 w-full px-2 mt-2 rounded border text-sm" style={{ borderColor: 'oklch(0.9 0.005 250)' }} />
+                )}
+              </div>
+            )}
+            {isTeacherMode && (
+              <p className="text-xs px-3 py-2 rounded-lg flex items-center gap-1.5" style={{ background: 'oklch(0.96 0.02 250)', color: 'oklch(0.45 0.015 250)' }}>
+                <Info size={12} /> 내가 만드는 시험은 내 수업용 개인 시험지입니다. 다른 선생님에게는 보이지 않습니다.
+              </p>
+            )}
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">대상 반</Label>
               <Select value={form.classId || 'all'} onValueChange={(v) => setForm((f) => ({ ...f, classId: v === 'all' ? '' : v }))}>
                 <SelectTrigger className="h-9 text-sm w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">학원 전체</SelectItem>
+                  <SelectItem value="all">{isTeacherMode ? '담당 학생 전체' : '학원 전체'}</SelectItem>
                   {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} ({c.subject})</SelectItem>)}
                 </SelectContent>
               </Select>
               <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
-                <Info size={11} /> 반을 선택하면 그 반 수강생만, 학원 전체를 선택하면 재원 중인 전체 학생이 응시 대상이 됩니다.
+                <Info size={11} /> {isTeacherMode
+                  ? '반을 선택하면 그 반 수강생만, 담당 학생 전체를 선택하면 내 담당 학생 전체가 응시 대상이 됩니다.'
+                  : '반을 선택하면 그 반 수강생만, 학원 전체를 선택하면 재원 중인 전체 학생이 응시 대상이 됩니다.'}
               </p>
             </div>
           </div>

@@ -55,6 +55,25 @@ export interface ExamQuestionDef {
 // ────────────────────────────────────────────────────────────
 export type ExamStatus = '준비중' | '응시중' | '채점중' | '공개완료';
 
+// ────────────────────────────────────────────────────────────
+// Phase 3C: 시험 scope — 최고관리자 공통 시험 vs 선생님 개인 시험 분리
+// ────────────────────────────────────────────────────────────
+export type ExamScope = 'ACADEMY_COMMON' | 'GRADE_COMMON' | 'COURSE_COMMON' | 'TEACHER_PRIVATE';
+export type ExamSourceType = 'ADMIN_COMMON' | 'TEACHER_PRIVATE';
+export type ExamVisibility = 'COMMON' | 'OWNER_ONLY';
+
+export const EXAM_SCOPE_LABELS: Record<ExamScope, string> = {
+  ACADEMY_COMMON: '전체 공통',
+  GRADE_COMMON:   '학년 공통',
+  COURSE_COMMON:  '과정 공통',
+  TEACHER_PRIVATE:'수업',
+};
+
+// 학생 화면에 노출하는 최소 라벨(행정 구분 과다 노출 금지 — "공통" 또는 "수업"만 사용)
+export function studentFacingScopeLabel(scope: ExamScope | undefined): '공통' | '수업' {
+  return scope === 'TEACHER_PRIVATE' ? '수업' : '공통';
+}
+
 export interface Exam {
   id: string;
   title: string;
@@ -69,6 +88,13 @@ export interface Exam {
   createdAt: string;
   publishedBy?: string;
   publishedAt?: string;
+  // ─── Phase 3C: scope 분리 ────────────────────────────────────────
+  scope: ExamScope;              // 기본값 정책은 addExam()에서 강제(교사 생성 시 TEACHER_PRIVATE 고정)
+  ownerTeacherId: string | null; // TEACHER_PRIVATE인 경우 생성한 교사 id, 공통 시험은 null
+  targetGrade?: string;          // GRADE_COMMON일 때 대상 학년
+  targetCourseId?: string;       // COURSE_COMMON일 때 대상 과정 id
+  sourceType?: ExamSourceType;   // ADMIN_COMMON | TEACHER_PRIVATE(표시/필터용, scope와 함께 유지)
+  visibility: ExamVisibility;    // COMMON | OWNER_ONLY
 }
 
 // ────────────────────────────────────────────────────────────
@@ -137,36 +163,43 @@ export function canPublishExam(submissions: ExamSubmission[]): boolean {
 // Exam.status 필드 자체(ExamStatus)는 더미 시드 호환을 위해 남겨두지만, 화면(AssessmentList.tsx/
 // AssessmentDetail.tsx)에서는 이 필드를 직접 노출하지 않고 아래 파생 함수만 사용한다.
 
-export function isAcademyWideExam(exam: Pick<Exam, 'classId'>): boolean {
+// Phase 3C 반려 대응: TEACHER_PRIVATE 시험은 classId 유무와 무관하게 "학원 전체 공통 시험"
+// 취급을 받지 않는다 — 교사가 채점 완료하면 별도 공개 절차 없이 즉시 반영된다(반 단위 시험과
+// 동일한 흐름). "학원 전체 공개 절차 필요" 규칙은 관리자 공통 시험(ACADEMY_COMMON 등)에만
+// 적용된다.
+export function isAcademyWideExam(exam: Pick<Exam, 'classId' | 'scope'>): boolean {
+  if (exam.scope === 'TEACHER_PRIVATE') return false;
   return !exam.classId;
 }
 
-// 이 시험이 "공개" 액션 자체를 필요로 하는지 — 학원 전체 시험만 해당한다.
-export function requiresPublishAction(exam: Pick<Exam, 'classId'>): boolean {
+// 이 시험이 "공개" 액션 자체를 필요로 하는지 — 관리자 공통 시험 중 classId 없는 경우만 해당.
+// TEACHER_PRIVATE는 절대 해당하지 않는다(교사에게는애초에 공개 권한도 없다).
+export function requiresPublishAction(exam: Pick<Exam, 'classId' | 'scope'>): boolean {
   return isAcademyWideExam(exam);
 }
 
 // 화면에 보여줄 파생 진행 단계 — 상태 카드/필터를 대체한다.
 export type ExamPhase = '미채점 있음' | '채점 완료' | '공개 완료';
 
-export function getExamPhase(exam: Pick<Exam, 'classId' | 'publishedAt'>, submissions: ExamSubmission[]): ExamPhase {
+export function getExamPhase(exam: Pick<Exam, 'classId' | 'publishedAt' | 'scope'>, submissions: ExamSubmission[]): ExamPhase {
   const allGraded = canPublishExam(submissions);
   if (isAcademyWideExam(exam)) {
     if (exam.publishedAt) return '공개 완료';
     return allGraded ? '채점 완료' : '미채점 있음';
   }
-  // 반 단위 시험: "채점 완료" = 반영 가능 상태(별도 공개 절차 없음)이므로 '공개 완료'라는 표현 대신
-  // '채점 완료'까지만 표시한다(반 단위 시험에는 "공개"라는 개념 자체가 없다).
+  // 반 단위 시험 / TEACHER_PRIVATE: "채점 완료" = 반영 가능 상태(별도 공개 절차 없음)이므로
+  // '공개 완료'라는 표현 대신 '채점 완료'까지만 표시한다.
   return allGraded ? '채점 완료' : '미채점 있음';
 }
 
 // 이 시험의 이 학생 결과를 학생 상세 성적조회 탭에 노출해도 되는지 판단.
-// 결석/미채점이면 항상 false. 반 단위 시험은 채점 완료 시 true. 학원 전체 시험은 공개(publishedAt) 후에만 true.
-export function isResultVisibleForStudent(exam: Pick<Exam, 'classId' | 'publishedAt'>, submission: ExamSubmission): boolean {
+// 결석/미채점이면 항상 false. 반 단위 시험/TEACHER_PRIVATE는 채점 완료 시 true.
+// 관리자 공통(classId 없는) 시험은 공개(publishedAt) 후에만 true.
+export function isResultVisibleForStudent(exam: Pick<Exam, 'classId' | 'publishedAt' | 'scope'>, submission: ExamSubmission): boolean {
   if (submission.status === '결석') return false;
   if (submission.totalScore === undefined) return false;
   if (isAcademyWideExam(exam)) return !!exam.publishedAt;
-  return true; // 반 단위 시험은 채점 완료(totalScore 확정) 시 즉시 반영 가능
+  return true; // 반 단위 시험 / TEACHER_PRIVATE는 채점 완료(totalScore 확정) 시 즉시 반영 가능
 }
 
 // 문항별 자동채점 적용 — 자동채점 대상 문항에 한해 studentAnswer를 correctAnswer와 비교해 점수를 매긴다.
@@ -229,6 +262,7 @@ export interface StudentExamResult {
   totalPoints: number;    // 만점
   earnedScore: number;    // 획득 점수(totalScore — isResultVisibleForStudent를 통과했으므로 항상 number)
   classId?: string;
+  scope: ExamScope;       // Phase 3C: 학생 화면 "공통"/"수업" 라벨용(studentFacingScopeLabel 참조)
   // ─── 성적표 상세 통계 (같은 시험의 전체 제출 기준 산출) ────────────
   averageScore?: number;      // 응시자 평균 점수
   highestScore?: number;      // 응시자 최고 점수
@@ -289,6 +323,7 @@ export function getPublishedResultsForStudent(exams: Exam[], submissions: ExamSu
       totalPoints: exam.totalScore,
       earnedScore: sub.totalScore!, // isResultVisibleForStudent가 undefined가 아님을 보장
       classId: exam.classId,
+      scope: exam.scope,
       ...stats,
       wrongQuestions: computeWrongQuestions(exam, sub),
     });
@@ -435,7 +470,7 @@ const weeklyMockQuestions: ExamQuestionDef[] = [
   q(5, '객관식', 20, '1'),
 ];
 
-export const DUMMY_EXAMS: Exam[] = [
+const DUMMY_EXAMS_BASE: Omit<Exam, 'scope' | 'ownerTeacherId' | 'visibility' | 'sourceType'>[] = [
   {
     id: 'exam-001',
     title: '1학기 1차 단원평가 (수학)',
@@ -554,6 +589,15 @@ export const DUMMY_EXAMS: Exam[] = [
     publishedAt: '2024-03-18T15:00:00',
   },
 ];
+
+// Phase 3C: 시드 데이터는 전부 최고관리자가 만든 학원 전체 공통 시험으로 간주한다.
+export const DUMMY_EXAMS: Exam[] = DUMMY_EXAMS_BASE.map((e) => ({
+  ...e,
+  scope: 'ACADEMY_COMMON' as ExamScope,
+  ownerTeacherId: null,
+  sourceType: 'ADMIN_COMMON' as ExamSourceType,
+  visibility: 'COMMON' as ExamVisibility,
+}));
 
 // 더미 응시자/채점 데이터 — Exam.classId가 있으면 그 반 수강생, 없으면 학원 전체 재원생 일부를 대상으로 한다.
 // (실제 화면에서는 ClassContext.getClassStudents()/StudentContext.students로 동적 매칭하지만,

@@ -96,7 +96,7 @@ const PERM_CATEGORIES: PermCategory[] = [
     ],
   },
   {
-    label: '성적관리',
+    label: '시험 및 성적 관리',
     rows: [
       { feature: '시험 조회', view: 'assessment.view', create: null, update: null, remove: null, approve: null, publish: null },
       { feature: '시험 생성', view: null, create: 'assessment.create', update: null, remove: null, approve: null, publish: null },

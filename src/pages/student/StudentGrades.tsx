@@ -21,7 +21,7 @@ import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useGrowth } from '@/contexts/GrowthContext';
-import { getPublishedResultsForStudent, categoryLabel } from '@/lib/assessmentData';
+import { getPublishedResultsForStudent, categoryLabel, studentFacingScopeLabel } from '@/lib/assessmentData';
 import {
   STUDENT_HIDDEN_CATEGORY_IDS,
   getSchoolGradeColor,
@@ -645,7 +645,12 @@ function TestCard({ result, onClick }: { result: StudentExamResult; onClick: () 
     <button type="button" onClick={onClick} className="axis-card p-4 w-full text-left">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="font-semibold text-sm truncate" style={{ color: 'oklch(0.2 0.02 250)' }}>{result.title}</div>
+          <div className="font-semibold text-sm truncate flex items-center gap-1.5" style={{ color: 'oklch(0.2 0.02 250)' }}>
+            {result.title}
+            <span className="text-xs font-normal px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.55 0.015 250)' }}>
+              {studentFacingScopeLabel(result.scope)}
+            </span>
+          </div>
           <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
             {result.examDate}
             {result.participantCount && ` · 응시 ${result.participantCount}명`}

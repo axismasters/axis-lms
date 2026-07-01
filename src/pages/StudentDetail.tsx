@@ -2303,7 +2303,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
 
       {/* IF 성장 힌트 placeholder */}
       <div className="px-4 py-3 rounded-lg text-xs" style={{ background: '#EEF2FF', border: '1px solid #C7D2FE', color: '#4338CA' }}>
-        <strong>📊 IF 성장 힌트</strong> — 성적관리 IF 분석 결과와 엠블럼 진행도 연동이 준비되어 있습니다.
+        <strong>📊 IF 성장 힌트</strong> — 시험 및 성적 관리 IF 분석 결과와 엠블럼 진행도 연동이 준비되어 있습니다.
         계산 실수 개선 → 꼼꼼한 검토자 / 계산 정확도 향상 엠블럼,
         개념 부족 보완 → 개념 정복자 / 개념 회복 엠블럼,
         시간 부족 개선 → 시간 마스터 / 시간관리 달인 엠블럼과 연결됩니다.

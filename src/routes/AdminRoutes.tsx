@@ -79,7 +79,7 @@ export default function AdminRoutes() {
         <Route path="/admin/attendance/check" component={AttendanceCheck} />
         <Route path="/admin/attendance" component={AttendanceStatus} />
 
-        {/* 성적관리 */}
+        {/* 시험 및 성적 관리 */}
         <Route path="/admin/scores/new" component={() => <Redirect to="/admin/scores?new=1" />} />
         <Route path="/admin/scores/:id" component={AssessmentDetail} />
         <Route path="/admin/scores" component={AssessmentList} />

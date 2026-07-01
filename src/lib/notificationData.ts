@@ -97,7 +97,7 @@ export const RELATED_ENTITY_TYPE_LABEL: Record<RelatedEntityType, string> = {
   ATTENDANCE: '출결관리',
   ENROLLMENT: '수강등록',
   FINANCE: '재무관리',
-  ASSESSMENT: '성적관리',
+  ASSESSMENT: '시험 및 성적 관리',
   MANUAL: '수동',
 };
 

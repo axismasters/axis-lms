@@ -65,7 +65,7 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    label: '성적관리',
+    label: '시험 및 성적 관리',
     path: '/admin/scores',
     icon: <BarChart2 size={16} />,
     requires: 'assessment.view',

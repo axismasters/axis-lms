@@ -9,7 +9,7 @@ import TeacherStudents from '@/pages/teacher/TeacherStudents';
 import TeacherStudentDetail from '@/pages/teacher/TeacherStudentDetail';
 import TeacherAttendance from '@/pages/teacher/TeacherAttendance';
 import TeacherExams from '@/pages/teacher/TeacherExams';
-import TeacherExamGrading from '@/pages/teacher/TeacherExamGrading';
+import TeacherExamGrading from '@/pages/teacher/TeacherExamGradingGuard';
 import TeacherGrades from '@/pages/teacher/TeacherGrades';
 import TeacherVideos from '@/pages/teacher/TeacherVideos';
 import TeacherNotes from '@/pages/teacher/TeacherNotes';

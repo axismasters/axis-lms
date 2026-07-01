@@ -1,16 +1,19 @@
-// AXIS LMS v1.2 - TeacherExams (Scope Guard Fix)
+// AXIS LMS v1.2 - TeacherExams (Phase 3C: 개인 시험지 생성 추가)
 // 강사 전용 내 시험 / 미채점 시험 화면.
 // - 모든 counts/stats는 담당 학생(assignedStudentIds) submissions 기준
 // - exam.status 내부값 노출 금지 → 현장 친화적 표현 사용
 // - 담당 학생 데이터 없는 학원 전체 시험은 전체 탭에서 제외
+// - Phase 3C: 공통 시험(ACADEMY_COMMON/GRADE_COMMON/COURSE_COMMON) + 본인 소유 TEACHER_PRIVATE만 노출.
+//   다른 교사의 TEACHER_PRIVATE 시험은 이 화면에 절대 나타나지 않는다.
 
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { BarChart2, CheckCircle2, AlertCircle, ChevronRight } from 'lucide-react';
+import { BarChart2, CheckCircle2, AlertCircle, ChevronRight, Plus, Lock } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import type { ExamSubmission } from '@/lib/assessmentData';
+import AssessmentFormModal from '@/components/AssessmentFormModal';
 
 type Tab = '미채점' | '전체';
 
@@ -35,6 +38,7 @@ export default function TeacherExams() {
   const { currentUser } = useAuth();
   const { exams, submissions } = useAssessment();
   const [tab, setTab] = useState<Tab>('미채점');
+  const [formOpen, setFormOpen] = useState(false);
 
   const assignedClassIds = currentUser.assignedClassIds ?? [];
   const assignedStudentIds = currentUser.assignedStudentIds ?? [];
@@ -43,10 +47,12 @@ export default function TeacherExams() {
   // 담당 학생의 submissions만 사용
   const mySubmissions = submissions.filter((s) => myStudentIds.has(s.studentId));
 
-  // 담당 반 시험 또는 학원 전체 시험 후보
-  const candidateExams = exams.filter(
-    (e) => assignedClassIds.includes(e.classId ?? '') || !e.classId
-  );
+  // Phase 3C: 담당 반/학원 전체 공통 시험 후보 + 본인 소유 개인 시험(TEACHER_PRIVATE) 후보를 분리해서 계산한다.
+  // 다른 교사의 TEACHER_PRIVATE 시험은 assignedClassIds/classId 매칭과 무관하게 항상 제외한다(이중 방어).
+  const candidateExams = exams.filter((e) => {
+    if (e.scope === 'TEACHER_PRIVATE') return e.ownerTeacherId === currentUser.id;
+    return assignedClassIds.includes(e.classId ?? '') || !e.classId;
+  });
 
   // 미채점 탭: 담당 학생 중 채점중 항목이 있는 시험
   const ungradedExams = candidateExams.filter((e) =>
@@ -68,6 +74,13 @@ export default function TeacherExams() {
   return (
     <TeacherLayout title="채점">
       <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+
+        {/* Phase 3C: 내 시험 만들기 */}
+        <button type="button" onClick={() => setFormOpen(true)}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold"
+          style={{ background: 'oklch(0.511 0.262 276.966)', color: 'white' }}>
+          <Plus size={15} /> 내 시험 만들기
+        </button>
 
         {/* 탭 */}
         <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'oklch(0.93 0.006 250)' }}>
@@ -116,8 +129,13 @@ export default function TeacherExams() {
                 <div key={exam.id} className="axis-card p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                      <div className="font-semibold text-sm flex items-center gap-1.5" style={{ color: 'oklch(0.2 0.02 250)' }}>
                         {exam.title}
+                        {exam.scope === 'TEACHER_PRIVATE' && (
+                          <span className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: '#EDE9FE', color: '#7C3AED' }}>
+                            <Lock size={9} /> 내 수업
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
                         {exam.subject} · {exam.examDate}
@@ -170,6 +188,8 @@ export default function TeacherExams() {
         )}
 
       </div>
+
+      <AssessmentFormModal open={formOpen} onClose={() => setFormOpen(false)} createdBy={currentUser.name} mode="teacher" />
     </TeacherLayout>
   );
 }

@@ -15,13 +15,14 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import {
   Exam, ExamSubmission, ExamQuestionDef, SubmissionStatus, ScoreCorrectionLog,
-  StudentExamResult,
+  StudentExamResult, ExamScope,
   DUMMY_EXAMS, DUMMY_SUBMISSIONS,
   applyAutoGrading, recalcTotalScore, canPublishExam, isSubmissionGraded, requiresPublishAction,
   getPublishedResultsForStudent as filterPublishedResultsForStudent,
 } from '@/lib/assessmentData';
 import { useNotification } from '@/contexts/NotificationContext';
 import { useStudents } from '@/contexts/StudentContext';
+import { useEmployees } from '@/contexts/EmployeeContext';
 
 interface NewExamInput {
   title: string;
@@ -31,6 +32,11 @@ interface NewExamInput {
   examDate: string;
   questions: ExamQuestionDef[];
   createdBy: string;
+  // ─── Phase 3C: scope 분리 — 호출부(관리자 폼/교사 폼)가 명시적으로 지정한다 ─────
+  scope: ExamScope;
+  ownerTeacherId?: string | null;   // TEACHER_PRIVATE일 때 생성 교사 id
+  targetGrade?: string;             // GRADE_COMMON일 때 대상 학년
+  targetCourseId?: string;          // COURSE_COMMON일 때 대상 과정 id
 }
 
 interface AssessmentContextType {
@@ -89,6 +95,7 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
   const [submissions, setSubmissions] = useState<ExamSubmission[]>(DUMMY_SUBMISSIONS);
   const { createAssessmentPublishedNotification } = useNotification();
   const { students } = useStudents();
+  const { getEmployeeByAccountId } = useEmployees();
 
   const getExam = useCallback((id: string) => exams.find((e) => e.id === id), [exams]);
   const getSubmissionsByExam = useCallback((examId: string) => submissions.filter((s) => s.examId === examId), [submissions]);
@@ -100,6 +107,9 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
   const addExam = useCallback((input: NewExamInput, targetStudentIds: string[]): Exam => {
     const id = `exam-${Date.now()}`;
     const totalScore = input.questions.reduce((sum, q) => sum + q.points, 0);
+    // Phase 3C: TEACHER_PRIVATE는 visibility/ownerTeacherId를 서버(mock) 단에서도 한 번 더 강제한다.
+    // 호출부가 scope는 TEACHER_PRIVATE로 넘기면서 ownerTeacherId를 빠뜨리는 실수를 막기 위함.
+    const isPrivate = input.scope === 'TEACHER_PRIVATE';
     const newExam: Exam = {
       id,
       title: input.title,
@@ -112,6 +122,12 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
       status: '준비중',
       createdBy: input.createdBy,
       createdAt: new Date().toISOString(),
+      scope: input.scope,
+      ownerTeacherId: isPrivate ? (input.ownerTeacherId ?? input.createdBy) : null,
+      targetGrade: input.targetGrade,
+      targetCourseId: input.targetCourseId,
+      sourceType: isPrivate ? 'TEACHER_PRIVATE' : 'ADMIN_COMMON',
+      visibility: isPrivate ? 'OWNER_ONLY' : 'COMMON',
     };
     setExams((prev) => [newExam, ...prev]);
     setSubmissions((prev) => [
@@ -303,6 +319,19 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
     const exam = exams.find(e => e.id === examId);
     if (!exam) return { ok: false, reason: '시험을 찾을 수 없습니다.' };
 
+    // Phase 3C v2 반려 대응(2차 방어): TeacherExamGradingGuard가 라우트 레벨에서 이미 막지만,
+    // Context 데이터 계층에서도 한 번 더 검증한다. gradeSubmissionByTeacher는 gradedBy로 이름
+    // 문자열만 받으므로(TeacherExamGrading.tsx가 currentUser.name을 그대로 넘김 — 이 파일은
+    // 불변이라 시그니처를 바꿀 수 없다), ownerTeacherId(계정 id)를 이름으로 역조회해 비교한다.
+    // 동명이인이 있으면 이 이름 비교만으로는 완벽하지 않지만, 라우트 가드가 1차로 이미 막고
+    // 있어 실질적으로는 이중 방어 중 두 번째 안전망 역할이다.
+    if (exam.scope === 'TEACHER_PRIVATE' && exam.ownerTeacherId) {
+      const ownerName = getEmployeeByAccountId(exam.ownerTeacherId)?.name;
+      if (ownerName && ownerName !== gradedBy) {
+        return { ok: false, reason: '다른 선생님의 개인 시험지는 채점할 수 없습니다.' };
+      }
+    }
+
     const sub = submissions.find(s => s.examId === examId && s.studentId === studentId);
     if (!sub) return { ok: false, reason: '응시 기록을 찾을 수 없습니다.' };
     if (sub.status === '결석') return { ok: false, reason: '결석 처리된 학생은 채점할 수 없습니다.' };
@@ -326,7 +355,7 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
     }));
 
     return { ok: true };
-  }, [exams, submissions]);
+  }, [exams, submissions, getEmployeeByAccountId]);
 
   return (
     <AssessmentContext.Provider value={{
