@@ -27,12 +27,14 @@ import {
   getSchoolGradeColor,
 } from '@/lib/phase2dData';
 import type { StudentExamResult, ExamSubmission } from '@/lib/assessmentData';
-import { IF_REASONS, calcIfAnalysis, getIfMotivationComment, calcIfAnalysisFromQuestions, getIfMotivationCommentFromQuestions } from '@/lib/studentIfAnalysis';
-import type { IfReason, IfQuestionEntry } from '@/lib/studentIfAnalysis';
+// [Phase 3D v3-r9-r1] IF 계산/저장/성장연동을 ifAnalysisEngine.ts 하나로 경유한다.
+// studentIfAnalysis.ts/studentIfRecord.ts를 이 화면에서 직접 import하지 않는다.
 import {
-  saveIfRecord, getIfRecordForExam, toGrowthIfFlags, markIfRecordGrowthLinked, loadIfRecords,
-} from '@/lib/studentIfRecord';
-import type { StudentIfRecord } from '@/lib/studentIfRecord';
+  IF_REASONS, calcIfAnalysis, getIfMotivationComment,
+  saveIfRecord, getIfRecordForExam, markIfRecordGrowthLinked, loadIfRecords,
+  getIfCumulativeSummary, runIfAnalysisEngine, buildGrowthEvent,
+} from '@/lib/ifAnalysisEngine';
+import type { IfReason, IfQuestionEntry } from '@/lib/ifAnalysisEngine';
 import { Button } from '@/components/ui/button';
 
 // ─── 성적 색상 ────────────────────────────────────────────────────────
@@ -322,7 +324,11 @@ function CumulativeGrowthSection({
     acc.push(prev + r.missedPoints);
     return acc;
   }, []);
-  const reasonSummary = getIfCumulativeSummaryLocal(ifRecords);
+  const reasonSummaryRaw = getIfCumulativeSummary(ifRecords);
+  const reasonSummary = {
+    total: reasonSummaryRaw.reasonRatios.reduce((s, r) => s + r.count, 0),
+    ratios: reasonSummaryRaw.reasonRatios,
+  };
 
   // 6. 같은 시험군 내 성장 변화 — 첫 기록 대비 현재
   const firstPct = upToNow.length > 0
@@ -446,21 +452,11 @@ function CumulativeGrowthSection({
   );
 }
 
-// getIfCumulativeSummary는 studentId 전체 기준 집계용이라, 이 컴포넌트처럼 "시험군으로
-// 좁힌 레코드 배열"에 바로 쓸 수 있는 로컬 버전을 별도로 둔다(요청 시 studentIfRecord.ts로 승격 가능).
-function getIfCumulativeSummaryLocal(records: StudentIfRecord[]): {
-  total: number;
-  ratios: { reason: IfReason; pct: number; count: number }[];
-} {
-  const counts: Record<IfReason, number> = { '계산 실수': 0, '개념 부족': 0, '시간 부족': 0 };
-  let total = 0;
-  records.forEach(r => r.selections.forEach(s => { counts[s.reason]++; total++; }));
-  const ratios = IF_REASONS.map(reason => ({
-    reason, count: counts[reason],
-    pct: total > 0 ? Math.round((counts[reason] / total) * 100) : 0,
-  })).sort((a, b) => b.count - a.count);
-  return { total, ratios };
-}
+// [Phase 3D v3-r9-r1] 이전에는 studentId 전체 기준 집계용과 다르다는 이유로 이 화면
+// 안에 getIfCumulativeSummaryLocal이라는 중복 함수가 있었다 — 실제로는
+// ifAnalysisEngine.getIfCumulativeSummary도 동일하게 "이미 필터링된 records 배열"을
+// 받는 시그니처였다(studentId를 받지 않음). 판단/계산 로직을 컴포넌트 밖에 두는
+// 원칙에 따라 중복 함수를 제거하고 엔진 함수를 그대로 쓰도록 정리했다.
 
 // ─── 성적표 상세 모달 (IF 채점 포함) ────────────────────────────────
 export function ResultDetailModal({
@@ -501,13 +497,17 @@ export function ResultDetailModal({
     questionId: wq.questionId, no: wq.no, points: wq.points,
     reason: questionReasons[wq.questionId] ?? null,
   }));
-  const ifQuestionResult = hasQuestionLevelData
-    ? calcIfAnalysisFromQuestions({
+  // [Phase 3D v3-r9-r1] calcIfAnalysisFromQuestions() 직접 호출 대신
+  // ifAnalysisEngine.runIfAnalysisEngine()을 사용한다 — 결과/동기부여 문장/보완
+  // 포인트를 한 번에 받는다(계약 그대로).
+  const ifEngineOutput = hasQuestionLevelData
+    ? runIfAnalysisEngine({
         examId: result.examId, examTitle: result.title,
         actualScore: result.earnedScore, totalPoints: result.totalPoints,
         questions: questionEntries,
       })
     : null;
+  const ifQuestionResult = ifEngineOutput?.result ?? null;
 
   // Phase 3B: 탭할 때마다 저장 + 오답 전체에 이유가 채워지면 1회만 Growth(Emblem/SP) 훅 연결.
   useEffect(() => {
@@ -524,9 +524,8 @@ export function ResultDetailModal({
     });
 
     if (record.isComplete && !record.growthLinked) {
-      onIfAnalysisResult({
-        studentId, examId: result.examId, ifFlags: toGrowthIfFlags(record),
-      });
+      // [Phase 3D v3-r9-r1] toGrowthIfFlags() 직접 호출 대신 ifAnalysisEngine.buildGrowthEvent()를 사용한다.
+      onIfAnalysisResult(buildGrowthEvent(studentId, result.examId, record));
       addStudentSP(studentId, 5, 'IF 분석 완료 — 오답 회고', 'ASSESSMENT', result.examId, 'SYSTEM');
       markIfRecordGrowthLinked(studentId, result.examId);
     }
@@ -663,8 +662,14 @@ export function ResultDetailModal({
                           {ifQuestionResult.selectedCount}/{ifQuestionResult.totalWrongCount}개 문항 선택됨
                         </div>
                         <div className="rounded-lg px-4 py-3 text-sm" style={{ background: 'oklch(0.95 0.06 260)', color: 'oklch(0.3 0.1 260)' }}>
-                          {getIfMotivationCommentFromQuestions(ifQuestionResult)}
+                          {ifEngineOutput?.motivationComment}
                         </div>
+                        {ifEngineOutput?.improvementPoint.topReason && (
+                          <div className="flex items-start gap-1.5 text-xs" style={{ color: '#081F4D' }}>
+                            <Sparkles size={12} className="flex-shrink-0 mt-0.5" />
+                            <span>{ifEngineOutput.improvementPoint.suggestion}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </>

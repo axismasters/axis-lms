@@ -188,9 +188,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
   const SidebarContent = () => (
     <>
       <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'oklch(0.22 0.02 250)', minHeight: 56 }}>
-        <div className="flex items-center justify-center rounded-md" style={{ width: 32, height: 32, background: '#C8A15A' }}>
-          <AxisMark size={18} letterColor="#081F4D" slashColor="#081F4D" />
-        </div>
+        <AxisMark size={32} className="rounded-md flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="font-bold text-white text-sm tracking-wide">AXIS LMS</div>
           <div className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>v1.2 관리자</div>

@@ -15,7 +15,7 @@ import { useStudents } from '@/contexts/StudentContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { getPublishedResultsForStudent, EXAM_CATEGORIES } from '@/lib/assessmentData';
 import type { StudentExamResult } from '@/lib/assessmentData';
-import { getIfRecordForExam } from '@/lib/studentIfRecord';
+import { getIfRecordForExam } from '@/lib/ifAnalysisEngine';
 
 function scoreColor(pct: number) {
   return pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)';

@@ -1,5 +1,36 @@
 # APPLY_ORDER_PHASE3D.md
 
+## v3-r9-r1 적용 안내
+
+단일 zip(`axis-lms-v1_2-phase3d-if-analysis-engine-detail-flow-v3-r9-r1-github-upload.zip`,
+내부 루트 `axis-lms-main/`)으로 제공한다.
+
+### 적용 순서
+
+1. zip 압축 해제 후 로컬 저장소 폴더 내용을 전체 교체한다.
+   - **신규 폴더 `src/assets/brand/`(이미지 3장) 반드시 포함해서 복사할 것** —
+     빠뜨리면 로그인 화면과 4개 포털 헤더 배지가 깨진다.
+2. GitHub Desktop에서 변경 사항 확인 — 신규 파일 3개(이미지), 수정 파일 10개
+   (`AxisMark.tsx`, `AxisWordmark.tsx`, `global.d.ts`, `AdminLayout.tsx`,
+   `TeacherLayout.tsx`, `ParentLayout.tsx`, `StudentLayout.tsx`,
+   `ifAnalysisEngine.ts`, `LoginPage.tsx`, `StudentGrades.tsx`,
+   `ParentGrades.tsx`), `docs/` 4종 문서.
+3. 커밋 메시지: "Phase 3D v3-r9-r1 IF analysis engine wiring and AXIS brand hotfix"
+4. Push 후 GitHub Actions Build Check 결과 확인.
+5. **불변 파일 3종은 이번에도 손대지 않았다.**
+
+### 적용 후 수동 확인 권장 항목
+
+- 로그인 화면: 히어로 이미지가 찌그러짐 없이 잘 표시되는지(반응형 폭 축소 시에도).
+- 관리자/교사/학부모/학생 4개 포털 헤더의 소형 A마크 배지가 전부 동일하게
+  보이는지.
+- 학생 테스트 상세 → IF 채점: 문항 선택 후 결과 카드에 새로 추가된 "보완 포인트"
+  제안 문구가 표시되는지, 저장/성장이벤트(SP 지급)가 이전과 동일하게 동작하는지.
+- 교사 "담당 학생 성장" 화면의 IF 잠재력 수치가 이전과 동일하게 나오는지(회귀
+  확인).
+
+---
+
 ## v3-r9 적용 안내
 
 이번에도 단일 zip(`axis-lms-v1_2-phase3d-if-analysis-engine-detail-flow-v3-r9-github-upload.zip`,

@@ -65,12 +65,7 @@ export default function TeacherLayout({ children, title }: TeacherLayoutProps) {
       >
         <div className="flex items-center gap-2 lg:gap-6">
           <div className="flex items-center gap-2">
-            <div
-              className="flex items-center justify-center rounded-md"
-              style={{ width: 28, height: 28, background: '#081F4D' }}
-            >
-              <AxisMark size={15} letterColor="#F7F4EE" slashColor="#C8A15A" />
-            </div>
+            <AxisMark size={28} className="rounded-md flex-shrink-0" />
             <span className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
               {title ?? 'AXIS 강사'}
             </span>

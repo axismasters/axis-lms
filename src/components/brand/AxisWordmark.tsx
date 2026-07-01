@@ -1,63 +1,28 @@
-// AXIS LMS v1.2 - AxisWordmark (Phase 3D v3-r8)
+// AXIS LMS v1.2 - AxisWordmark (Phase 3D v3-r9-r1)
 //
-// 브랜드보드 "BRAND MARK" 히어로 패널을 기준으로 구현한 AXIS 전체 워드마크.
-// A / I / S는 letterColor, X는 accentColor(Gold)로 표시하고, X 위로 대각선
-// 골드 슬래시가 화면 왼쪽 아래에서 오른쪽 위로 관통한다.
-// 로그인 화면 등 브랜드 노출이 중요한 히어로 영역에서 사용한다.
+// [교체 이력] v3-r8에서는 SVG <text> + 대각선 <line>으로 워드마크를 직접 그렸다 —
+// 폰트 렌더링에 따라 슬래시와 "X" 글자 위치가 브라우저마다 어긋날 수 있는 리스크가
+// 있었고, 실제 브랜드 이미지와 미묘하게 달라 보였다. v3-r9-r1부터는 사용자가 제공한
+// 실제 워드마크 이미지(밝은 배경용, 투명 배경 처리 완료 — Navy "A"/"I"/"S" + Gold "X"
+// + 대각선 슬래시)를 그대로 사용한다. 배경이 투명하므로 밝은 배경 위 어디에 놓아도
+// 자연스럽게 어울린다(어두운 배경에는 쓰지 않는다 — 그 경우 로그인 히어로처럼
+// axis-hero-dark.png를 통째로 쓴다).
+
+import axisWordmarkLight from '@/assets/brand/axis-wordmark-light.png';
 
 interface AxisWordmarkProps {
   height?: number;
-  letterColor?: string;
-  accentColor?: string;
   className?: string;
 }
 
-export function AxisWordmark({
-  height = 44,
-  letterColor = '#081F4D',
-  accentColor = '#C8A15A',
-  className,
-}: AxisWordmarkProps) {
-  const gradId = `axisWordSlash-${letterColor.replace('#', '')}-${accentColor.replace('#', '')}`;
-
+export function AxisWordmark({ height = 40, className }: AxisWordmarkProps) {
   return (
-    <svg
+    <img
+      src={axisWordmarkLight}
+      alt="AXIS"
       height={height}
-      viewBox="0 0 400 130"
       className={className}
-      role="img"
-      aria-label="AXIS"
-    >
-      <defs>
-        <linearGradient id={gradId} x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor={accentColor} stopOpacity="0" />
-          <stop offset="30%" stopColor={accentColor} stopOpacity="1" />
-          <stop offset="100%" stopColor={accentColor} stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
-      <text
-        x="200"
-        y="88"
-        textAnchor="middle"
-        fontFamily="'Cormorant Garamond', 'Noto Serif KR', Georgia, 'Times New Roman', serif"
-        fontSize="78"
-        fontWeight="600"
-        letterSpacing="12"
-      >
-        <tspan fill={letterColor}>A</tspan>
-        <tspan fill={accentColor}>X</tspan>
-        <tspan fill={letterColor}>IS</tspan>
-      </text>
-      {/* 시그니처 대각선 골드 슬래시 — X 글자를 관통해 위아래로 뻗는다 */}
-      <line
-        x1="148"
-        y1="122"
-        x2="234"
-        y2="2"
-        stroke={`url(#${gradId})`}
-        strokeWidth="4.5"
-        strokeLinecap="round"
-      />
-    </svg>
+      style={{ height, width: 'auto', display: 'block' }}
+    />
   );
 }

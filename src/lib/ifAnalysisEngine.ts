@@ -32,23 +32,49 @@
 
 import {
   IF_REASONS,
+  calcIfAnalysis,
+  getIfMotivationComment,
   calcIfAnalysisFromQuestions,
   getIfMotivationCommentFromQuestions,
   type IfReason,
+  type IfAnalysisInput,
+  type IfAnalysisResult,
   type IfQuestionEntry,
   type IfAnalysisQuestionResult,
   type IfReasonBreakdownEntry,
 } from './studentIfAnalysis';
 import {
+  saveIfRecord,
+  getIfRecordForExam,
+  markIfRecordGrowthLinked,
+  loadIfRecords,
   toGrowthIfFlags,
   getIfCumulativeSummary,
   type StudentIfRecord,
+  type IfQuestionSelectionSaved,
   type IfCumulativeSummary,
 } from './studentIfRecord';
 
-// ─── 재노출(re-export) — 다른 엔진은 이 파일 하나만 import하면 된다 ───────
-export { IF_REASONS, calcIfAnalysisFromQuestions, getIfMotivationCommentFromQuestions };
-export type { IfReason, IfQuestionEntry, IfAnalysisQuestionResult, IfReasonBreakdownEntry, IfCumulativeSummary };
+// ─── 재노출(re-export) — 다른 엔진/화면은 이 파일 하나만 import하면 된다 ───────
+// (studentIfAnalysis.ts / studentIfRecord.ts를 직접 import하지 않아도 되도록
+//  계산·저장·조회 함수 전체를 이 엔진 경계에서 재노출한다.)
+export {
+  IF_REASONS,
+  calcIfAnalysis,               // legacy fallback(문항별 데이터 없는 시험 전용)
+  getIfMotivationComment,       // legacy fallback용 동기부여 문장
+  calcIfAnalysisFromQuestions,
+  getIfMotivationCommentFromQuestions,
+  saveIfRecord,
+  getIfRecordForExam,
+  markIfRecordGrowthLinked,
+  loadIfRecords,
+  getIfCumulativeSummary,
+};
+export type {
+  IfReason, IfAnalysisInput, IfAnalysisResult,
+  IfQuestionEntry, IfAnalysisQuestionResult, IfReasonBreakdownEntry,
+  StudentIfRecord, IfQuestionSelectionSaved, IfCumulativeSummary,
+};
 
 // ─── 예상 보완 포인트 ────────────────────────────────────────────────
 export interface IfEngineImprovementPoint {
@@ -128,8 +154,6 @@ export function estimateIfPotentialFromAveragePct(avgAchievedPct: number | null,
   if (avgAchievedPct === null) return null;
   return Math.max(0, Math.min(100 - avgAchievedPct, capPct));
 }
-
-export { getIfCumulativeSummary };
 
 // ─── 확장 방향 (Phase 3D v3-r9 기준, 구현 아님 — 계약만 미리 남겨둔다) ────
 //

@@ -1,6 +1,55 @@
 # MODIFIED_FILES_PHASE3D.md
 
-## v3-r9 변경분 (IF Analysis Engine 계약 정리 + 로그인 화면 히어로 카드 추가)
+## v3-r9-r1 변경분 (IF Analysis Engine 실배선 + AXIS 브랜드 이미지 반영, v3-r9 반려 대응)
+
+**베이스라인**: v3-r8 (GitHub main 반영 완료, Build Check 통과 확인 상태) — **v3-r9는
+반려**되었고, 그중 로그인 딥 네이비 히어로 변경만 사용자 지시로 유지한다는 전제로
+v3-r8 위에 다시 작업했다. 신규 파일 3개(이미지), 수정 파일 10개.
+
+### 신규 파일 — 실제 AXIS 브랜드 이미지 3종
+
+| 파일 | 내용 |
+|---|---|
+| `src/assets/brand/axis-hero-dark.png` | 사용자 제공 이미지 1(623×274) — 로그인 히어로 원본 그대로. MATH ACADEMY 라벨/워드마크/골드 슬래시/태그라인/ANALYSIS·PRECISION·RESULT 전부 포함. |
+| `src/assets/brand/axis-mark-icon.png` | 사용자 제공 이미지 3을 정사각(164×164)으로 패딩 처리한 소형 "A" 마크 배지. 원본 하단에 있던 배경 여백(라이트 그레이 3~8px)만 크롭 제거, 마크 자체는 무편집. |
+| `src/assets/brand/axis-wordmark-light.png` | 사용자 제공 이미지 2(228×118)의 배경(라이트 그레이 #F2F2F2)을 알파 채널로 투명화한 버전. 밝은 배경 어디에 놓아도 자연스럽게 어울린다. |
+
+### 1~3. 로그인/브랜드 마크 정리 — SVG 재해석 대신 실제 이미지 사용
+
+v3-r8/v3-r9에서 SVG로 손수 그렸던 AxisMark/AxisWordmark가 "허접한 임의 마크"라는
+피드백을 받아, 이번엔 재해석 없이 사용자가 제공한 실제 이미지를 그대로 쓰도록
+컴포넌트 내부를 전면 교체했다. Props 인터페이스도 단순화했다(색상은 이미지에
+내장되어 있으므로 `letterColor`/`slashColor`/`accentColor` prop 제거).
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/components/brand/AxisMark.tsx` | SVG `<path>`/`<line>` 도형 제거 → `axis-mark-icon.png`을 `<img>`로 렌더링. `size` prop만 유지, 색상 prop 제거. |
+| `src/components/brand/AxisWordmark.tsx` | SVG `<text>`/`<line>` 제거 → `axis-wordmark-light.png`을 `<img>`로 렌더링. `height` prop만 유지. |
+| `src/global.d.ts` | `declare module '*.png'` 타입 선언 추가(이미지 import를 위한 최소 타입 지원 — 기존 `*.css` 선언과 동일 패턴). |
+| `src/components/AdminLayout.tsx` | 사이드바 배지의 Gold 배경 div + AxisMark 조합을 `<AxisMark size={32} />` 단독 렌더링으로 단순화(마크 이미지 자체에 네이비 배경이 내장되어 있어 별도 색상 컨테이너가 불필요해짐). |
+| `src/layouts/TeacherLayout.tsx` / `ParentLayout.tsx` / `StudentLayout.tsx` | 헤더 배지의 Navy 배경 div + AxisMark 조합을 `<AxisMark size={28} />` 단독 렌더링으로 동일하게 단순화. 4개 포털 헤더가 이제 완전히 동일한 마크 이미지를 쓴다(이전엔 Admin만 Gold 배경, 나머지는 Navy 배경으로 서로 달랐다). |
+| `src/pages/LoginPage.tsx` | 히어로 영역(우상단 라벨 + 네이비 카드 + 워드마크 + 태그라인, 총 4개 요소를 코드로 조립하던 구조)을 전부 제거하고 `axis-hero-dark.png` 이미지 한 장(`<img className="w-full rounded-3xl">`)으로 교체 — v3-r9의 딥 네이비 히어로 방향은 그대로 유지하되(사용자 지시), 실제 브랜드 이미지를 그대로 반영. 페이지 배경은 계속 Ivory 유지, 폼도 밝은 영역에 그대로 둠(전체 다크 전환 아님). |
+
+### 4~5. IF Analysis Engine 실제 배선
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/lib/ifAnalysisEngine.ts` | 레거시 시험 전체 단위 함수(`calcIfAnalysis`, `getIfMotivationComment`)와 저장/조회 함수(`saveIfRecord`, `getIfRecordForExam`, `markIfRecordGrowthLinked`, `loadIfRecords`, `getIfCumulativeSummary`)까지 전부 재노출 추가 — 이제 화면에서 `studentIfAnalysis.ts`/`studentIfRecord.ts`를 전혀 직접 import하지 않아도 된다. |
+| `src/pages/student/StudentGrades.tsx` | ① IF 관련 import를 전부 `@/lib/ifAnalysisEngine` 하나로 통합(`studentIfAnalysis.ts`/`studentIfRecord.ts` 직접 import 제거). ② 문항별 IF 계산을 `calcIfAnalysisFromQuestions()` 직접 호출 대신 `runIfAnalysisEngine()`으로 교체(결과+동기부여문장+보완포인트를 한 번에 받음). ③ 성장 이벤트 연결을 `toGrowthIfFlags()` 직접 호출 대신 `buildGrowthEvent()`로 교체. ④ **부수 발견**: 화면 안에 `getIfCumulativeSummaryLocal()`이라는 중복 집계 함수가 있었다(주석상 "studentId 전체 집계용과 달라서 로컬로 뒀다"고 되어 있었으나, 실제로는 엔진의 `getIfCumulativeSummary()`도 이미 필터링된 records 배열을 받는 동일 시그니처였음) — 판단 로직 컴포넌트 내 직접 삽입 금지 원칙에 따라 제거하고 엔진 함수로 교체. ⑤ IF 결과 카드에 엔진의 "예상 보완 포인트" 제안 문구를 새로 표시(이전엔 계산만 하고 화면에 노출하지 않았던 값). |
+| `src/pages/parent/ParentGrades.tsx` | `getIfRecordForExam` import 경로를 `studentIfRecord.ts` 직접 참조에서 `ifAnalysisEngine.ts` 경유로 통일(동작 변화 없음, import 경로만 정리). |
+
+### 6~7. IF 이유 3개 고정 / 학부모·선생님 화면 / 별도 메뉴 금지 — 변경 없음(재검증만)
+
+이번에도 전부 재검증만 하고 코드는 바꾸지 않았다: `IF_REASONS` 3개 고정 유지,
+`/student/if` `/parent/if` `/teacher/if` 같은 별도 라우트 없음, 학부모 화면 IF
+선택/수정 UI 없음(읽기 전용), 선생님 화면 수동 입력 기능 신설 없음.
+
+### 8. 마지막 검수
+
+전체 `tsc -p tsconfig.app.json --noEmit` 에러 총량이 v3-r8/v3-r9와 동일한 379줄
+(문법 오류 0건)임을 재확인했다. 신규 이미지 import(`*.png`)도 `global.d.ts` 타입
+선언 덕분에 별도 에러 없이 통과했다. 상세는 `QA_PHASE3D.md` v3-r9-r1 섹션 참조.
+
 
 **베이스라인**: v3-r8 (GitHub main 반영 완료, Build Check 통과 확인 상태).
 신규 파일 1개, 수정 파일 2개. 삭제 파일 없음. 지시대로 화면을 갈아엎지 않고

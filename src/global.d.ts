@@ -12,3 +12,10 @@ declare namespace JSX {
 // CSS side-effect import (main.tsx의 './index.css') — 실제 Vite 빌드에서는 자동 처리되지만,
 // 격리 타입체크 환경에는 CSS 모듈 선언이 없어 별도로 추가한다.
 declare module '*.css';
+
+// [Phase 3D v3-r9-r1] 브랜드 이미지 에셋 import(src/assets/brand/*.png) 타입 선언 —
+// Vite는 이미지 import를 번들된 URL 문자열로 처리한다.
+declare module '*.png' {
+  const src: string;
+  export default src;
+}

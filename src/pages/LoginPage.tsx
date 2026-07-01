@@ -1,16 +1,14 @@
-// AXIS LMS v1.2 - LoginPage (Phase 3D v3-r9)
+// AXIS LMS v1.2 - LoginPage (Phase 3D v3-r9-r1)
 // 첫 화면 = 로그인 페이지. AXIS 밝은 프리미엄 브랜드 톤(Ivory/Warm White 페이지 배경 +
 // Navy 제한적 사용 + Gold 포인트) — 전체 다크 로그인 화면 금지 원칙은 유지한다.
 //
-// [Phase 3D v3-r9] 사용자가 제공한 참고 목업 이미지 기준으로 히어로 영역만 재구성:
-//   - 페이지 배경은 그대로 밝은 톤 유지(다크 전환 아님).
-//   - AXIS 워드마크를 담는 히어로 카드만 짙은 네이비(#000926, 참고 이미지에서 정밀
-//     샘플링한 값 — 브랜드보드의 UI 기준색 #081F4D보다 더 짙은 "히어로 전용" 톤)로
-//     감싸 대비를 강하게 준다. 이 짙은 톤은 이 카드 안에서만 쓰고, 앱의 다른 UI
-//     요소(버튼/사이드바 등)의 기준 Navy(#081F4D)는 그대로 둔다.
-//   - 우상단 "MATH ACADEMY" 라벨, 카드 안 태그라인 색상 강조(분석/적중=Gold),
-//     "로그인 상태 유지(자동 로그인)" 문구, 골드 버튼 흰 글씨 등 참고 이미지의
-//     디테일을 반영했다.
+// [Phase 3D v3-r9-r1] 사용자가 제공한 실제 AXIS 브랜드 이미지 3종 중 "로그인 히어로"용
+// 이미지(axis-hero-dark.png)를 재해석 없이 그대로 사용한다 — MATH ACADEMY 라벨,
+// AXIS 워드마크, 대각선 골드 슬래시, 태그라인(분석/적중 골드 강조), ANALYSIS·
+// PRECISION·RESULT 구성이 이미지 한 장에 전부 포함되어 있어 별도로 재조립하지 않는다.
+// v3-r9의 딥 네이비 히어로 방향은 유지하되(사용자 지시), 히어로는 카드 "이미지"로
+// 표시하고 그 아래 로그인 폼은 계속 밝은 페이지 배경 위에 둔다 — 전체 화면을
+// 네이비로 덮지 않는다.
 //
 // 정책:
 //   - 휴대폰번호 + 비밀번호 입력만 존재. 이메일 로그인/회원가입/계정생성 버튼 없음.
@@ -26,10 +24,9 @@
 import { useState, FormEvent } from 'react';
 import { Lock, Phone, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { AxisWordmark } from '@/components/brand/AxisWordmark';
+import axisHeroDark from '@/assets/brand/axis-hero-dark.png';
 
 const NAVY = '#081F4D';       // 앱 전역 기준 브랜드 Navy(버튼/사이드바 등)
-const HERO_NAVY = '#000926';  // 로그인 히어로 카드 전용 짙은 톤(참고 이미지 정밀 샘플값)
 const GOLD = '#C8A15A';
 
 export default function LoginPage() {
@@ -62,31 +59,21 @@ export default function LoginPage() {
       style={{ background: 'oklch(0.968 0.009 84.57)' }}
     >
       <div className="w-full max-w-sm relative">
-        {/* 우상단 브랜드 라벨 */}
-        <div className="flex justify-end mb-2">
-          <span className="text-xs font-bold tracking-[0.15em]" style={{ color: GOLD }}>
-            MATH ACADEMY
-          </span>
-        </div>
-
-        {/* 히어로 카드 — 짙은 네이비, AXIS 워드마크 + 태그라인 */}
-        <div
-          className="rounded-3xl px-6 py-10 flex flex-col items-center text-center"
-          style={{ background: HERO_NAVY, boxShadow: `0 24px 60px ${HERO_NAVY}55` }}
-        >
-          <AxisWordmark height={56} letterColor="#F7F4EE" accentColor={GOLD} />
-          <p className="text-sm mt-4 leading-relaxed" style={{ color: 'oklch(0.9 0.008 250)' }}>
-            날카롭게 <span style={{ color: GOLD, fontWeight: 600 }}>분석</span>하고 당신의 손으로{' '}
-            <span style={{ color: GOLD, fontWeight: 600 }}>적중</span>된다
-          </p>
-        </div>
+        {/* 히어로 — 실제 AXIS 브랜드 이미지를 그대로 사용(MATH ACADEMY 라벨/워드마크/
+            골드 슬래시/태그라인/ANALYSIS·PRECISION·RESULT 전부 이미지에 포함됨) */}
+        <img
+          src={axisHeroDark}
+          alt="AXIS MATH ACADEMY — 날카롭게 분석하고 당신의 손으로 적중된다"
+          className="w-full rounded-3xl"
+          style={{ boxShadow: '0 24px 60px rgba(0,9,38,0.35)', display: 'block' }}
+        />
 
         {/* 카드-폼 구분 포인트 */}
         <div className="flex justify-center my-6">
           <div className="w-10 h-[3px] rounded-full" style={{ background: GOLD }} />
         </div>
 
-        {/* 로그인 폼 — 별도 카드로 감싸지 않고 페이지 배경 위에 직접 배치 */}
+        {/* 로그인 폼 — 별도 카드로 감싸지 않고 밝은 페이지 배경 위에 직접 배치 */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-semibold mb-2" style={{ color: NAVY }}>
