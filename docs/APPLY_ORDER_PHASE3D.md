@@ -1,5 +1,32 @@
 # APPLY_ORDER_PHASE3D.md
 
+## v3-r9 적용 안내
+
+이번에도 단일 zip(`axis-lms-v1_2-phase3d-if-analysis-engine-detail-flow-v3-r9-github-upload.zip`,
+내부 루트 `axis-lms-main/`)으로 제공한다 — GitHub Desktop 사용 기준 분할 불필요.
+
+### 적용 순서
+
+1. zip 압축 해제 후 로컬 저장소 폴더 내용을 전체 교체한다(신규 파일
+   `src/lib/ifAnalysisEngine.ts` 포함).
+2. GitHub Desktop에서 변경 사항 확인 — 수정 파일 2개(`LoginPage.tsx`,
+   `TeacherStudentGrowth.tsx`), 신규 파일 1개(`ifAnalysisEngine.ts`), `docs/`
+   4종 문서.
+3. 커밋 메시지: "Phase 3D v3-r9 IF analysis engine and test detail flow"
+4. Push 후 GitHub Actions Build Check 결과 확인.
+5. **불변 파일 3종은 이번에도 손대지 않았다.**
+
+### 적용 후 수동 확인 권장 항목
+
+- 로그인 화면: 짙은 네이비 히어로 카드 안 AXIS 워드마크가 잘 보이는지,
+  "MATH ACADEMY" 라벨이 우상단에 잘 정렬되는지 확인.
+- 학생 테스트 상세 → IF 채점 블록이 여전히 정상 동작하는지(이번엔 로직을
+  건드리지 않았지만 회귀 확인 차원에서 권장).
+- 교사 "담당 학생 성장" 화면의 "IF 잠재력" 수치가 이전과 동일하게 나오는지
+  (계산식 자체는 그대로 옮기기만 했으므로 값이 바뀌면 안 된다).
+
+---
+
 ## v3-r8 적용 안내
 
 이번 산출물은 v3-r3 라운드처럼 GitHub 웹 UI 업로드 100개 파일 제한에 걸리지

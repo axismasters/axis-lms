@@ -1,6 +1,75 @@
 # MODIFIED_FILES_PHASE3D.md
 
-## v3-r8 변경분 (학생 테스트/학부모 포털 정책 정리 + AXIS 브랜드 UI 고도화)
+## v3-r9 변경분 (IF Analysis Engine 계약 정리 + 로그인 화면 히어로 카드 추가)
+
+**베이스라인**: v3-r8 (GitHub main 반영 완료, Build Check 통과 확인 상태).
+신규 파일 1개, 수정 파일 2개. 삭제 파일 없음. 지시대로 화면을 갈아엎지 않고
+최소 범위로만 작업했다.
+
+### 신규 파일
+
+| 파일 | 내용 |
+|---|---|
+| `src/lib/ifAnalysisEngine.ts` | IF Analysis Engine 계약(contract) 정리 파일. `studentIfAnalysis.ts`/`studentIfRecord.ts`의 기존 계산·저장 로직을 다시 구현하지 않고, 미래 엔진(문제은행/엠블럼/라이벌/학부모브리핑/추천 엔진)이 참조할 단일 진입점과 타입을 재노출(re-export)한다. `runIfAnalysisEngine()`(통합 실행), `buildImprovementPoint()`(예상 보완 포인트), `buildGrowthEvent()`(성장 엔진 연결 이벤트), `estimateIfPotentialFromAveragePct()`(교사 화면용 잠재력 추정) 신규 함수 포함. 8개 엔진 확장 방향을 다이어그램 주석으로 명시. |
+
+### 1. IF 채점 위치/구조 확인 (변경 없음 — 이미 지시 기준 충족)
+
+`StudentGrades.tsx`의 `ResultDetailModal`(테스트 성적표 상세 모달) 안에서만 IF
+채점 블록이 열리는 구조를 확인했다 — 별도 메뉴/라우트 없음. `IF_REASONS`가
+`studentIfAnalysis.ts`에 `['계산 실수', '개념 부족', '시간 부족']` 3개로 고정되어
+있음을 재확인. 학생 직접 성적 입력 버튼은 이미 제거된 상태(주석으로 확인).
+`ParentGrades.tsx`는 IF를 읽기 전용 요약으로만 표시하고 선택/수정 UI가 없음을
+재확인. 이 부분은 이미 v3-r7-r1 이전부터 지시 기준을 충족하고 있어 코드 변경이
+필요 없었다.
+
+### 2. 화면 컴포넌트 판단 로직 이동 (금지 기준 위반 1건 발견·수정)
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/teacher/TeacherStudentGrowth.tsx` | "IF 상승 가능성" 계산 중 `Math.min(100 - avgPct, 20)` 휴리스틱이 컴포넌트 안에 직접 들어있던 것을 발견 — `ifAnalysisEngine.estimateIfPotentialFromAveragePct()`로 이동하고 컴포넌트에서는 함수 호출만 하도록 수정("화면 컴포넌트에 판단/계산 로직 직접 삽입 금지" 기준 위반 해소). |
+
+### 6. IF Analysis Engine 계약 정리 (이번 Phase 핵심 산출물)
+
+`src/lib/ifAnalysisEngine.ts` 신규 생성. 지시된 입력/출력 계약을 그대로 타입과
+함수로 반영했다:
+- 입력: 시험 결과(`StudentExamResult`) + 오답 문항(`WrongQuestionInfo[]`) + 학생이
+  선택한 IF 이유(문항별) — 기존 `assessmentData.ts`/`studentIfAnalysis.ts` 타입 재사용.
+- 출력: IF 요약(`IfAnalysisQuestionResult`) + 사유별 비중(`reasonBreakdown`) +
+  예상 보완 포인트(`IfEngineImprovementPoint`, 신규) + 엠블럼/성장 엔진 연결용
+  이벤트(`IfEngineGrowthEvent`, `GrowthContext.onIfAnalysisResult` 입력 형식과 동일).
+- 엠블럼/라이벌/대학추천은 이번에 구현하지 않고, 연결 가능한 이벤트/타입 계약만
+  정리했다(지시 그대로).
+
+### 7. 확장 방향 문서화
+
+`ifAnalysisEngine.ts` 하단에 ASCII 다이어그램 주석으로 8개 엔진(Question
+Bank / Test Template / Assessment / IF Analysis / Emblem / Rival / Parent
+Briefing / Recommendation)의 연결 관계와 각 엔진의 현재 상태(이미 존재/아직
+없음)를 명시했다. 특히 Recommendation Engine(대학추천, 불변 파일)은 IF 데이터를
+입력으로 받지 않는다는 점을 명확히 문서화했다 — IF는 학원 자체 테스트 회고이고
+대학추천은 실제내신/전국모의 등 공식 성적만 쓰는, 서로 다른 데이터 계열이기 때문이다.
+
+### 로그인 화면 히어로 카드 추가 (세션 중 사용자 추가 요청)
+
+작업 도중 사용자가 로그인 화면 참고 목업 이미지를 첨부하며 "이 형식으로,
+이 네이비 색상으로 추가 개발"을 요청해 반영했다. 참고 이미지에서 정밀
+샘플링한 짙은 네이비 값(`#000926`)은 이 로그인 히어로 카드에만 적용했고,
+앱 전역 기준 브랜드 Navy(`#081F4D`, 브랜드보드에 명시된 값)는 그대로 유지했다
+— 자세한 판단 근거는 `CHANGES_PHASE3D.md` v3-r9 섹션과 §GPT 전달 의견 참조.
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/LoginPage.tsx` | 히어로 영역을 참고 이미지 기준으로 재구성: 우상단 "MATH ACADEMY" 라벨 추가, AXIS 워드마크를 짙은 네이비(#000926) 카드 안에 크게 배치(기존 작은 정사각 배지+워드마크 조합 → 카드형으로 변경), 태그라인에 "분석"/"적중" Gold 강조 색상 적용, 카드-폼 사이 골드 구분선 추가, 폼을 감싸던 흰색 카드 래퍼 제거(참고 이미지처럼 페이지 배경 위에 라벨+입력창을 직접 배치), 라벨 문구 "휴대폰번호"→"휴대폰 번호", placeholder를 "010-1234-5678"/"비밀번호를 입력하세요"로 변경, 체크박스 문구에 "(자동 로그인)" 추가, 로그인 버튼을 Navy+Gold 글씨에서 Gold 배경+흰 글씨로 변경(참고 이미지와 동일). 페이지 배경 자체는 계속 밝은 Ivory 톤 유지 — 카드 하나만 다크이므로 "전체 다크 로그인 화면 금지" 원칙은 유지된다. |
+
+### 8. 마지막 검수
+
+이번 라운드부터 **실제 `tsc` 타입체크가 가능함을 발견했다** — 이 컨테이너에
+TypeScript 컴파일러가 전역 설치되어 있었다(`npm install` 없이도 `tsc` 명령
+자체는 사용 가능). 프로젝트 자체 `node_modules`는 여전히 없어서(레지스트리
+차단) `react`/`wouter`/`lucide-react` 등 외부 패키지 타입은 못 찾지만, **문법
+오류(TS1xxx)는 진짜로 잡아낼 수 있다.** 상세 결과는 `QA_PHASE3D.md` v3-r9
+섹션 참조.
+
 
 **베이스라인**: v3-r7-r1 (GitHub main 반영 완료, Build Check 통과 확인 상태).
 신규 파일 3개, 수정 파일 39개. 삭제 파일 없음.

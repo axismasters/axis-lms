@@ -20,6 +20,7 @@ import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
 import { getSchoolRecordsForStudent, getNationalMocksForStudent } from '@/lib/phase2dData';
+import { estimateIfPotentialFromAveragePct } from '@/lib/ifAnalysisEngine';
 
 function scoreColor(pct: number) {
   return pct >= 80 ? 'oklch(0.45 0.15 145)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)';
@@ -43,11 +44,12 @@ function GrowthCard({ studentId }: { studentId: string }) {
   const schoolRecords = getSchoolRecordsForStudent(studentId);
   const nationalMocks = getNationalMocksForStudent(studentId);
 
-  // IF 상승 가능성 요약 — 학원 평가 기준 평균 달성률에서 산출
+  // [Phase 3D v3-r9] IF 상승 가능성 계산은 컴포넌트 밖 IF Analysis Engine으로 이동
+  // (화면 컴포넌트에 판단/계산 로직을 직접 넣지 않는다는 원칙 준수).
   const avgPct = publishedResults.length > 0
     ? Math.round(publishedResults.reduce((s, r) => s + (r.totalPoints > 0 ? r.earnedScore / r.totalPoints * 100 : 0), 0) / publishedResults.length)
     : null;
-  const ifPotential = avgPct !== null ? Math.min(100 - avgPct, 20) : null; // 간단 추정
+  const ifPotential = estimateIfPotentialFromAveragePct(avgPct);
 
   const tierColor = profile ? TIER_COLORS[profile.tier] : 'oklch(0.7 0.01 250)';
   const tierLabel = profile ? TIER_LABELS[profile.tier] : '-';

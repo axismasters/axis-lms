@@ -1,6 +1,16 @@
-// AXIS LMS v1.2 - LoginPage (Phase 3D v3-r7-r1)
-// 첫 화면 = 로그인 페이지. AXIS 밝은 프리미엄 브랜드 톤(Ivory/Warm White 배경 +
-// Navy #081F4D 제한적 사용 + Gold #C8A15A 포인트) — 전체 다크 로그인 화면 금지.
+// AXIS LMS v1.2 - LoginPage (Phase 3D v3-r9)
+// 첫 화면 = 로그인 페이지. AXIS 밝은 프리미엄 브랜드 톤(Ivory/Warm White 페이지 배경 +
+// Navy 제한적 사용 + Gold 포인트) — 전체 다크 로그인 화면 금지 원칙은 유지한다.
+//
+// [Phase 3D v3-r9] 사용자가 제공한 참고 목업 이미지 기준으로 히어로 영역만 재구성:
+//   - 페이지 배경은 그대로 밝은 톤 유지(다크 전환 아님).
+//   - AXIS 워드마크를 담는 히어로 카드만 짙은 네이비(#000926, 참고 이미지에서 정밀
+//     샘플링한 값 — 브랜드보드의 UI 기준색 #081F4D보다 더 짙은 "히어로 전용" 톤)로
+//     감싸 대비를 강하게 준다. 이 짙은 톤은 이 카드 안에서만 쓰고, 앱의 다른 UI
+//     요소(버튼/사이드바 등)의 기준 Navy(#081F4D)는 그대로 둔다.
+//   - 우상단 "MATH ACADEMY" 라벨, 카드 안 태그라인 색상 강조(분석/적중=Gold),
+//     "로그인 상태 유지(자동 로그인)" 문구, 골드 버튼 흰 글씨 등 참고 이미지의
+//     디테일을 반영했다.
 //
 // 정책:
 //   - 휴대폰번호 + 비밀번호 입력만 존재. 이메일 로그인/회원가입/계정생성 버튼 없음.
@@ -16,10 +26,10 @@
 import { useState, FormEvent } from 'react';
 import { Lock, Phone, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { AxisMark } from '@/components/brand/AxisMark';
 import { AxisWordmark } from '@/components/brand/AxisWordmark';
 
-const NAVY = '#081F4D';
+const NAVY = '#081F4D';       // 앱 전역 기준 브랜드 Navy(버튼/사이드바 등)
+const HERO_NAVY = '#000926';  // 로그인 히어로 카드 전용 짙은 톤(참고 이미지 정밀 샘플값)
 const GOLD = '#C8A15A';
 
 export default function LoginPage() {
@@ -48,129 +58,106 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen w-full flex items-center justify-center px-4 relative overflow-hidden"
+      className="min-h-screen w-full flex items-center justify-center px-4 py-8 relative"
       style={{ background: 'oklch(0.968 0.009 84.57)' }}
     >
-      {/* [Phase 3D v3-r7-r1] Gold 사선 포인트 — 화면 전체를 다크로 만들지 않고, 우상단에
-          은은한 대각선 골드 액센트만 배치해 프리미엄 톤을 낸다. */}
-      <div
-        aria-hidden
-        className="absolute pointer-events-none"
-        style={{
-          top: -120, right: -160, width: 520, height: 520,
-          background: `linear-gradient(135deg, ${GOLD}22 0%, ${GOLD}00 60%)`,
-          transform: 'rotate(12deg)',
-        }}
-      />
-      <div
-        aria-hidden
-        className="absolute pointer-events-none"
-        style={{
-          bottom: -140, left: -160, width: 420, height: 420,
-          background: `linear-gradient(135deg, ${NAVY}10 0%, ${NAVY}00 60%)`,
-          transform: 'rotate(-8deg)',
-        }}
-      />
-
       <div className="w-full max-w-sm relative">
-        {/* 브랜드 워드마크 */}
-        <div className="flex flex-col items-center mb-7">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-            style={{ background: NAVY, boxShadow: `0 8px 24px ${NAVY}33` }}
-          >
-            <AxisMark size={30} letterColor="#F7F4EE" slashColor={GOLD} />
-          </div>
-          <AxisWordmark height={40} letterColor={NAVY} accentColor={GOLD} />
-          <div className="text-xs mt-2 tracking-wide font-medium" style={{ color: GOLD }}>
-            ANALYSIS · PRECISION · TARGET · RESULT
-          </div>
+        {/* 우상단 브랜드 라벨 */}
+        <div className="flex justify-end mb-2">
+          <span className="text-xs font-bold tracking-[0.15em]" style={{ color: GOLD }}>
+            MATH ACADEMY
+          </span>
         </div>
 
-        {/* 로그인 카드 */}
+        {/* 히어로 카드 — 짙은 네이비, AXIS 워드마크 + 태그라인 */}
         <div
-          className="rounded-2xl p-7"
-          style={{ background: 'white', boxShadow: '0 20px 50px oklch(0.2 0.03 255 / 0.12)', border: '1px solid oklch(0.93 0.01 80)' }}
+          className="rounded-3xl px-6 py-10 flex flex-col items-center text-center"
+          style={{ background: HERO_NAVY, boxShadow: `0 24px 60px ${HERO_NAVY}55` }}
         >
-          <div className="mb-5">
-            <h1 className="font-bold text-lg" style={{ color: NAVY }}>로그인</h1>
-            <p className="text-xs mt-1" style={{ color: 'oklch(0.5 0.015 250)' }}>
-              등록된 휴대폰번호로 로그인하세요.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.4 0.015 250)' }}>
-                휴대폰번호
-              </label>
-              <div className="relative">
-                <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.65 0.01 250)' }} />
-                <input
-                  type="tel"
-                  autoComplete="tel"
-                  inputMode="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="01000000000 (하이픈 없이 입력 가능)"
-                  className="w-full h-11 pl-9 pr-3 rounded-lg text-sm outline-none transition-colors"
-                  style={{ border: '1px solid oklch(0.88 0.006 250)' }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = NAVY)}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = 'oklch(0.88 0.006 250)')}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.4 0.015 250)' }}>
-                비밀번호
-              </label>
-              <div className="relative">
-                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.65 0.01 250)' }} />
-                <input
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="비밀번호"
-                  className="w-full h-11 pl-9 pr-3 rounded-lg text-sm outline-none transition-colors"
-                  style={{ border: '1px solid oklch(0.88 0.006 250)' }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = NAVY)}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = 'oklch(0.88 0.006 250)')}
-                />
-              </div>
-            </div>
-
-            {error && (
-              <div className="text-xs px-3 py-2 rounded-lg" style={{ background: 'oklch(0.96 0.05 25)', color: 'oklch(0.5 0.18 25)' }}>
-                {error}
-              </div>
-            )}
-
-            <label className="flex items-center gap-2 text-xs cursor-pointer select-none" style={{ color: 'oklch(0.45 0.015 250)' }}>
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                style={{ accentColor: NAVY }}
-              />
-              로그인 상태 유지
-            </label>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full h-11 rounded-lg font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.99] disabled:opacity-60"
-              style={{ background: NAVY, color: GOLD }}
-            >
-              {submitting ? '로그인 중…' : '로그인'}
-            </button>
-          </form>
-
-          <p className="text-xs text-center mt-5" style={{ color: 'oklch(0.6 0.01 250)' }}>
-            계정은 학원 내부 등록 시 자동으로 생성됩니다.
+          <AxisWordmark height={56} letterColor="#F7F4EE" accentColor={GOLD} />
+          <p className="text-sm mt-4 leading-relaxed" style={{ color: 'oklch(0.9 0.008 250)' }}>
+            날카롭게 <span style={{ color: GOLD, fontWeight: 600 }}>분석</span>하고 당신의 손으로{' '}
+            <span style={{ color: GOLD, fontWeight: 600 }}>적중</span>된다
           </p>
         </div>
+
+        {/* 카드-폼 구분 포인트 */}
+        <div className="flex justify-center my-6">
+          <div className="w-10 h-[3px] rounded-full" style={{ background: GOLD }} />
+        </div>
+
+        {/* 로그인 폼 — 별도 카드로 감싸지 않고 페이지 배경 위에 직접 배치 */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-semibold mb-2" style={{ color: NAVY }}>
+              휴대폰 번호
+            </label>
+            <div className="relative">
+              <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.65 0.01 250)' }} />
+              <input
+                type="tel"
+                autoComplete="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="010-1234-5678"
+                className="w-full h-12 pl-9 pr-3 rounded-lg text-sm outline-none transition-colors"
+                style={{ border: '1px solid oklch(0.88 0.006 250)' }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = NAVY)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = 'oklch(0.88 0.006 250)')}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-2" style={{ color: NAVY }}>
+              비밀번호
+            </label>
+            <div className="relative">
+              <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.65 0.01 250)' }} />
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="비밀번호를 입력하세요"
+                className="w-full h-12 pl-9 pr-3 rounded-lg text-sm outline-none transition-colors"
+                style={{ border: '1px solid oklch(0.88 0.006 250)' }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = NAVY)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = 'oklch(0.88 0.006 250)')}
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="text-xs px-3 py-2 rounded-lg" style={{ background: 'oklch(0.96 0.05 25)', color: 'oklch(0.5 0.18 25)' }}>
+              {error}
+            </div>
+          )}
+
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none" style={{ color: 'oklch(0.4 0.015 250)' }}>
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              style={{ accentColor: NAVY }}
+            />
+            로그인 상태 유지 (자동 로그인)
+          </label>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full h-12 rounded-lg font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.99] disabled:opacity-60"
+            style={{ background: GOLD, color: 'white' }}
+          >
+            {submitting ? '로그인 중…' : '로그인'}
+          </button>
+
+          <p className="text-xs text-center" style={{ color: 'oklch(0.6 0.01 250)' }}>
+            계정은 학원 내부 등록 시 자동으로 생성됩니다.
+          </p>
+        </form>
 
         {/* TODO(auth): 데모 계정 안내 — 실제 인증 서버 연동 후 이 블록은 제거할 것 */}
         <div
@@ -189,3 +176,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

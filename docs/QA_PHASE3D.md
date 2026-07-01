@@ -1,5 +1,71 @@
 # QA_PHASE3D.md
 
+## v3-r9 검수 결과
+
+**버전**: v3-r9 — v3-r8 GitHub Actions Build Check 통과 확인 완료 상태에서 시작.
+
+### 검증 방법론 개선 — 실제 tsc 문법 검사
+
+이전 라운드까지는 `npm install`이 레지스트리 차단으로 실패해 괄호 균형 검사
+같은 대리 검증만 가능했다. 이번에 확인해보니 **이 컨테이너에 TypeScript
+컴파일러가 전역 설치되어 있었다**(`/home/claude/.npm-global/lib/node_modules/typescript`,
+v6.0.3) — `npm install` 없이 `tsc` 명령 자체는 바로 쓸 수 있다.
+
+```
+$ tsc -p tsconfig.app.json --noEmit 2>&1 | wc -l
+379   (v3-r8 베이스라인과 v3-r9 결과물 동일)
+
+$ tsc -p tsconfig.app.json --noEmit 2>&1 | grep -oE "error TS[0-9]+" | sort | uniq -c
+    235 error TS2307   (Cannot find module — react/wouter/lucide-react 등, node_modules 없어서 발생)
+    112 error TS2875   (jsx-runtime 모듈 없음 — 위와 동일 원인)
+     25 error TS2503   (Cannot find namespace 'React' — 위와 동일 원인)
+      4 error TS2339   (Property does not exist — 아래 확인)
+      2 error TS2322   (Type not assignable — 아래 확인)
+      1 error TS2559
+
+문법 오류(TS1xxx 계열): 0건
+```
+
+TS2339/2322/2559(7건)는 v3-r8 베이스라인에서 정확히 동일한 파일·라인으로
+이미 존재했음을 대조 확인했다(`App.tsx`, `ErrorBoundary.tsx`, `ClassList.tsx`,
+`TeacherExamScores.tsx` — 전부 이번 라운드에 손대지 않은 파일). React 타입을
+못 찾는 환경에서 발생하는 연쇄적 타입 추론 저하로 보이며, 실제 `node_modules`가
+설치된 환경(GitHub Actions)에서는 재현되지 않을 가능성이 높다 — 그래도 혹시
+모르니 GitHub Actions 결과에서 이 4개 파일 관련 에러가 뜨면 알려달라, 별도로
+확인하겠다.
+
+**결론**: 이번 라운드에서 수정/신규 생성한 파일(`ifAnalysisEngine.ts`,
+`LoginPage.tsx`, `TeacherStudentGrowth.tsx`)에서 새로 발생한 에러는 0건이다
+(v3-r8 대비 전체 에러 라인 수가 379줄로 완전히 동일).
+
+### 정책 검증 결과
+
+| 항목 | 결과 |
+|---|---|
+| IF 채점이 테스트 성적표 상세 안에서만 열리는지 | ✔ 확인(`StudentGrades.tsx`의 `ResultDetailModal` 내부, 별도 라우트 없음) |
+| IF 이유 3개 고정(계산 실수/개념 부족/시간 부족) | ✔ 확인(`IF_REASONS` 상수, 초과 없음) |
+| 학생 성적 직접 입력 UI | 미발견(이미 제거된 상태) |
+| 학부모 IF 선택/수정 가능 여부 | 불가능(읽기 전용 요약만, `ParentGrades.tsx` 확인) |
+| 학부모 IF와 선생님 상담 기록 원문 연결 여부 | 연결 없음 |
+| 선생님 화면 IF 수동 입력 기능 신설 여부 | 신설 없음(자동 브리핑 엔진만 사용) |
+| 화면 컴포넌트 판단/계산 로직 직접 삽입 | **1건 발견(TeacherStudentGrowth.tsx) → 수정 완료** |
+| 외부 AI API 호출 추가 여부 | 없음 |
+| 문제은행/엠블럼/라이벌/대학추천 확장을 막는 폐쇄형 구조 여부 | 없음(엔진 계약 파일에 연결 지점 명시) |
+| v3-r8 브랜드/레이아웃 대규모 재작업 여부 | 없음(로그인 화면 히어로만 사용자 요청으로 부분 수정, 나머지 레이아웃 무변경) |
+| 금지 표현(합격률/합격가능성/합격보장/안정합격/불합격) | 실 UI 텍스트에서 미발견 |
+| 불변 파일 3종 MD5 | 이번 라운드 미접촉 — 변경 없음 |
+
+### 알려진 한계
+
+- 로그인 히어로 카드의 네이비 값(`#000926`)은 참고 이미지에서 픽셀 샘플링한
+  값이며, 카드 배경 588개 샘플 중 588개가 동일해 신뢰도는 높지만 이미지
+  자체의 압축/렌더링에 따라 실제 의도한 값과 미세하게 다를 수 있다.
+- `AxisWordmark`를 더 큰 사이즈(height 56)로 쓰는 건 이번이 처음이라, 실제
+  브라우저에서 대각선 슬래시와 "X" 글자 정렬이 여전히 잘 맞는지 육안 확인이
+  필요하다(v3-r8 QA에서 남긴 한계와 동일 사유).
+
+---
+
 ## v3-r8 검수 결과
 
 **버전**: v3-r8 — v3-r7-r1 GitHub Actions Build Check 통과 확인 완료 상태에서 시작.
