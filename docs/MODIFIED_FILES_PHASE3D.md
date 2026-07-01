@@ -278,3 +278,45 @@
 ### 불변 유지(변경 없음) — MD5 확인
 - `src/lib/universityAnalysisAdapter.ts`(1eddaef5) · `src/pages/teacher/TeacherExamGrading.tsx`(3429a4ba)
   · `src/App.tsx`(387bbf48) · `src/lib/classData.ts`(126d9e5e)
+
+---
+
+## Phase 3D v3-r6 (employee/emblem/rival/class/score fixes)
+
+기준: v3-r5(GitHub 업로드 승인됨).
+
+### 신규 파일 (NEW)
+- `src/lib/scoreExportEngine.ts` — 성적 Excel/PDF 출력 계산 전용 엔진(권한 판정 없음).
+- `src/components/ScoreExportPanel.tsx` — 성적 출력 공용 UI(시험/반/학생 선택 + 미리보기
+  + Excel/PDF 버튼 + 인쇄 전용 A4 레이아웃).
+- `src/pages/ScoreExportPage.tsx` — 관리자 성적 출력 페이지(`/admin/scores/export`).
+- `src/pages/teacher/TeacherScoreExport.tsx` — 강사 성적 출력 페이지(`/teacher/scores/export`).
+- `src/pages/teacher/TeacherClassRoster.tsx` — 담당반 출석부형 학생 목록
+  (`/teacher/classes/:classId`).
+
+### 수정 파일 (MODIFIED)
+- `src/pages/EmployeeList.tsx` — `useSearch()` 기반 등록 모달 트리거로 교체(근본 버그 수정),
+  계정상태(활성/비활성) 토글 버튼 신규, 계정상태 필터 신규, breadcrumb 경로 오류 수정.
+- `src/index.css` — `.axis-modal-drag-enter`(드래그 모달 전용 opacity 애니메이션) 신규,
+  성적 출력 인쇄용 A4 스타일(`.axis-print-area`, `@media print`, `@page`) 신규.
+- `src/pages/growth/EmblemManagement.tsx` — 모달 패널 클래스를 `modal-enter` →
+  `axis-modal-drag-enter`로 교체(드래그-애니메이션 transform 충돌 해결).
+- `src/pages/growth/RivalManagement.tsx` — 승/패/종료 버튼 및 종료 확인 모달 버튼에
+  hover/active/focus-visible 상태 추가.
+- `src/pages/teacher/TeacherClasses.tsx` — 운영중 반 카드를 클릭 가능하게 변경, 반 상세
+  (출석부) 화면으로 연결.
+- `src/pages/student/StudentGrades.tsx` — `ExamLineTrendChart` 신규 컴포넌트 및 섹션 추가
+  (단원평가/내신대비모의고사 분리 선그래프), 기존 막대 그래프 유지.
+- `src/lib/rbac.ts` — `canExportAcademyWideScores()` 신규(SUPER_ADMIN/DIRECTOR 전용).
+- `src/routes/AdminRoutes.tsx` — `/admin/scores/export` 라우트 등록.
+- `src/routes/TeacherRoutes.tsx` — `/teacher/classes/:classId`, `/teacher/scores/export`
+  라우트 등록.
+- `src/components/AdminLayout.tsx` — `children` 항목에 `requiresFn` 지원 추가, "성적 출력"
+  메뉴 게이트를 `assessment.view`(권한 기반) → `canExportAcademyWideScores()`(역할 기반)로
+  정밀화.
+- `src/pages/teacher/TeacherExams.tsx` — "성적 출력" 진입 카드 링크 추가.
+- `package.json` — `xlsx@^0.18.5` 의존성 추가.
+
+### 불변 유지(변경 없음) — MD5 확인
+- `src/lib/universityAnalysisAdapter.ts`(1eddaef5) · `src/pages/teacher/TeacherExamGrading.tsx`(3429a4ba)
+  · `src/App.tsx`(387bbf48) · `src/lib/classData.ts`(126d9e5e)

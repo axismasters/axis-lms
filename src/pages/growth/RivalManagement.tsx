@@ -166,18 +166,18 @@ export default function RivalManagement() {
                     {canManage && relation ? (
                       <div className="flex gap-1.5 flex-wrap">
                         <button onClick={() => handleWin(relation)}
-                          className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-xs font-semibold"
-                          style={{ background: '#D1FAE5', color: '#065F46', border: '1px solid #A7F3D0' }}>
+                          className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all duration-150 hover:brightness-95 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
+                          style={{ background: '#D1FAE5', color: '#065F46', border: '1px solid #A7F3D0', outlineColor: '#059669' }}>
                           <Plus size={10} />승
                         </button>
                         <button onClick={() => handleLoss(relation)}
-                          className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-xs font-semibold"
-                          style={{ background: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA' }}>
+                          className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all duration-150 hover:brightness-95 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
+                          style={{ background: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA', outlineColor: '#DC2626' }}>
                           <Minus size={10} />패
                         </button>
                         <button onClick={() => setConfirmEnd(relation)}
-                          className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-xs"
-                          style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.87 0.006 250)' }}>
+                          className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded text-xs cursor-pointer transition-all duration-150 hover:bg-slate-100 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
+                          style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.87 0.006 250)', outlineColor: 'oklch(0.6 0.015 250)' }}>
                           <StopCircle size={10} />종료
                         </button>
                       </div>
@@ -227,10 +227,10 @@ export default function RivalManagement() {
             </p>
             <div className="flex gap-2 justify-end">
               <button onClick={() => setConfirmEnd(null)}
-                className="px-4 py-1.5 text-sm rounded-md border"
+                className="px-4 py-1.5 text-sm rounded-md border transition-colors hover:bg-slate-50 active:scale-95"
                 style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.5 0.015 250)' }}>취소</button>
               <button onClick={() => handleEnd(confirmEnd)}
-                className="px-4 py-1.5 text-sm rounded-md font-semibold"
+                className="px-4 py-1.5 text-sm rounded-md font-semibold transition-colors hover:brightness-90 active:scale-95"
                 style={{ background: '#EF4444', color: '#fff' }}>종료 확인</button>
             </div>
           </div>

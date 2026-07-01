@@ -118,6 +118,90 @@ function TrendChart({ results }: { results: StudentExamResult[] }) {
   );
 }
 
+// ─── Phase 3D v3-r6: 학생 성적 추이 선그래프(신규) ──────────────────────
+// 기존 TrendChart(탭 내부, 최근 5회, 인증평가와 혼합)는 삭제하지 않고 그대로 둔다.
+// 이 컴포넌트는 "단원평가"(인증평가 제외 순수)와 "내신 대비 모의고사"를 각각 독립된
+// 선그래프로 분리해서 보여주기 위한 신규 섹션 전용이며, 전체 응시 이력을 시험일 오름차순
+// 그대로 표시한다(최근 5회로 자르지 않음). 각 점에는 시험일/시험명/백분율이 항상 텍스트로도
+// 확인 가능하도록 SVG 라벨 + 하단 목록을 함께 제공한다. 데이터가 없으면 빈 상태 안내를 표시한다.
+function ExamLineTrendChart({ title, results, color }: { title: string; results: StudentExamResult[]; color: string }) {
+  const sorted = [...results].sort((a, b) => a.examDate.localeCompare(b.examDate));
+  const pcts = sorted.map(r => r.totalPoints > 0 ? Math.round((r.earnedScore / r.totalPoints) * 100) : 0);
+
+  const H = 100, padTop = 22, padBottom = 28, padX = 20;
+  const POINT_GAP = 56; // 점 사이 최소 간격(px) — 회차가 많아지면 가로 스크롤로 대응
+  const W = Math.max(240, padX * 2 + Math.max(1, sorted.length - 1) * POINT_GAP);
+
+  const minPct = sorted.length > 0 ? Math.max(0, Math.min(...pcts) - 10) : 0;
+  const maxPct = sorted.length > 0 ? Math.min(100, Math.max(...pcts) + 10) : 100;
+  const range = maxPct - minPct || 10;
+  const xs = sorted.length > 1
+    ? pcts.map((_, i) => padX + (i / (pcts.length - 1)) * (W - 2 * padX))
+    : [W / 2];
+  const ys = pcts.map(p => H - padBottom - ((p - minPct) / range) * (H - padTop - padBottom));
+
+  return (
+    <div className="axis-card p-4">
+      <div className="flex items-center gap-1.5 mb-2">
+        <TrendingUp size={13} style={{ color }} />
+        <span className="text-xs font-semibold" style={{ color: 'oklch(0.35 0.02 250)' }}>{title} 성적 추이</span>
+        {sorted.length > 0 && (
+          <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>· 총 {sorted.length}회</span>
+        )}
+      </div>
+
+      {sorted.length === 0 ? (
+        <div className="py-8 text-center">
+          <div className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>표시할 {title} 결과가 없습니다.</div>
+          <div className="text-xs mt-1" style={{ color: 'oklch(0.75 0.01 250)' }}>{title} 결과가 공개되면 추이 그래프가 표시됩니다.</div>
+        </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ minWidth: W }}>
+              {sorted.length >= 2 && (
+                <>
+                  <polygon
+                    points={`${xs[0]},${H - padBottom} ${xs.map((x, i) => `${x},${ys[i]}`).join(' ')} ${xs[xs.length - 1]},${H - padBottom}`}
+                    fill={color} fillOpacity="0.08"
+                  />
+                  <polyline
+                    points={xs.map((x, i) => `${x},${ys[i]}`).join(' ')}
+                    fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  />
+                </>
+              )}
+              {xs.map((x, i) => (
+                <g key={sorted[i].examId}>
+                  <circle cx={x} cy={ys[i]} r={4} fill="white" stroke={color} strokeWidth="1.5" />
+                  {/* 네이티브 SVG 툴팁 — 마우스오버 시 시험일/시험명/점수 확인 가능 */}
+                  <title>{`${sorted[i].examDate} · ${sorted[i].title} · ${pcts[i]}%`}</title>
+                  <text x={x} y={H - padBottom + 14} fontSize={9} textAnchor="middle" fill="oklch(0.65 0.015 250)">
+                    {sorted[i].examDate.slice(5)}
+                  </text>
+                  <text x={x} y={ys[i] - 8} fontSize={9} textAnchor="middle" fontWeight="700" fill={color}>
+                    {pcts[i]}%
+                  </text>
+                </g>
+              ))}
+            </svg>
+          </div>
+
+          {/* 시험명 목록 — 그래프 위 라벨만으로는 좁아서 못 보이는 시험명을 텍스트로도 확인 가능하게 */}
+          <ul className="mt-2 space-y-0.5">
+            {sorted.map((r, i) => (
+              <li key={r.examId} className="flex items-center justify-between text-xs gap-2">
+                <span className="truncate" style={{ color: 'oklch(0.45 0.015 250)' }}>{r.examDate} · {r.title}</span>
+                <span className="font-semibold tabular-nums flex-shrink-0" style={{ color }}>{pcts[i]}%</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── 내 점수 vs 평균 막대 그래프 ────────────────────────────────────
 function ScoreVsAvgBar({ result }: { result: StudentExamResult }) {
   const myPct = result.totalPoints > 0 ? Math.round(result.earnedScore / result.totalPoints * 100) : 0;
@@ -793,6 +877,11 @@ export default function StudentGrades() {
     'mock-school': allResults.filter(r => r.categoryId === 'mock-school').length,
   };
 
+  // Phase 3D v3-r6: 성적 추이 선그래프용 — "단원평가"는 인증평가를 섞지 않은 순수
+  // unit-eval만, "내신 대비 모의고사"는 mock-school만 사용한다(위 tabCounts와는 별개).
+  const unitEvalOnlyResults = allResults.filter(r => r.categoryId === 'unit-eval');
+  const mockSchoolOnlyResults = allResults.filter(r => r.categoryId === 'mock-school');
+
   return (
     <StudentLayout title="테스트">
       <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
@@ -801,6 +890,14 @@ export default function StudentGrades() {
         <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid oklch(0.511 0.262 276.966)', color: 'oklch(0.5 0.015 250)' }}>
           단원평가와 내신대비 모의고사 결과를 확인하세요. 카드를 탭하면 성적표 상세와 IF 채점을 볼 수 있습니다.
         </div>
+
+        {/* Phase 3D v3-r6: 성적 추이 선그래프 — 시험 종류별(단원평가/내신대비모의고사)로 분리.
+            기존 탭 내부 막대/추이 그래프는 그대로 유지하고, 이 섹션은 추가로 제공된다. */}
+        <section className="space-y-2">
+          <div className="text-xs font-semibold px-1" style={{ color: 'oklch(0.45 0.015 250)' }}>성적 추이</div>
+          <ExamLineTrendChart title="단원평가" results={unitEvalOnlyResults} color="oklch(0.511 0.262 276.966)" />
+          <ExamLineTrendChart title="내신 대비 모의고사" results={mockSchoolOnlyResults} color="oklch(0.45 0.15 160)" />
+        </section>
 
         {/* 탭 */}
         <div className="flex gap-2">

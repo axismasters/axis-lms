@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { PermissionKey, POSITION_LABEL, canAccessGrowth } from '@/lib/rbac';
+import { PermissionKey, POSITION_LABEL, canAccessGrowth, canExportAcademyWideScores } from '@/lib/rbac';
 
 interface NavItem {
   label: string;
@@ -20,7 +20,13 @@ interface NavItem {
   icon: React.ReactNode;
   requires?: PermissionKey;
   requiresFn?: (can: (k: PermissionKey) => boolean, accountType: string) => boolean;
-  children?: { label: string; path: string; icon?: React.ReactNode; requires?: PermissionKey }[];
+  children?: {
+    label: string;
+    path: string;
+    icon?: React.ReactNode;
+    requires?: PermissionKey;
+    requiresFn?: (can: (k: PermissionKey) => boolean, accountType: string) => boolean;
+  }[];
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -69,6 +75,10 @@ const NAV_ITEMS: NavItem[] = [
     path: '/admin/scores',
     icon: <BarChart2 size={16} />,
     requires: 'assessment.view',
+    children: [
+      { label: '시험 목록', path: '/admin/scores', requires: 'assessment.view' },
+      { label: '성적 출력', path: '/admin/scores/export', requiresFn: (_can, accountType) => canExportAcademyWideScores(accountType as import('@/lib/rbac').AccountType) },
+    ],
   },
   {
     label: '재무관리',
@@ -146,7 +156,9 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
 
   const visibleNav = NAV_ITEMS
     .map((item): NavItem | null => {
-      const visibleChildren = item.children?.filter((c) => !c.requires || can(c.requires));
+      const visibleChildren = item.children?.filter((c) =>
+        c.requiresFn ? c.requiresFn(can, currentUser.accountType) : (!c.requires || can(c.requires))
+      );
       let visible: boolean;
       if (item.requiresFn) {
         visible = item.requiresFn(can, currentUser.accountType);

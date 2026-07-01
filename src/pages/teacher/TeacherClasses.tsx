@@ -1,7 +1,8 @@
 // AXIS LMS v1.2 - TeacherClasses (강사 포털 Foundation v1)
 // 강사 전용 담당 반 목록 화면.
 
-import { BookOpen, Clock } from 'lucide-react';
+import { BookOpen, Clock, ChevronRight } from 'lucide-react';
+import { Link } from 'wouter';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useClasses } from '@/contexts/ClassContext';
@@ -45,34 +46,41 @@ export default function TeacherClasses() {
             <div className="text-xs font-semibold mb-2 px-1" style={{ color: 'oklch(0.45 0.015 250)' }}>운영중</div>
             <div className="space-y-2">
               {activeClasses.map((cls) => (
-                <div key={cls.id} className="axis-card p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{cls.name}</div>
-                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                        {cls.subject} · {cls.level}
+                <Link key={cls.id} href={`/teacher/classes/${cls.id}`} style={{ display: 'block' }}>
+                  <div className="axis-card axis-card-clickable p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm flex items-center gap-1" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                          {cls.name}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                          {cls.subject} · {cls.level}
+                        </div>
+                        <div className="flex items-center gap-1 mt-1 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                          <Clock size={11} />
+                          {formatSchedule(cls.timeSlots)}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 mt-1 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                        <Clock size={11} />
-                        {formatSchedule(cls.timeSlots)}
+                      <div className="text-right ml-3 flex-shrink-0 flex items-center gap-2">
+                        <div>
+                          <div className="font-bold tabular-nums text-sm" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                            {cls.enrolledCount}
+                            <span className="text-xs font-normal" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                              /{cls.capacity}명
+                            </span>
+                          </div>
+                          <div className="text-xs mt-0.5" style={{ color: 'oklch(0.6 0.015 250)' }}>수강생</div>
+                        </div>
+                        <ChevronRight size={16} style={{ color: 'oklch(0.7 0.01 250)' }} />
                       </div>
                     </div>
-                    <div className="text-right ml-3 flex-shrink-0">
-                      <div className="font-bold tabular-nums text-sm" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
-                        {cls.enrolledCount}
-                        <span className="text-xs font-normal" style={{ color: 'oklch(0.6 0.015 250)' }}>
-                          /{cls.capacity}명
-                        </span>
+                    {cls.room && (
+                      <div className="mt-2 text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                        강의실 {cls.room}
                       </div>
-                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.6 0.015 250)' }}>수강생</div>
-                    </div>
+                    )}
                   </div>
-                  {cls.room && (
-                    <div className="mt-2 text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
-                      강의실 {cls.room}
-                    </div>
-                  )}
-                </div>
+                </Link>
               ))}
             </div>
           </section>

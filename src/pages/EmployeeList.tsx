@@ -6,8 +6,8 @@
 // 직원 등록은 ?new=1 쿼리로 모달 진입 (ClassList 패턴 동일).
 
 import { useMemo, useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { Search, UserPlus, X, Info, ChevronRight, Briefcase, Phone } from 'lucide-react';
+import { useLocation, useSearch } from 'wouter';
+import { UserPlus, X, Info, ChevronRight, Briefcase, Phone, ShieldCheck, ShieldOff } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -71,9 +71,9 @@ function ResignModal({ target, onCancel, onConfirm }: { target: Employee; onCanc
 // 메인
 // ────────────────────────────────────────────────────────────
 export default function EmployeeList() {
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
   const { can, currentUser } = useAuth();
-  const { employees, resignEmployee } = useEmployees();
+  const { employees, updateEmployee, resignEmployee } = useEmployees();
 
   const canView = can('employee.view');
   const canCreate = can('employee.create');
@@ -94,19 +94,34 @@ export default function EmployeeList() {
     return true;
   };
 
-  // ?new=1 쿼리로 등록 모달 제어
-  const showNewModal = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1';
+  // [실사용 버그 수정] 기존에는 window.location.search를 렌더 시점에 직접 읽어 showNewModal을
+  // 계산했는데, wouter의 useLocation()은 pathname만 추적하고 querystring 변화에는 리렌더를
+  // 트리거하지 않는다. 그 결과 "직원 등록" 버튼을 눌러 /admin/employees?new=1로 navigate해도
+  // 컴포넌트가 다시 렌더되지 않아 등록 모달이 열리지 않는 경우가 있었다(ClassList.tsx는 이미
+  // useSearch()로 이 문제를 올바르게 처리하고 있었음 — 동일 패턴으로 통일한다).
+  const searchStr = useSearch();
+  const [newModalOpen, setNewModalOpen] = useState(false);
   useEffect(() => {
-    if (showNewModal && !canCreate) {
+    const sp = new URLSearchParams(searchStr);
+    if (sp.get('new') !== '1') return;
+    if (!canCreate) {
       navigate('/admin/employees');
       toast.error('직원 등록 권한이 없습니다.');
+      return;
     }
-  }, [showNewModal, canCreate, navigate]);
+    setNewModalOpen(true);
+  }, [searchStr, canCreate, navigate]);
+
+  const closeNewModal = () => {
+    setNewModalOpen(false);
+    navigate('/admin/employees');
+  };
 
   // 검색 상태
   const [qName, setQName] = useState('');
   const [qPosition, setQPosition] = useState<Position | '전체'>('전체');
   const [qStatus, setQStatus] = useState<EmployeeStatus | '전체'>('전체');
+  const [qAccountStatus, setQAccountStatus] = useState<'활성' | '비활성' | '전체'>('전체');
 
   // 퇴직 모달
   const [resignTarget, setResignTarget] = useState<Employee | null>(null);
@@ -116,9 +131,25 @@ export default function EmployeeList() {
       if (qName.trim() && !e.name.includes(qName.trim())) return false;
       if (qPosition !== '전체' && e.position !== qPosition) return false;
       if (qStatus !== '전체' && e.status !== qStatus) return false;
+      if (qAccountStatus !== '전체' && e.accountStatus !== qAccountStatus) return false;
       return true;
     });
-  }, [employees, qName, qPosition, qStatus]);
+  }, [employees, qName, qPosition, qStatus, qAccountStatus]);
+
+  // [실사용 버그 수정] 기존에는 계정상태(활성/비활성)가 배지로 표시만 되고 실제로 전환할
+  // 방법이 없었다. 퇴직 처리된 직원은 계정상태가 퇴직 처리 절차로만 바뀌도록 토글에서 제외한다.
+  const canToggleAccountStatus = (emp: Employee): boolean => canEdit && emp.status !== '퇴직';
+
+  const handleToggleAccountStatus = (emp: Employee) => {
+    if (!canToggleAccountStatus(emp)) return;
+    const next = emp.accountStatus === '활성' ? '비활성' : '활성';
+    const r = updateEmployee(emp.id, { accountStatus: next });
+    if (r.ok) {
+      toast.success(`${emp.name} 직원 계정이 ${next}(으)로 전환되었습니다.`);
+    } else {
+      toast.error(r.reason ?? '계정 상태 변경 중 오류가 발생했습니다.');
+    }
+  };
 
   const handleResign = (leaveDate: string) => {
     if (!resignTarget) return;
@@ -139,7 +170,7 @@ export default function EmployeeList() {
 
   if (!canView) {
     return (
-      <AdminLayout title="직원 목록" breadcrumbs={[{ label: '직원관리', path: '/employees' }, { label: '직원 목록' }]}>
+      <AdminLayout title="직원 목록" breadcrumbs={[{ label: '직원관리', path: '/admin/employees' }, { label: '직원 목록' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>직원 목록 조회 권한이 없습니다.</p>
         </div>
@@ -155,7 +186,7 @@ export default function EmployeeList() {
   employees.forEach((e) => { counts[e.status] = (counts[e.status] || 0) + 1; });
 
   return (
-    <AdminLayout title="직원 목록" breadcrumbs={[{ label: '직원관리', path: '/employees' }, { label: '직원 목록' }]}>
+    <AdminLayout title="직원 목록" breadcrumbs={[{ label: '직원관리', path: '/admin/employees' }, { label: '직원 목록' }]}>
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-5">
         <div>
@@ -181,7 +212,7 @@ export default function EmployeeList() {
 
       {/* 검색 필터 */}
       <div className="axis-card p-4 mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
           <label className="flex flex-col gap-1">
             <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>이름</span>
             <input value={qName} onChange={(e) => setQName(e.target.value)} placeholder="이름 검색"
@@ -203,6 +234,14 @@ export default function EmployeeList() {
               <option value="재직">재직</option>
               <option value="휴직">휴직</option>
               <option value="퇴직">퇴직</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>계정상태</span>
+            <select className={selectCls} style={selectStyle} value={qAccountStatus} onChange={(e) => setQAccountStatus(e.target.value as '활성' | '비활성' | '전체')}>
+              <option value="전체">전체</option>
+              <option value="활성">활성</option>
+              <option value="비활성">비활성</option>
             </select>
           </label>
         </div>
@@ -268,6 +307,21 @@ export default function EmployeeList() {
                         style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>
                         <ChevronRight size={11} /> 상세
                       </button>
+                      {canToggleAccountStatus(emp) && (
+                        <button
+                          onClick={() => handleToggleAccountStatus(emp)}
+                          className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-slate-50"
+                          style={{
+                            borderColor: 'oklch(0.9 0.008 250)',
+                            color: emp.accountStatus === '활성' ? 'oklch(0.5 0.015 250)' : 'oklch(0.45 0.15 160)',
+                          }}
+                          title={emp.accountStatus === '활성' ? '계정을 비활성화합니다' : '계정을 활성화합니다'}
+                        >
+                          {emp.accountStatus === '활성'
+                            ? <><ShieldOff size={11} /> 비활성화</>
+                            : <><ShieldCheck size={11} /> 활성화</>}
+                        </button>
+                      )}
                       {canResignEmployee(emp) && (
                         <button
                           onClick={() => setResignTarget(emp)}
@@ -291,11 +345,11 @@ export default function EmployeeList() {
       </p>
 
       {/* 직원 등록 모달 */}
-      {showNewModal && canCreate && (
+      {newModalOpen && canCreate && (
         <EmployeeFormModal
           mode="create"
-          onClose={() => navigate('/admin/employees')}
-          onSaved={() => { toast.success('직원이 등록되었습니다.'); navigate('/admin/employees'); }}
+          onClose={closeNewModal}
+          onSaved={() => { toast.success('직원이 등록되었습니다.'); closeNewModal(); }}
         />
       )}
 

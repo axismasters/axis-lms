@@ -392,6 +392,20 @@
     cursor: grabbing;
   }
 
+  /* [실사용 버그 수정] 드래그 가능한 모달 전용 등장 애니메이션.
+     기존 .modal-enter는 transform: scale(...)을 forwards로 고정시켜, 애니메이션 종료 후에도
+     transform 속성을 계속 점유한다 — useDraggableModal이 인라인 style로 적용하는
+     transform: translate(x,y)가 브라우저에서 무시되어 "드래그해도 팝업이 움직이지 않는" 버그의
+     원인이었다. 이 클래스는 transform을 전혀 건드리지 않고 opacity만 애니메이션해
+     드래그 이동과 충돌하지 않는다. */
+  .axis-modal-drag-enter {
+    animation: axisModalDragEnter 160ms ease-out forwards;
+  }
+  @keyframes axisModalDragEnter {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
   /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 6px;
@@ -406,5 +420,39 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: oklch(0.7 0.012 250);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     Phase 3D v3-r6: 시험 성적 PDF 출력용 인쇄 스타일.
+     "PDF 생성"은 별도 라이브러리 없이 브라우저 인쇄(window.print())로 처리한다 — 인쇄 대상
+     영역(.axis-print-area)만 보이게 하고 나머지 화면은 인쇄 시 완전히 숨긴다. A4 인쇄를
+     기준으로 여백을 지정한다. 평소 화면에서는 .axis-print-area 자체를 display:none으로
+     숨겨 두고(중복 콘텐츠가 화면에 보이지 않게), 인쇄 시에만 보이게 전환한다.
+  ────────────────────────────────────────────────────────────── */
+  .axis-print-area {
+    display: none;
+  }
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .axis-print-area,
+    .axis-print-area * {
+      visibility: visible;
+    }
+    .axis-print-area {
+      display: block !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+    .axis-no-print {
+      display: none !important;
+    }
+    @page {
+      size: A4;
+      margin: 14mm;
+    }
   }
 }

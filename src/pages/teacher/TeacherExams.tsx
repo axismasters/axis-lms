@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { CheckCircle2, AlertCircle, ChevronRight, Plus, Lock, Users } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ChevronRight, Plus, Lock, Users, FileSpreadsheet } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
@@ -89,6 +89,18 @@ export default function TeacherExams() {
           style={{ background: 'oklch(0.511 0.262 276.966)', color: 'white' }}>
           <Plus size={15} /> 내 시험 만들기
         </button>
+
+        {/* Phase 3D v3-r6: 성적 출력(Excel/PDF) 진입 */}
+        <Link href="/teacher/scores/export" style={{ display: 'block' }}>
+          <div className="axis-card axis-card-clickable p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileSpreadsheet size={15} style={{ color: 'oklch(0.45 0.15 145)' }} />
+              <span className="text-sm font-medium" style={{ color: 'oklch(0.3 0.02 250)' }}>성적 출력</span>
+              <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>Excel · PDF</span>
+            </div>
+            <ChevronRight size={15} style={{ color: 'oklch(0.7 0.01 250)' }} />
+          </div>
+        </Link>
 
         {/* 탭 */}
         <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'oklch(0.93 0.006 250)' }}>

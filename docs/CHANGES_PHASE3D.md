@@ -1148,3 +1148,107 @@ Assessment Engine과 완전히 독립된 데이터 계층을 사용한다(문항
 - `EXAM_CATEGORIES.find()`/`category.label` 무null-체크 사용처(StudentMockExams.tsx 등)
   전수 확인 — 모두 여전히 카탈로그에 남아있는 categoryId(mock-school/mock-suneung)만
   대상이라 회귀 없음.
+
+---
+
+# Phase 3D v3-r6 — employee/emblem/rival/class/score fixes
+
+기준: v3-r5(GitHub 업로드 승인됨). 실사용 중 확인된 버그 수정 + 핵심 UX 6개 추가.
+커밋 요약: `Phase 3D v3-r6 employee emblem rival class score export fixes`.
+
+## 1. 직원관리 버그 수정 (`src/pages/EmployeeList.tsx`)
+
+**근본 원인**: `showNewModal`을 렌더 시점에 `window.location.search`로 직접 읽어 계산했는데,
+wouter의 `useLocation()`은 pathname만 추적하고 querystring 변화에는 리렌더를 트리거하지
+않는다. "직원 등록" 버튼으로 `/admin/employees?new=1`로 navigate해도 컴포넌트가 다시
+렌더되지 않아 등록 모달이 안정적으로 열리지 않았다(ClassList.tsx는 이미 `useSearch()`로
+이 문제를 올바르게 처리하고 있었음 — 동일 패턴으로 통일).
+- `useSearch()` + `useEffect` + `newModalOpen` state로 교체. 재클릭 시에도 정상 반응.
+- **활성/비활성 토글 신규 추가** — 계정상태는 기존에 배지로 표시만 되고 전환 방법이 없었다.
+  `updateEmployee(id, { accountStatus })`를 호출하는 활성화/비활성화 버튼을 관리 컬럼에
+  추가(퇴직 처리된 직원은 토글 제외 — 계정상태는 퇴직 절차로만 변경).
+- **계정상태 필터 추가** — 검색 필터에 "계정상태"(활성/비활성/전체) 드롭다운 신규.
+- 부수 수정: breadcrumbs `path: '/employees'`(존재하지 않는 경로) → `/admin/employees`로 정정.
+- `addEmployee`/`nextAccountId`(휴대폰 로그인 계정 자동 생성) 로직은 전혀 건드리지 않음.
+
+## 2. 엠블럼 수정 팝업 드래그 수정 (`src/index.css`, `EmblemManagement.tsx`)
+
+**근본 원인**: 모달 패널에 `.modal-enter`(등장 애니메이션, `animation-fill-mode: forwards`로
+`transform: scale(1)`을 영구 고정)와 `useDraggableModal`의 인라인
+`style.transform: translate(x,y)`가 같은 `transform` 속성을 동시에 점유했다. CSS
+애니메이션의 forwards 고정값이 인라인 스타일보다 우선 적용되어, 드래그 상태는 내부적으로
+갱신되지만 화면에는 전혀 반영되지 않는(움직이지 않는) 버그였다.
+- 신규 `.axis-modal-drag-enter`(opacity만 애니메이션, transform 없음) 클래스 추가 —
+  드래그 가능한 모달 전용. 다른 5개 모달(`ClassFormModal` 등)의 `.modal-enter`는 그대로
+  유지해 회귀 없음.
+- `EmblemManagement.tsx` 모달 패널의 클래스를 `modal-enter` → `axis-modal-drag-enter`로 교체.
+- 검증: 화면 중앙 시작, 제목 영역 드래그, `clampPosition()`으로 화면 밖 이탈 방지,
+  X/취소/ESC/오버레이 클릭 모두 기존처럼 정상 동작(변경 없음).
+
+## 3. 라이벌 승/패/종료 버튼 UI 강화 (`RivalManagement.tsx`)
+
+기존에도 `<button>` + 실제 핸들러(`addRivalWin`/`addRivalLoss`/`endRivalRelation`, 모두
+`setState` 기반으로 클릭 즉시 화면 갱신)로 구현되어 있었으나, hover/active/focus 시각
+피드백이 전혀 없어 "버튼처럼 안 보인다"는 문제가 있었다.
+- 승/패/종료 3개 버튼에 `transition-all`, `hover:brightness-95`(승/패) /
+  `hover:bg-slate-100`(종료), `active:scale-95`, `focus-visible:outline` 추가.
+- 종료 확인 모달의 취소/종료 확인 버튼도 동일하게 hover/active 상태 추가.
+- `학생 화면(StudentRival.tsx)에는 수동 승패 조작 버튼이 없음을 재확인(변경 불필요).
+
+## 4. 담당반 출석부형 학생 목록 (신규 `TeacherClassRoster.tsx`)
+
+- `TeacherClasses.tsx`의 운영중 반 카드를 클릭 가능하게 만들고
+  `/teacher/classes/:classId`로 연결(라우트는 `/teacher/classes`보다 먼저 등록).
+- 신규 화면: 학생명 · 수강상태 · 출결 요약(최근 10회 출석률) · 최근 테스트(제목+백분율) ·
+  숙제 상태(완료/배정 건수) · 학생 상세 진입 버튼을 표 형태로 표시.
+  PC 웹 기준 넓은 표(`max-w-6xl`, `minWidth: 860`)로 구성하고, 모바일은
+  `axis-table-wrap`(가로 스크롤)로 깨지지 않는 정도까지만 대응.
+- 담당 반(`assignedClassIds`)이 아니면 접근 차단.
+
+## 5. 학생 성적 추이 선그래프 (`StudentGrades.tsx`)
+
+- 신규 `ExamLineTrendChart` 컴포넌트: 시험일 오름차순 SVG 선그래프, 점마다 네이티브
+  툴팁(`<title>`)과 하단 텍스트 목록으로 시험일·시험명·백분율을 항상 확인 가능.
+  데이터 없으면 빈 상태 안내.
+- "단원평가"(categoryId `unit-eval`만, 인증평가 제외 순수)와 "내신 대비 모의고사"
+  (`mock-school`)를 별도 그래프로 분리.
+- 기존 막대 그래프(`TrendChart`, `TestTabContent` 내부)는 삭제하지 않고 그대로 유지.
+- 데이터 소스는 `getPublishedResultsForStudent()`(공개된 결과만) — 학생 직접 입력 UI 없음.
+
+## 6. 시험 성적 Excel/PDF 출력 (신규)
+
+- **`src/lib/scoreExportEngine.ts`** — 계산 전용 순수 모듈. `buildScoreExportRows()`가
+  선택된 시험/반/학생 조건으로 행(row) 배열을 생성(결석/미채점 제외, 요청된 10개 컬럼
+  전부 포함: 학생명/반/시험명/시험일/점수/총점/백분율/평균 대비 위치/IF 점수/놓친 점수).
+  `exportScoresToExcel()`은 `xlsx`(SheetJS, 신규 의존성 `package.json`에 추가)로 `.xlsx`
+  생성. PDF는 별도 라이브러리 없이 `window.print()` + A4 전용 인쇄 스타일로 처리
+  (`groupRowsByExam()`이 인쇄용 시험별 그룹핑 제공). 권한 판정은 이 모듈이 하지 않음
+  (호출부 책임 — docstring에 명시).
+- **`src/components/ScoreExportPanel.tsx`** — 공용 UI. 시험 선택(전체선택/해제) → 반
+  선택(선택 사항) → 학생 선택(검색 가능, 선택 사항) → 미리보기 표 + Excel 다운로드/PDF
+  인쇄 버튼. 인쇄 전용 영역(`.axis-print-area`)은 평소 화면에는 숨겨져 있다가 인쇄 시에만
+  A4 양식으로 표시된다(`@page { size: A4; margin: 14mm; }`, `src/index.css` 신규 규칙).
+- **관리자**: `src/pages/ScoreExportPage.tsx`(`/admin/scores/export`) — `exams` 배열
+  제한 없이 전달(학원 전체), `canExportAcademyWideScores()`(SUPER_ADMIN/DIRECTOR 전용,
+  `src/lib/rbac.ts` 신규 함수)로 게이트.
+- **강사**: 신규 `src/pages/teacher/TeacherScoreExport.tsx`(`/teacher/scores/export`) —
+  본인 소유 TEACHER_PRIVATE 시험 + 담당 반 공통 시험만, 그리고 **v3-r5에서 정리한
+  `TEACHER_CREATABLE_EXAM_CATEGORY_IDS`(단원평가/내신대비모의고사)로도 필터링**해 관리자
+  전용·성적 입력 자료 카테고리가 강사 성적 출력에 절대 섞이지 않게 했다. 학생/반 선택지도
+  담당 범위로만 제한. `TeacherExams.tsx`("내 시험 만들기" 버튼 아래)에 진입 링크 추가
+  (5탭 하단 네비게이션 구조를 건드리지 않기 위해 `TeacherGrades.tsx`와 동일한 방식으로
+  카드형 링크 진입을 사용).
+- **관리자 사이드바 메뉴 게이트 정밀화** — 기존에 "성적 출력" 메뉴가 `assessment.view`
+  권한(STAFF도 보유 가능)으로만 게이트되어, STAFF에게 메뉴가 보이지만 클릭하면
+  "권한 없음" 화면을 보게 되는 불일치가 있었다. `AdminLayout.tsx`의 `children` 타입에
+  `requiresFn` 지원을 추가하고, "성적 출력" 항목을 `canExportAcademyWideScores()` 기준
+  `requiresFn`으로 교체해 SUPER_ADMIN/DIRECTOR가 아니면 메뉴 자체가 보이지 않게 정정.
+
+## 검증
+
+- 불변 파일 4종 MD5 유지 확인.
+- 변경/생성 18개 파일 전체 괄호 균형 통과.
+- 관리자/강사 성적 출력 권한 분리: 관리자는 전체 시험, 강사는 본인 소유+담당 범위+
+  TEACHER_CREATABLE_EXAM_CATEGORY_IDS 필터 3중 제한.
+- 직원등록/활성비활성/라이벌 승패 모두 실제 Context state(`setEmployees`/`setRivalRelations`
+  등)를 변경하는 함수를 호출함을 코드 추적으로 확인(단순 UI 토글 아님).

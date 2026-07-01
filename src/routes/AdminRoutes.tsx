@@ -16,6 +16,7 @@ import AttendanceCheck from '@/pages/AttendanceCheck';
 import AttendanceStatus from '@/pages/AttendanceStatus';
 import AssessmentList from '@/pages/AssessmentList';
 import AssessmentDetail from '@/pages/AssessmentDetail';
+import ScoreExportPage from '@/pages/ScoreExportPage';
 import FinancePayments from '@/pages/FinancePayments';
 import FinanceRefunds from '@/pages/FinanceRefunds';
 import FinanceUnpaid from '@/pages/FinanceUnpaid';
@@ -81,6 +82,7 @@ export default function AdminRoutes() {
 
         {/* 시험 및 성적 관리 */}
         <Route path="/admin/scores/new" component={() => <Redirect to="/admin/scores?new=1" />} />
+        <Route path="/admin/scores/export" component={ScoreExportPage} />
         <Route path="/admin/scores/:id" component={AssessmentDetail} />
         <Route path="/admin/scores" component={AssessmentList} />
 

@@ -235,7 +235,7 @@ export default function EmblemManagement() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }}
           onClick={() => setShowModal(false)}>
           <div ref={draggable.panelRef} onClick={(ev) => ev.stopPropagation()}
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md modal-enter flex flex-col"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md axis-modal-drag-enter flex flex-col"
             style={{ ...draggable.style, maxHeight: 'calc(100vh - 48px)' }}>
             <div
               className="flex items-center justify-between p-5 border-b flex-shrink-0"

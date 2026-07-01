@@ -5,6 +5,7 @@ import { Route, Switch, Redirect } from 'wouter';
 import { RoleRoute } from './RoleRoute';
 import TeacherHome from '@/pages/teacher/TeacherHome';
 import TeacherClasses from '@/pages/teacher/TeacherClasses';
+import TeacherClassRoster from '@/pages/teacher/TeacherClassRoster';
 import TeacherStudents from '@/pages/teacher/TeacherStudents';
 import TeacherStudentDetail from '@/pages/teacher/TeacherStudentDetail';
 import TeacherAttendance from '@/pages/teacher/TeacherAttendance';
@@ -12,6 +13,7 @@ import TeacherExams from '@/pages/teacher/TeacherExams';
 import TeacherExamScores from '@/pages/teacher/TeacherExamScores';
 import TeacherExamGrading from '@/pages/teacher/TeacherExamGradingGuard';
 import TeacherGrades from '@/pages/teacher/TeacherGrades';
+import TeacherScoreExport from '@/pages/teacher/TeacherScoreExport';
 import TeacherMaterials from '@/pages/teacher/TeacherMaterials';
 import TeacherHomework from '@/pages/teacher/TeacherHomework';
 import TeacherStudentGrowth from '@/pages/teacher/TeacherStudentGrowth';
@@ -46,6 +48,9 @@ export default function TeacherRoutes() {
         {/* 강사 홈 */}
         <Route path="/teacher" component={TeacherHome} />
 
+        {/* 담당 반 학생 목록(출석부 형태) — 목록보다 먼저 등록 */}
+        <Route path="/teacher/classes/:classId" component={TeacherClassRoster} />
+
         {/* 담당 반 */}
         <Route path="/teacher/classes" component={TeacherClasses} />
 
@@ -69,6 +74,9 @@ export default function TeacherRoutes() {
 
         {/* 담당 학생 테스트 결과 확인 */}
         <Route path="/teacher/grades" component={TeacherGrades} />
+
+        {/* Phase 3D v3-r6: 성적 출력(Excel/PDF) — 본인 실시/담당 반·학생 범위만 */}
+        <Route path="/teacher/scores/export" component={TeacherScoreExport} />
 
         {/* Phase 3A: 학생 성장 요약 */}
         <Route path="/teacher/growth" component={TeacherStudentGrowth} />

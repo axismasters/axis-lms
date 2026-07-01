@@ -338,6 +338,16 @@ export function canAccessGrowth(t: AccountType): boolean {
 }
 
 /**
+ * 학원 전체 시험 성적 Excel/PDF 출력 — 원장급 이상.
+ * SUPER_ADMIN / DIRECTOR 전용. 강사는 본인 실시 시험 또는 담당 반/담당 학생 범위만
+ * 출력할 수 있으며(scoreExportEngine.ts의 별도 스코프 필터로 처리), 이 함수는 "학원 전체"
+ * 범위 접근 여부만 판단한다.
+ */
+export function canExportAcademyWideScores(t: AccountType): boolean {
+  return t === 'SUPER_ADMIN' || t === 'DIRECTOR';
+}
+
+/**
  * 엠블럼 정책 관리(추가·수정·활성토글·숨김토글) — 원장급 이상.
  * SUPER_ADMIN / DIRECTOR 전용. STAFF·TEACHER는 조회만 가능.
  */
