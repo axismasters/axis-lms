@@ -76,6 +76,19 @@ export default function TeacherExamScores() {
   const gradedAvg = gradedScores.length > 0 ? gradedScores.reduce((a, b) => a + b, 0) / gradedScores.length : 0;
   const gradedMax = gradedScores.length > 0 ? Math.max(...gradedScores) : 0;
 
+  // Phase 3D v3-r3: 문항별 정답률 — 담당 학생 채점완료 제출 기준. 자동채점 문항은
+  // AnswerRecord.isCorrect로 바로 집계되고, 수동채점 문항은 문항 배점 만점 획득 여부로
+  // 정답 처리한다(부분점수 문항은 "만점=정답"으로 간주하는 단순화된 근사치).
+  const questionAccuracy = visibleExam.questions.map((q) => {
+    const answered = mySubmissions
+      .filter((s) => s.status === '채점완료')
+      .map((s) => s.answers.find((a) => a.questionId === q.id))
+      .filter((a): a is NonNullable<typeof a> => !!a && a.score !== undefined);
+    const correctCount = answered.filter((a) => (a.isCorrect ?? (a.score ?? 0) >= q.points)).length;
+    const rate = answered.length > 0 ? Math.round((correctCount / answered.length) * 100) : null;
+    return { no: q.no, points: q.points, rate, sampleSize: answered.length };
+  }).filter((q) => q.rate !== null);
+
   const openCorrect = (sub: ExamSubmission) => {
     setCorrectForm({ score: String(sub.totalScore ?? ''), reason: '' });
     setCorrectModalSub(sub);
@@ -108,6 +121,29 @@ export default function TeacherExamScores() {
             {visibleExam.subject} · {visibleExam.examDate} · 만점 {visibleExam.totalScore}점 · 담당 학생 {mySubmissions.length}명
           </div>
         </div>
+
+        {/* Phase 3D v3-r3: 문항별 정답률 — 문항별 채점 데이터가 있는 경우에만 표시 */}
+        {questionAccuracy.length > 0 && (
+          <div className="axis-card p-4">
+            <div className="text-xs font-semibold mb-3" style={{ color: 'oklch(0.45 0.015 250)' }}>
+              문항별 정답률 (담당 학생 기준)
+            </div>
+            <div className="grid grid-cols-1 gap-1.5">
+              {questionAccuracy.map((q) => {
+                const color = q.rate! >= 80 ? 'oklch(0.45 0.15 145)' : q.rate! >= 50 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)';
+                return (
+                  <div key={q.no} className="flex items-center gap-2">
+                    <div className="text-xs w-10 flex-shrink-0 tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>{q.no}번</div>
+                    <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: 'oklch(0.93 0.006 250)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${q.rate}%`, background: color }} />
+                    </div>
+                    <div className="text-xs font-bold tabular-nums w-10 text-right flex-shrink-0" style={{ color }}>{q.rate}%</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {mySubmissions.length === 0 ? (
           <div className="axis-card p-10 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>

@@ -1,5 +1,101 @@
 # QA_PHASE3D.md
 
+## v3-r3 검수 결과
+
+**버전**: v3-r3 — v3-r2는 GitHub 업로드 가능 상태로 확정됐고, 이번 라운드는 추가 개선
+요청 5개에 대응한다. 이 섹션이 최신 검수 결과다. v3-r2 이하 검수 결과는 아래에 각각 보존.
+
+### 검증 명령 실행 결과
+
+```
+npm install
+→ npm error code E403
+→ npm error 403 Forbidden - GET https://registry.npmjs.org/@tailwindcss%2fvite
+```
+
+이번 라운드에도 재시도했으나 이 작업 환경은 여전히 `registry.npmjs.org` 접근이 차단되어
+있다. **이는 이 세션 내에서 Claude가 해결할 수 없는 환경 제약이며, 산출물 자체의 결함이
+아니다.**
+
+**대체 검증**: 동일한 방식으로 `tsc -p tsconfig.app.json --noEmit`을 src 전체(약 165개
+파일)에 대해 실행했다.
+
+```
+결과: 0 errors
+```
+
+검증 후 심볼릭 링크/스텁 모두 제거, 최종 산출물에는 `node_modules` 미포함.
+**실제 서비스 반영 전 로컬 또는 GitHub Actions에서 `npm install && npm run typecheck &&
+npm run build`를 반드시 1회 실행해야 한다.**
+
+### v3-r3 항목별 검수
+
+| # | 항목 | 결과 |
+|---|---|---|
+| 1 | 학부모 페이지 Rival/Emblem/SP/Tier 완전 제거(코드+주석+문서) | **완료 — grep 재검증 0건**(주석 포함, 원칙 설명 문단도 지표명 나열 없이 재작성) |
+| 1-2 | `PARENT_PAGE_CONSTITUTION.md` "Tier까지만 확인 가능" 문구 | **삭제 완료**(학생 Rival 화면 정책은 StudentRival.tsx 자체 주석에 이미 정확히 기술되어 정보 손실 없음) |
+| 1-3 | 성장 리포트 강화(목표대비/과목별변화/주간변화/상담용요약) | **4개 전부 신규 추가** — 아래 상세 참조 |
+| 1-4 | 새 아이디어 기록 | **완료** — `PARENT_PAGE_ENGAGEMENT_IDEAS.md`에 v3-r3 신규 항목 5개 추가 |
+| 2 | 관리자 학생 요약 카드 클릭 필터 | **기존 v3-r1 구현이 이미 요구사항 충족 확인**(재검증만 수행, 코드 변경 없음) |
+| 3 | 출결 요약 카드 클릭 필터 + 0건 안내 | **기존 v3-r1 구현이 이미 요구사항 충족 확인**(카드는 항상 클릭 가능, 0건 시 명확한 빈 목록 안내 문구 확인) |
+| 4 | 선생님 "시험 채점"/단독 "채점" 전수 재검색 | **0건**(불변 파일 1곳 제외) |
+| 5 | 시험지별 그래프 강화(문항별 정답률 신규) | **완료** — TeacherExamScores.tsx에 문항별 정답률 막대그래프 신규 추가 |
+| 6 | 불변 파일 4종 MD5 | **완전 동일** |
+| 6 | 금지 표현(합격 관련) | **grep 재검증 0건** |
+
+### 성장 리포트 강화 상세(항목 1-3)
+
+- **목표 대비**: 과목별 보완 필요도 막대 아래 "목표(90%)까지 N%p" 표시 신규 추가.
+- **과목별 변화**: 각 과목 응시 이력을 앞/뒤 절반으로 나눠 "이전 대비 ▲/▼ N%p" 신규 추가
+  (표본 2건 미만인 과목은 계산 제외 — 데이터 왜곡 방지).
+- **주간 변화**: 리포트 탭에 지난주(8~14일 전) 대비 이번 주 출결율/숙제완료율 증감 표시.
+- **상담용 요약**: 리포트 탭에 테스트 평균·직전 대비 변화·보완 필요 과목·이번 달 결석·
+  숙제 완료율을 한 문단으로 조합한 "상담용 요약" 카드 신규 추가.
+
+### 학부모 페이지 Rival/Emblem/SP/Tier 최종 재검증
+
+```
+grep -rn "Rival|Emblem|엠블럼|라이벌|Tier|티어|useGrowth|totalSP|GrowthContext" src/pages/parent/*.tsx src/layouts/ParentLayout.tsx docs/PARENT_PAGE_CONSTITUTION.md
+→ 0건(v3-r2까지 남아있던 "원칙 설명 문단 안의 지표명 1회 언급"까지 전부 제거,
+  이제 어떤 지표명도 직접 등장하지 않는다)
+```
+
+### 관리자/출결 요약 카드 재검증(항목 2, 3)
+
+코드를 다시 읽어 다음을 확인했다(수정 없이 검증만):
+- `StudentList.tsx`의 `SummaryFilterCard`는 학생 수와 무관하게 항상 렌더링되고 항상
+  클릭 가능하다. `active` 상태는 현재 `fStatus`/`fUnpaid` 값과 정확히 일치할 때만
+  켜진다. 필터 결과가 0명이면 "조건에 맞는 학생이 없습니다." 안내가 표시된다.
+- `AttendanceStatus.tsx`의 `SUMMARY_CARDS`도 값이 0이어도 동일하게 항상 렌더링·클릭
+  가능하며, "알림 발송 건수" 카드를 눌러도 발송 기록이 없으면 "조회 조건에 해당하는
+  출결 이력이 없습니다." 안내가 표시된다.
+- 두 화면 모두 카드에 `axis-card-clickable` 클래스(hover 시 그림자·테두리 변화)가
+  적용되어 있어 클릭 가능 UI임이 시각적으로 드러난다.
+
+### 선생님 "채점" 표현 최종 재검색
+
+```
+grep -rn "시험 채점" src/
+→ 1건, TeacherExamGradingGuard.tsx의 정책 설명 주석("공통 시험 채점은 기존과 동일하게
+  허용")뿐 — 화면 제목/메뉴명이 아니라 "채점 권한 정책"을 설명하는 서술문이라 허용 범위.
+
+단독 "채점" 재검색(채점하기/채점완료/미채점/정정/IF채점 등 허용 문맥 제외)
+→ TeacherExamGrading.tsx(불변 파일) title="채점" 2곳만 남음.
+→ AssessmentFormModal.tsx의 "자동채점"/"수동채점"은 문항 채점 방식을 가리키는 기술
+  용어이며 메뉴/제목이 아니므로 허용 범위로 판단.
+```
+
+### 불변 파일 MD5 (v3-r3 작업 후 재확인)
+
+```
+387bbf48a3d87ff63ce10d6dbc8bf33c  src/App.tsx
+3429a4ba81c0500e6596418edc639225  src/pages/teacher/TeacherExamGrading.tsx
+1eddaef5cf427e00666be685ea16f32f  src/lib/universityAnalysisAdapter.ts
+126d9e5e314de186bf1df0a63b3abf82  src/lib/classData.ts
+```
+
+---
+
 ## v3-r2 검수 결과 (v3-r1 반려 대응)
 
 **버전**: v3-r2 — 이 섹션이 최신 검수 결과다. v3-r1/v3/v2/v1 검수 결과는 아래에 각각 보존.

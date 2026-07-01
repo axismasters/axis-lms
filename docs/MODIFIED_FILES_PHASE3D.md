@@ -1,5 +1,22 @@
 # MODIFIED_FILES_PHASE3D.md
 
+## v3-r3 변경분 (추가 개선)
+
+신규/삭제 파일 없음 — 전부 기존 파일 수정.
+
+| 파일 | 수정 내용 |
+|---|---|
+| `docs/PARENT_PAGE_CONSTITUTION.md` | "Tier까지만 확인 가능" 문구 삭제, 원칙 6번 본문을 지표명 없이 완전 추상화. |
+| `docs/PARENT_PAGE_ENGAGEMENT_IDEAS.md` | "v3-r3 신규 반영" 섹션 추가(목표대비/과목별변화/주간변화/상담용요약 4개 + 문서 정리 1개 = 5개 항목). |
+| `src/pages/parent/ParentGrowthReport.tsx` | 과목별 "목표 대비"·"이전 대비 변화" 표시, 리포트 탭에 "전주 대비" 증감 + "상담용 요약" 카드 신규 추가. |
+| `src/pages/teacher/TeacherExamScores.tsx` | "문항별 정답률" 막대그래프 신규 추가(담당 학생 채점완료 기준). |
+
+**재검증만 수행(코드 변경 없음)**: `src/pages/StudentList.tsx`, `src/pages/AttendanceStatus.tsx`
+(요약 카드 클릭 필터가 v3-r1부터 이미 요구사항을 충족하고 있음을 확인), 선생님 전체
+화면의 "채점"/"성적" 관련 표현(v3-r2에서 이미 정리 완료, 신규 위반 없음 확인).
+
+---
+
 ## v3-r2 변경분 (v3-r1 반려 대응)
 
 신규/삭제 파일 없음 — 전부 기존 파일 수정.

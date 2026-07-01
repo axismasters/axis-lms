@@ -230,18 +230,32 @@ export default function ParentGrowthReport() {
   }));
   const scoreTrend = trendPoints.length >= 2 ? trendPoints[trendPoints.length - 1].pct - trendPoints[0].pct : null;
 
-  // 과목별 보완 필요도 — exam.subject 기준 평균 % 오름차순(낮을수록 보완 필요)
+  // 과목별 보완 필요도 — exam.subject 기준 평균 % 오름차순(낮을수록 보완 필요).
+  // v3-r3: 목표(90%) 대비 격차, 최근 절반 vs 이전 절반 비교로 "과목별 변화"까지 함께 계산.
+  const SUBJECT_TARGET_PCT = 90;
   const subjectStats = useMemo(() => {
-    const map = new Map<string, { sum: number; count: number }>();
+    const map = new Map<string, { pct: number; date: string }[]>();
     publishedResults.forEach(r => {
       const exam = exams.find(e => e.id === r.examId);
       const subject = exam?.subject ?? '기타';
       const pct = r.totalPoints > 0 ? (r.earnedScore / r.totalPoints) * 100 : 0;
-      const cur = map.get(subject) ?? { sum: 0, count: 0 };
-      map.set(subject, { sum: cur.sum + pct, count: cur.count + 1 });
+      const list = map.get(subject) ?? [];
+      list.push({ pct, date: r.examDate });
+      map.set(subject, list);
     });
     return Array.from(map.entries())
-      .map(([subject, { sum, count }]) => ({ subject, avgPct: Math.round(sum / count) }))
+      .map(([subject, list]) => {
+        const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date));
+        const avgPct = Math.round(sorted.reduce((s, x) => s + x.pct, 0) / sorted.length);
+        const mid = Math.floor(sorted.length / 2);
+        const earlierHalf = sorted.slice(0, mid);
+        const laterHalf = sorted.slice(mid);
+        const changeVsEarlier = earlierHalf.length > 0 && laterHalf.length > 0
+          ? Math.round(laterHalf.reduce((s, x) => s + x.pct, 0) / laterHalf.length)
+            - Math.round(earlierHalf.reduce((s, x) => s + x.pct, 0) / earlierHalf.length)
+          : null;
+        return { subject, avgPct, count: sorted.length, gapToTarget: SUBJECT_TARGET_PCT - avgPct, changeVsEarlier };
+      })
       .sort((a, b) => a.avgPct - b.avgPct);
   }, [publishedResults, exams]);
 
@@ -283,6 +297,17 @@ export default function ParentGrowthReport() {
   const monthlyAvgPct = monthlyExams.length > 0
     ? Math.round(monthlyExams.reduce((s, r) => s + (r.totalPoints > 0 ? (r.earnedScore / r.totalPoints) * 100 : 0), 0) / monthlyExams.length)
     : null;
+
+  // v3-r3: "주간 변화" — 지난주(8~14일 전) 대비 이번 주 비교
+  const twoWeeksAgoStr = (() => { const d = new Date(); d.setDate(d.getDate() - 14); return getLocalDateStr(d); })();
+  const prevWeekAtt = allAttRecords.filter(r => r.date >= twoWeeksAgoStr && r.date < weekAgoStr);
+  const prevWeekHomework = homeworkList.filter(hw => hw.status === 'published' && hw.createdAt.slice(0, 10) >= twoWeeksAgoStr && hw.createdAt.slice(0, 10) < weekAgoStr);
+  const prevWeekHomeworkRate = homeworkCompletionRate(prevWeekHomework);
+  const attendRate = (list: typeof allAttRecords) => list.length === 0 ? null : Math.round((list.filter(r => r.status === '출석' || r.status === '보강출석').length / list.length) * 100);
+  const weeklyAttRate = attendRate(weeklyAtt);
+  const prevWeekAttRate = attendRate(prevWeekAtt);
+  const homeworkRateDelta = weeklyHomeworkRate !== null && prevWeekHomeworkRate !== null ? weeklyHomeworkRate - prevWeekHomeworkRate : null;
+  const attRateDelta = weeklyAttRate !== null && prevWeekAttRate !== null ? weeklyAttRate - prevWeekAttRate : null;
 
   const parentComments = selectedId ? getParentCommentsForStudent(selectedId) : [];
 
@@ -392,13 +417,28 @@ export default function ParentGrowthReport() {
 
             {subjectStats.length > 0 && (
               <div className="axis-card p-4">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-1">
                   <BookOpen size={15} style={{ color: 'oklch(0.45 0.15 145)' }} />
                   <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>과목별 보완 필요도</span>
                 </div>
-                <div className="space-y-2">
+                <p className="text-xs mb-3" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                  목표 {SUBJECT_TARGET_PCT}% 기준으로 부족한 과목부터 정렬했습니다.
+                </p>
+                <div className="space-y-3">
                   {subjectStats.slice(0, 5).map(s => (
-                    <HBar key={s.subject} label={s.subject} value={s.avgPct} max={100} color={scoreColor(s.avgPct)} valueLabel={`${s.avgPct}%`} />
+                    <div key={s.subject}>
+                      <HBar label={s.subject} value={s.avgPct} max={100} color={scoreColor(s.avgPct)} valueLabel={`${s.avgPct}%`} />
+                      <div className="flex items-center gap-2 mt-1 ml-[72px] text-xs">
+                        {s.gapToTarget > 0 && (
+                          <span style={{ color: 'oklch(0.55 0.2 27)' }}>목표까지 {s.gapToTarget}%p</span>
+                        )}
+                        {s.changeVsEarlier !== null && s.changeVsEarlier !== 0 && (
+                          <span style={{ color: s.changeVsEarlier > 0 ? 'oklch(0.45 0.15 145)' : 'oklch(0.55 0.2 27)' }}>
+                            이전 대비 {s.changeVsEarlier > 0 ? `▲+${s.changeVsEarlier}%p` : `▼${s.changeVsEarlier}%p`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -516,19 +556,29 @@ export default function ParentGrowthReport() {
         {tab === 'report' && (
           <>
             <div className="axis-card p-4">
-              <div className="text-xs font-semibold mb-3" style={{ color: 'oklch(0.45 0.015 250)' }}>주간 학습 리포트 (최근 7일)</div>
+              <div className="text-xs font-semibold mb-3" style={{ color: 'oklch(0.45 0.015 250)' }}>주간 학습 리포트 (최근 7일 · 전주 대비)</div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg p-3" style={{ background: 'oklch(0.96 0.004 250)' }}>
                   <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>출결</div>
                   <div className="font-bold text-sm mt-0.5" style={{ color: 'oklch(0.3 0.02 250)' }}>
                     {weeklyAtt.length === 0 ? '기록 없음' : `${weeklyAtt.filter(r => r.status === '출석' || r.status === '보강출석').length}/${weeklyAtt.length}회 출석`}
                   </div>
+                  {attRateDelta !== null && attRateDelta !== 0 && (
+                    <div className="text-xs mt-0.5" style={{ color: attRateDelta > 0 ? 'oklch(0.45 0.15 145)' : 'oklch(0.55 0.2 27)' }}>
+                      전주 대비 {attRateDelta > 0 ? `▲+${attRateDelta}%p` : `▼${attRateDelta}%p`}
+                    </div>
+                  )}
                 </div>
                 <div className="rounded-lg p-3" style={{ background: 'oklch(0.96 0.004 250)' }}>
                   <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>숙제 완료율</div>
                   <div className="font-bold text-sm mt-0.5" style={{ color: 'oklch(0.3 0.02 250)' }}>
                     {weeklyHomeworkRate !== null ? `${weeklyHomeworkRate}%` : '해당 숙제 없음'}
                   </div>
+                  {homeworkRateDelta !== null && homeworkRateDelta !== 0 && (
+                    <div className="text-xs mt-0.5" style={{ color: homeworkRateDelta > 0 ? 'oklch(0.45 0.15 145)' : 'oklch(0.55 0.2 27)' }}>
+                      전주 대비 {homeworkRateDelta > 0 ? `▲+${homeworkRateDelta}%p` : `▼${homeworkRateDelta}%p`}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -550,6 +600,24 @@ export default function ParentGrowthReport() {
                   </div>
                   <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>이번 달 결석</div>
                 </div>
+              </div>
+            </div>
+
+            <div className="axis-card p-4" style={{ borderLeft: '3px solid oklch(0.511 0.262 276.966)' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <ClipboardList size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>상담용 요약</span>
+              </div>
+              <p className="text-xs mb-2" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                선생님과 상담하실 때 참고하실 수 있도록 이번 달 흐름을 한 문단으로 정리했습니다.
+              </p>
+              <div className="rounded-lg p-3 text-sm leading-relaxed" style={{ background: 'oklch(0.97 0.004 250)', color: 'oklch(0.3 0.02 250)' }}>
+                {student?.name ?? '자녀'}은(는) 최근 한 달간 테스트 평균 {monthlyAvgPct !== null ? `${monthlyAvgPct}%` : '기록 없음'}
+                {scoreTrend !== null && (scoreTrend > 0 ? `(직전 대비 +${scoreTrend}%p 상승)` : scoreTrend < 0 ? `(직전 대비 ${scoreTrend}%p 하락)` : '(직전과 비슷한 수준)')}
+                를 기록했습니다.
+                {subjectStats[0] && ` 보완이 가장 필요한 과목은 ${subjectStats[0].subject}(평균 ${subjectStats[0].avgPct}%)입니다.`}
+                {' '}이번 달 결석은 {monthlyAtt.filter(r => r.status === '결석').length}회,
+                숙제 완료율은 {monthlyHomeworkRate !== null ? `${monthlyHomeworkRate}%` : '집계된 숙제 없음'}입니다.
               </div>
             </div>
 
