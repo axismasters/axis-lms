@@ -1,5 +1,5 @@
 // AXIS LMS v1.2 - TeacherHome (Workflow Foundation v1)
-// 강사 전용 홈: 인사 / 빠른 실행 / 오늘 수업 / 미채점 시험 / 최근 성적.
+// 강사 전용 홈: 인사 / 빠른 실행 / 오늘 수업 / 미채점 시험 / 최근 테스트 결과.
 // 모든 시험/성적/통계는 담당 학생(assignedStudentIds) 기준으로만 계산.
 
 import { Link } from 'wouter';
@@ -74,7 +74,7 @@ export default function TeacherHome() {
     mySubmissions.some((s) => s.examId === e.id && s.status === '채점중')
   );
 
-  // 최근 성적: 담당 학생이 채점완료된 시험 최근 2건
+  // 최근 테스트 결과: 담당 학생이 채점완료된 시험 최근 2건
   const recentGradedExams = candidateExams
     .filter((e) => mySubmissions.some((s) => s.examId === e.id && s.status === '채점완료'))
     .sort((a, b) => b.examDate.localeCompare(a.examDate))
@@ -307,16 +307,16 @@ export default function TeacherHome() {
           )}
         </section>
 
-        {/* 최근 성적 — 담당 학생 기준 */}
+        {/* 최근 테스트 결과 — 담당 학생 기준 */}
         {recentGradedExams.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-2 px-1">
               <div className="flex items-center gap-2">
                 <BarChart2 size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
-                <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 성적</span>
+                <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 테스트 결과</span>
               </div>
               <Link href="/teacher/grades">
-                <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>성적 보기</span>
+                <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>학생별 성적 보기</span>
               </Link>
             </div>
             <div className="space-y-2">

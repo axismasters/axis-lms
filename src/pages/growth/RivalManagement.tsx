@@ -19,6 +19,9 @@ export default function RivalManagement() {
   const { currentUser } = useAuth();
   const canManage = canManageRivals(currentUser.accountType);
 
+  // Phase 3D v3-r1: Rules of Hooks 준수 — 아래 접근 권한 조기 return보다 반드시 앞에 선언.
+  const [confirmEnd, setConfirmEnd] = useState<RivalRelation | null>(null);
+
   // 페이지 진입 가드 — TEACHER 및 STUDENT/GUARDIAN 차단 (URL 직접 입력 시에도 적용)
   // 전체 라이벌 연결 관계는 SUPER_ADMIN / DIRECTOR / STAFF 만 조회 가능
   if (!canAccessGrowth(currentUser.accountType)) {
@@ -33,7 +36,6 @@ export default function RivalManagement() {
       </AdminLayout>
     );
   }
-  const [confirmEnd, setConfirmEnd] = useState<RivalRelation | null>(null);
 
   const handleWin = (rel: RivalRelation) => {
     const res = addRivalWin(rel.id);
@@ -92,12 +94,12 @@ export default function RivalManagement() {
 
       {/* 메인 테이블 */}
       <div className="axis-card overflow-hidden mb-5">
-        <div className="axis-table-wrap">
+        <div className="axis-table-scroll" style={{ maxHeight: 560 }}>
         <table className="w-full text-sm border-collapse" style={{ minWidth: 800 }}>
           <thead>
-            <tr style={{ background: 'oklch(0.97 0.004 250)', borderBottom: '1px solid oklch(0.92 0.006 250)' }}>
+            <tr style={{ background: 'oklch(0.97 0.004 250)' }}>
               {['학생명', '닉네임', '현재 라이벌', '승', '패', '승률', '연승/연패', '나를 지정', '다음 변경', '관리'].map(h => (
-                <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)' }}>{h}</th>
+                <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.97 0.004 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
               ))}
             </tr>
           </thead>

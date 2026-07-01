@@ -3,7 +3,7 @@
 // 엠블럼 추가/수정/활성토글/숨김토글: 원장급 이상(canManageEmblems).
 // 강사/행정: 조회만 가능.
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Trophy, Plus, Eye, EyeOff, Edit2, X, Check, GripVertical } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { useGrowth } from '@/contexts/GrowthContext';
@@ -32,6 +32,25 @@ export default function EmblemManagement() {
   const { currentUser } = useAuth();
   const canManage = canManageEmblems(currentUser.accountType);
 
+  // Phase 3D v3-r1: Rules of Hooks 준수 — 아래 접근 권한 조기 return보다 반드시 앞에
+  // 모든 hook을 선언해야 한다(조건부로 hook 호출 개수가 달라지면 안 됨).
+  const [filterCat, setFilterCat] = useState<EmblemCategory | 'ALL'>('ALL');
+  const [filterActive, setFilterActive] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
+  const [showModal, setShowModal] = useState(false);
+  const [editTarget, setEditTarget] = useState<Emblem | null>(null);
+  const [form, setForm] = useState<FormData>(DEFAULT_FORM);
+  const draggable = useDraggableModal(showModal);
+
+  // Phase 3D v3-r1: ESC로 팝업 닫기 지원 (X 클릭/overlay 클릭과 동일하게 동작해야 함)
+  useEffect(() => {
+    if (!showModal) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowModal(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showModal]);
+
   // 페이지 진입 가드 — TEACHER 및 STUDENT/GUARDIAN 차단 (URL 직접 입력 시에도 적용)
   if (!canAccessGrowth(currentUser.accountType)) {
     return (
@@ -45,13 +64,6 @@ export default function EmblemManagement() {
       </AdminLayout>
     );
   }
-
-  const [filterCat, setFilterCat] = useState<EmblemCategory | 'ALL'>('ALL');
-  const [filterActive, setFilterActive] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
-  const [showModal, setShowModal] = useState(false);
-  const [editTarget, setEditTarget] = useState<Emblem | null>(null);
-  const [form, setForm] = useState<FormData>(DEFAULT_FORM);
-  const draggable = useDraggableModal(showModal);
 
   const filtered = emblems.filter(e => {
     if (filterCat !== 'ALL' && e.category !== filterCat) return false;
@@ -133,12 +145,12 @@ export default function EmblemManagement() {
 
       {/* 테이블 */}
       <div className="axis-card overflow-hidden">
-        <div className="axis-table-wrap">
+        <div className="axis-table-scroll" style={{ maxHeight: 560 }}>
         <table className="w-full text-sm border-collapse" style={{ minWidth: 700 }}>
           <thead>
             <tr style={{ background: 'oklch(0.97 0.004 250)' }}>
               {['엠블럼명', '카테고리', '재질 단계', '획득 조건', '필요 횟수', '숨김', '활성', '관리'].map(h => (
-                <th key={h} className="axis-th-sticky axis-th-sticky-56 text-left px-4 py-2.5 text-xs font-semibold"
+                <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold"
                   style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.97 0.004 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
               ))}
             </tr>
@@ -224,13 +236,19 @@ export default function EmblemManagement() {
           onClick={() => setShowModal(false)}>
           <div ref={draggable.panelRef} onClick={(ev) => ev.stopPropagation()}
             className="bg-white rounded-xl shadow-2xl w-full max-w-md modal-enter flex flex-col"
-            style={{ ...draggable.style, maxHeight: '90vh' }}>
+            style={{ ...draggable.style, maxHeight: 'calc(100vh - 48px)' }}>
             <div
-              {...draggable.dragHandleProps}
-              className="axis-modal-drag-handle flex items-center justify-between p-5 border-b flex-shrink-0"
+              className="flex items-center justify-between p-5 border-b flex-shrink-0"
               style={{ borderColor: 'oklch(0.92 0.006 250)' }}
             >
-              <h2 className="font-bold text-base flex items-center gap-1.5" style={{ color: 'oklch(0.15 0.02 250)' }}>
+              {/* Phase 3D v3-r1: 드래그 핸들을 제목 영역에만 한정해서 X 버튼 클릭이 드래그
+                  포인터 캡처에 막히지 않게 했다(기존에는 헤더 행 전체가 드래그 핸들이라
+                  X 버튼도 그 안에 포함되어 있었음). */}
+              <h2
+                {...draggable.dragHandleProps}
+                className="axis-modal-drag-handle font-bold text-base flex items-center gap-1.5"
+                style={{ color: 'oklch(0.15 0.02 250)' }}
+              >
                 {!draggable.isMobile && <GripVertical size={15} style={{ color: 'oklch(0.75 0.01 250)' }} />}
                 {editTarget ? '엠블럼 수정' : '엠블럼 추가'}
               </h2>

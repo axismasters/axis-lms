@@ -21,6 +21,7 @@ import {
 } from '@/lib/counselingData';
 import { resetStudentNickname } from '@/lib/studentProfile';
 import { logAccountAction } from '@/lib/accountActionLog';
+import { getParentCommentsForStudent, addParentComment, ParentComment } from '@/lib/parentComments';
 import { getLocalDateStr } from '@/utils/dateUtils';
 
 export default function TeacherStudentDetail() {
@@ -42,7 +43,13 @@ export default function TeacherStudentDetail() {
     target: COUNSELING_TARGETS[0] as CounselingTarget,
     content: '',
   });
-  // Phase 3D v3: 비밀번호/닉네임 초기화 확인 모달 상태(마찬가지로 조기 return보다 앞에 선언)
+  // Phase 3D v3-r1: 학부모 공개 코멘트 상태(마찬가지로 조기 return보다 앞에 선언)
+  const [parentComments, setParentComments] = useState<ParentComment[]>(() =>
+    studentId ? getParentCommentsForStudent(studentId) : []
+  );
+  const [showParentCommentForm, setShowParentCommentForm] = useState(false);
+  const [parentCommentText, setParentCommentText] = useState('');
+  // Phase 3D v3-r1: 비밀번호/닉네임 초기화 확인 모달 상태(마찬가지로 조기 return보다 앞에 선언)
   const [confirmAction, setConfirmAction] = useState<'password' | 'nickname' | null>(null);
 
   const assignedClassIds = currentUser.assignedClassIds ?? [];
@@ -107,6 +114,22 @@ export default function TeacherStudentDetail() {
   const lateCount = attendanceRecords.filter(
     (r) => r.status === '지각' || r.status === '조퇴'
   ).length;
+
+  // Phase 3D v3-r1: 학부모 공개 코멘트 — 상담 기록 원문과 별개로, 학부모에게 보여줄
+  // 문장을 선생님이 직접 다시 써서 저장한다.
+  const handleAddParentComment = () => {
+    if (!parentCommentText.trim()) return;
+    const comment = addParentComment({
+      studentId,
+      date: getLocalDateStr(),
+      content: parentCommentText.trim(),
+      authorId: currentUser.id,
+      authorName: currentUser.name,
+    });
+    setParentComments((prev) => [comment, ...prev]);
+    setParentCommentText('');
+    setShowParentCommentForm(false);
+  };
 
   const handleAddCounseling = () => {
     if (!form.content.trim()) return;
@@ -263,15 +286,15 @@ export default function TeacherStudentDetail() {
           )}
         </section>
 
-        {/* 최근 성적 */}
+        {/* 최근 테스트 결과 */}
         <section>
           <div className="flex items-center gap-2 mb-2 px-1">
             <BarChart2 size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
-            <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>최근 성적</span>
+            <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>최근 테스트 결과</span>
           </div>
           {studentSubs.length === 0 ? (
             <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
-              성적 데이터가 없습니다.
+              테스트 결과 데이터가 없습니다.
             </div>
           ) : (
             <div className="space-y-2">
@@ -307,19 +330,53 @@ export default function TeacherStudentDetail() {
           )}
         </section>
 
-        {/* 수업노트 바로가기 */}
+        {/* 수업자료에서 수업노트 확인 */}
         <section>
           <div className="flex items-center gap-2 mb-2 px-1">
             <FileText size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
-            <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>수업노트</span>
+            <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>수업자료</span>
           </div>
           <div className="axis-card p-4 text-center">
-            <Link href="/teacher/notes">
+            <Link href="/teacher/materials?tab=notes">
               <span className="text-sm cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
-                수업노트 작성/확인하기 →
+                수업자료 열기 →
               </span>
             </Link>
           </div>
+        </section>
+
+        {/* 학부모 공개 코멘트 — Phase 3D v3-r1 신규. 상담 기록(내부용)과 달리 학부모 성장
+            리포트 화면에 그대로 노출된다. 선생님이 학부모용으로 다시 쓴 문장만 저장한다. */}
+        <section>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center gap-2">
+              <MessageSquare size={14} style={{ color: 'oklch(0.45 0.15 160)' }} />
+              <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                학부모 공개 코멘트 ({parentComments.length}건)
+              </span>
+              <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.94 0.06 160)', color: 'oklch(0.35 0.12 160)' }}>학부모 화면 노출</span>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setShowParentCommentForm(true)} className="h-7 text-xs gap-1">
+              <Plus size={12} /> 코멘트 작성
+            </Button>
+          </div>
+          {parentComments.length === 0 ? (
+            <div className="axis-card p-4 text-center text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+              작성된 학부모 공개 코멘트가 없습니다.
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {parentComments.map((c) => (
+                <div key={c.id} className="axis-card p-3 text-xs">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium" style={{ color: 'oklch(0.3 0.02 250)' }}>{c.authorName}</span>
+                    <span style={{ color: 'oklch(0.6 0.015 250)' }}>{c.date}</span>
+                  </div>
+                  <p style={{ color: 'oklch(0.35 0.02 250)' }}>{c.content}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* 상담 기록 — Phase 3D v2 신규. 내부 기록용(학부모/학생 노출 없음).
@@ -377,6 +434,39 @@ export default function TeacherStudentDetail() {
         </section>
 
       </div>
+
+      {/* 학부모 공개 코멘트 작성 모달 */}
+      {showParentCommentForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.45)' }}
+          onClick={() => setShowParentCommentForm(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
+              <h2 className="font-bold text-base" style={{ color: 'oklch(0.15 0.02 250)' }}>학부모 공개 코멘트 작성</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowParentCommentForm(false)} className="h-8 w-8" aria-label="닫기">
+                <X size={17} style={{ color: 'oklch(0.5 0.015 250)' }} />
+              </Button>
+            </div>
+            <div className="p-5 flex flex-col gap-3">
+              <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                이 코멘트는 학부모 성장 리포트 화면에 그대로 보여집니다. 상담 기록 원문을 그대로
+                붙여넣지 말고, 학부모가 보기에 알맞은 문장으로 다시 써주세요.
+              </p>
+              <textarea
+                value={parentCommentText}
+                onChange={(e) => setParentCommentText(e.target.value)}
+                rows={4}
+                placeholder="예: 이번 달 수학 개념 이해도가 눈에 띄게 좋아졌습니다. 다음 시험까지 계산 실수만 줄이면 더 좋은 결과가 기대됩니다."
+                className="w-full border rounded-md px-3 py-2 text-sm resize-none"
+                style={{ borderColor: 'oklch(0.87 0.006 250)' }}
+              />
+            </div>
+            <div className="flex justify-end gap-2 p-5 border-t" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
+              <Button variant="outline" onClick={() => setShowParentCommentForm(false)}>취소</Button>
+              <Button onClick={handleAddParentComment} style={{ background: 'oklch(0.45 0.15 160)' }}>학부모 화면에 공개</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 상담 기록 추가 모달 */}
       {showCounselingForm && (

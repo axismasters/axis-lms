@@ -11,7 +11,7 @@ const TEACHER_NAV = [
   { path: '/teacher',                  label: '홈',     icon: Home },
   { path: '/teacher/classes',          label: '담당반',  icon: BookOpen },
   { path: '/teacher/students',         label: '학생',   icon: Users },
-  { path: '/teacher/exams',            label: '채점',   icon: BarChart2 },
+  { path: '/teacher/exams',            label: '시험지',  icon: BarChart2 },
   { path: '/teacher/university-data',  label: '대학추천', icon: GraduationCap },
 ];
 
@@ -26,11 +26,7 @@ export default function TeacherLayout({ children, title }: TeacherLayoutProps) {
 
   const isActive = (path: string) => {
     if (path === '/teacher') return location === '/teacher';
-    // 자료 탭: /teacher/videos 와 /teacher/notes 모두 active
-    if (path === '/teacher/videos') {
-      return location.startsWith('/teacher/videos') || location.startsWith('/teacher/notes');
-    }
-    // 채점 탭: /teacher/exams (채점 목록/상세) 와 /teacher/grades 모두 active
+    // 시험지 탭: /teacher/exams(내 시험지 관리 목록/상세)와 /teacher/grades(학생별 성적) 모두 active
     if (path === '/teacher/exams') {
       return location.startsWith('/teacher/exams') || location.startsWith('/teacher/grades');
     }

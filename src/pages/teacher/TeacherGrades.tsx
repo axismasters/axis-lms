@@ -1,5 +1,5 @@
 // AXIS LMS v1.2 - TeacherGrades (Scope Guard Fix)
-// 강사 전용 담당 학생 성적 확인 화면.
+// 강사 전용 담당 학생 테스트 결과 확인 화면.
 // - 평균/최고점/최저점/응시자 수 모두 담당 학생(assignedStudentIds) submissions 기준
 // - 담당 학생 데이터가 없는 시험은 목록에서 제외
 
@@ -36,13 +36,13 @@ export default function TeacherGrades() {
   const assignedStudents = students.filter((s) => assignedStudentIds.includes(s.id));
 
   return (
-    <TeacherLayout title="성적 확인">
+    <TeacherLayout title="학생별 성적">
       <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
 
         {gradedExams.length === 0 ? (
           <div className="axis-card p-10 text-center">
             <BarChart2 size={28} className="mx-auto mb-2" style={{ color: 'oklch(0.8 0.01 250)' }} />
-            <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>표시할 성적 데이터가 없습니다.</div>
+            <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>표시할 테스트 결과 데이터가 없습니다.</div>
             <div className="text-xs mt-1" style={{ color: 'oklch(0.7 0.01 250)' }}>
               담당 학생의 채점이 완료되면 여기에 표시됩니다.
             </div>

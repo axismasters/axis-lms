@@ -8,7 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 
 // Phase 3D v2: 학생 화면의 "성적" → "테스트" 개편에 맞춰 학부모 화면도 동기화.
-// 자녀 성장(Emblem/SP/Tier) 확인 흐름 접근성을 위해 "성장" 탭 추가.
+// 자녀 성장 리포트(테스트 변화·출결 흐름·대학추천 요약) 접근성을 위해 "성장" 탭 추가.
+// 학생용 게임형 지표는 학부모 화면에 노출하지 않음.
 const PARENT_NAV = [
   { path: '/parent',             label: '홈',    icon: Home },
   { path: '/parent/attendance',  label: '출결',   icon: CalendarCheck },

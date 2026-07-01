@@ -1,5 +1,10 @@
-// AXIS LMS v1.2 - StudentRoutes (Student Finance View Foundation v1)
+// AXIS LMS v1.2 - StudentRoutes (Phase 3D v3-r1: 누락 라우트 복구)
 // /student/** — STUDENT 계정 전용. 모든 화면은 읽기 전용.
+//
+// v3-r1 반려 대응: 홈 카드/하단 네비게이션이 가리키는 /student/my, /student/target-preview,
+// /student/growth, /student/rival이 실제로는 라우트에 연결되어 있지 않아(또는 placeholder만
+// 있어) 404/placeholder로 빠지는 문제가 있었다. 이미 완성되어 있던 페이지 컴포넌트들을
+// 실제로 연결하고, StudentRival.tsx는 존재하지 않아 이번에 신규로 만들었다.
 
 import { Route, Switch, Redirect } from 'wouter';
 import { RoleRoute } from './RoleRoute';
@@ -10,6 +15,10 @@ import StudentAttendance from '@/pages/student/StudentAttendance';
 import StudentHomework from '@/pages/student/StudentHomework';
 import StudentMockExams from '@/pages/student/StudentMockExams';
 import StudentWeeklyMocks from '@/pages/student/StudentWeeklyMocks';
+import StudentMyPage from '@/pages/student/StudentMyPage';
+import StudentTargetPreview from '@/pages/student/StudentTargetPreview';
+import StudentGrowthShowcase from '@/pages/student/StudentGrowthShowcase';
+import StudentRival from '@/pages/student/StudentRival';
 import StudentLayout from '@/layouts/StudentLayout';
 
 function StudentPlaceholder({ title }: { title: string }) {
@@ -47,7 +56,8 @@ export default function StudentRoutes() {
         {/* 내 숙제 */}
         <Route path="/student/homework" component={StudentHomework} />
 
-        {/* Phase 3D v2: 학생 화면 재무 노출 절대 금지 — /student/finance는 항상 /student로 차단 리다이렉트 */}
+        {/* Phase 3D v2/v3-r1: 학생 화면 재무 노출 절대 금지 — /student/finance는 항상 /student로 차단 리다이렉트.
+            StudentFinance.tsx 컴포넌트 자체도 더 이상 존재하지 않는다(물리 삭제 완료). */}
         <Route path="/student/finance" component={() => <Redirect to="/student" />} />
 
         {/* 모의고사 결과 조회 (읽기 전용) */}
@@ -56,8 +66,17 @@ export default function StudentRoutes() {
         {/* 고3 수능실전 주간 루틴 조회 (읽기 전용) */}
         <Route path="/student/weekly-mocks" component={StudentWeeklyMocks} />
 
-        {/* 성장 진열장 (Foundation — 홈에서 접근) */}
-        <Route path="/student/growth" component={() => <StudentPlaceholder title="성장 진열장" />} />
+        {/* 마이페이지(닉네임/프로필) — v3-r1: 실제 연결 */}
+        <Route path="/student/my" component={StudentMyPage} />
+
+        {/* 목표대학추천/대학추천 미리보기 — v3-r1: 실제 연결 */}
+        <Route path="/student/target-preview" component={StudentTargetPreview} />
+
+        {/* 성장 진열장 — v3-r1: placeholder 대신 실제 화면 연결 */}
+        <Route path="/student/growth" component={StudentGrowthShowcase} />
+
+        {/* Rival — v3-r1: 신규 Foundation 화면 연결 */}
+        <Route path="/student/rival" component={StudentRival} />
 
         {/* 구 경로 하위호환 리다이렉트 */}
         <Route path="/student/scores" component={() => <Redirect to="/student/grades" />} />

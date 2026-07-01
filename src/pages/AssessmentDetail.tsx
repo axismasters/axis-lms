@@ -303,12 +303,12 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
 
   return (
     <div>
-    <div className="axis-table-wrap">
+    <div className="axis-table-scroll" style={{ maxHeight: 560 }}>
       <table className="w-full text-sm">
         <thead>
           <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
             {['학생명', '휴대폰번호', '응시상태', '획득점수', '채점상태', '공개여부', '관리'].map((h) => (
-              <th key={h} className="axis-th-sticky axis-th-sticky-56 px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
+              <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
                 style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
             ))}
           </tr>
@@ -401,20 +401,20 @@ function GradingTab({
         </div>
       )}
 
-      <div className="axis-table-wrap">
+      <div className="axis-table-scroll" style={{ maxHeight: 560 }}>
         <table className="w-full text-sm">
           <thead>
             <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
-              <th className="axis-th-sticky axis-th-sticky-56 px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
+              <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
                 style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>학생명</th>
               {exam.questions.map((q) => (
-                <th key={q.id} className="axis-th-sticky axis-th-sticky-56 px-2 py-2.5 text-center text-xs font-semibold whitespace-nowrap"
+                <th key={q.id} className="px-2 py-2.5 text-center text-xs font-semibold whitespace-nowrap"
                   style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>
                   {q.no}번<br /><span className="text-[10px]" style={{ color: isAutoGraded(q.type) ? 'oklch(0.5 0.13 160)' : 'oklch(0.5 0.13 60)' }}>{q.type}({q.points})</span>
                   {isAutoGraded(q.type) && <div className="text-[10px] mt-0.5" style={{ color: 'oklch(0.6 0.015 250)' }}>정답: {q.correctAnswer}</div>}
                 </th>
               ))}
-              <th className="axis-th-sticky axis-th-sticky-56 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap"
+              <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap"
                 style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>합계</th>
             </tr>
           </thead>
@@ -675,12 +675,12 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
             </span>
           )}
         </Label>
-        <div className="axis-table-wrap">
+        <div className="axis-table-scroll" style={{ maxHeight: 560 }}>
         <table className="w-full text-sm">
           <thead>
             <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
               {['학생명', '총점', '정정 이력', ''].map((h) => (
-                <th key={h} className="axis-th-sticky axis-th-sticky-56 px-3 py-2.5 text-left text-xs font-semibold"
+                <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold"
                   style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
               ))}
             </tr>

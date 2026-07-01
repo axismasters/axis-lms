@@ -1,23 +1,26 @@
-// AXIS LMS v1.2 - ParentHome (Parent Finance Home Bridge v1 → Phase 3D v2 개편)
-// 보호자 전용 홈: 자녀 선택 / 수강 반 요약 / 출결 요약 / 공개 테스트 결과 / 성장 흐름 / 수납 상태.
+// AXIS LMS v1.2 - ParentHome (Parent Finance Home Bridge v1 → Phase 3D v3-r2 개편)
+// 보호자 전용 홈: 자녀 선택 / 수강 반 요약 / 출결 요약 / 공개 테스트 결과 / 성장 리포트 진입 / 수납 상태.
 //
-// ⚠ 학부모 페이지 헌법 (Phase 3D v2 추가 — docs/PARENT_PAGE_CONSTITUTION.md 참조):
+// ⚠ 학부모 페이지 헌법 (docs/PARENT_PAGE_CONSTITUTION.md 참조):
 //   1. 학부모 페이지는 "확인 화면"이 아니라 "자녀 성장을 계속 들여다보고 싶은 화면"이다.
 //   2. 중심은 납부 확인이 아니라 자녀 성장 확인이다 — 수납은 보조 정보로 낮춘다.
 //   3. 클릭 가능한 카드/요약/상세 진입 요소는 버튼/카드 버튼처럼 명확히 보이게 만든다.
 //   4. 학부모는 확인자다 — 입력/수정 기능은 어떤 화면에도 넣지 않는다.
-//   5. 상담 기록 원문은 학부모에게 노출하지 않는다(내부 기록용, 공개 리포트는 별도 승인 절차 필요).
+//   5. 상담 기록 원문은 학부모에게 노출하지 않는다(내부 기록용, 공개 코멘트는 선생님이 별도 작성).
+//   6. 학생용 게임형 지표는 학부모 화면에 노출하지 않는다 — 대신 테스트 변화·출결 흐름·
+//      대학추천·학습 리포트 중심의 "성장 리포트"로 보여준다(자세한 내용은
+//      /parent/growth = ParentGrowthReport.tsx 참조).
 //
 // ✅ 테스트: getPublishedResultsForStudent 정책 준수 (결석/미채점/미공개 제외)
 // ✅ 출결: 자녀 소속 반 세션만 필터링
-// ✅ 수납 상태: 총액 대신 미납 유무 배지만 표시(Phase 3D v2 — 총액 과시형 화면 금지)
-// 🚫 라이벌 상세(상대 식별)/경쟁 정보 노출 금지 — Tier/Emblem/SP 흐름은 성장 리포트로 확인
+// ✅ 수납 상태: 총액 대신 미납 유무 배지만 표시(총액 과시형 화면 금지)
+// 🚫 학생용 게임형 지표 노출 금지, 라이벌 상세(상대 식별)/경쟁 정보 노출 금지
 // 🚫 납부 등록/환불 요청/수정/삭제 버튼 없음
-// 🚫 선생님 상담 기록 원문 노출 금지(Phase 3D v2 — "상담 리포트" 카드 제거)
+// 🚫 선생님 상담 기록 원문 노출 금지("상담 리포트" 카드는 v2에서 이미 제거)
 
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { CalendarCheck, ClipboardList, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2, X, CalendarClock, CheckCircle2, TrendingUp, Award } from 'lucide-react';
+import { CalendarCheck, ClipboardList, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2, X, CalendarClock, CheckCircle2, TrendingUp } from 'lucide-react';
 import ParentLayout from '@/layouts/ParentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
@@ -28,9 +31,7 @@ import { useContent } from '@/contexts/ContentContext';
 import { useHomework } from '@/contexts/HomeworkContext';
 import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { useFinance } from '@/contexts/FinanceContext';
-import { useGrowth } from '@/contexts/GrowthContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
-import { TIER_LABELS, TIER_COLORS } from '@/lib/growthData';
 import type { ContentItem } from '@/lib/contentData';
 
 function scoreColor(pct: number) {
@@ -118,7 +119,7 @@ export default function ParentHome() {
   const { getForStudent } = useHomework();
   const { getStatus } = useHomeworkStatus();
   const { getInvoicesByStudent, getUnpaidAmount } = useFinance();
-  const { getProfile, getStudentEmblems } = useGrowth();
+  // useGrowth() 의존 제거(위 주석 참조 — 학생용 게임형 지표 미노출 방침)
 
   // 연결된 자녀 목록 (assignedStudentIds 기준)
   const myChildren = students.filter((s) =>
@@ -185,11 +186,8 @@ export default function ParentHome() {
   const financeUnpaid = childInvoices.reduce((s, inv) => s + getUnpaidAmount(inv.id), 0);
   const hasUnpaid = financeUnpaid > 0;
 
-  // 성장 흐름(Tier/Emblem) — 학부모 홈에서 "눌러보고 싶은" 진입점으로 사용
-  const growthProfile = selectedChildId ? getProfile(selectedChildId) : undefined;
-  const achievedEmblemCount = selectedChildId ? getStudentEmblems(selectedChildId).filter(e => e.achieved).length : 0;
-  const tierColor = growthProfile ? TIER_COLORS[growthProfile.tier] : 'oklch(0.7 0.01 250)';
-  const tierLabel = growthProfile ? TIER_LABELS[growthProfile.tier] : null;
+  // 성장 리포트 진입점 — 학부모 홈에서 "눌러보고 싶은" 카드로 사용.
+  // 학생용 게임형 지표는 학부모 화면에 노출하지 않으므로 GrowthContext 의존을 두지 않는다.
 
   const classNameOf = (classId: string) => (
     childActiveClasses.find(c => c.id === classId)?.name
@@ -465,7 +463,7 @@ export default function ParentHome() {
             )}
 
             {/* 성장 리포트 — 학부모 페이지 헌법 원칙: 납부 확인이 아니라 자녀 성장 확인이 중심이다.
-                Tier/Emblem을 홈에서 미리 보여주고 눌러서 더 보고 싶게 만드는 진입 카드. */}
+                학생용 게임형 지표 대신 테스트·출결·대학추천 요약으로 눌러서 더 보고 싶게 만드는 진입 카드. */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
                 <TrendingUp size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
@@ -474,27 +472,21 @@ export default function ParentHome() {
               <Link href="/parent/growth" style={{ display: 'block' }}>
                 <div
                   className="axis-card axis-card-clickable p-4 flex items-center justify-between"
-                  style={{ background: `linear-gradient(135deg, ${tierColor}14, white)` }}
+                  style={{ background: 'linear-gradient(135deg, oklch(0.511 0.262 276.966 / 0.08), white)' }}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
-                      style={{ background: tierColor }}
+                      style={{ background: 'oklch(0.511 0.262 276.966)' }}
                     >
                       {child?.name.charAt(0) ?? '?'}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-semibold text-sm flex items-center gap-1.5 flex-wrap" style={{ color: 'oklch(0.2 0.02 250)' }}>
-                        {child?.name ?? '자녀'}의 성장 현황
-                        {tierLabel && (
-                          <span className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0"
-                            style={{ background: tierColor + '20', color: tierColor }}>
-                            {tierLabel}
-                          </span>
-                        )}
+                      <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                        {child?.name ?? '자녀'}의 성장 리포트
                       </div>
                       <div className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                        <Award size={11} /> 획득 엠블럼 {achievedEmblemCount}개 · SP {growthProfile?.totalSP.toLocaleString() ?? 0}점 — 눌러서 자세히 보기
+                        <TrendingUp size={11} /> 테스트 변화 · 출결 흐름 · 대학추천 — 눌러서 자세히 보기
                       </div>
                     </div>
                   </div>

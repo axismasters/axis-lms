@@ -93,6 +93,8 @@ export default function AttendanceStatusPage() {
   const [toDate, setToDate] = useState(initialRange.to);
   const [studentSearch, setStudentSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<AStatus | 'all'>('all'); // 기본: 전체 상태
+  // Phase 3D v3-r1: "알림 발송 건수" 요약 카드를 클릭하면 알림 발송된 기록만 필터링한다.
+  const [filterNotifyOnly, setFilterNotifyOnly] = useState(false);
 
   const handlePeriodChange = (preset: PeriodPreset) => {
     setPeriodPreset(preset);
@@ -158,15 +160,16 @@ export default function AttendanceStatusPage() {
     return { total: baseRows.length, counts, notifySent };
   }, [baseRows]);
 
-  // 목록에 표시할 최종 행 — 학생 검색 + 상태 필터까지 적용
+  // 목록에 표시할 최종 행 — 학생 검색 + 상태 필터 + 알림발송 필터까지 적용
   const visibleRows = useMemo(() => {
     const kw = studentSearch.trim();
     return baseRows.filter(r => {
       if (kw && !r.studentName.includes(kw) && !r.studentPhone.replace(/-/g, '').includes(kw.replace(/-/g, ''))) return false;
       if (filterStatus !== 'all' && r.status !== filterStatus) return false;
+      if (filterNotifyOnly && r.notificationLabel !== '발송됨') return false;
       return true;
     });
-  }, [baseRows, studentSearch, filterStatus]);
+  }, [baseRows, studentSearch, filterStatus, filterNotifyOnly]);
 
   if (!can('attendance.view')) {
     return (
@@ -283,14 +286,35 @@ export default function AttendanceStatusPage() {
         </div>
       </div>
 
-      {/* 요약 카드 */}
-      <div className="grid grid-cols-4 lg:grid-cols-8 gap-2.5 mb-4">
-        {SUMMARY_CARDS.map(card => (
-          <div key={card.key} className="axis-card p-3 text-center">
-            <div className="text-xs mb-1 truncate" style={{ color: 'oklch(0.6 0.015 250)' }}>{card.label}</div>
-            <div className="text-xl font-bold" style={{ color: card.color }}>{card.value}</div>
-          </div>
-        ))}
+      {/* 요약 카드 — 클릭하면 아래 목록이 해당 상태(또는 알림 발송 기록)로 필터링된다(Phase 3D v3-r1) */}
+      <div className="grid grid-cols-4 lg:grid-cols-8 gap-2.5 mb-2">
+        {SUMMARY_CARDS.map(card => {
+          const active = card.key === 'notify' ? filterNotifyOnly : card.key === 'total' ? (filterStatus === 'all' && !filterNotifyOnly) : filterStatus === card.key;
+          const onClick = () => {
+            if (card.key === 'total') { setFilterStatus('all'); setFilterNotifyOnly(false); }
+            else if (card.key === 'notify') { setFilterNotifyOnly(v => !v); }
+            else { setFilterStatus(prev => (prev === card.key ? 'all' : card.key as AStatus)); }
+          };
+          return (
+            <button
+              key={card.key}
+              type="button"
+              onClick={onClick}
+              className="axis-card axis-card-clickable p-3 text-center transition-colors"
+              style={active ? { borderColor: 'oklch(0.511 0.262 276.966)', boxShadow: '0 0 0 1px oklch(0.511 0.262 276.966)' } : undefined}
+            >
+              <div className="text-xs mb-1 truncate flex items-center justify-center gap-1" style={{ color: active ? 'oklch(0.45 0.2 277)' : 'oklch(0.6 0.015 250)' }}>
+                {card.label}
+              </div>
+              <div className="text-xl font-bold" style={{ color: card.color }}>{card.value}</div>
+            </button>
+          );
+        })}
+      </div>
+      <div className="text-xs mb-4" style={{ color: 'oklch(0.5 0.015 250)' }}>
+        현재 필터: <b style={{ color: 'oklch(0.45 0.2 277)' }}>
+          {filterNotifyOnly ? '알림 발송 기록' : filterStatus === 'all' ? '전체 출결' : filterStatus}
+        </b> · {visibleRows.length}건
       </div>
 
       {/* 출결 이력 목록 */}
@@ -301,12 +325,12 @@ export default function AttendanceStatusPage() {
             조회 조건에 해당하는 출결 이력이 없습니다.
           </div>
         ) : (
-          <div className="axis-table-wrap">
+          <div className="axis-table-scroll" style={{ maxHeight: 620 }}>
             <table className="w-full text-sm" style={{ minWidth: 1180 }}>
               <thead>
-                <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
+                <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
                   {['날짜', '요일', '반명', '반유형', '수업시간', '학생명', '휴대폰번호', '보호자 연락처', '출결상태', '결석사유', '알림상태', '처리자', '처리일시', '관리'].map(h => (
-                    <th key={h} className="px-3 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
+                    <th key={h} className="px-3 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>

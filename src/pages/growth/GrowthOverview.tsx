@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Link } from 'wouter';
 import { Trophy, Star, Zap, Users, Eye, ChevronRight, Plus, Clock } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
+import { Button } from '@/components/ui/button';
 import { useGrowth } from '@/contexts/GrowthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -135,12 +136,12 @@ export default function GrowthOverview() {
           {recentLogs.length === 0 ? (
             <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>이력 없음</p>
           ) : (
-            <div className="axis-table-wrap">
+            <div className="axis-table-scroll" style={{ maxHeight: 320 }}>
             <table className="w-full text-xs border-collapse" style={{ minWidth: 480 }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid oklch(0.92 0.006 250)' }}>
+                <tr>
                   {['일자', '학생', 'SP', '사유', '출처', '지급자'].map(h => (
-                    <th key={h} className="text-left pb-1.5 font-semibold" style={{ color: 'oklch(0.4 0.015 250)' }}>{h}</th>
+                    <th key={h} className="text-left pb-1.5 font-semibold" style={{ color: 'oklch(0.4 0.015 250)', background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -173,12 +174,12 @@ export default function GrowthOverview() {
 
       {/* 학생 목록 테이블 */}
       <div className="axis-card overflow-hidden">
-        <div className="axis-table-wrap">
+        <div className="axis-table-scroll" style={{ maxHeight: 560 }}>
         <table className="w-full text-sm border-collapse" style={{ minWidth: 680 }}>
           <thead>
-            <tr style={{ background: 'oklch(0.97 0.004 250)', borderBottom: '1px solid oklch(0.92 0.006 250)' }}>
+            <tr style={{ background: 'oklch(0.97 0.004 250)' }}>
               {['학생명', '닉네임', '티어', '누적 SP', '이번 시즌 SP', '대표 엠블럼', '현재 라이벌', '보유 엠블럼', '관리'].map(h => (
-                <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)' }}>{h}</th>
+                <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.97 0.004 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -231,22 +232,22 @@ export default function GrowthOverview() {
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <Link href={`/students/${s.id}?tab=growth`}>
-                        <span className="inline-flex items-center gap-1 text-xs font-medium cursor-pointer" style={{ color: 'oklch(0.45 0.2 277)' }}>
+                        <Button variant="outline" size="sm" className="h-6 px-2 text-xs gap-0.5">
                           상세 <ChevronRight size={11} />
-                        </span>
+                        </Button>
                       </Link>
                       {canGrant && profile && (
                         <button onClick={() => { setSpModal({ studentId: s.id, studentName: s.name }); setSpAmount(''); setSpReason(''); }}
-                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-semibold"
+                          className="inline-flex items-center gap-0.5 px-1.5 py-1 rounded text-xs font-semibold transition-colors hover:brightness-95"
                           style={{ background: '#D1FAE5', color: '#065F46', border: '1px solid #A7F3D0' }}>
                           <Plus size={10} />SP
                         </button>
                       )}
                       {canGrantEmblem && profile && (
                         <button onClick={() => { setEmbModal({ studentId: s.id, studentName: s.name }); setEmblemId(''); }}
-                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-semibold"
+                          className="inline-flex items-center gap-0.5 px-1.5 py-1 rounded text-xs font-semibold transition-colors hover:brightness-95"
                           style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}>
                           <Trophy size={10} />
                         </button>

@@ -249,12 +249,12 @@ export default function AssessmentList() {
             조회 조건에 해당하는 시험이 없습니다.
           </div>
         ) : (
-          <div className="axis-table-wrap">
+          <div className="axis-table-scroll" style={{ maxHeight: 620 }}>
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
                 {['시험명', '종류', '과목', '대상', '시험일', '응시/채점', '진행상태', '공개일', ''].map((h) => (
-                  <th key={h} className="axis-th-sticky axis-th-sticky-56 px-4 py-3 text-left text-xs font-semibold whitespace-nowrap"
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap"
                     style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                 ))}
               </tr>
@@ -267,7 +267,7 @@ export default function AssessmentList() {
                 const subs = getSubmissionsByExam(exam.id);
                 const gradedCnt = subs.filter((s) => s.status === '채점완료' || s.status === '결석').length;
                 return (
-                  <tr key={exam.id} className="axis-table-row border-b cursor-pointer" style={{ borderColor: 'oklch(0.95 0.003 250)' }} onClick={() => navigate(`/admin/scores/${exam.id}`)}>
+                  <tr key={exam.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                     <td className="px-4 py-3 font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</td>
                     <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{categoryLabel(exam.categoryId)}</td>
                     <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{exam.subject ?? '-'}</td>
@@ -290,10 +290,12 @@ export default function AssessmentList() {
                       {exam.publishedAt ? exam.publishedAt.slice(0, 10) : '-'}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-0.5 text-xs font-medium px-2 py-1 rounded-md"
-                        style={{ color: 'oklch(0.511 0.262 276.966)', background: 'oklch(0.96 0.02 277)' }}>
-                        상세 <ChevronRight size={11} />
-                      </span>
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs gap-0.5"
+                        onClick={() => navigate(`/admin/scores/${exam.id}`)}
+                      >
+                        상세 보기 <ChevronRight size={11} />
+                      </Button>
                     </td>
                   </tr>
                 );

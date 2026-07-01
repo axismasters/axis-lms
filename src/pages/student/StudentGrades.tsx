@@ -123,6 +123,8 @@ function ScoreVsAvgBar({ result }: { result: StudentExamResult }) {
   const myPct = result.totalPoints > 0 ? Math.round(result.earnedScore / result.totalPoints * 100) : 0;
   const avgPct = result.averageScore != null && result.totalPoints > 0
     ? Math.round(result.averageScore / result.totalPoints * 100) : null;
+  const maxPct = result.highestScore != null && result.totalPoints > 0
+    ? Math.round(result.highestScore / result.totalPoints * 100) : null;
   if (avgPct === null) return null;
   const diff = myPct - avgPct;
   const myColor = scoreColor(myPct);
@@ -142,6 +144,15 @@ function ScoreVsAvgBar({ result }: { result: StudentExamResult }) {
         </div>
         <div className="text-xs font-bold w-8 text-right tabular-nums flex-shrink-0" style={{ color: 'oklch(0.5 0.015 250)' }}>{avgPct}%</div>
       </div>
+      {maxPct !== null && (
+        <div className="flex items-center gap-2">
+          <div className="text-xs w-12 text-right flex-shrink-0" style={{ color: 'oklch(0.55 0.015 250)' }}>최고점</div>
+          <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ background: 'oklch(0.93 0.006 250)' }}>
+            <div className="h-full rounded-full" style={{ width: `${maxPct}%`, background: 'oklch(0.45 0.15 145)' }} />
+          </div>
+          <div className="text-xs font-bold w-8 text-right tabular-nums flex-shrink-0" style={{ color: 'oklch(0.45 0.15 145)' }}>{maxPct}%</div>
+        </div>
+      )}
       {diff !== 0 && (
         <div className="text-xs text-center" style={{ color: diff > 0 ? 'oklch(0.45 0.15 145)' : 'oklch(0.55 0.2 27)' }}>
           평균 대비 {diff > 0 ? `+${diff}%p` : `${diff}%p`}

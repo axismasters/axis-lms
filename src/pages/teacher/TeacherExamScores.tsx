@@ -71,6 +71,11 @@ export default function TeacherExamScores() {
   const mySubmissions = submissions.filter((s) => s.examId === examId && myStudentIds.has(s.studentId));
   const studentMap = new Map(students.map((s) => [s.id, s]));
 
+  // Phase 3D v3-r1: 결과 보기 모달의 담당 평균/최고점 비교용
+  const gradedScores = mySubmissions.filter((s) => s.status === '채점완료' && s.totalScore != null).map((s) => s.totalScore as number);
+  const gradedAvg = gradedScores.length > 0 ? gradedScores.reduce((a, b) => a + b, 0) / gradedScores.length : 0;
+  const gradedMax = gradedScores.length > 0 ? Math.max(...gradedScores) : 0;
+
   const openCorrect = (sub: ExamSubmission) => {
     setCorrectForm({ score: String(sub.totalScore ?? ''), reason: '' });
     setCorrectModalSub(sub);
@@ -110,13 +115,13 @@ export default function TeacherExamScores() {
           </div>
         ) : (
           <div className="axis-card overflow-hidden">
-            <div className="axis-table-wrap">
+            <div className="axis-table-scroll" style={{ maxHeight: 560 }}>
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
                     {['학생명', '채점상태', '점수/만점', '응시/결시', '결과', '관리'].map((h) => (
                       <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
-                        style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)' }}>{h}</th>
+                        style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -204,6 +209,27 @@ export default function TeacherExamScores() {
                       {resultModalSub.totalScore ?? '-'} / {visibleExam.totalScore}
                     </span>
                   </div>
+                  {/* Phase 3D v3-r1: 담당 학생 범위 기준 평균/최고점 비교 막대 */}
+                  {gradedScores.length > 0 && resultModalSub.totalScore != null && (
+                    <div className="space-y-1.5 pt-1">
+                      {([
+                        { label: '이 학생', value: resultModalSub.totalScore, color: 'oklch(0.511 0.262 276.966)' },
+                        { label: '담당 평균', value: Math.round(gradedAvg), color: 'oklch(0.6 0.015 250)' },
+                        { label: '담당 최고', value: gradedMax, color: 'oklch(0.45 0.15 145)' },
+                      ]).map((row) => {
+                        const pct = visibleExam.totalScore > 0 ? Math.min(100, Math.round((row.value / visibleExam.totalScore) * 100)) : 0;
+                        return (
+                          <div key={row.label} className="flex items-center gap-2">
+                            <div className="text-xs w-16 flex-shrink-0" style={{ color: 'oklch(0.5 0.015 250)' }}>{row.label}</div>
+                            <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: 'oklch(0.93 0.006 250)' }}>
+                              <div className="h-full rounded-full" style={{ width: `${pct}%`, background: row.color }} />
+                            </div>
+                            <div className="text-xs font-bold tabular-nums w-10 text-right flex-shrink-0" style={{ color: row.color }}>{row.value}점</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   {resultModalSub.teacherNote && (
                     <div className="rounded-lg p-3 text-xs" style={{ background: 'oklch(0.97 0.004 250)', color: 'oklch(0.4 0.015 250)' }}>
                       💬 {resultModalSub.teacherNote}

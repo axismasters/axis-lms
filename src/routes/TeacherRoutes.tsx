@@ -67,7 +67,7 @@ export default function TeacherRoutes() {
         {/* 내 시험지 관리 / 미채점 */}
         <Route path="/teacher/exams" component={TeacherExams} />
 
-        {/* 담당 학생 성적 확인 */}
+        {/* 담당 학생 테스트 결과 확인 */}
         <Route path="/teacher/grades" component={TeacherGrades} />
 
         {/* Phase 3A: 학생 성장 요약 */}
