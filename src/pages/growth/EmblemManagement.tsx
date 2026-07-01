@@ -109,7 +109,7 @@ export default function EmblemManagement() {
         {canManage && (
           <button onClick={openAdd}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-opacity hover:opacity-90 active:scale-95"
-            style={{ background: '#081F4D', color: '#C8A15A' }}>
+            style={{ background: '#040D1E', color: '#C8A15A' }}>
             <Plus size={14} /> 엠블럼 추가
           </button>
         )}
@@ -122,7 +122,7 @@ export default function EmblemManagement() {
             <button key={cat} onClick={() => setFilterCat(cat)}
               className="px-2.5 py-1 text-xs rounded-md font-medium transition-colors"
               style={{
-                background: filterCat === cat ? '#081F4D' : 'oklch(0.96 0.004 250)',
+                background: filterCat === cat ? '#040D1E' : 'oklch(0.96 0.004 250)',
                 color: filterCat === cat ? '#C8A15A' : 'oklch(0.5 0.015 250)',
               }}>
               {cat === 'ALL' ? '전체' : CATEGORY_LABELS[cat]}
@@ -166,9 +166,9 @@ export default function EmblemManagement() {
                 <tr key={e.id} style={{ borderBottom: '1px solid oklch(0.95 0.004 250)', opacity: e.active ? 1 : 0.5 }}>
                   <td className="px-4 py-2.5 font-semibold" style={{ color: 'oklch(0.18 0.02 250)' }}>
                     {e.name}
-                    {e.hidden && <span className="ml-1.5 text-xs" style={{ color: '#081F4D' }}>🔒숨김</span>}
+                    {e.hidden && <span className="ml-1.5 text-xs" style={{ color: '#040D1E' }}>🔒숨김</span>}
                     {e.ifPlaceholderKey && (
-                      <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded" style={{ background: '#E7EBF3', color: '#081F4D' }}>IF연동</span>
+                      <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded" style={{ background: '#E7EBF3', color: '#040D1E' }}>IF연동</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">
@@ -195,11 +195,11 @@ export default function EmblemManagement() {
                         className="h-8 w-8"
                         aria-label={e.hidden ? '공개로 전환' : '숨김 처리'}
                       >
-                        {e.hidden ? <EyeOff size={15} style={{ color: '#081F4D' }} /> : <Eye size={15} style={{ color: 'oklch(0.55 0.015 250)' }} />}
+                        {e.hidden ? <EyeOff size={15} style={{ color: '#040D1E' }} /> : <Eye size={15} style={{ color: 'oklch(0.55 0.015 250)' }} />}
                       </Button>
                     ) : (
                       <span className="inline-flex items-center justify-center h-8 w-8" aria-hidden>
-                        {e.hidden ? <EyeOff size={15} style={{ color: '#081F4D' }} /> : <Eye size={15} style={{ color: 'oklch(0.8 0.01 250)' }} />}
+                        {e.hidden ? <EyeOff size={15} style={{ color: '#040D1E' }} /> : <Eye size={15} style={{ color: 'oklch(0.8 0.01 250)' }} />}
                       </span>
                     )}
                   </td>
@@ -307,7 +307,7 @@ export default function EmblemManagement() {
             </div>
             <div className="flex justify-end gap-2 p-5 border-t flex-shrink-0" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
               <Button variant="outline" size="default" onClick={() => setShowModal(false)} className="text-sm">취소</Button>
-              <Button onClick={handleSave} className="gap-1.5 text-sm" style={{ background: '#081F4D', color: '#C8A15A' }}>
+              <Button onClick={handleSave} className="gap-1.5 text-sm" style={{ background: '#040D1E', color: '#C8A15A' }}>
                 <Check size={14} /> {editTarget ? '수정 완료' : '추가'}
               </Button>
             </div>

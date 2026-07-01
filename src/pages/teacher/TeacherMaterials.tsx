@@ -95,7 +95,7 @@ function VideoMaterialTabContent() {
   return (
     <>
       <div className="axis-card px-4 py-3 text-xs"
-        style={{ borderLeft: '3px solid #081F4D', color: 'oklch(0.5 0.015 250)' }}>
+        style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.5 0.015 250)' }}>
         수업영상·학습자료 URL을 반별로 등록하고 관리합니다. 외부 링크만 저장되며 실제 파일 업로드는 지원하지 않습니다.
       </div>
 
@@ -103,7 +103,7 @@ function VideoMaterialTabContent() {
         <button
           onClick={() => setShowForm(true)}
           className="w-full py-3 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-2"
-          style={{ background: '#081F4D' }}
+          style={{ background: '#040D1E' }}
         >
           <Plus size={16} /> 영상 / 자료 등록
         </button>
@@ -128,9 +128,9 @@ function VideoMaterialTabContent() {
                   onClick={() => setForm((f) => ({ ...f, type: t }))}
                   className="py-2 rounded-lg text-sm font-medium border transition-colors"
                   style={{
-                    borderColor: form.type === t ? '#081F4D' : 'oklch(0.9 0.008 250)',
+                    borderColor: form.type === t ? '#040D1E' : 'oklch(0.9 0.008 250)',
                     background: form.type === t ? 'oklch(0.93 0.03 262)' : 'white',
-                    color: form.type === t ? '#081F4D' : 'oklch(0.5 0.015 250)',
+                    color: form.type === t ? '#040D1E' : 'oklch(0.5 0.015 250)',
                   }}
                 >
                   {TYPE_LABEL[t]}
@@ -198,7 +198,7 @@ function VideoMaterialTabContent() {
             <button
               onClick={handleSave} disabled={!canSave}
               className="py-2.5 rounded-xl text-sm font-medium text-white"
-              style={{ flex: 2, background: canSave ? '#081F4D' : 'oklch(0.85 0.01 250)', cursor: canSave ? 'pointer' : 'not-allowed' }}
+              style={{ flex: 2, background: canSave ? '#040D1E' : 'oklch(0.85 0.01 250)', cursor: canSave ? 'pointer' : 'not-allowed' }}
             >
               등록
             </button>
@@ -226,7 +226,7 @@ function VideoMaterialTabContent() {
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
                       style={{ background: item.type === 'video' ? 'oklch(0.91 0.035 262)' : 'oklch(0.96 0.04 160)' }}>
-                      <Icon size={14} style={{ color: item.type === 'video' ? '#081F4D' : 'oklch(0.45 0.15 160)' }} />
+                      <Icon size={14} style={{ color: item.type === 'video' ? '#040D1E' : 'oklch(0.45 0.15 160)' }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
@@ -238,12 +238,12 @@ function VideoMaterialTabContent() {
                       <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
                         {cls?.name ?? item.classId} · {item.date} ·{' '}
                         <span className="px-1.5 py-0.5 rounded text-xs"
-                          style={{ background: item.type === 'video' ? 'oklch(0.91 0.035 262)' : 'oklch(0.96 0.04 160)', color: item.type === 'video' ? '#081F4D' : 'oklch(0.45 0.15 160)' }}>
+                          style={{ background: item.type === 'video' ? 'oklch(0.91 0.035 262)' : 'oklch(0.96 0.04 160)', color: item.type === 'video' ? '#040D1E' : 'oklch(0.45 0.15 160)' }}>
                           {TYPE_LABEL[item.type as 'video' | 'material'] ?? item.type}
                         </span>
                       </div>
                       {item.url && (
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1.5 text-xs" style={{ color: '#081F4D' }}>
+                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1.5 text-xs" style={{ color: '#040D1E' }}>
                           <Link2 size={11} /> 링크 열기
                         </a>
                       )}
@@ -321,7 +321,7 @@ function NotesTabContent() {
         <button
           onClick={() => setShowForm(true)}
           className="w-full py-3 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-2"
-          style={{ background: '#081F4D' }}
+          style={{ background: '#040D1E' }}
         >
           <Plus size={16} /> 수업노트 작성
         </button>
@@ -403,7 +403,7 @@ function NotesTabContent() {
             <button
               onClick={handleSave} disabled={!canSave}
               className="py-2.5 rounded-xl text-sm font-medium text-white"
-              style={{ flex: 2, background: canSave ? '#081F4D' : 'oklch(0.85 0.01 250)', cursor: canSave ? 'pointer' : 'not-allowed' }}
+              style={{ flex: 2, background: canSave ? '#040D1E' : 'oklch(0.85 0.01 250)', cursor: canSave ? 'pointer' : 'not-allowed' }}
             >
               저장
             </button>
@@ -473,7 +473,7 @@ export default function TeacherMaterials() {
               onClick={() => setTab(t.key)}
               className="py-2 rounded-md text-center text-sm font-medium transition-colors"
               style={tab === t.key
-                ? { background: 'white', color: '#081F4D', boxShadow: '0 1px 3px oklch(0 0 0 / 0.1)' }
+                ? { background: 'white', color: '#040D1E', boxShadow: '0 1px 3px oklch(0 0 0 / 0.1)' }
                 : { color: 'oklch(0.5 0.015 250)' }}
             >
               {t.label}

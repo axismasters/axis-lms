@@ -32,7 +32,7 @@ export default function TeacherExamGradingGuard() {
       <TeacherLayout title="내 시험지 관리">
         <div className="max-w-lg mx-auto px-4 py-5">
           <Link href="/teacher/exams">
-            <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#081F4D' }}>
+            <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#040D1E' }}>
               <ChevronLeft size={14} />
               시험 목록
             </div>

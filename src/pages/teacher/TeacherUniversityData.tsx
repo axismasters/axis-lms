@@ -258,7 +258,7 @@ function SchoolRecordTab({ teacherId, assignedStudentIds }: { teacherId: string;
         <div className="axis-card overflow-hidden">
           <button type="button" onClick={() => setShowAddPicker(v => !v)}
             className="w-full flex items-center justify-between px-4 py-3">
-            <span className="text-xs font-semibold" style={{ color: '#081F4D' }}>
+            <span className="text-xs font-semibold" style={{ color: '#040D1E' }}>
               + 과목 추가 ({hiddenSubjects.length}개 과목 더 있음)
             </span>
             <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>{showAddPicker ? '접기' : '펼치기'}</span>
@@ -280,7 +280,7 @@ function SchoolRecordTab({ teacherId, assignedStudentIds }: { teacherId: string;
 
       <button type="button" onClick={handleSave}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm"
-        style={{ background: '#081F4D', color: 'white' }}>
+        style={{ background: '#040D1E', color: 'white' }}>
         <Save size={15} /> 내신성적 확정 저장 (TEACHER_CONFIRMED)
       </button>
     </div>
@@ -478,7 +478,7 @@ function MockExamTab({
 
       <button type="button" onClick={handleSave}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm"
-        style={{ background: '#081F4D', color: 'white' }}>
+        style={{ background: '#040D1E', color: 'white' }}>
         <Save size={15} /> {isSuneung ? '수능실전' : '전국연합'} 성적 확정 저장
       </button>
     </div>
@@ -526,7 +526,7 @@ function DataStatusTab({ assignedStudentIds }: { assignedStudentIds: string[] })
             <div className="grid grid-cols-3 gap-2">
               {[
                 { label: '내신성적', count: schoolRecords.length, color: schoolRecords.length > 0 ? 'oklch(0.45 0.15 145)' : 'oklch(0.6 0.015 250)' },
-                { label: '전국연합', count: nationalMocks.length, color: nationalMocks.length > 0 ? '#081F4D' : 'oklch(0.6 0.015 250)' },
+                { label: '전국연합', count: nationalMocks.length, color: nationalMocks.length > 0 ? '#040D1E' : 'oklch(0.6 0.015 250)' },
                 { label: '수능실전', count: suneungMocks.length, color: suneungMocks.length > 0 ? 'oklch(0.55 0.2 27)' : 'oklch(0.6 0.015 250)' },
               ].map(({ label, count, color }) => (
                 <div key={label} className="rounded-lg p-2 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
@@ -566,7 +566,7 @@ function PayloadTab({ assignedStudentIds }: { assignedStudentIds: string[] }) {
           return (
             <button key={id} type="button" onClick={() => setSelectedId(id)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0"
-              style={{ background: selectedId === id ? '#081F4D' : 'oklch(0.95 0.004 250)', color: selectedId === id ? 'white' : 'oklch(0.5 0.015 250)' }}>
+              style={{ background: selectedId === id ? '#040D1E' : 'oklch(0.95 0.004 250)', color: selectedId === id ? 'white' : 'oklch(0.5 0.015 250)' }}>
               {s?.name ?? id}
             </button>
           );
@@ -626,7 +626,7 @@ export default function TeacherUniversityData() {
             <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
               className="px-3 py-2 rounded-lg text-xs font-semibold flex-shrink-0"
               style={{
-                background: activeTab === tab.id ? '#081F4D' : 'oklch(0.95 0.004 250)',
+                background: activeTab === tab.id ? '#040D1E' : 'oklch(0.95 0.004 250)',
                 color: activeTab === tab.id ? 'white' : 'oklch(0.5 0.015 250)',
               }}>
               {tab.label}

@@ -106,7 +106,7 @@ function FinanceStatisticsContent() {
                   <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(m.totalRefunded)}</td>
                   <td className="px-2.5 py-2" style={{ minWidth: 140 }}>
                     <div className="h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${(m.totalBilled / maxBilled) * 100}%`, background: '#081F4D' }} />
+                      <div className="h-full rounded-full" style={{ width: `${(m.totalBilled / maxBilled) * 100}%`, background: '#040D1E' }} />
                     </div>
                   </td>
                 </tr>
@@ -129,7 +129,7 @@ function FinanceStatisticsContent() {
                 <div key={c.classId} className="flex items-center gap-2 text-xs">
                   <span className="w-28 flex-shrink-0 truncate" style={{ color: 'oklch(0.4 0.015 250)' }}>{c.name}</span>
                   <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                    <div className="h-full rounded-full" style={{ width: `${(c.revenue / maxClassRevenue) * 100}%`, background: '#081F4D' }} />
+                    <div className="h-full rounded-full" style={{ width: `${(c.revenue / maxClassRevenue) * 100}%`, background: '#040D1E' }} />
                   </div>
                   <span className="w-20 text-right tabular-nums flex-shrink-0" style={{ color: 'oklch(0.3 0.015 250)' }}>{won(c.revenue)}</span>
                 </div>
@@ -149,7 +149,7 @@ function FinanceStatisticsContent() {
                   <span className="tabular-nums font-semibold" style={{ color: 'oklch(0.3 0.015 250)' }}>{won(typeStats[type])}</span>
                 </div>
                 <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                  <div className="h-full rounded-full" style={{ width: `${(typeStats[type] / typeTotal) * 100}%`, background: type === '정규반' ? '#081F4D' : 'oklch(0.6 0.15 60)' }} />
+                  <div className="h-full rounded-full" style={{ width: `${(typeStats[type] / typeTotal) * 100}%`, background: type === '정규반' ? '#040D1E' : 'oklch(0.6 0.15 60)' }} />
                 </div>
               </div>
             ))}

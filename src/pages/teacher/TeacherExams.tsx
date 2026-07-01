@@ -86,7 +86,7 @@ export default function TeacherExams() {
         {/* Phase 3C: 내 시험 만들기 */}
         <button type="button" onClick={() => setFormOpen(true)}
           className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold"
-          style={{ background: '#081F4D', color: 'white' }}>
+          style={{ background: '#040D1E', color: 'white' }}>
           <Plus size={15} /> 내 시험 만들기
         </button>
 
@@ -111,7 +111,7 @@ export default function TeacherExams() {
               className="flex-1 py-2 rounded-md text-sm font-medium transition-all"
               style={{
                 background: tab === t ? 'white' : 'transparent',
-                color: tab === t ? '#081F4D' : 'oklch(0.5 0.015 250)',
+                color: tab === t ? '#040D1E' : 'oklch(0.5 0.015 250)',
                 boxShadow: tab === t ? '0 1px 3px oklch(0 0 0 / 0.1)' : 'none',
               }}
             >
@@ -159,7 +159,7 @@ export default function TeacherExams() {
                       <div className="font-semibold text-sm flex items-center gap-1.5" style={{ color: 'oklch(0.2 0.02 250)' }}>
                         {exam.title}
                         {exam.scope === 'TEACHER_PRIVATE' && (
-                          <span className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: '#E7EBF3', color: '#081F4D' }}>
+                          <span className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: '#E7EBF3', color: '#040D1E' }}>
                             <Lock size={9} /> 내 수업
                           </span>
                         )}
@@ -192,7 +192,7 @@ export default function TeacherExams() {
                         )}
                       </div>
                       <Link href={`/teacher/exams/${exam.id}/grading`}>
-                        <Button size="sm" className="h-7 text-xs gap-0.5" onClick={(e) => e.stopPropagation()} style={{ background: '#081F4D' }}>
+                        <Button size="sm" className="h-7 text-xs gap-0.5" onClick={(e) => e.stopPropagation()} style={{ background: '#040D1E' }}>
                           채점하기 <ChevronRight size={12} />
                         </Button>
                       </Link>
@@ -203,7 +203,7 @@ export default function TeacherExams() {
                       <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
                         담당 학생 {gradedCount}명 채점 완료 · 만점 {exam.totalScore}점
                       </div>
-                      <span className="inline-flex items-center gap-0.5 text-xs font-medium" style={{ color: '#081F4D' }}>
+                      <span className="inline-flex items-center gap-0.5 text-xs font-medium" style={{ color: '#040D1E' }}>
                         <Users size={11} /> 학생별 성적 <ChevronRight size={11} />
                       </span>
                     </div>

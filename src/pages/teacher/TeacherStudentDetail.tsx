@@ -25,7 +25,7 @@ import { resetStudentNickname } from '@/lib/studentProfile';
 import { logAccountAction } from '@/lib/accountActionLog';
 import { getParentCommentsForStudent, addParentComment, ParentComment } from '@/lib/parentComments';
 import { getLocalDateStr } from '@/utils/dateUtils';
-import { loadIfRecords } from '@/lib/studentIfRecord';
+import { loadIfRecords } from '@/lib/ifAnalysisEngine';
 import { computeSubjectGaps } from '@/lib/observationSignals';
 import type { StudentSignalBundle } from '@/lib/observationSignals';
 import { isGradedSubmission } from '@/lib/assessmentData';
@@ -70,7 +70,7 @@ export default function TeacherStudentDetail() {
     <TeacherLayout title="학생 상세">
       <div className="max-w-lg mx-auto px-4 py-5">
         <Link href="/teacher/students">
-          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#081F4D' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#040D1E' }}>
             <ChevronLeft size={14} />
             담당 학생 목록
           </div>
@@ -226,7 +226,7 @@ export default function TeacherStudentDetail() {
 
         {/* 뒤로가기 */}
         <Link href="/teacher/students">
-          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#040D1E' }}>
             <ChevronLeft size={14} />
             담당 학생 목록
           </div>
@@ -242,7 +242,7 @@ export default function TeacherStudentDetail() {
         <div className="axis-card p-4 flex items-center gap-3">
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg flex-shrink-0"
-            style={{ background: '#081F4D' }}
+            style={{ background: '#040D1E' }}
           >
             {student.name.charAt(0)}
           </div>
@@ -349,7 +349,7 @@ export default function TeacherStudentDetail() {
         {/* 출결 요약 */}
         <section>
           <div className="flex items-center gap-2 mb-2 px-1">
-            <CalendarCheck size={14} style={{ color: '#081F4D' }} />
+            <CalendarCheck size={14} style={{ color: '#040D1E' }} />
             <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>
               출결 요약 (최근 10건)
             </span>
@@ -377,7 +377,7 @@ export default function TeacherStudentDetail() {
         {/* 최근 테스트 결과 */}
         <section>
           <div className="flex items-center gap-2 mb-2 px-1">
-            <BarChart2 size={14} style={{ color: '#081F4D' }} />
+            <BarChart2 size={14} style={{ color: '#040D1E' }} />
             <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>최근 테스트 결과</span>
           </div>
           {studentSubs.length === 0 ? (
@@ -404,7 +404,7 @@ export default function TeacherStudentDetail() {
                         className="font-bold tabular-nums text-sm"
                         style={{
                           color:
-                            pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? '#081F4D' : 'oklch(0.55 0.2 27)',
+                            pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? '#040D1E' : 'oklch(0.55 0.2 27)',
                         }}
                       >
                         {score}/{exam.totalScore}
@@ -425,12 +425,12 @@ export default function TeacherStudentDetail() {
         {/* 수업자료에서 수업노트 확인 */}
         <section>
           <div className="flex items-center gap-2 mb-2 px-1">
-            <FileText size={14} style={{ color: '#081F4D' }} />
+            <FileText size={14} style={{ color: '#040D1E' }} />
             <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>수업자료</span>
           </div>
           <div className="axis-card p-4 text-center">
             <Link href="/teacher/materials?tab=notes">
-              <span className="text-sm cursor-pointer" style={{ color: '#081F4D' }}>
+              <span className="text-sm cursor-pointer" style={{ color: '#040D1E' }}>
                 수업자료 열기 →
               </span>
             </Link>
@@ -476,7 +476,7 @@ export default function TeacherStudentDetail() {
         <section>
           <div className="flex items-center justify-between mb-2 px-1">
             <div className="flex items-center gap-2">
-              <MessageSquare size={14} style={{ color: '#081F4D' }} />
+              <MessageSquare size={14} style={{ color: '#040D1E' }} />
               <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>
                 상담 기록 ({counselingRecords.length}건)
               </span>
@@ -507,7 +507,7 @@ export default function TeacherStudentDetail() {
                       <tr key={rec.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                         <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{rec.date}</td>
                         <td className="px-3 py-2.5 whitespace-nowrap">
-                          <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.93 0.02 262)', color: 'oklch(0.254 0.090 262.09)' }}>
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.93 0.02 262)', color: 'oklch(0.1605 0.0394 259.41)' }}>
                             {rec.type}
                           </span>
                         </td>
@@ -607,7 +607,7 @@ export default function TeacherStudentDetail() {
             </div>
             <div className="flex justify-end gap-2 p-5 border-t" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
               <Button variant="outline" onClick={() => setShowCounselingForm(false)}>취소</Button>
-              <Button onClick={handleAddCounseling} style={{ background: '#081F4D' }}>저장</Button>
+              <Button onClick={handleAddCounseling} style={{ background: '#040D1E' }}>저장</Button>
             </div>
           </div>
         </div>

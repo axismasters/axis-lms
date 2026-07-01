@@ -71,7 +71,7 @@ export default function EmployeeDetail() {
       <AdminLayout title="직원 상세" breadcrumbs={[{ label: '직원관리', path: '/employees' }, { label: '직원 상세' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>직원을 찾을 수 없습니다.</p>
-          <button onClick={() => navigate('/admin/employees')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.254 0.090 262.09)' }}>← 직원 목록</button>
+          <button onClick={() => navigate('/admin/employees')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.1605 0.0394 259.41)' }}>← 직원 목록</button>
         </div>
       </AdminLayout>
     );
@@ -140,7 +140,7 @@ export default function EmployeeDetail() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
-              style={{ background: '#081F4D' }}>
+              style={{ background: '#040D1E' }}>
               {emp.name.charAt(0)}
             </div>
             <div>
@@ -205,7 +205,7 @@ export default function EmployeeDetail() {
               <button onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50"
                 style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
               <button onClick={saveEdit} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-medium text-white"
-                style={{ background: '#081F4D' }}><Save size={13} /> 저장</button>
+                style={{ background: '#040D1E' }}><Save size={13} /> 저장</button>
             </div>
           </div>
         ) : (

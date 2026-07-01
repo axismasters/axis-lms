@@ -94,7 +94,7 @@ export default function StudentWeeklyMocks() {
 
         {/* 뒤로가기 */}
         <Link href="/student/mock-exams">
-          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#040D1E' }}>
             <ChevronLeft size={14} />
             모의고사 결과
           </div>
@@ -103,7 +103,7 @@ export default function StudentWeeklyMocks() {
         {/* 안내 */}
         <div
           className="axis-card px-4 py-3 text-xs"
-          style={{ borderLeft: '3px solid #081F4D', color: 'oklch(0.5 0.015 250)' }}
+          style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.5 0.015 250)' }}
         >
           수능실전모의고사(mock-suneung) 공개 결과를 회차 순으로 표시합니다. 미공개/채점 중인 결과는 표시되지 않습니다.
         </div>
@@ -123,7 +123,7 @@ export default function StudentWeeklyMocks() {
             {/* 요약 카드 */}
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: '누적 회차', value: `${weeklyResults.length}회`,               color: '#081F4D' },
+                { label: '누적 회차', value: `${weeklyResults.length}회`,               color: '#040D1E' },
                 { label: '최근 점수', value: latestPct !== null ? `${latestPct}%` : '-', color: scoreColor(latestPct ?? 0) },
                 { label: '최고 점수', value: best !== null ? `${best}%` : '-',           color: 'oklch(0.45 0.15 160)' },
               ].map(({ label, value, color }) => (
@@ -142,7 +142,7 @@ export default function StudentWeeklyMocks() {
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <div>
                   <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>평균 점수</div>
-                  <div className="font-bold text-sm tabular-nums mt-0.5" style={{ color: '#081F4D' }}>
+                  <div className="font-bold text-sm tabular-nums mt-0.5" style={{ color: '#040D1E' }}>
                     {summary.avgPct !== null ? `${summary.avgPct}%` : '-'}
                   </div>
                 </div>
@@ -194,7 +194,7 @@ export default function StudentWeeklyMocks() {
                         <div className="flex items-center gap-2">
                           <span
                             className="text-xs font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                            style={{ background: '#081F4D', color: 'white' }}
+                            style={{ background: '#040D1E', color: 'white' }}
                           >
                             {idx + 1}회
                           </span>

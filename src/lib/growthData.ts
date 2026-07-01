@@ -135,7 +135,7 @@ export const CATEGORY_BADGE: Record<EmblemCategory, { bg: string; text: string }
   GROWTH:     { bg: '#EFF6FF', text: '#1E40AF' },
   ASSESSMENT: { bg: '#FFF7ED', text: '#9A3412' },
   RIVAL:      { bg: '#FEF2F2', text: '#991B1B' },
-  SKILL:      { bg: '#E7EBF3', text: '#081F4D' },
+  SKILL:      { bg: '#E7EBF3', text: '#040D1E' },
   SPECIAL:    { bg: '#FFFBEB', text: '#92400E' },
 };
 

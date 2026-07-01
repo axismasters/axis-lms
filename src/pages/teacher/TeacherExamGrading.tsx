@@ -24,7 +24,7 @@ function NotFoundScreen() {
     <TeacherLayout title="채점">
       <div className="max-w-lg mx-auto px-4 py-5">
         <Link href="/teacher/exams">
-          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#081F4D' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#040D1E' }}>
             <ChevronLeft size={14} />
             시험 목록
           </div>
@@ -131,7 +131,7 @@ export default function TeacherExamGrading() {
 
         {/* 뒤로가기 */}
         <Link href="/teacher/exams">
-          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#040D1E' }}>
             <ChevronLeft size={14} />
             시험 목록
           </div>
@@ -242,7 +242,7 @@ export default function TeacherExamGrading() {
                         disabled={!isValidScore}
                         className="w-full py-2 rounded-lg text-sm font-medium text-white"
                         style={{
-                          background: isValidScore ? '#081F4D' : 'oklch(0.85 0.01 250)',
+                          background: isValidScore ? '#040D1E' : 'oklch(0.85 0.01 250)',
                           cursor: isValidScore ? 'pointer' : 'not-allowed',
                         }}
                       >

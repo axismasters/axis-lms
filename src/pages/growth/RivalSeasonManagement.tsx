@@ -141,7 +141,7 @@ function CreateSeasonModal({ onClose }: { onClose: () => void }) {
                 <button key={g} type="button" onClick={() => toggleGrade(g)}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold"
                   style={{
-                    background: grades.includes(g) ? '#081F4D' : 'oklch(0.95 0.004 250)',
+                    background: grades.includes(g) ? '#040D1E' : 'oklch(0.95 0.004 250)',
                     color: grades.includes(g) ? 'white' : 'oklch(0.5 0.015 250)',
                   }}>
                   {g}
@@ -179,7 +179,7 @@ function CreateSeasonModal({ onClose }: { onClose: () => void }) {
           <button type="button"
             onClick={() => { toast.success(`시즌 "${name || '(미입력)'}" 생성 요청됨 (mock — 실제 DB 저장 미구현)`); onClose(); }}
             className="w-full py-3 rounded-xl font-bold text-sm"
-            style={{ background: '#081F4D', color: 'white' }}>
+            style={{ background: '#040D1E', color: 'white' }}>
             시즌 생성 (mock)
           </button>
           <div className="text-xs text-center" style={{ color: 'oklch(0.65 0.015 250)' }}>
@@ -250,7 +250,7 @@ export default function RivalSeasonManagement() {
         <div className="flex justify-end">
           <button type="button" onClick={() => setShowCreate(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold"
-            style={{ background: '#081F4D', color: 'white' }}>
+            style={{ background: '#040D1E', color: 'white' }}>
             <Plus size={15} /> 새 시즌 생성
           </button>
         </div>
@@ -291,7 +291,7 @@ export default function RivalSeasonManagement() {
         </div>
 
         {/* 기록 보관 안내 */}
-        <div className="axis-card p-4 text-xs" style={{ borderLeft: '3px solid #081F4D', color: 'oklch(0.5 0.015 250)' }}>
+        <div className="axis-card p-4 text-xs" style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.5 0.015 250)' }}>
           <strong>시즌 기록 보관 정책:</strong> 종료된 시즌의 승패 기록과 SP 지급 내역은 영구 보관됩니다.
           학생에게는 자신의 기록만 공개되며, 전체 Rival 연결 관계는 관리자만 조회할 수 있습니다.
         </div>

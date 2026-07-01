@@ -128,7 +128,7 @@ export default function FinanceSettlements() {
         </div>
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>순매출</div>
-          <div className="text-lg font-bold" style={{ color: '#081F4D' }}>{won(selectedAmounts.netRevenue)}</div>
+          <div className="text-lg font-bold" style={{ color: '#040D1E' }}>{won(selectedAmounts.netRevenue)}</div>
         </div>
       </div>
 
@@ -157,7 +157,7 @@ export default function FinanceSettlements() {
                     <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(amounts.totalPaid)}</td>
                     <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(amounts.totalUnpaid)}</td>
                     <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(amounts.totalRefunded)}</td>
-                    <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap font-semibold" style={{ color: '#081F4D' }}>{won(amounts.netRevenue)}</td>
+                    <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap font-semibold" style={{ color: '#040D1E' }}>{won(amounts.netRevenue)}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
                       {hasRecord ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: style.bg, color: style.text }}>
@@ -183,7 +183,7 @@ export default function FinanceSettlements() {
                       {/* 정산 레코드는 있지만 DRAFT — 확정 버튼 */}
                       {hasRecord && s!.status === 'DRAFT' && canConfirm && (
                         // ★ QA v1: s!.id(settlement id) 대신 month를 confirmTarget에 저장한다
-                        <button onClick={() => setConfirmTarget(month)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: '#081F4D' }}>
+                        <button onClick={() => setConfirmTarget(month)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: '#040D1E' }}>
                           <CheckCircle2 size={11} /> 정산 확정
                         </button>
                       )}
@@ -217,7 +217,7 @@ export default function FinanceSettlements() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} style={{ background: '#081F4D' }}>확정</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirm} style={{ background: '#040D1E' }}>확정</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

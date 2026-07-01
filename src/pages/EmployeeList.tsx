@@ -204,7 +204,7 @@ export default function EmployeeList() {
           <button
             onClick={() => navigate('/admin/employees?new=1')}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-sm font-medium text-white"
-            style={{ background: '#081F4D' }}>
+            style={{ background: '#040D1E' }}>
             <UserPlus size={14} /> 직원 등록
           </button>
         )}
@@ -271,7 +271,7 @@ export default function EmployeeList() {
                   <td className="px-3 py-3 font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                        style={{ background: '#081F4D' }}>
+                        style={{ background: '#040D1E' }}>
                         {emp.name.charAt(0)}
                       </div>
                       {emp.name}

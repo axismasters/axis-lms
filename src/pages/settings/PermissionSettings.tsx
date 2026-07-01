@@ -207,7 +207,7 @@ function CopyModal({
             disabled={!target}
             onClick={() => target && onApply(target as Position)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-white disabled:opacity-40"
-            style={{ background: '#081F4D' }}>
+            style={{ background: '#040D1E' }}>
             <Copy size={12} /> 복사 실행
           </button>
         </div>
@@ -455,7 +455,7 @@ export default function PermissionSettings() {
               <button onClick={save}
                 disabled={!hasPending}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-sm font-medium text-white disabled:opacity-40"
-                style={{ background: '#081F4D' }}>
+                style={{ background: '#040D1E' }}>
                 <Check size={13} /> 저장{hasPending ? ` (+${pendingAdded.size} -${pendingRemoved.size})` : ''}
               </button>
             </>
@@ -479,7 +479,7 @@ export default function PermissionSettings() {
               onClick={() => selectPosition(p)}
               className="w-full flex items-center justify-between px-2.5 py-2.5 rounded-md text-sm text-left transition-colors"
               style={{
-                background: selected === p ? '#081F4D' : 'transparent',
+                background: selected === p ? '#040D1E' : 'transparent',
                 color: selected === p ? 'white' : 'oklch(0.3 0.02 250)',
               }}>
               <span className="flex items-center gap-1.5">
@@ -495,7 +495,7 @@ export default function PermissionSettings() {
               <button key={p} onClick={() => selectPosition(p)}
                 className="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors"
                 style={{
-                  color: selected === p ? 'oklch(0.254 0.090 262.09)' : 'oklch(0.55 0.015 250)',
+                  color: selected === p ? 'oklch(0.1605 0.0394 259.41)' : 'oklch(0.55 0.015 250)',
                   background: selected === p ? 'oklch(0.93 0.02 262)' : 'transparent',
                 }}>
                 {POSITION_LABEL[p]}
@@ -508,7 +508,7 @@ export default function PermissionSettings() {
         <div className="axis-card overflow-hidden">
           {/* 선택 직급 헤더 */}
           <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)', background: 'oklch(0.98 0.004 247)' }}>
-            <ShieldCheck size={14} style={{ color: '#081F4D' }} />
+            <ShieldCheck size={14} style={{ color: '#040D1E' }} />
             <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>
               {POSITION_LABEL[selected]} 권한
             </span>
@@ -566,7 +566,7 @@ export default function PermissionSettings() {
                                 onChange={() => toggle(key)}
                                 className="cursor-pointer disabled:cursor-not-allowed"
                                 style={{
-                                  accentColor: '#081F4D',
+                                  accentColor: '#040D1E',
                                   outline: isPending ? '2px solid oklch(0.7 0.12 80)' : undefined,
                                   outlineOffset: '2px',
                                 }}
@@ -626,7 +626,7 @@ export default function PermissionSettings() {
               <button onClick={() => setShowRestore(false)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50"
                 style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
               <button onClick={restoreDefault} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-white"
-                style={{ background: '#081F4D' }}>
+                style={{ background: '#040D1E' }}>
                 <RotateCcw size={12} /> 복원 실행
               </button>
             </div>

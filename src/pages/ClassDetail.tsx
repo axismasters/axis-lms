@@ -342,7 +342,7 @@ export default function ClassDetail() {
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${fillRate}%`,
-                background: isFull ? 'oklch(0.577 0.245 27.325)' : fillRate >= 80 ? 'oklch(0.7 0.18 60)' : '#081F4D',
+                background: isFull ? 'oklch(0.577 0.245 27.325)' : fillRate >= 80 ? 'oklch(0.7 0.18 60)' : '#040D1E',
               }}
             />
           </div>
@@ -358,9 +358,9 @@ export default function ClassDetail() {
               onClick={() => setActiveTab(tab.key)}
               className={cn(
                 'flex items-center gap-1.5 px-5 py-3 text-xs font-medium border-b-2 -mb-px transition-colors',
-                activeTab === tab.key ? 'border-[#081F4D]' : 'border-transparent hover:border-slate-200'
+                activeTab === tab.key ? 'border-[#040D1E]' : 'border-transparent hover:border-slate-200'
               )}
-              style={{ color: activeTab === tab.key ? '#081F4D' : 'oklch(0.55 0.015 250)' }}
+              style={{ color: activeTab === tab.key ? '#040D1E' : 'oklch(0.55 0.015 250)' }}
             >
               {tab.icon} {tab.label}
             </button>
@@ -380,7 +380,7 @@ export default function ClassDetail() {
                     size="sm"
                     onClick={() => setAddStudentDialog(true)}
                     className="h-8 text-xs gap-1.5"
-                    style={{ background: '#081F4D' }}
+                    style={{ background: '#040D1E' }}
                   >
                     <Plus size={12} /> 수강생 추가
                     {isFull && <span className="ml-1 text-xs" style={{ color: 'oklch(0.97 0.06 27)' }}>(정원초과)</span>}
@@ -416,13 +416,13 @@ export default function ClassDetail() {
                           <td className="px-3 py-2.5 text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>{idx + 1}</td>
                           <td className="px-3 py-2.5">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: '#081F4D' }}>
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: '#040D1E' }}>
                                 {stu.name[0]}
                               </div>
                               <button
                                 onClick={() => navigate(`/admin/students/${stu.id}`)}
                                 className="font-medium hover:underline text-left"
-                                style={{ color: '#081F4D' }}
+                                style={{ color: '#040D1E' }}
                               >
                                 {stu.name}
                               </button>
@@ -559,7 +559,7 @@ export default function ClassDetail() {
               {/* 정원 요약 카드들 */}
               <div className="grid grid-cols-3 gap-3 mb-5">
                 {[
-                  { label: '최대 정원', value: `${cls.capacity}명`, color: '#081F4D' },
+                  { label: '최대 정원', value: `${cls.capacity}명`, color: '#040D1E' },
                   { label: '현재 수강생', value: `${currentCount}명`, color: isFull ? 'oklch(0.577 0.245 27.325)' : 'oklch(0.5 0.15 160)' },
                   { label: '잔여 자리', value: `${Math.max(0, cls.capacity - currentCount)}명`, color: 'oklch(0.5 0.015 250)' },
                 ].map((item, i) => (
@@ -574,7 +574,7 @@ export default function ClassDetail() {
               <div className="p-4 rounded-lg mb-5" style={{ background: 'oklch(0.985 0.003 250)', border: '1px solid oklch(0.92 0.005 250)' }}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)' }}>충원율</span>
-                  <span className="text-sm font-bold" style={{ color: isFull ? 'oklch(0.577 0.245 27.325)' : '#081F4D' }}>
+                  <span className="text-sm font-bold" style={{ color: isFull ? 'oklch(0.577 0.245 27.325)' : '#040D1E' }}>
                     {fillRate}%
                   </span>
                 </div>
@@ -583,7 +583,7 @@ export default function ClassDetail() {
                     className="h-full rounded-full transition-all duration-700"
                     style={{
                       width: `${fillRate}%`,
-                      background: isFull ? 'oklch(0.577 0.245 27.325)' : fillRate >= 80 ? 'oklch(0.7 0.18 60)' : '#081F4D',
+                      background: isFull ? 'oklch(0.577 0.245 27.325)' : fillRate >= 80 ? 'oklch(0.7 0.18 60)' : '#040D1E',
                     }}
                   />
                 </div>
@@ -607,7 +607,7 @@ export default function ClassDetail() {
                         className="w-7 h-7 rounded flex items-center justify-center text-xs font-medium"
                         title={occupied ? `${i + 1}번 (수강중)` : `${i + 1}번 (빈 자리)`}
                         style={{
-                          background: occupied ? '#081F4D' : 'oklch(0.92 0.005 250)',
+                          background: occupied ? '#040D1E' : 'oklch(0.92 0.005 250)',
                           color: occupied ? 'white' : 'oklch(0.7 0.01 250)',
                         }}
                       >
@@ -618,7 +618,7 @@ export default function ClassDetail() {
                 </div>
                 <div className="flex items-center gap-4 mt-3 text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded" style={{ background: '#081F4D' }} />
+                    <div className="w-3 h-3 rounded" style={{ background: '#040D1E' }} />
                     수강중 ({currentCount}명)
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -632,7 +632,7 @@ export default function ClassDetail() {
               {cls.fee && cls.fee > 0 && (
                 <div className="p-4 rounded-lg" style={{ background: 'oklch(0.97 0.04 250)', border: '1px solid oklch(0.9 0.06 250)' }}>
                   <div className="flex items-center gap-2 mb-3">
-                    <DollarSign size={14} style={{ color: '#081F4D' }} />
+                    <DollarSign size={14} style={{ color: '#040D1E' }} />
                     <span className="text-xs font-semibold" style={{ color: 'oklch(0.4 0.12 250)' }}>수강료 현황</span>
                   </div>
                   <div className="grid grid-cols-3 gap-3 text-xs">
@@ -642,7 +642,7 @@ export default function ClassDetail() {
                     </div>
                     <div>
                       <div style={{ color: 'oklch(0.55 0.015 250)' }}>현재 월 매출</div>
-                      <div className="font-bold mt-0.5" style={{ color: '#081F4D' }}>
+                      <div className="font-bold mt-0.5" style={{ color: '#040D1E' }}>
                         {(currentCount * cls.fee).toLocaleString()}원
                       </div>
                     </div>
@@ -735,7 +735,7 @@ export default function ClassDetail() {
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setMemoModal(null)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>닫기</button>
-              {canEdit && <button onClick={saveMemo} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: '#081F4D' }}>저장</button>}
+              {canEdit && <button onClick={saveMemo} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: '#040D1E' }}>저장</button>}
             </div>
           </div>
         </div>
@@ -770,7 +770,7 @@ export default function ClassDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setAddStudentDialog(false)} className="h-8 text-xs">취소</Button>
-            <Button size="sm" onClick={handleAddStudent} disabled={!selectedStudentId} className="h-8 text-xs" style={{ background: '#081F4D' }}>
+            <Button size="sm" onClick={handleAddStudent} disabled={!selectedStudentId} className="h-8 text-xs" style={{ background: '#040D1E' }}>
               추가
             </Button>
           </DialogFooter>

@@ -17,7 +17,7 @@ import { useHomework } from '@/contexts/HomeworkContext';
 import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
 import type { ClassRoom } from '@/lib/classData';
-import { loadIfRecords } from '@/lib/studentIfRecord';
+import { loadIfRecords } from '@/lib/ifAnalysisEngine';
 import { collectObservations, computeSubjectGaps } from '@/lib/observationSignals';
 import type { StudentSignalBundle } from '@/lib/observationSignals';
 import ObservationPanel from '@/components/ObservationPanel';
@@ -36,8 +36,8 @@ function useTodayClasses(assignedClassIds: string[]): ClassRoom[] {
 const QUICK_ACTIONS = [
   { icon: CalendarCheck, label: '출결 체크', path: '/teacher/attendance', color: 'oklch(0.45 0.15 160)' },
   { icon: BarChart2,     label: '내 시험지', path: '/teacher/exams',      color: 'oklch(0.577 0.245 27.325)' },
-  { icon: Users,         label: '담당 학생', path: '/teacher/students',   color: '#081F4D' },
-  { icon: Play,          label: '수업자료',  path: '/teacher/materials',  color: '#081F4D' },
+  { icon: Users,         label: '담당 학생', path: '/teacher/students',   color: '#040D1E' },
+  { icon: Play,          label: '수업자료',  path: '/teacher/materials',  color: '#040D1E' },
   { icon: ClipboardList, label: '숙제 관리', path: '/teacher/homework',   color: 'oklch(0.45 0.15 160)' },
 ];
 
@@ -204,7 +204,7 @@ export default function TeacherHome() {
               )}
             </div>
             <Link href="/teacher/homework">
-              <span className="text-xs cursor-pointer" style={{ color: '#081F4D' }}>숙제 관리</span>
+              <span className="text-xs cursor-pointer" style={{ color: '#040D1E' }}>숙제 관리</span>
             </Link>
           </div>
 
@@ -260,7 +260,7 @@ export default function TeacherHome() {
         {/* 오늘 수업 */}
         <section>
           <div className="flex items-center gap-2 mb-2 px-1">
-            <Clock size={15} style={{ color: '#081F4D' }} />
+            <Clock size={15} style={{ color: '#040D1E' }} />
             <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>오늘 수업</span>
           </div>
           {todayClasses.length === 0 ? (
@@ -320,7 +320,7 @@ export default function TeacherHome() {
             <div className="flex items-center gap-2">
               <BarChart2
                 size={15}
-                style={{ color: ungradedExams.length > 0 ? 'oklch(0.577 0.245 27.325)' : '#081F4D' }}
+                style={{ color: ungradedExams.length > 0 ? 'oklch(0.577 0.245 27.325)' : '#040D1E' }}
               />
               <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>미채점 시험</span>
               {ungradedExams.length > 0 && (
@@ -333,7 +333,7 @@ export default function TeacherHome() {
               )}
             </div>
             <Link href="/teacher/exams">
-              <span className="text-xs cursor-pointer" style={{ color: '#081F4D' }}>내 시험지 보기</span>
+              <span className="text-xs cursor-pointer" style={{ color: '#040D1E' }}>내 시험지 보기</span>
             </Link>
           </div>
           {ungradedExams.length === 0 ? (
@@ -368,7 +368,7 @@ export default function TeacherHome() {
               })}
               {ungradedExams.length > 1 && (
                 <Link href="/teacher/exams">
-                  <div className="text-center text-xs cursor-pointer" style={{ color: '#081F4D' }}>
+                  <div className="text-center text-xs cursor-pointer" style={{ color: '#040D1E' }}>
                     외 {ungradedExams.length - 1}건 더 보기
                   </div>
                 </Link>
@@ -382,11 +382,11 @@ export default function TeacherHome() {
           <section>
             <div className="flex items-center justify-between mb-2 px-1">
               <div className="flex items-center gap-2">
-                <BarChart2 size={15} style={{ color: '#081F4D' }} />
+                <BarChart2 size={15} style={{ color: '#040D1E' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 테스트 결과</span>
               </div>
               <Link href="/teacher/grades">
-                <span className="text-xs cursor-pointer" style={{ color: '#081F4D' }}>학생별 성적 보기</span>
+                <span className="text-xs cursor-pointer" style={{ color: '#040D1E' }}>학생별 성적 보기</span>
               </Link>
             </div>
             <div className="space-y-2">
@@ -410,7 +410,7 @@ export default function TeacherHome() {
                     </div>
                     {avg !== null && (
                       <div className="text-right">
-                        <div className="font-bold tabular-nums text-sm" style={{ color: '#081F4D' }}>
+                        <div className="font-bold tabular-nums text-sm" style={{ color: '#040D1E' }}>
                           {avg}점
                         </div>
                         <div className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>담당 평균</div>

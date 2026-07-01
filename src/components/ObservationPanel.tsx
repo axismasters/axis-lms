@@ -114,7 +114,7 @@ export default function ObservationPanel({
                   <Link href={detailHref(o.studentId)}>
                     <button
                       className="flex items-center gap-0.5 text-xs font-medium px-2.5 py-1.5 rounded-md flex-shrink-0 transition-colors"
-                      style={{ background: '#081F4D', color: 'white' }}
+                      style={{ background: '#040D1E', color: 'white' }}
                     >
                       상세 보기 <ChevronRight size={12} />
                     </button>

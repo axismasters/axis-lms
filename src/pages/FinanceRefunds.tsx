@@ -182,7 +182,7 @@ export default function FinanceRefunds() {
           </p>
         </div>
         {canRequest && (
-          <Button onClick={openRequestModal} className="gap-1.5" style={{ background: '#081F4D' }}>
+          <Button onClick={openRequestModal} className="gap-1.5" style={{ background: '#040D1E' }}>
             <Plus size={14} /> 환불 요청 등록
           </Button>
         )}
@@ -192,7 +192,7 @@ export default function FinanceRefunds() {
       <div className="grid grid-cols-4 gap-3 mb-4">
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>환불 요청 건수</div>
-          <div className="text-lg font-bold" style={{ color: '#081F4D' }}>{summary.requestCount}건</div>
+          <div className="text-lg font-bold" style={{ color: '#040D1E' }}>{summary.requestCount}건</div>
         </div>
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>승인 대기 금액</div>
@@ -341,7 +341,7 @@ export default function FinanceRefunds() {
               onClick={saveRequest}
               disabled={isRefundBlocked}
               className="h-8 text-xs"
-              style={{ background: isRefundBlocked ? undefined : '#081F4D' }}
+              style={{ background: isRefundBlocked ? undefined : '#040D1E' }}
             >
               {isRefundBlocked ? '환불 불가' : '요청 등록'}
             </Button>
@@ -377,7 +377,7 @@ export default function FinanceRefunds() {
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setApproveModal(null)} className="h-8 text-xs">취소</Button>
-            <Button size="sm" onClick={confirmApprove} className="h-8 text-xs" style={{ background: '#081F4D' }}>승인</Button>
+            <Button size="sm" onClick={confirmApprove} className="h-8 text-xs" style={{ background: '#040D1E' }}>승인</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

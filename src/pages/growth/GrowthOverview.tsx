@@ -63,7 +63,7 @@ export default function GrowthOverview() {
     { label: '총 발급 엠블럼',      value: stats.totalEmblemsIssued,             icon: <Trophy size={18} />, color: '#C8A15A' },
     { label: '이번 시즌 SP 합계',   value: stats.seasonSPTotal.toLocaleString(), icon: <Zap size={18} />,   color: '#10B981' },
     { label: '활성 라이벌 수',      value: stats.activeRivals,                   icon: <Star size={18} />,  color: '#EF4444' },
-    { label: '숨겨진 엠블럼',       value: stats.hiddenEmblems,                  icon: <Eye size={18} />,   color: '#081F4D' },
+    { label: '숨겨진 엠블럼',       value: stats.hiddenEmblems,                  icon: <Eye size={18} />,   color: '#040D1E' },
   ];
 
   return (
@@ -124,7 +124,7 @@ export default function GrowthOverview() {
                         <span className="block truncate" title={log.reason}>{log.reason}</span>
                       </td>
                       <td className="py-1.5">
-                        <span className="px-1.5 py-0.5 rounded text-xs" style={{ background: '#E7EBF3', color: '#081F4D' }}>
+                        <span className="px-1.5 py-0.5 rounded text-xs" style={{ background: '#E7EBF3', color: '#040D1E' }}>
                           {SOURCE_TYPE_LABELS[log.sourceType]}
                         </span>
                       </td>

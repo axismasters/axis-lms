@@ -25,7 +25,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
 import { useHomework } from '@/contexts/HomeworkContext';
 import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
-import { loadIfRecords } from '@/lib/studentIfRecord';
+import { loadIfRecords } from '@/lib/ifAnalysisEngine';
 import { collectObservations, computeSubjectGaps } from '@/lib/observationSignals';
 import type { StudentSignalBundle } from '@/lib/observationSignals';
 import ObservationPanel from '@/components/ObservationPanel';
@@ -44,13 +44,13 @@ function SummaryFilterCard({
       type="button"
       onClick={onClick}
       className="axis-card axis-card-clickable p-4 flex items-center gap-3 text-left w-full transition-colors"
-      style={active ? { borderColor: '#081F4D', boxShadow: '0 0 0 1px #081F4D' } : undefined}
+      style={active ? { borderColor: '#040D1E', boxShadow: '0 0 0 1px #040D1E' } : undefined}
     >
       <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: tone }}>{icon}</div>
       <div className="min-w-0">
-        <div className="text-xs flex items-center gap-1" style={{ color: active ? 'oklch(0.254 0.090 262.09)' : 'oklch(0.5 0.015 250)' }}>
+        <div className="text-xs flex items-center gap-1" style={{ color: active ? 'oklch(0.1605 0.0394 259.41)' : 'oklch(0.5 0.015 250)' }}>
           {label}
-          {active && <span className="text-xs px-1 py-0 rounded" style={{ background: '#081F4D', color: 'white' }}>✓</span>}
+          {active && <span className="text-xs px-1 py-0 rounded" style={{ background: '#040D1E', color: 'white' }}>✓</span>}
         </div>
         <div className="text-xl font-bold tabular-nums" style={{ color: 'oklch(0.2 0.02 250)' }}>
           {value}<span className="text-xs font-normal ml-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>명</span>
@@ -104,7 +104,7 @@ function QuickActions({ studentId, showFinance }: { studentId: string; showFinan
   return (
     <div className="flex items-center gap-1.5 justify-end" onClick={(e) => e.stopPropagation()} ref={ref}>
       <button className={cn(btn, 'hover:bg-slate-50')} style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.35 0.02 250)' }} onClick={() => goto('?tab=basic')}><Eye size={12} /> 상세</button>
-      <button className={cn(btn, 'hover:bg-[#E7EBF3]')} style={{ borderColor: 'oklch(0.8 0.03 262)', color: 'oklch(0.254 0.090 262.09)' }} onClick={() => goto('?tab=grades')}><BarChart2 size={12} /> 성적</button>
+      <button className={cn(btn, 'hover:bg-[#E7EBF3]')} style={{ borderColor: 'oklch(0.8 0.03 262)', color: 'oklch(0.1605 0.0394 259.41)' }} onClick={() => goto('?tab=grades')}><BarChart2 size={12} /> 성적</button>
       <div className="relative">
         <button className={cn(btn, 'hover:bg-slate-50')} style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.35 0.02 250)' }} onClick={() => setOpen((v) => !v)}><MoreHorizontal size={12} /> 더보기</button>
         {open && (
@@ -261,7 +261,7 @@ export default function StudentList() {
         </div>
         {can('student.create') && (
           <Link href="/admin/students/new">
-            <button className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90" style={{ background: '#081F4D' }}>
+            <button className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90" style={{ background: '#040D1E' }}>
               <UserPlus size={15} /> 학생 등록
             </button>
           </Link>
@@ -281,7 +281,7 @@ export default function StudentList() {
       {/* 요약 카드 — 클릭하면 아래 목록이 해당 조건으로 필터링된다(Phase 3D v3-r1) */}
       <div className={cn('grid grid-cols-2 gap-3 mb-5', showFinanceColumn ? 'md:grid-cols-5' : 'md:grid-cols-4')}>
         <SummaryFilterCard
-          icon={<Users size={18} color="oklch(0.254 0.090 262.09)" />} label="전체 학생" value={summary.total} tone="oklch(0.93 0.02 262)"
+          icon={<Users size={18} color="oklch(0.1605 0.0394 259.41)" />} label="전체 학생" value={summary.total} tone="oklch(0.93 0.02 262)"
           active={fStatus === '전체' && fUnpaid === '전체'} onClick={clearQuickFilters}
         />
         <SummaryFilterCard
@@ -313,7 +313,7 @@ export default function StudentList() {
           </div>
           <button onClick={() => setShowFilters((v) => !v)} className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-50" style={{ border: '1px solid oklch(0.9 0.008 250)', color: 'oklch(0.35 0.02 250)' }}>
             <SlidersHorizontal size={14} /> 상세 필터
-            {activeFilterCount > 0 && <span className="text-xs px-1.5 rounded-full text-white" style={{ background: '#081F4D' }}>{activeFilterCount}</span>}
+            {activeFilterCount > 0 && <span className="text-xs px-1.5 rounded-full text-white" style={{ background: '#040D1E' }}>{activeFilterCount}</span>}
             <ChevronDown size={14} className="transition-transform" style={{ transform: showFilters ? 'rotate(180deg)' : 'none' }} />
           </button>
         </div>
@@ -354,7 +354,7 @@ export default function StudentList() {
       </div>
 
       <div className="text-xs mb-2" style={{ color: 'oklch(0.5 0.015 250)' }}>
-        <b style={{ color: 'oklch(0.254 0.090 262.09)' }}>{currentFilterLabel}</b> <b style={{ color: 'oklch(0.254 0.090 262.09)' }}>{filtered.length}</b>명
+        <b style={{ color: 'oklch(0.1605 0.0394 259.41)' }}>{currentFilterLabel}</b> <b style={{ color: 'oklch(0.1605 0.0394 259.41)' }}>{filtered.length}</b>명
       </div>
 
       <div className="axis-card overflow-hidden">

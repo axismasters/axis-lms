@@ -149,7 +149,7 @@ export default function AssessmentList() {
           </p>
         </div>
         {canCreate && (
-          <Button onClick={() => setFormOpen(true)} className="gap-1.5" style={{ background: '#081F4D' }}>
+          <Button onClick={() => setFormOpen(true)} className="gap-1.5" style={{ background: '#040D1E' }}>
             <Plus size={14} /> 시험 등록
           </Button>
         )}
@@ -159,7 +159,7 @@ export default function AssessmentList() {
       <div className="grid grid-cols-4 gap-3 mb-4">
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>전체 시험</div>
-          <div className="text-2xl font-bold" style={{ color: '#081F4D' }}>{stats.total}</div>
+          <div className="text-2xl font-bold" style={{ color: '#040D1E' }}>{stats.total}</div>
         </div>
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>미채점 있음</div>

@@ -213,7 +213,7 @@ export default function FinancePayments() {
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="axis-card p-3 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>이번 달 수납 완료 건수</div>
-          <div className="text-base font-bold" style={{ color: '#081F4D' }}>{summary.paidCount}건</div>
+          <div className="text-base font-bold" style={{ color: '#040D1E' }}>{summary.paidCount}건</div>
         </div>
         <div className="axis-card p-3 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>환불 요청액 (승인 대기)</div>
@@ -313,7 +313,7 @@ export default function FinancePayments() {
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{lastPaidAt}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap">
                         {hasUnissuedReceipt && canReceipt ? (
-                          <button onClick={() => handleIssueReceipt(inv.id)} className="flex items-center gap-1 hover:underline" style={{ color: '#081F4D' }}>
+                          <button onClick={() => handleIssueReceipt(inv.id)} className="flex items-center gap-1 hover:underline" style={{ color: '#040D1E' }}>
                             <Receipt size={11} /> 발급
                           </button>
                         ) : pays.some(p => p.receiptIssued) ? (
@@ -332,7 +332,7 @@ export default function FinancePayments() {
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           {canPay && remaining > 0 && (
-                            <button onClick={() => openPaymentModal(inv)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: '#081F4D' }}>
+                            <button onClick={() => openPaymentModal(inv)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: '#040D1E' }}>
                               <CreditCard size={11} /> 수납 등록
                             </button>
                           )}
@@ -386,7 +386,7 @@ export default function FinancePayments() {
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setPaymentModal(null)} className="h-8 text-xs">취소</Button>
-            <Button size="sm" onClick={savePayment} className="h-8 text-xs" style={{ background: '#081F4D' }}>등록</Button>
+            <Button size="sm" onClick={savePayment} className="h-8 text-xs" style={{ background: '#040D1E' }}>등록</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -418,7 +418,7 @@ export default function FinancePayments() {
                   </div>
                   <div className="flex items-center justify-between text-xs mb-1">
                     <span style={{ color: 'oklch(0.5 0.015 250)' }}>금액</span>
-                    <span className="font-semibold tabular-nums" style={{ color: '#081F4D' }}>{won(receipt.amount)}</span>
+                    <span className="font-semibold tabular-nums" style={{ color: '#040D1E' }}>{won(receipt.amount)}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs mb-1">
                     <span style={{ color: 'oklch(0.5 0.015 250)' }}>발급일</span>

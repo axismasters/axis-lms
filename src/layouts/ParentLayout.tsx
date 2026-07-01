@@ -62,7 +62,7 @@ export default function ParentLayout({ children, title }: ParentLayoutProps) {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors"
                     style={{
                       background: active ? '#C8A15A1A' : 'transparent',
-                      color: active ? '#081F4D' : 'oklch(0.5 0.015 250)',
+                      color: active ? '#040D1E' : 'oklch(0.5 0.015 250)',
                     }}
                   >
                     <Icon size={15} />
@@ -76,7 +76,7 @@ export default function ParentLayout({ children, title }: ParentLayoutProps) {
         <div className="flex items-center gap-2">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
-            style={{ background: '#081F4D' }}
+            style={{ background: '#040D1E' }}
           >
             {currentUser.name.charAt(0)}
           </div>
@@ -108,7 +108,7 @@ export default function ParentLayout({ children, title }: ParentLayoutProps) {
             <Link key={path} href={path} style={{ flex: 1, display: 'flex' }}>
               <div
                 className="flex flex-col items-center justify-center gap-0.5 w-full py-1 cursor-pointer transition-colors"
-                style={{ color: active ? '#081F4D' : 'oklch(0.6 0.015 250)' }}
+                style={{ color: active ? '#040D1E' : 'oklch(0.6 0.015 250)' }}
               >
                 <Icon size={20} />
                 <span className="text-xs font-medium">{label}</span>

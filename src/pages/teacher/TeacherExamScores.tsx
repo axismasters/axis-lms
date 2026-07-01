@@ -25,7 +25,7 @@ function NotFoundScreen() {
     <TeacherLayout title="내 시험지 관리">
       <div className="max-w-lg mx-auto px-4 py-5">
         <Link href="/teacher/exams">
-          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#081F4D' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#040D1E' }}>
             <ChevronLeft size={14} /> 내 시험지 목록
           </div>
         </Link>
@@ -118,7 +118,7 @@ export default function TeacherExamScores() {
       <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
 
         <Link href="/teacher/exams">
-          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#040D1E' }}>
             <ChevronLeft size={14} /> 내 시험지 목록
           </div>
         </Link>
@@ -210,7 +210,7 @@ export default function TeacherExamScores() {
                         <td className="px-3 py-2.5">
                           {isPending && (
                             <Link href={`/teacher/exams/${visibleExam.id}/grading`}>
-                              <Button size="sm" className="h-7 text-xs" style={{ background: '#081F4D' }}>채점하기</Button>
+                              <Button size="sm" className="h-7 text-xs" style={{ background: '#040D1E' }}>채점하기</Button>
                             </Link>
                           )}
                           {isGraded && (
@@ -257,7 +257,7 @@ export default function TeacherExamScores() {
                   {gradedScores.length > 0 && resultModalSub.totalScore != null && (
                     <div className="space-y-1.5 pt-1">
                       {([
-                        { label: '이 학생', value: resultModalSub.totalScore, color: '#081F4D' },
+                        { label: '이 학생', value: resultModalSub.totalScore, color: '#040D1E' },
                         { label: '담당 평균', value: Math.round(gradedAvg), color: 'oklch(0.6 0.015 250)' },
                         { label: '담당 최고', value: gradedMax, color: 'oklch(0.45 0.15 145)' },
                       ]).map((row) => {
@@ -333,7 +333,7 @@ export default function TeacherExamScores() {
             </div>
             <div className="flex justify-end gap-2 p-5 border-t" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
               <Button variant="outline" onClick={() => setCorrectModalSub(null)}>취소</Button>
-              <Button onClick={handleCorrectSubmit} style={{ background: '#081F4D' }}>정정 저장</Button>
+              <Button onClick={handleCorrectSubmit} style={{ background: '#040D1E' }}>정정 저장</Button>
             </div>
           </div>
         </div>

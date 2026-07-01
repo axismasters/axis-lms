@@ -26,7 +26,7 @@ import { Lock, Phone, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import axisHeroDark from '@/assets/brand/axis-hero-dark.png';
 
-const NAVY = '#081F4D';       // 앱 전역 기준 브랜드 Navy(버튼/사이드바 등)
+const NAVY = '#040D1E';       // 앱 전역 기준 브랜드 Navy(버튼/사이드바 등)
 const GOLD = '#C8A15A';
 
 export default function LoginPage() {

@@ -83,7 +83,7 @@ export default function TeacherGrades() {
                 {stats && (
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     {[
-                      { label: '담당 평균', value: stats.avg, color: '#081F4D' },
+                      { label: '담당 평균', value: stats.avg, color: '#040D1E' },
                       { label: '최고점',   value: stats.max, color: 'oklch(0.45 0.15 160)' },
                       { label: '최저점',   value: stats.min, color: 'oklch(0.55 0.2 27)' },
                     ].map(({ label, value, color }) => (
@@ -123,7 +123,7 @@ export default function TeacherGrades() {
                                 pct >= 80
                                   ? 'oklch(0.45 0.15 160)'
                                   : pct >= 60
-                                  ? '#081F4D'
+                                  ? '#040D1E'
                                   : 'oklch(0.55 0.2 27)',
                             }}
                           />

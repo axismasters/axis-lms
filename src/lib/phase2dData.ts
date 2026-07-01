@@ -41,7 +41,7 @@ export const GRADE_TABS: GradeTab[] = [
     categoryIds: ['unit-eval', 'certification'],
     // [Phase 3D v3-r8] 구 인디고/퍼플 primary 토큰(oklch 276.966)을 그대로 재사용하던
     // 값이었다 — primary가 Navy로 교체됨에 따라 이 탭도 Navy로 정리(ANALYSIS 단계와 의미 일치).
-    color: 'oklch(0.254 0.090 262.09)',
+    color: 'oklch(0.1605 0.0394 259.41)',
     accentColor: '#E7EBF3',
   },
   {

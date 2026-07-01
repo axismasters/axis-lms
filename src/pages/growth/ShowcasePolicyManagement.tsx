@@ -88,7 +88,7 @@ export default function ShowcasePolicyManagement() {
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ background: 'oklch(0.95 0.06 260)' }}>
-              <Trophy size={18} style={{ color: '#081F4D' }} />
+              <Trophy size={18} style={{ color: '#040D1E' }} />
             </div>
             <div>
               <div className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
@@ -140,7 +140,7 @@ export default function ShowcasePolicyManagement() {
           </button>
           <button type="button" onClick={handleSave}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold"
-            style={{ background: '#081F4D', color: 'white' }}>
+            style={{ background: '#040D1E', color: 'white' }}>
             <Save size={14} /> 정책 저장 (mock)
           </button>
         </div>

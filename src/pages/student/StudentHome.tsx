@@ -87,7 +87,7 @@ export default function StudentHome() {
     if (dueDate < today) return { label: '마감', color: 'oklch(0.55 0.015 250)' };
     if (dueDate === today) return { label: '오늘 마감', color: 'oklch(0.577 0.245 27.325)' };
     const diff = Math.ceil((new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000);
-    return { label: `D-${diff}`, color: '#081F4D' };
+    return { label: `D-${diff}`, color: '#040D1E' };
   };
 
   return (
@@ -127,11 +127,11 @@ export default function StudentHome() {
             {/* 빠른 이동 3×2 */}
             <div className="grid grid-cols-3 gap-2">
               {[
-                { icon: ClipboardList, label: '테스트',    path: '/student/grades',          color: '#081F4D' },
+                { icon: ClipboardList, label: '테스트',    path: '/student/grades',          color: '#040D1E' },
                 { icon: BookOpen,      label: '내 반',      path: '/student/classes',          color: 'oklch(0.45 0.15 160)' },
                 { icon: CalendarCheck, label: '출결',       path: '/student/attendance',       color: 'oklch(0.55 0.15 80)' },
                 { icon: Trophy,        label: '진열장',     path: '/student/growth',           color: 'oklch(0.7 0.18 80)' },
-                { icon: Swords,        label: 'Rival',     path: '/student/rival',            color: '#081F4D' },
+                { icon: Swords,        label: 'Rival',     path: '/student/rival',            color: '#040D1E' },
                 { icon: GraduationCap, label: universityLabel, path: '/student/target-preview', color: '#C8A15A' },
               ].map(({ icon: Icon, label, path, color }) => (
                 <Link key={`${path}-${label}`} href={path} style={{ display: 'block' }}>
@@ -157,7 +157,7 @@ export default function StudentHome() {
                             )}
                           </div>
                           <Link href="/student/homework">
-                            <span className="text-xs cursor-pointer" style={{ color: '#081F4D' }}>내 숙제 보기</span>
+                            <span className="text-xs cursor-pointer" style={{ color: '#040D1E' }}>내 숙제 보기</span>
                           </Link>
                         </div>
                         {myHomework.length === 0 ? (
@@ -197,11 +197,11 @@ export default function StudentHome() {
             <section>
                         <div className="flex items-center justify-between mb-2 px-1">
                           <div className="flex items-center gap-2">
-                            <BarChart2 size={15} style={{ color: '#081F4D' }} />
+                            <BarChart2 size={15} style={{ color: '#040D1E' }} />
                             <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 테스트</span>
                           </div>
                           <Link href="/student/grades">
-                            <span className="text-xs cursor-pointer" style={{ color: '#081F4D' }}>전체 보기</span>
+                            <span className="text-xs cursor-pointer" style={{ color: '#040D1E' }}>전체 보기</span>
                           </Link>
                         </div>
                         {publishedResults.length === 0 ? (
@@ -246,7 +246,7 @@ export default function StudentHome() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                     style={{ background: '#E7EBF3' }}>
-                    <Swords size={18} style={{ color: '#081F4D' }} />
+                    <Swords size={18} style={{ color: '#040D1E' }} />
                   </div>
                   <div>
                     <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
@@ -265,9 +265,9 @@ export default function StudentHome() {
           </Link>
         ) : !hasNickname ? (
           <Link href="/student/my" style={{ display: 'block' }}>
-            <div className="axis-card p-4 cursor-pointer" style={{ borderLeft: '3px solid #081F4D' }}>
+            <div className="axis-card p-4 cursor-pointer" style={{ borderLeft: '3px solid #040D1E' }}>
               <div className="flex items-center gap-2">
-                <Swords size={15} style={{ color: '#081F4D' }} />
+                <Swords size={15} style={{ color: '#040D1E' }} />
                 <div className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>
                   닉네임을 설정하면 <strong>Rival</strong> 기능을 사용할 수 있습니다
                 </div>

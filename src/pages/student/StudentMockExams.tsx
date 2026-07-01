@@ -66,7 +66,7 @@ export default function StudentMockExams() {
         {/* 안내 */}
         <div
           className="axis-card px-4 py-3 text-xs"
-          style={{ borderLeft: '3px solid #081F4D', color: 'oklch(0.5 0.015 250)' }}
+          style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.5 0.015 250)' }}
         >
           내신대비모의고사 및 수능실전모의고사 공개 결과만 표시됩니다. 채점 중이거나 미공개된 결과는 표시되지 않습니다.
         </div>
@@ -86,7 +86,7 @@ export default function StudentMockExams() {
             {/* 요약 통계 */}
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: '응시 횟수', value: `${mockResults.length}회`, color: '#081F4D' },
+                { label: '응시 횟수', value: `${mockResults.length}회`, color: '#040D1E' },
                 { label: '평균',      value: avg !== null ? `${avg}%` : '-',  color: 'oklch(0.45 0.15 160)' },
                 { label: '최고',      value: best !== null ? `${best}%` : '-', color: 'oklch(0.55 0.15 80)' },
               ].map(({ label, value, color }) => (

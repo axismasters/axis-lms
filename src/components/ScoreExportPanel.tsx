@@ -11,7 +11,7 @@ import type { Exam, ExamSubmission } from '@/lib/assessmentData';
 import type { Student } from '@/lib/dummyData';
 import type { ClassRoom } from '@/lib/classData';
 import { buildScoreExportRows, exportScoresToExcel, groupRowsByExam, SCORE_EXPORT_COLUMNS } from '@/lib/scoreExportEngine';
-import { getIfRecordForExam } from '@/lib/studentIfRecord';
+import { getIfRecordForExam } from '@/lib/ifAnalysisEngine';
 import { toast } from 'sonner';
 
 interface ScoreExportPanelProps {
@@ -92,14 +92,14 @@ export default function ScoreExportPanel({ scopeLabel, availableExams, students,
   };
 
   const chipStyle = (active: boolean) => ({
-    background: active ? '#081F4D' : 'oklch(0.96 0.004 250)',
+    background: active ? '#040D1E' : 'oklch(0.96 0.004 250)',
     color: active ? 'white' : 'oklch(0.4 0.015 250)',
-    border: active ? '1px solid #081F4D' : '1px solid oklch(0.9 0.008 250)',
+    border: active ? '1px solid #040D1E' : '1px solid oklch(0.9 0.008 250)',
   });
 
   return (
     <div className="space-y-4">
-      <div className="axis-card p-4 text-xs" style={{ borderLeft: '3px solid #081F4D', color: 'oklch(0.5 0.015 250)' }}>
+      <div className="axis-card p-4 text-xs" style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.5 0.015 250)' }}>
         출력 범위: <b>{scopeLabel}</b>. 시험을 선택하면 반/학생 필터로 일부만 골라 출력할 수 있습니다(비워두면 전체).
       </div>
 
@@ -130,7 +130,7 @@ export default function ScoreExportPanel({ scopeLabel, availableExams, students,
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left text-xs transition-colors hover:bg-slate-50"
                   style={{ border: '1px solid oklch(0.93 0.006 250)' }}
                 >
-                  {active ? <CheckSquare size={14} style={{ color: '#081F4D' }} /> : <Square size={14} style={{ color: 'oklch(0.75 0.01 250)' }} />}
+                  {active ? <CheckSquare size={14} style={{ color: '#040D1E' }} /> : <Square size={14} style={{ color: 'oklch(0.75 0.01 250)' }} />}
                   <span className="font-medium flex-1 truncate" style={{ color: 'oklch(0.25 0.02 250)' }}>{exam.title}</span>
                   <span style={{ color: 'oklch(0.6 0.015 250)' }}>{exam.examDate}</span>
                 </button>
@@ -195,7 +195,7 @@ export default function ScoreExportPanel({ scopeLabel, availableExams, students,
             </button>
             <button onClick={handlePrint}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white transition-opacity hover:opacity-90"
-              style={{ background: '#081F4D' }}>
+              style={{ background: '#040D1E' }}>
               <Printer size={13} /> PDF로 인쇄
             </button>
           </div>
@@ -229,7 +229,7 @@ export default function ScoreExportPanel({ scopeLabel, availableExams, students,
                       <td className="px-2.5 py-1.5 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>{r.examDate}</td>
                       <td className="px-2.5 py-1.5 text-right tabular-nums" style={{ color: 'oklch(0.25 0.02 250)' }}>{r.score}</td>
                       <td className="px-2.5 py-1.5 text-right tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>{r.totalScore}</td>
-                      <td className="px-2.5 py-1.5 text-right tabular-nums font-semibold" style={{ color: '#081F4D' }}>{r.percentage}%</td>
+                      <td className="px-2.5 py-1.5 text-right tabular-nums font-semibold" style={{ color: '#040D1E' }}>{r.percentage}%</td>
                       <td className="px-2.5 py-1.5 text-right tabular-nums" style={{ color: (r.vsAverage ?? 0) >= 0 ? 'oklch(0.45 0.15 160)' : 'oklch(0.55 0.2 27)' }}>
                         {r.vsAverage === null ? '-' : r.vsAverage > 0 ? `+${r.vsAverage}` : r.vsAverage}
                       </td>

@@ -58,7 +58,7 @@ function CapacityBar({ enrolled, capacity }: { enrolled: number; capacity: numbe
     ? 'oklch(0.577 0.245 27.325)'
     : isNearFull
     ? 'oklch(0.7 0.18 60)'
-    : '#081F4D';
+    : '#040D1E';
 
   return (
     <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export default function ClassList() {
         <Button
           onClick={() => setFormModal({ open: true })}
           className="gap-2 text-sm font-semibold h-9"
-          style={{ background: '#081F4D' }}
+          style={{ background: '#040D1E' }}
         >
           <Plus size={15} /> 반 개설
         </Button>
@@ -187,7 +187,7 @@ export default function ClassList() {
       {/* 요약 카드 */}
       <div className="grid grid-cols-4 gap-3 mb-5">
         {[
-          { label: '전체 반', value: stats.total, sub: `운영중 ${stats.active}개`, color: '#081F4D' },
+          { label: '전체 반', value: stats.total, sub: `운영중 ${stats.active}개`, color: '#040D1E' },
           { label: '총 수강생', value: stats.totalEnrolled, sub: `정원 ${stats.totalCapacity}명`, color: 'oklch(0.5 0.15 160)' },
           { label: '정원 마감', value: stats.full, sub: '운영중 기준', color: 'oklch(0.577 0.245 27.325)' },
           { label: '평균 충원율', value: `${stats.totalCapacity > 0 ? Math.round((stats.totalEnrolled / stats.totalCapacity) * 100) : 0}%`, sub: '운영중 반 기준', color: 'oklch(0.6 0.15 60)' },
@@ -360,7 +360,7 @@ export default function ClassList() {
                           className="p-1.5 rounded transition-colors hover:bg-[#E7EBF3]"
                           title="상세보기"
                         >
-                          <Eye size={14} style={{ color: '#081F4D' }} />
+                          <Eye size={14} style={{ color: '#040D1E' }} />
                         </button>
                         <button
                           onClick={() => setFormModal({ open: true, editId: cls.id })}

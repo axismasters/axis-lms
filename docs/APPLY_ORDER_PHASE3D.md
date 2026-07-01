@@ -1,5 +1,36 @@
 # APPLY_ORDER_PHASE3D.md
 
+## v3-r9-r2 적용 안내
+
+단일 zip(`axis-lms-v1_2-phase3d-if-analysis-engine-detail-flow-v3-r9-r2-github-upload.zip`,
+내부 루트 `axis-lms-main/`)으로 제공한다. **v3-r9-r1은 반려된 산출물이므로
+GitHub에 반영되지 않았어야 한다** — 이번 zip은 v3-r8 기준으로 다시 만든
+것이라 v3-r9-r1을 이미 반영했다면 반드시 이번 zip으로 덮어써야 한다.
+
+### 적용 순서
+
+1. zip 압축 해제 후 로컬 저장소 폴더 내용을 전체 교체한다(`src/assets/brand/`
+   이미지 3장 포함 확인 필수 — v3-r9-r1과 동일).
+2. GitHub Desktop에서 변경 사항 확인 — 수정 파일 71개(대부분 네이비 색상값
+   리터럴 치환), `docs/` 4종 문서. 신규/삭제 파일 없음.
+3. 커밋 메시지: "Phase 3D v3-r9-r2 IF engine import boundary and AXIS brand token hotfix"
+4. Push 후 **GitHub Actions Build Check 통과가 이번엔 필수 조건**(사용자
+   지시 — 로컬 build 검증이 계속 불가능한 환경이라 CI 결과가 유일한 최종
+   검증 수단이다).
+5. **불변 파일 3종은 이번에도 손대지 않았다.**
+
+### 적용 후 수동 확인 권장 항목
+
+- 앱 전반적으로 네이비 톤이 이전보다 눈에 띄게 짙어졌는지 확인(사이드바,
+  버튼, 배지, 포커스 링 등) — 로그인 히어로 이미지의 네이비와 나머지 UI의
+  네이비가 이제 훨씬 잘 어울려 보여야 한다.
+- 학생 테스트 상세 IF 채점, 학부모/교사 IF 관련 화면(ParentHome, ParentGrowthReport,
+  TeacherHome, TeacherStudentDetail, StudentList, ScoreExportPanel) 전부
+  이전과 동일하게 동작하는지(이번엔 import 경로만 바꿨으므로 동작 변화가
+  없어야 정상).
+
+---
+
 ## v3-r9-r1 적용 안내
 
 단일 zip(`axis-lms-v1_2-phase3d-if-analysis-engine-detail-flow-v3-r9-r1-github-upload.zip`,

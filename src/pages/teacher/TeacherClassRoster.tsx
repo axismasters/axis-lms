@@ -24,7 +24,7 @@ function NotAllowedScreen() {
     <TeacherLayout title="담당 반">
       <div className="max-w-lg mx-auto px-4 py-5">
         <Link href="/teacher/classes">
-          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#081F4D' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#040D1E' }}>
             <ChevronLeft size={14} /> 담당 반 목록
           </div>
         </Link>
@@ -99,7 +99,7 @@ export default function TeacherClassRoster() {
 
         {/* 뒤로가기 */}
         <Link href="/teacher/classes">
-          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#040D1E' }}>
             <ChevronLeft size={14} /> 담당 반 목록
           </div>
         </Link>
@@ -112,7 +112,7 @@ export default function TeacherClassRoster() {
               {cls.subject} · {cls.level} {cls.room ? `· 강의실 ${cls.room}` : ''}
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: '#081F4D' }}>
+          <div className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: '#040D1E' }}>
             <Users size={15} /> {roster.length}명
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function TeacherClassRoster() {
                         <td className="px-3 py-2.5 whitespace-nowrap">
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0"
-                              style={{ background: '#081F4D' }}>
+                              style={{ background: '#040D1E' }}>
                               {student.name.charAt(0)}
                             </div>
                             <span className="font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{student.name}</span>

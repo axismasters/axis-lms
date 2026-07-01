@@ -172,7 +172,7 @@ export default function ParentWeeklyMocks() {
               {[
                 { label: '누적 회차', value: `${weeklyResults.length}회`,               color: 'oklch(0.45 0.15 160)' },
                 { label: '최근 점수', value: latestPct !== null ? `${latestPct}%` : '-', color: scoreColor(latestPct ?? 0) },
-                { label: '최고 점수', value: best !== null ? `${best}%` : '-',           color: '#081F4D' },
+                { label: '최고 점수', value: best !== null ? `${best}%` : '-',           color: '#040D1E' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="axis-card p-3 text-center">
                   <div className="font-bold text-sm tabular-nums" style={{ color }}>{value}</div>
@@ -196,7 +196,7 @@ export default function ParentWeeklyMocks() {
                 </div>
                 <div>
                   <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 3회 평균</div>
-                  <div className="font-bold text-sm tabular-nums mt-0.5" style={{ color: '#081F4D' }}>
+                  <div className="font-bold text-sm tabular-nums mt-0.5" style={{ color: '#040D1E' }}>
                     {summary.last3AvgPct !== null ? `${summary.last3AvgPct}%` : '-'}
                   </div>
                 </div>

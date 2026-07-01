@@ -34,8 +34,7 @@ import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import type { StudentExamResult } from '@/lib/assessmentData';
 import { STUDENT_HIDDEN_CATEGORY_IDS } from '@/lib/phase2dData';
 import { STATUS_CONFIG } from '@/lib/attendanceData';
-import { loadIfRecords, getIfCumulativeSummary } from '@/lib/studentIfRecord';
-import { IF_REASONS } from '@/lib/studentIfAnalysis';
+import { loadIfRecords, getIfCumulativeSummary, IF_REASONS } from '@/lib/ifAnalysisEngine';
 import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
 import { getParentCommentsForStudent } from '@/lib/parentComments';
 import { getLocalDateStr } from '@/utils/dateUtils';
@@ -88,7 +87,7 @@ function TrendSparkline({ points }: { points: { label: string; pct: number }[] }
   return (
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 64 }} preserveAspectRatio="none">
-        <polyline points={coords.map(c => `${c.x},${c.y}`).join(' ')} fill="none" stroke="#081F4D" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+        <polyline points={coords.map(c => `${c.x},${c.y}`).join(' ')} fill="none" stroke="#040D1E" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
         {coords.map((c, i) => (
           <circle key={i} cx={c.x} cy={c.y} r="1.6" fill={scoreColor(c.pct)} vectorEffect="non-scaling-stroke" />
         ))}
@@ -160,7 +159,7 @@ function TestDetailModal({ result, onClose }: { result: StudentExamResult; onClo
             <div>
               <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.4 0.015 250)' }}>점수 비교</div>
               <div className="space-y-2">
-                <HBar label="내 점수" value={result.earnedScore} max={result.totalPoints} color="#081F4D" valueLabel={`${result.earnedScore}점`} />
+                <HBar label="내 점수" value={result.earnedScore} max={result.totalPoints} color="#040D1E" valueLabel={`${result.earnedScore}점`} />
                 {result.averageScore != null && (
                   <HBar label="반 평균" value={result.averageScore} max={result.totalPoints} color="oklch(0.6 0.015 250)" valueLabel={`${Math.round(result.averageScore)}점`} />
                 )}
@@ -331,7 +330,7 @@ export default function ParentGrowthReport() {
                 <button key={id} type="button" onClick={() => setSelectedId(id)}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0"
                   style={{
-                    background: selectedId === id ? '#081F4D' : 'oklch(0.95 0.004 250)',
+                    background: selectedId === id ? '#040D1E' : 'oklch(0.95 0.004 250)',
                     color: selectedId === id ? 'white' : 'oklch(0.5 0.015 250)',
                   }}>
                   {s?.name ?? id}
@@ -344,7 +343,7 @@ export default function ParentGrowthReport() {
         {/* 인사 + 이번 달 변화 요약 */}
         <div className="axis-card p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-bold text-white" style={{ background: '#081F4D' }}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-bold text-white" style={{ background: '#040D1E' }}>
               {student?.name.charAt(0) ?? '?'}
             </div>
             <div>
@@ -358,7 +357,7 @@ export default function ParentGrowthReport() {
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
-              <div className="font-black text-base tabular-nums" style={{ color: '#081F4D' }}>{allPublishedResults.length}건</div>
+              <div className="font-black text-base tabular-nums" style={{ color: '#040D1E' }}>{allPublishedResults.length}건</div>
               <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>테스트 기록</div>
             </div>
             <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
@@ -380,7 +379,7 @@ export default function ParentGrowthReport() {
             <button key={t.key} onClick={() => setTab(t.key)}
               className="py-2 rounded-md text-center text-xs font-medium transition-colors flex items-center justify-center gap-1"
               style={tab === t.key
-                ? { background: 'white', color: '#081F4D', boxShadow: '0 1px 3px oklch(0 0 0 / 0.1)' }
+                ? { background: 'white', color: '#040D1E', boxShadow: '0 1px 3px oklch(0 0 0 / 0.1)' }
                 : { color: 'oklch(0.5 0.015 250)' }}>
               <t.icon size={12} /> {t.label}
             </button>
@@ -394,7 +393,7 @@ export default function ParentGrowthReport() {
               <button key={p.k} onClick={() => setPeriod(p.k)}
                 className="px-3 py-1.5 rounded-full text-xs font-medium"
                 style={period === p.k
-                  ? { background: '#081F4D', color: 'white' }
+                  ? { background: '#040D1E', color: 'white' }
                   : { background: 'oklch(0.96 0.004 250)', color: 'oklch(0.5 0.015 250)' }}>
                 {p.l}
               </button>
@@ -408,7 +407,7 @@ export default function ParentGrowthReport() {
             {trendPoints.length > 0 && (
               <div className="axis-card p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp size={15} style={{ color: '#081F4D' }} />
+                  <TrendingUp size={15} style={{ color: '#040D1E' }} />
                   <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>점수 변화 추이 (최근 {trendPoints.length}회)</span>
                 </div>
                 <TrendSparkline points={trendPoints} />
@@ -447,12 +446,12 @@ export default function ParentGrowthReport() {
             {ifSummary.totalRecordsAnalyzed > 0 && (
               <div className="axis-card p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Lightbulb size={15} style={{ color: '#081F4D' }} />
+                  <Lightbulb size={15} style={{ color: '#040D1E' }} />
                   <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>놓친 점수 원인 요약(IF)</span>
                 </div>
                 <p className="text-sm mb-3" style={{ color: 'oklch(0.35 0.02 250)' }}>
                   최근 테스트에서 놓친 점수 중 실수로 놓친 부분을 모두 맞혔다면 평균
-                  약 <strong style={{ color: '#081F4D' }}>+{ifSummary.avgImprovementPct ?? 0}%p</strong> 향상 여지가 있습니다.
+                  약 <strong style={{ color: '#040D1E' }}>+{ifSummary.avgImprovementPct ?? 0}%p</strong> 향상 여지가 있습니다.
                 </p>
                 <ReasonRatioStack ratios={reasonRatios} />
               </div>
@@ -494,7 +493,7 @@ export default function ParentGrowthReport() {
           <>
             <div className="axis-card p-4">
               <div className="flex items-center gap-2 mb-3">
-                <CalendarCheck size={15} style={{ color: '#081F4D' }} />
+                <CalendarCheck size={15} style={{ color: '#040D1E' }} />
                 <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 출결 흐름</span>
               </div>
               {recentAtt10.length === 0 ? (
@@ -545,7 +544,7 @@ export default function ParentGrowthReport() {
                 {student?.name ?? '자녀'}의 누적 성적을 바탕으로 한 {universityLabel} 상세 화면으로 이동합니다.
                 시간이 지나며 데이터가 쌓일수록 더 정확한 방향을 확인할 수 있습니다.
               </p>
-              <div className="flex items-center gap-1 mt-3 text-xs font-medium" style={{ color: '#081F4D' }}>
+              <div className="flex items-center gap-1 mt-3 text-xs font-medium" style={{ color: '#040D1E' }}>
                 자세히 보기 <ChevronRight size={12} />
               </div>
             </div>
@@ -591,7 +590,7 @@ export default function ParentGrowthReport() {
                   <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>테스트 평균</div>
                 </div>
                 <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
-                  <div className="font-black text-base tabular-nums" style={{ color: '#081F4D' }}>{monthlyHomeworkRate !== null ? `${monthlyHomeworkRate}%` : '-'}</div>
+                  <div className="font-black text-base tabular-nums" style={{ color: '#040D1E' }}>{monthlyHomeworkRate !== null ? `${monthlyHomeworkRate}%` : '-'}</div>
                   <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>숙제 완료율</div>
                 </div>
                 <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
@@ -603,9 +602,9 @@ export default function ParentGrowthReport() {
               </div>
             </div>
 
-            <div className="axis-card p-4" style={{ borderLeft: '3px solid #081F4D' }}>
+            <div className="axis-card p-4" style={{ borderLeft: '3px solid #040D1E' }}>
               <div className="flex items-center gap-2 mb-2">
-                <ClipboardList size={15} style={{ color: '#081F4D' }} />
+                <ClipboardList size={15} style={{ color: '#040D1E' }} />
                 <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>상담용 요약</span>
               </div>
               <p className="text-xs mb-2" style={{ color: 'oklch(0.6 0.015 250)' }}>

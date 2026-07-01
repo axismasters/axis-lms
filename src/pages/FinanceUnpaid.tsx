@@ -201,7 +201,7 @@ export default function FinanceUnpaid() {
                             onClick={() => handleNotify(inv.id, inv.studentId, stu?.name ?? '')}
                             disabled={notified}
                             className="flex items-center gap-1 text-xs hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
-                            style={{ color: '#081F4D' }}
+                            style={{ color: '#040D1E' }}
                           >
                             <Send size={11} /> {notified ? '발송완료' : '알림 발송'}
                           </button>

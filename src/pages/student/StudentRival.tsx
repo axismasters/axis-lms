@@ -43,7 +43,7 @@ export default function StudentRival() {
               Rival 기능은 닉네임 설정 후 사용할 수 있습니다. 실명은 상대방에게 노출되지 않습니다.
             </div>
             <Link href="/student/my">
-              <button className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: '#081F4D' }}>
+              <button className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: '#040D1E' }}>
                 마이페이지에서 설정하기
               </button>
             </Link>
@@ -64,7 +64,7 @@ export default function StudentRival() {
         {/* 내 Rival 카드 */}
         <div className="axis-card p-5" style={{ background: `linear-gradient(135deg, ${tierColor}14, white)` }}>
           <div className="flex items-center gap-2 mb-1">
-            <Swords size={16} style={{ color: '#081F4D' }} />
+            <Swords size={16} style={{ color: '#040D1E' }} />
             <span className="text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>내 Rival 전적</span>
           </div>
           <div className="flex items-center justify-between mt-2">
@@ -90,7 +90,7 @@ export default function StudentRival() {
                 <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>패</div>
               </div>
               <div className="rounded-lg p-2.5 text-center" style={{ background: 'white' }}>
-                <div className="font-black text-base tabular-nums" style={{ color: '#081F4D' }}>{relation.winRate.toFixed(0)}%</div>
+                <div className="font-black text-base tabular-nums" style={{ color: '#040D1E' }}>{relation.winRate.toFixed(0)}%</div>
                 <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>승률</div>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function StudentRival() {
         {rivalProfile && (
           <div className="axis-card p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Shield size={15} style={{ color: '#081F4D' }} />
+              <Shield size={15} style={{ color: '#040D1E' }} />
               <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>현재 Rival 상대</span>
             </div>
             <div className="flex items-center gap-3">
@@ -133,10 +133,10 @@ export default function StudentRival() {
         {/* 나에게 도전한 학생 수 — 식별 정보 없이 건수만 */}
         <div className="axis-card p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Users size={15} style={{ color: '#081F4D' }} />
+            <Users size={15} style={{ color: '#040D1E' }} />
             <span className="text-sm font-medium" style={{ color: 'oklch(0.3 0.02 250)' }}>나에게 도전한 학생</span>
           </div>
-          <span className="font-bold text-sm tabular-nums" style={{ color: '#081F4D' }}>{challengersCount}명</span>
+          <span className="font-bold text-sm tabular-nums" style={{ color: '#040D1E' }}>{challengersCount}명</span>
         </div>
 
         {/* 성장 진열장 바로가기 */}

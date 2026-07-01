@@ -256,8 +256,8 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
               onClick={() => setActiveTab(t.key)}
               className="px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors"
               style={{
-                borderColor: activeTab === t.key ? '#081F4D' : 'transparent',
-                color: activeTab === t.key ? '#081F4D' : 'oklch(0.55 0.015 250)',
+                borderColor: activeTab === t.key ? '#040D1E' : 'transparent',
+                color: activeTab === t.key ? '#040D1E' : 'oklch(0.55 0.015 250)',
               }}
             >
               {t.label}
@@ -438,7 +438,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-xs">취소</Button>
-          <Button size="sm" onClick={handleSave} className="h-8 text-xs" style={{ background: '#081F4D' }}>
+          <Button size="sm" onClick={handleSave} className="h-8 text-xs" style={{ background: '#040D1E' }}>
             시험 생성
           </Button>
         </DialogFooter>

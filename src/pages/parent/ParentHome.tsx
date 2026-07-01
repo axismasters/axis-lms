@@ -33,7 +33,7 @@ import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import type { ContentItem } from '@/lib/contentData';
-import { loadIfRecords } from '@/lib/studentIfRecord';
+import { loadIfRecords } from '@/lib/ifAnalysisEngine';
 import { computeSubjectGaps } from '@/lib/observationSignals';
 import type { StudentSignalBundle } from '@/lib/observationSignals';
 import { computeParentInsight } from '@/lib/parentInsightEngine';
@@ -242,12 +242,12 @@ export default function ParentHome() {
     if (dueDate < today) return { label: '마감', color: 'oklch(0.55 0.015 250)' };
     if (dueDate === today) return { label: '오늘 마감', color: 'oklch(0.577 0.245 27.325)' };
     const diff = Math.ceil((new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000);
-    return { label: `D-${diff}`, color: '#081F4D' };
+    return { label: `D-${diff}`, color: '#040D1E' };
   };
   const homeworkStatusLabel = (homeworkId: string) => {
     const status = getStatus(homeworkId, selectedChildId)?.status ?? 'assigned';
     if (status === 'completed') return { label: '완료', color: 'oklch(0.45 0.15 160)' };
-    if (status === 'seen') return { label: '확인함', color: '#081F4D' };
+    if (status === 'seen') return { label: '확인함', color: '#040D1E' };
     return { label: '미확인', color: 'oklch(0.55 0.015 250)' };
   };
 
@@ -483,7 +483,7 @@ export default function ParentHome() {
                       className="axis-card p-3 flex items-start gap-3 w-full text-left"
                     >
                       {item.type === 'note'
-                        ? <FileText size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#081F4D' }} />
+                        ? <FileText size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#040D1E' }} />
                         : <Play size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.45 0.15 160)' }} />
                       }
                       <div className="flex-1 min-w-0">
@@ -516,18 +516,18 @@ export default function ParentHome() {
                 학생용 게임형 지표 대신 테스트·출결·대학추천 요약으로 눌러서 더 보고 싶게 만드는 진입 카드. */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
-                <TrendingUp size={15} style={{ color: '#081F4D' }} />
+                <TrendingUp size={15} style={{ color: '#040D1E' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>성장 리포트</span>
               </div>
               <Link href="/parent/growth" style={{ display: 'block' }}>
                 <div
                   className="axis-card axis-card-clickable p-4 flex items-center justify-between"
-                  style={{ background: 'linear-gradient(135deg, #081F4D14, white)' }}
+                  style={{ background: 'linear-gradient(135deg, #040D1E14, white)' }}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
-                      style={{ background: '#081F4D' }}
+                      style={{ background: '#040D1E' }}
                     >
                       {child?.name.charAt(0) ?? '?'}
                     </div>
@@ -553,7 +553,7 @@ export default function ParentHome() {
                 Rival/Emblem/SP/Tier 등 학생용 게임형 지표는 포함하지 않는다. */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
-                <BarChart2 size={15} style={{ color: '#081F4D' }} />
+                <BarChart2 size={15} style={{ color: '#040D1E' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>객관 지표</span>
               </div>
               <div className="axis-card p-4 grid grid-cols-2 gap-3">
@@ -612,7 +612,7 @@ export default function ParentHome() {
                 상담 기록 원문은 포함하지 않는다(학부모 노출 절대 금지 원칙 유지). */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
-                <MessageSquare size={15} style={{ color: '#081F4D' }} />
+                <MessageSquare size={15} style={{ color: '#040D1E' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>상담 전 확인 카드</span>
               </div>
               <div className="axis-card p-4 space-y-3">

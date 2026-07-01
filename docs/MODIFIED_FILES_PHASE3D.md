@@ -1,6 +1,66 @@
 # MODIFIED_FILES_PHASE3D.md
 
-## v3-r9-r1 변경분 (IF Analysis Engine 실배선 + AXIS 브랜드 이미지 반영, v3-r9 반려 대응)
+## v3-r9-r2 변경분 (IF Analysis Engine 단일 진입점 완성 + 네이비 토큰 이미지 기준 갱신)
+
+**베이스라인**: v3-r8 + v3-r9-r1의 로그인 히어로 이미지/브랜드 마크 작업(v3-r9-r1
+자체는 반려되었으나 이 부분만 유지 지시). 수정 파일 71개, 신규 파일 없음, 삭제
+파일 없음.
+
+### 1~4. IF Analysis Engine 진짜 단일 진입점 완성 (이번 Phase 핵심)
+
+v3-r9-r1까지는 `StudentGrades.tsx`/`ParentGrades.tsx`만 `ifAnalysisEngine.ts`를
+거치도록 고쳤고, 나머지 6개 화면/컴포넌트는 여전히 `studentIfAnalysis.ts`/
+`studentIfRecord.ts`를 직접 import하고 있었다. 전수 검색으로 확인한 결과
+정확히 지시받은 6개 파일과 일치했다 — 전부 `@/lib/ifAnalysisEngine`으로
+import 경로만 교체했다(재구현 없음, 동일한 함수 참조를 재노출하는 것뿐이라
+동작 변화 없음).
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/components/ScoreExportPanel.tsx` | `getIfRecordForExam` import를 `ifAnalysisEngine`으로 교체 |
+| `src/pages/parent/ParentHome.tsx` | `loadIfRecords` import를 `ifAnalysisEngine`으로 교체 |
+| `src/pages/parent/ParentGrowthReport.tsx` | `loadIfRecords`/`getIfCumulativeSummary`(구 `studentIfRecord.ts`)와 `IF_REASONS`(구 `studentIfAnalysis.ts`) 2개 import를 `ifAnalysisEngine` 1개로 통합 |
+| `src/pages/teacher/TeacherHome.tsx` | `loadIfRecords` import를 `ifAnalysisEngine`으로 교체 |
+| `src/pages/teacher/TeacherStudentDetail.tsx` | `loadIfRecords` import를 `ifAnalysisEngine`으로 교체 |
+| `src/pages/StudentList.tsx` | `loadIfRecords` import를 `ifAnalysisEngine`으로 교체 |
+
+`ifAnalysisEngine.ts`는 이 전환을 지원하기 위해 레거시 시험 전체 단위 함수
+(`calcIfAnalysis`, `getIfMotivationComment`)와 저장/조회 함수(`saveIfRecord`,
+`getIfRecordForExam`, `markIfRecordGrowthLinked`, `loadIfRecords`,
+`getIfCumulativeSummary`)까지 전부 재노출하도록 이미 v3-r9-r1에서 확장돼
+있었다 — 이번엔 그 재노출 표면을 실제로 전부 소비하도록 화면을 정리한 것.
+
+**검증**: `studentIfAnalysis.ts`/`studentIfRecord.ts`를 직접 import하는 파일이
+`ifAnalysisEngine.ts` 자기 자신 외에 전무함을 grep으로 재확인했다(`QA_PHASE3D.md`
+참조).
+
+### 5~6. 로그인 히어로 이미지 / 실제 브랜드 마크 — 변경 없음(유지 확인만)
+
+v3-r9-r1에서 적용한 실제 AXIS 이미지(`axis-hero-dark.png` 등) 사용 방식을
+그대로 유지했다. `AxisMark`/`AxisWordmark`가 여전히 `<img>` 기반임을
+재확인했다 — SVG로 되돌리지 않았다.
+
+### 7. 네이비 토큰을 실제 브랜드 이미지 기준으로 재조정
+
+이전까지 앱 전역 `--brand-navy` 토큰(및 각 파일에 하드코딩된 `#081F4D` 리터럴)은
+브랜드보드에 "인쇄된" 명목값을 썼다. 이번엔 사용자가 제공한 실제 이미지
+(로그인 히어로 + 소형 마크)에서 두 이미지 합쳐 300개 이상 픽셀을 직접
+샘플링해 최빈값(`#040D1E`)을 구했고, 이 값이 브랜드보드 명목값(`#081F4D`)보다
+훨씬 짙고 채도가 낮다는 것을 확인했다 — "이미지 기준으로 브랜드 토큰화" 지시에
+따라 이 값을 새 기준으로 채택했다.
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/index.css` | `--brand-navy` 토큰을 `oklch(0.1605 0.0394 259.41)`(← `#040D1E`)로 갱신. `--primary`/`--ring`/`--chart-1`/`--sidebar-primary-foreground`/`.axis-card-clickable` 등은 전부 `var(--brand-navy)`를 참조 중이라 이 한 줄만으로 자동 반영됐다. |
+| `src/lib/brandColors.ts` | `AXIS_NAVY`/`AXIS_NAVY_OKLCH` 상수를 동일 값으로 갱신 |
+| 그 외 69개 파일 | 하드코딩된 `#081F4D`(335건) 및 `oklch(0.254 0.090 262.09)`(약 24건) 리터럴을 새 값으로 전역 기계적 치환(문자열 값만 교체, 로직/구조 변경 없음) — Tailwind 클래스나 CSS 변수가 아니라 인라인 `style` 하드코딩이 이 프로젝트의 지배적 패턴이라, 토큰 정의만 바꿔서는 실제 화면에 반영되지 않기 때문에 리터럴까지 함께 갱신했다. 옅은 배경 틴트(`#E7EBF3`, `oklch(0.9x 0.0x 262)` 등 보조색)는 색조 차이가 미미해(262°→259°) 건드리지 않았다. |
+
+### 8. 마지막 재검수 (전체 재실행)
+
+IF 이유 3개 고정, IF 별도 메뉴 없음, 금지 표현 없음, 학생 재무 노출 없음,
+외부 AI API 호출 없음을 전부 재확인했다. 상세는 `QA_PHASE3D.md` v3-r9-r2
+섹션 참조.
+
 
 **베이스라인**: v3-r8 (GitHub main 반영 완료, Build Check 통과 확인 상태) — **v3-r9는
 반려**되었고, 그중 로그인 딥 네이비 히어로 변경만 사용자 지시로 유지한다는 전제로

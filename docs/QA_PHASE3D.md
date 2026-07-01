@@ -1,5 +1,65 @@
 # QA_PHASE3D.md
 
+## v3-r9-r2 검수 결과
+
+**버전**: v3-r9-r2 — v3-r9-r1 반려 대응 hotfix(사유: IF 엔진 단일 진입점 미완성).
+베이스라인은 v3-r8 + v3-r9-r1의 로그인 히어로/브랜드 마크 부분(유지 지시).
+
+### IF 단일 진입점 전수 재검증
+
+```
+$ grep -rln "from '@/lib/studentIfAnalysis'\|from '@/lib/studentIfRecord'" src \
+    --include="*.tsx" --include="*.ts" | grep -v "ifAnalysisEngine.ts\|studentIfRecord.ts\|studentIfAnalysis.ts"
+
+(결과 없음 — src/lib/ifAnalysisEngine.ts 외에는 직접 import하는 파일이 전무함)
+```
+
+수정 전 이 명령의 결과는 정확히 6개 파일(StudentList.tsx, ScoreExportPanel.tsx,
+TeacherStudentDetail.tsx, TeacherHome.tsx, ParentHome.tsx, ParentGrowthReport.tsx)
+이었고, 지시받은 목록과 정확히 일치했다. 수정 후 재실행 결과 0건 — "단일
+진입점" 원칙이 실제로 완성됐음을 기계적으로 확인했다.
+
+### 검증 명령 실행 결과
+
+```
+$ tsc -p tsconfig.app.json --noEmit 2>&1 | wc -l
+379   (v3-r8/v3-r9/v3-r9-r1과 완전히 동일)
+
+$ tsc -p tsconfig.app.json --noEmit 2>&1 | grep -E "error TS1[0-9]{3}" | wc -l
+0     (문법 오류 없음, 71개 파일 대규모 색상 치환 이후에도 동일)
+```
+
+### 정책 검증 결과
+
+| 항목 | 결과 |
+|---|---|
+| IF 엔진 단일 진입점(ifAnalysisEngine.ts 외 직접 import 없음) | **완성 확인**(위 grep 결과 0건) |
+| 로그인 실제 AXIS 히어로 이미지 유지 | 유지(변경 없음) |
+| 임의 SVG 마크로 회귀 여부 | 회귀 없음(`AxisMark`/`AxisWordmark` 계속 `<img>` 기반) |
+| 네이비 전체 화면 도배 여부 | 아님 — 적용 범위(버튼/배지/사이드바/포커스링/강조선)는 v3-r8과 동일, 값만 갱신 |
+| 색상값 임의 생성 여부 | 아님 — 실제 이미지 픽셀 샘플링값(#040D1E) 사용, 산출 과정 문서화 |
+| IF 이유 3개 초과 | 없음 |
+| IF 별도 메뉴/라우트 | 없음 |
+| 학생 성적 직접 입력 | 없음 |
+| 학생 화면 재무 노출 | 없음 |
+| 학부모 IF 수정 기능 | 없음 |
+| 화면 컴포넌트 IF 판단/계산/누적 로직 직접 보유 | 없음(v3-r9-r1에서 이미 제거한 `getIfCumulativeSummaryLocal` 재확인, 신규 발견 없음) |
+| 외부 AI API 호출(OpenAI/Claude/Gemini) | 없음 |
+| 금지 표현(합격률 등 5종) | 미발견(정책 주석만) |
+| 불변 파일 3종 MD5 | 변경 없음 |
+
+### 알려진 한계
+
+- 네이비 리터럴 치환은 정확히 `#081F4D`와 `oklch(0.254 0.090 262.09)` 두 문자열
+  패턴만 대상으로 했다. 혹시 이 두 패턴과 다르게 표기된(예: 대소문자, 공백 차이)
+  네이비 값이 남아있을 가능성은 이론상 있으나, 재검색 결과 두 패턴 모두 0건으로
+  확인됐다.
+- 이번 색상 갱신은 "메인 네이비"만 다뤘고, 그 파생 옅은 배경 틴트(`#E7EBF3`
+  등)는 색조 차이가 육안으로 거의 구분되지 않아 그대로 뒀다 — 실제 화면에서
+  메인 색과 옅은 틴트가 나란히 보일 때 위화감이 있으면 다음 라운드에 알려달라.
+
+---
+
 ## v3-r9-r1 검수 결과
 
 **버전**: v3-r9-r1 — v3-r9 반려 대응 hotfix. 베이스라인은 v3-r8(Build Check

@@ -158,7 +158,7 @@ export default function StudentMyPage() {
         {/* 닉네임 설정 */}
         <div className="axis-card p-5">
           <div className="flex items-center gap-2 mb-3">
-            <Swords size={16} style={{ color: '#081F4D' }} />
+            <Swords size={16} style={{ color: '#040D1E' }} />
             <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
               Rival 닉네임
             </span>
@@ -215,7 +215,7 @@ export default function StudentMyPage() {
                 maxLength={NICKNAME_MAX_LEN}
                 placeholder="닉네임 입력 (2-12자)"
                 className="w-full text-sm font-medium rounded-lg px-3 py-2 outline-none"
-                style={{ border: `1px solid ${nickError ? 'oklch(0.577 0.245 27.325)' : '#081F4D'}`, color: 'oklch(0.2 0.02 250)' }}
+                style={{ border: `1px solid ${nickError ? 'oklch(0.577 0.245 27.325)' : '#040D1E'}`, color: 'oklch(0.2 0.02 250)' }}
               />
               {nickError && (
                 <div className="text-xs" style={{ color: 'oklch(0.577 0.245 27.325)' }}>{nickError}</div>
@@ -223,7 +223,7 @@ export default function StudentMyPage() {
               <div className="flex gap-2">
                 <button type="button" onClick={handleSaveNick}
                   className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold"
-                  style={{ background: '#081F4D', color: 'white' }}>
+                  style={{ background: '#040D1E', color: 'white' }}>
                   <Check size={13} /> 저장
                 </button>
                 <button type="button" onClick={handleCancelNick}
@@ -239,7 +239,7 @@ export default function StudentMyPage() {
         {/* Rival 공개 프로필 미리보기 */}
         <div className="axis-card p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Shield size={15} style={{ color: '#081F4D' }} />
+            <Shield size={15} style={{ color: '#040D1E' }} />
             <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
               Rival 공개 프로필 미리보기
             </span>
@@ -264,7 +264,7 @@ export default function StudentMyPage() {
         {/* 획득 엠블럼 */}
         <div className="axis-card p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Award size={15} style={{ color: '#081F4D' }} />
+            <Award size={15} style={{ color: '#040D1E' }} />
             <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
               보유 엠블럼
             </span>
@@ -305,8 +305,8 @@ export default function StudentMyPage() {
             {[
               { icon: BookOpen, label: '내 반 / 수업', path: '/student/classes', color: 'oklch(0.45 0.15 160)' },
               { icon: CalendarCheck, label: '출결 확인', path: '/student/attendance', color: 'oklch(0.55 0.15 80)' },
-              { icon: Trophy, label: '성장 진열장', path: '/student/growth', color: '#081F4D' },
-              { icon: Swords, label: 'Rival', path: '/student/rival', color: '#081F4D' },
+              { icon: Trophy, label: '성장 진열장', path: '/student/growth', color: '#040D1E' },
+              { icon: Swords, label: 'Rival', path: '/student/rival', color: '#040D1E' },
             ].map(({ icon: Icon, label, path, color }) => (
               <Link key={path} href={path} style={{ display: 'block' }}>
                 <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer"

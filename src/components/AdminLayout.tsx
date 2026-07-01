@@ -1,5 +1,5 @@
 // AXIS LMS v1.2 - Admin Back Office Layout
-// [Phase 3D v3-r7-r1] Design: AXIS 밝은 프리미엄 브랜드 톤 — Navy(#081F4D) 사이드바
+// [Phase 3D v3-r7-r1] Design: AXIS 밝은 프리미엄 브랜드 톤 — Navy(#040D1E) 사이드바
 // 내비게이션 레일 + Ivory/Warm White 메인 콘텐츠 영역. 화면 전체를 다크 테마로 만들지
 // 않는다(메인 콘텐츠는 항상 밝은 배경).
 // Mobile/App Optimization Readiness v1: 모바일 폭에서 collapsible sidebar 대응
@@ -215,7 +215,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
                   isActive(item.path) ? '' : 'hover:text-white')}
                 style={{
                   background: isActive(item.path) ? '#C8A15A' : 'transparent',
-                  color: isActive(item.path) ? '#081F4D' : 'oklch(0.7 0.015 250)',
+                  color: isActive(item.path) ? '#040D1E' : 'oklch(0.7 0.015 250)',
                 }}
                 onMouseEnter={e => { if (!isActive(item.path)) { (e.currentTarget as HTMLElement).style.background = 'oklch(0.2 0.025 250)'; (e.currentTarget as HTMLElement).style.color = 'white'; } }}
                 onMouseLeave={e => { if (!isActive(item.path)) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'oklch(0.7 0.015 250)'; } }}
@@ -246,7 +246,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
 
       <div className="px-5 py-4 border-t" style={{ borderColor: 'oklch(0.22 0.02 250)' }}>
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: '#C8A15A', color: '#081F4D' }}>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: '#C8A15A', color: '#040D1E' }}>
             {currentUser.name.charAt(0)}
           </div>
           <div className="min-w-0 flex-1">
@@ -276,7 +276,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
                 className="flex-1 text-xs py-1.5 rounded-md font-medium transition-colors"
                 style={{
                   background: activeMode === mode ? '#C8A15A' : 'transparent',
-                  color: activeMode === mode ? '#081F4D' : 'oklch(0.65 0.015 250)',
+                  color: activeMode === mode ? '#040D1E' : 'oklch(0.65 0.015 250)',
                 }}
               >
                 {mode === 'ADMIN_MODE' ? '관리자 모드' : '강사 모드'}

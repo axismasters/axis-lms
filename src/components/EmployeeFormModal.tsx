@@ -132,7 +132,7 @@ export default function EmployeeFormModal({ onClose, onSaved }: Props) {
           <button onClick={onClose} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50"
             style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
           <button onClick={handleSubmit} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-medium text-white"
-            style={{ background: '#081F4D' }}>
+            style={{ background: '#040D1E' }}>
             <UserPlus size={13} /> 등록
           </button>
         </div>

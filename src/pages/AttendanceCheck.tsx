@@ -332,7 +332,7 @@ export default function AttendanceCheck() {
           {enrolledStudents.length === 0 ? (
             <p className="text-xs" style={{ color: 'oklch(0.577 0.245 27.325)' }}>현재 활성 수강생이 없는 반입니다. 수강등록을 먼저 진행해주세요.</p>
           ) : (
-            <Button onClick={handleInitSession} className="gap-2" style={{ background: '#081F4D' }}>
+            <Button onClick={handleInitSession} className="gap-2" style={{ background: '#040D1E' }}>
               <CheckCircle2 size={15} />
               출결 시작 (전체 출석 초기화)
             </Button>
@@ -382,7 +382,7 @@ export default function AttendanceCheck() {
                   </>
                 ) : (
                   <Button size="sm" onClick={handleLock} className="h-8 text-xs gap-1.5"
-                    style={{ background: '#081F4D' }}>
+                    style={{ background: '#040D1E' }}>
                     <CheckCircle2 size={12} /> 체크 완료
                   </Button>
                 )}
@@ -426,7 +426,7 @@ export default function AttendanceCheck() {
                       <td className="px-4 py-3" style={{ width: 140 }}>
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                            style={{ background: '#081F4D' }}>
+                            style={{ background: '#040D1E' }}>
                             {stu.name[0]}
                           </div>
                           <div>
@@ -463,7 +463,7 @@ export default function AttendanceCheck() {
                                   setNoteInput(rec.note || '');
                                 }}
                                 className="text-xs underline"
-                                style={{ color: '#081F4D' }}
+                                style={{ color: '#040D1E' }}
                               >
                                 수정
                               </button>
@@ -505,7 +505,7 @@ export default function AttendanceCheck() {
                                 <button
                                   onClick={() => handleResendNotify(currentSession.id, stu.id, stu.name)}
                                   className="text-xs flex items-center gap-0.5 underline"
-                                  style={{ color: '#081F4D' }}
+                                  style={{ color: '#040D1E' }}
                                 >
                                   <RefreshCw size={10} /> 재발송
                                 </button>
@@ -581,7 +581,7 @@ export default function AttendanceCheck() {
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setReasonModal(null)} className="h-8 text-xs">취소</Button>
-            <Button size="sm" onClick={handleReasonSave} className="h-8 text-xs" style={{ background: '#081F4D' }}>
+            <Button size="sm" onClick={handleReasonSave} className="h-8 text-xs" style={{ background: '#040D1E' }}>
               저장
             </Button>
           </DialogFooter>

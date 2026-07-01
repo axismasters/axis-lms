@@ -56,7 +56,7 @@ export default function ParentTargetSummary() {
                 <button key={id} type="button" onClick={() => setSelectedId(id)}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0"
                   style={{
-                    background: selectedId === id ? '#081F4D' : 'oklch(0.95 0.004 250)',
+                    background: selectedId === id ? '#040D1E' : 'oklch(0.95 0.004 250)',
                     color: selectedId === id ? 'white' : 'oklch(0.5 0.015 250)',
                   }}>
                   {s?.name ?? id}
