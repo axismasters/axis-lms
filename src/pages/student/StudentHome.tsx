@@ -1,10 +1,21 @@
-// AXIS LMS v1.2 - StudentHome (Student Finance Home Bridge v1)
-// 학생 홈: 인사 / 빠른 이동 / 숙제 요약 / 티어·SP / 나의 진열장 / 최근 성적 / 수납 상태.
-// ✅ QA Fix: QUICK_ACTIONS 4개 → grid-cols-2 (2×2)
-// ✅ Finance Bridge: 수납 상태 섹션 추가 — FinanceContext 실데이터, /student/finance 링크
+// AXIS LMS v1.2 — Phase 2F: StudentHome (Student Portal Core Rebuild v1)
+// 학생 홈 — 인사 / 빠른 이동 / 목표대학 입구 / Rival / 성장 진열장 / 최근 성적 / 숙제
+//
+// Phase 2F 변경:
+//   ✅ 성장 진열장 / Rival / 마이페이지 카드 추가
+//   ✅ 목표대학 추천 / 대학추천 입구 학년별 분기 유지
+//   ✅ 재무/수납 섹션 완전 제거 유지
+//
+// ⚠ Phase 2F 금지:
+//   - 합격률/합격 가능성/합격 보장/불합격 표현 금지
+//   - 학생 화면에 수납/재무/청구/미납/환불 노출 금지
 
 import { Link } from 'wouter';
-import { Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck, ClipboardList, CalendarClock, CheckCircle2, CreditCard, ChevronRight } from 'lucide-react';
+import {
+  Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck,
+  ClipboardList, CalendarClock, CheckCircle2, ChevronRight,
+  GraduationCap, Swords, User, TrendingUp,
+} from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
@@ -13,48 +24,50 @@ import { useGrowth } from '@/contexts/GrowthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useHomework } from '@/contexts/HomeworkContext';
 import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
-import { useFinance } from '@/contexts/FinanceContext';
 import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
-
-const QUICK_ACTIONS = [
-  { icon: BookOpen,      label: '내 반',  path: '/student/classes',    color: 'oklch(0.511 0.262 276.966)' },
-  { icon: ClipboardList, label: '숙제',   path: '/student/homework',   color: 'oklch(0.45 0.15 160)' },
-  { icon: BarChart2,     label: '성적',   path: '/student/grades',     color: 'oklch(0.45 0.15 160)' },
-  { icon: CalendarCheck, label: '출결',   path: '/student/attendance', color: 'oklch(0.55 0.15 80)' },
-];
+import { STUDENT_HIDDEN_CATEGORY_IDS } from '@/lib/phase2dData';
+import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
+import { loadStudentProfile, canUseRival } from '@/lib/studentProfile';
 
 export default function StudentHome() {
   const { currentUser } = useAuth();
   const { students } = useStudents();
   const { classes } = useClasses();
-  const { getProfile, getStudentEmblems, emblems } = useGrowth();
+  const { getProfile, getStudentEmblems, getRivalInfo, emblems } = useGrowth();
   const { exams, submissions } = useAssessment();
   const { getForStudent } = useHomework();
   const { getStatus } = useHomeworkStatus();
-  const { getInvoicesByStudent, getUnpaidAmount } = useFinance();
 
   const myStudentId = currentUser.assignedStudentIds[0] ?? '';
-  const student = students.find((s) => s.id === myStudentId);
+  const student = students.find(s => s.id === myStudentId);
   const enrolledClassIds =
-    student?.classes.filter((c) => c.status === '수강중').map((c) => c.id) ?? [];
+    student?.classes.filter(c => c.status === '수강중').map(c => c.id) ?? [];
 
-  const profile = myStudentId ? getProfile(myStudentId) : undefined;
-  const myStudentEmblems = myStudentId ? getStudentEmblems(myStudentId) : [];
+  // 학년 감지
+  const gradeLevel = detectStudentGradeLevel(student);
+  const universityLabel = getUniversityMenuLabel(gradeLevel);
 
-  const myEmblemsWithDef = myStudentEmblems
-    .filter((se) => se.achieved)
-    .map((se) => ({ se, def: emblems.find((e) => e.id === se.emblemId) }))
-    .filter((x): x is { se: typeof x.se; def: NonNullable<typeof x.def> } => x.def !== undefined);
+  // 닉네임 / Rival
+  const storedProfile = loadStudentProfile(myStudentId);
+  const hasNickname = canUseRival(myStudentId);
+  const rivalInfo = hasNickname ? getRivalInfo(myStudentId) : null;
 
-  // 공개/반영된 성적만 (visibility 정책 준수)
-  const publishedResults = myStudentId
-    ? getPublishedResultsForStudent(exams, submissions, myStudentId).slice(0, 3)
-    : [];
+  // Growth
+  const profile = getProfile(myStudentId);
+  const myEmblems = getStudentEmblems(myStudentId).filter(e => e.achieved);
+  const tierColor = profile ? TIER_COLORS[profile.tier] : 'oklch(0.7 0.01 250)';
+  const tierLabel = profile ? TIER_LABELS[profile.tier] : '-';
 
+  // 최근 성적 (입학테스트 제외)
+  const publishedResults = getPublishedResultsForStudent(exams, submissions, myStudentId)
+    .filter(r => !STUDENT_HIDDEN_CATEGORY_IDS.includes(r.categoryId as any))
+    .slice(0, 3);
+
+  // 숙제
   const myHomework = getForStudent(enrolledClassIds);
-  const incompleteHomework = myHomework.filter((hw) => {
-    const status = myStudentId ? getStatus(hw.id, myStudentId) : null;
+  const incompleteHomework = myHomework.filter(hw => {
+    const status = getStatus(hw.id, myStudentId);
     return status?.status !== 'completed';
   });
   const upcomingHomework = [...incompleteHomework]
@@ -62,24 +75,13 @@ export default function StudentHome() {
     .slice(0, 3);
 
   const today = new Date().toISOString().slice(0, 10);
-  const classNameOf = (classId: string) =>
-    classes.find((c) => c.id === classId)?.name ?? classId;
+  const classNameOf = (id: string) => classes.find(c => c.id === id)?.name ?? id;
   const dueBadge = (dueDate: string) => {
     if (dueDate < today) return { label: '마감', color: 'oklch(0.55 0.015 250)' };
     if (dueDate === today) return { label: '오늘 마감', color: 'oklch(0.577 0.245 27.325)' };
     const diff = Math.ceil((new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000);
     return { label: `D-${diff}`, color: 'oklch(0.511 0.262 276.966)' };
   };
-
-  const tierColor = profile ? TIER_COLORS[profile.tier] : 'oklch(0.7 0.01 250)';
-  const tierLabel = profile ? TIER_LABELS[profile.tier] : '-';
-
-  // 수납 요약 — 본인 ID 기준, CANCELED 제외
-  const myInvoices = myStudentId
-    ? getInvoicesByStudent(myStudentId).filter(inv => inv.status !== 'CANCELED')
-    : [];
-  const financeTotalBilled = myInvoices.reduce((s, inv) => s + inv.finalAmount, 0);
-  const financeUnpaid      = myInvoices.reduce((s, inv) => s + getUnpaidAmount(inv.id), 0);
 
   return (
     <StudentLayout title="AXIS 학생">
@@ -93,22 +95,129 @@ export default function StudentHome() {
           <div className="font-bold text-base" style={{ color: 'oklch(0.2 0.02 250)' }}>
             안녕하세요, {currentUser.name}님 ✨
           </div>
-          <div className="text-sm mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>
-            오늘도 목표를 향해 나아가요!
+          <div className="flex items-center gap-2 mt-1">
+            {gradeLevel && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#EDE9FE', color: '#7C3AED' }}>
+                {gradeLevel}
+              </span>
+            )}
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{ background: tierColor + '18', color: tierColor, border: `1px solid ${tierColor}44` }}>
+              {tierLabel}
+            </span>
+            <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.1 80)' }}>
+              ⚡ {profile?.totalSP.toLocaleString() ?? 0} SP
+            </span>
           </div>
         </div>
 
-        {/* 빠른 이동 — 4개 항목을 2×2 그리드로 균형 있게 배치 */}
-        <div className="grid grid-cols-2 gap-2">
-          {QUICK_ACTIONS.map(({ icon: Icon, label, path, color }) => (
-            <Link key={path} href={path} style={{ display: 'block' }}>
+        {/* 빠른 이동 3×2 */}
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { icon: ClipboardList, label: '테스트',    path: '/student/grades',          color: 'oklch(0.511 0.262 276.966)' },
+            { icon: BookOpen,      label: '내 반',      path: '/student/classes',          color: 'oklch(0.45 0.15 160)' },
+            { icon: CalendarCheck, label: '출결',       path: '/student/attendance',       color: 'oklch(0.55 0.15 80)' },
+            { icon: Trophy,        label: '진열장',     path: '/student/growth',           color: 'oklch(0.7 0.18 80)' },
+            { icon: Swords,        label: 'Rival',     path: '/student/rival',            color: '#7C3AED' },
+            { icon: GraduationCap, label: universityLabel, path: '/student/target-preview', color: '#7C3AED' },
+          ].map(({ icon: Icon, label, path, color }) => (
+            <Link key={`${path}-${label}`} href={path} style={{ display: 'block' }}>
               <div className="axis-card p-3 flex flex-col items-center gap-1.5 cursor-pointer">
                 <Icon size={20} style={{ color }} />
-                <span className="text-xs font-medium" style={{ color: 'oklch(0.3 0.02 250)' }}>{label}</span>
+                <span className="text-xs font-medium text-center" style={{ color: 'oklch(0.3 0.02 250)', fontSize: 10 }}>{label}</span>
               </div>
             </Link>
           ))}
         </div>
+
+        {/* Rival 현황 카드 */}
+        {hasNickname && rivalInfo?.relation ? (
+          <Link href="/student/rival" style={{ display: 'block' }}>
+            <div className="axis-card p-4 cursor-pointer">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: '#EDE9FE' }}>
+                    <Swords size={18} style={{ color: '#7C3AED' }} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                      Rival 전적 @{storedProfile.nickname}
+                    </div>
+                    <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                      {rivalInfo.relation.wins}승 {rivalInfo.relation.losses}패 ·
+                      승률 {rivalInfo.relation.winRate.toFixed(1)}%
+                      {rivalInfo.relation.streak > 0 ? ` 🔥 ${rivalInfo.relation.streak}연승` : ''}
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight size={15} style={{ color: 'oklch(0.7 0.01 250)' }} />
+              </div>
+            </div>
+          </Link>
+        ) : !hasNickname ? (
+          <Link href="/student/my" style={{ display: 'block' }}>
+            <div className="axis-card p-4 cursor-pointer" style={{ borderLeft: '3px solid oklch(0.511 0.262 276.966)' }}>
+              <div className="flex items-center gap-2">
+                <Swords size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <div className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>
+                  닉네임을 설정하면 <strong>Rival</strong> 기능을 사용할 수 있습니다
+                </div>
+              </div>
+              <div className="text-xs mt-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                마이페이지 → 닉네임 설정
+              </div>
+            </div>
+          </Link>
+        ) : null}
+
+        {/* 성장 요약 */}
+        <Link href="/student/growth" style={{ display: 'block' }}>
+          <div className="axis-card p-4 cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: tierColor + '18' }}>
+                  <TrendingUp size={18} style={{ color: tierColor }} />
+                </div>
+                <div>
+                  <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                    성장 진열장
+                  </div>
+                  <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                    SP {profile?.totalSP.toLocaleString() ?? 0} · 엠블럼 {myEmblems.length}개 보유
+                  </div>
+                </div>
+              </div>
+              <ChevronRight size={15} style={{ color: 'oklch(0.7 0.01 250)' }} />
+            </div>
+          </div>
+        </Link>
+
+        {/* 목표대학 추천 / 대학추천 입구 */}
+        <Link href="/student/target-preview" style={{ display: 'block' }}>
+          <div className="axis-card p-4 cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: '#EDE9FE' }}>
+                  <GraduationCap size={18} style={{ color: '#7C3AED' }} />
+                </div>
+                <div>
+                  <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                    {universityLabel}
+                  </div>
+                  <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                    {gradeLevel === '고3'
+                      ? '수능실전 결과 기반 준비 상태 확인'
+                      : '성적 기반 목표 방향 준비'}
+                  </div>
+                </div>
+              </div>
+              <ChevronRight size={15} style={{ color: 'oklch(0.7 0.01 250)' }} />
+            </div>
+          </div>
+        </Link>
 
         {/* 숙제 요약 */}
         <section>
@@ -117,10 +226,8 @@ export default function StudentHome() {
               <ClipboardList size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
               <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>숙제</span>
               {incompleteHomework.length > 0 && (
-                <span
-                  className="text-xs px-1.5 py-0.5 rounded-full font-bold text-white"
-                  style={{ background: 'oklch(0.577 0.245 27.325)' }}
-                >
+                <span className="text-xs px-1.5 py-0.5 rounded-full font-bold text-white"
+                  style={{ background: 'oklch(0.577 0.245 27.325)' }}>
                   {incompleteHomework.length}
                 </span>
               )}
@@ -129,11 +236,8 @@ export default function StudentHome() {
               <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>내 숙제 보기</span>
             </Link>
           </div>
-
           {myHomework.length === 0 ? (
-            <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
-              배정된 숙제가 없습니다
-            </div>
+            <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>배정된 숙제가 없습니다</div>
           ) : incompleteHomework.length === 0 ? (
             <div className="axis-card p-4 flex items-center gap-2">
               <CheckCircle2 size={16} style={{ color: 'oklch(0.45 0.15 160)' }} />
@@ -141,15 +245,13 @@ export default function StudentHome() {
             </div>
           ) : (
             <div className="space-y-2">
-              {upcomingHomework.map((hw) => {
+              {upcomingHomework.map(hw => {
                 const badge = dueBadge(hw.dueDate);
                 return (
                   <Link key={hw.id} href="/student/homework" style={{ display: 'block' }}>
                     <div className="axis-card p-4 flex items-center justify-between">
                       <div className="min-w-0">
-                        <div className="font-medium text-sm truncate" style={{ color: 'oklch(0.2 0.02 250)' }}>
-                          {hw.title}
-                        </div>
+                        <div className="font-medium text-sm truncate" style={{ color: 'oklch(0.2 0.02 250)' }}>{hw.title}</div>
                         <div className="flex items-center gap-1 mt-0.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
                           <CalendarClock size={11} />
                           {classNameOf(hw.classId)} · {hw.dueDate}
@@ -167,67 +269,6 @@ export default function StudentHome() {
           )}
         </section>
 
-        {/* 티어 + SP */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="axis-card p-4 flex flex-col items-center gap-1">
-            <Trophy size={24} style={{ color: tierColor }} />
-            <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>현재 티어</div>
-            <div className="font-bold text-sm" style={{ color: tierColor }}>{tierLabel}</div>
-          </div>
-          <div className="axis-card p-4 flex flex-col items-center gap-1">
-            <Zap size={24} style={{ color: 'oklch(0.7 0.18 80)' }} />
-            <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>누적 SP</div>
-            <div className="font-bold text-sm tabular-nums" style={{ color: 'oklch(0.4 0.1 80)' }}>
-              {profile?.totalSP.toLocaleString() ?? 0}
-            </div>
-          </div>
-        </div>
-
-        {/* 나의 진열장 */}
-        <section>
-          <div className="flex items-center gap-2 mb-2 px-1">
-            <Award size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
-            <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>나의 진열장</span>
-            <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
-              {myEmblemsWithDef.length}개 보유
-            </span>
-          </div>
-          <div className="axis-card p-4">
-            {myEmblemsWithDef.length === 0 ? (
-              <div className="text-center py-4 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
-                아직 획득한 엠블럼이 없습니다. 열심히 공부해서 첫 엠블럼을 획득해보세요!
-              </div>
-            ) : (
-              <div className="flex gap-3 flex-wrap">
-                {myEmblemsWithDef.slice(0, 6).map(({ se, def }) => {
-                  const badge = MATERIAL_BADGE[def.material];
-                  return (
-                    <div key={se.id} className="flex flex-col items-center gap-1">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-                        style={{ background: badge.bg, border: `2px solid ${badge.border}` }}
-                      >
-                        🏅
-                      </div>
-                      <div className="text-xs text-center truncate" style={{ color: 'oklch(0.5 0.015 250)', maxWidth: 52 }}>
-                        {def.name}
-                      </div>
-                    </div>
-                  );
-                })}
-                {myEmblemsWithDef.length > 6 && (
-                  <div className="flex flex-col items-center justify-center gap-1">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold"
-                      style={{ background: 'oklch(0.95 0.005 250)', color: 'oklch(0.5 0.015 250)' }}>
-                      +{myEmblemsWithDef.length - 6}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </section>
-
         {/* 최근 공개 성적 */}
         <section>
           <div className="flex items-center justify-between mb-2 px-1">
@@ -240,28 +281,20 @@ export default function StudentHome() {
             </Link>
           </div>
           {publishedResults.length === 0 ? (
-            <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
-              공개된 성적이 없습니다
-            </div>
+            <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>공개된 성적이 없습니다</div>
           ) : (
             <div className="space-y-2">
-              {publishedResults.map((r) => {
+              {publishedResults.map(r => {
                 const pct = r.totalPoints > 0 ? Math.round((r.earnedScore / r.totalPoints) * 100) : 0;
                 return (
                   <div key={r.examId} className="axis-card p-4 flex items-center justify-between">
                     <div>
                       <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{r.title}</div>
-                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                        {r.examDate}
-                      </div>
+                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{r.examDate}</div>
                     </div>
                     <div className="text-right">
-                      <div
-                        className="font-bold tabular-nums text-sm"
-                        style={{
-                          color: pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)',
-                        }}
-      >
+                      <div className="font-bold tabular-nums text-sm"
+                        style={{ color: pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)' }}>
                         {r.earnedScore}/{r.totalPoints}
                       </div>
                       <div className="text-xs tabular-nums" style={{ color: 'oklch(0.6 0.015 250)' }}>{pct}%</div>
@@ -271,57 +304,6 @@ export default function StudentHome() {
               })}
             </div>
           )}
-        </section>
-
-        {/* 수납 상태 — FinanceContext 실데이터, /student/finance 링크 */}
-        <section>
-          <div className="flex items-center gap-2 mb-2 px-1">
-            <CreditCard size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
-            <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>수납 상태</span>
-          </div>
-          <Link href="/student/finance">
-            <div className="axis-card p-4 cursor-pointer">
-              {myInvoices.length === 0 ? (
-                <div className="flex items-center justify-between">
-                  <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
-                    수납 내역이 없습니다
-                  </div>
-                  <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
-                </div>
-              ) : (
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex gap-3 text-xs flex-wrap">
-                    <span style={{ color: 'oklch(0.55 0.015 250)' }}>
-                      청구{' '}
-                      <span className="font-semibold tabular-nums" style={{ color: 'oklch(0.25 0.02 250)' }}>
-                        {financeTotalBilled.toLocaleString()}원
-                      </span>
-                    </span>
-                    {financeUnpaid > 0 && (
-                      <span style={{ color: 'oklch(0.55 0.015 250)' }}>
-                        미납{' '}
-                        <span className="font-semibold tabular-nums" style={{ color: 'oklch(0.55 0.2 27)' }}>
-                          {financeUnpaid.toLocaleString()}원
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span
-                      className="text-xs px-2 py-0.5 rounded-full font-medium"
-                      style={financeUnpaid > 0
-                        ? { background: 'oklch(0.93 0.1 25)',   color: 'oklch(0.45 0.15 25)' }
-                        : { background: 'oklch(0.92 0.08 145)', color: 'oklch(0.3 0.12 145)' }
-                      }
-                    >
-                      {financeUnpaid > 0 ? '미납 있음' : '완납'}
-                    </span>
-                    <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
-                  </div>
-                </div>
-              )}
-            </div>
-          </Link>
         </section>
 
       </div>

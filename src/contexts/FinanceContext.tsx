@@ -31,6 +31,7 @@ import {
 import { useEnrollment } from '@/contexts/EnrollmentContext';
 import { useNotification } from '@/contexts/NotificationContext';
 import { useStudents } from '@/contexts/StudentContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AddPaymentInput {
   invoiceId: string;
@@ -392,8 +393,44 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// ─── Phase 3A-2: 학생 role 재무 데이터 원천 차단 ──────────────────────
+// StudentFinance.tsx는 이미 완전 격리되어 있고 어떤 학생 화면도 useFinance()를
+// 호출하지 않지만, "UI에서 숨기는 것만으로는 불충분하다"는 원칙에 따라
+// 데이터 계층(훅 레벨)에서 한 번 더 차단한다. App.tsx의 Provider 순서상
+// FinanceProvider가 AuthProvider보다 바깥(상위)에 위치해 FinanceProvider
+// 자체에서는 useAuth()를 호출할 수 없으므로, 실제 소비 지점인 useFinance()
+// 훅에서 role을 검사해 STUDENT 계정에는 실제 데이터를 절대 반환하지 않는다.
+const STUDENT_BLOCKED_REASON = '학생 계정은 재무 데이터에 접근할 수 없습니다.';
+
+const STUDENT_SAFE_FINANCE: FinanceContextType = {
+  invoices: [], payments: [], refunds: [], settlements: [], receipts: [],
+  getInvoicesByEnrollment: () => [],
+  getInvoicesByStudent: () => [],
+  getPaymentsByInvoice: () => [],
+  getRefundsByInvoice: () => [],
+  getPaidAmount: () => 0,
+  getUnpaidAmount: () => 0,
+  getRefundable: () => 0,
+  getReceiptByPayment: () => undefined,
+  addPayment: () => ({ ok: false, reason: STUDENT_BLOCKED_REASON }),
+  issueReceipt: () => {},
+  requestRefund: () => ({ ok: false, reason: STUDENT_BLOCKED_REASON }),
+  approveRefund: () => ({ ok: false, reason: STUDENT_BLOCKED_REASON }),
+  rejectRefund: () => {},
+  completeRefund: () => {},
+  confirmSettlement: () => ({ ok: false, reason: STUDENT_BLOCKED_REASON }),
+  generateInvoicesForMonth: () => 0,
+  generateSettlementForMonth: (month: string) => ({
+    id: 'blocked', month, totalBilled: 0, totalPaid: 0, totalUnpaid: 0, totalRefunded: 0, status: 'DRAFT',
+  }),
+};
+
 export function useFinance() {
   const ctx = useContext(FinanceContext);
   if (!ctx) throw new Error('useFinance must be used within FinanceProvider');
+  const { currentUser } = useAuth();
+  if (currentUser?.position === 'STUDENT') {
+    return STUDENT_SAFE_FINANCE;
+  }
   return ctx;
 }

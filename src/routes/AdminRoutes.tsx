@@ -30,6 +30,12 @@ import PasswordResetManagement from '@/pages/settings/PasswordResetManagement';
 import GrowthOverview from '@/pages/growth/GrowthOverview';
 import EmblemManagement from '@/pages/growth/EmblemManagement';
 import RivalManagement from '@/pages/growth/RivalManagement';
+import RivalSeasonManagement from '@/pages/growth/RivalSeasonManagement';
+import ShowcasePolicyManagement from '@/pages/growth/ShowcasePolicyManagement';
+import UniversityReportManagement from '@/pages/admin/UniversityReportManagement';
+// ⚠ Phase 3A-2 Final Cleanup: StudentInputGradeReview 완전 제거 (2026-07-01)
+//   - 학생 성적 직접 입력 자체가 AXIS LMS 헌법 위반이라, 그 승인/반려 검토 화면도 함께 제거.
+//   - /admin/student-input-review 경로는 더 이상 존재하지 않는다(리다이렉트도 없음).
 import EmployeeList from '@/pages/EmployeeList';
 import EmployeeDetail from '@/pages/EmployeeDetail';
 import NotFound from '@/pages/NotFound';
@@ -97,6 +103,11 @@ export default function AdminRoutes() {
         <Route path="/admin/growth/overview" component={GrowthOverview} />
         <Route path="/admin/growth/emblems" component={EmblemManagement} />
         <Route path="/admin/growth/rivals" component={RivalManagement} />
+        <Route path="/admin/growth/rival-seasons" component={RivalSeasonManagement} />
+        <Route path="/admin/growth/showcase-policy" component={ShowcasePolicyManagement} />
+
+        {/* 대학추천/목표대학 관리자 리포트 */}
+        <Route path="/admin/university-reports" component={UniversityReportManagement} />
 
         {/* 시스템설정 */}
         <Route path="/admin/settings" component={() => <Redirect to="/admin/settings/academy" />} />

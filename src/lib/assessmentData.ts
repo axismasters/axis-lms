@@ -15,11 +15,15 @@ export interface ExamCategoryDef {
 }
 
 export const EXAM_CATEGORIES: ExamCategoryDef[] = [
-  { id: 'entrance-test', label: '입학테스트' },
-  { id: 'unit-eval', label: '단원평가' },
-  { id: 'certification', label: '인증평가' },
-  { id: 'mock-school', label: '내신대비모의고사' },
-  { id: 'mock-suneung', label: '수능실전모의고사' },
+  { id: 'entrance-test',  label: '입학테스트' },      // ❌ 학생 화면 미표시 (배치/상담 내부 자료)
+  { id: 'unit-eval',      label: '단원평가' },
+  { id: 'certification',  label: '인증평가' },
+  { id: 'mock-school',    label: '내신대비모의고사' },
+  { id: 'mock-suneung',   label: '수능실전모의고사' },
+  // Phase 2D 추가 카테고리 ──────────────────────────────────────
+  { id: 'national-mock',  label: '전국모의고사' },     // 전국연합/학평/교육청/평가원 (Phase 2D)
+  { id: 'school-record',  label: '실제내신성적' },     // 학교 중간/기말 (Phase 2D)
+  { id: 'weekly-suneung', label: '수능실전주간루틴' }, // 주간 실전모의 별도 구분 (Phase 2D)
 ];
 
 export function categoryLabel(categoryId: string): string {
@@ -210,6 +214,13 @@ export function recalcTotalScore(sub: ExamSubmission): ExamSubmission {
 // ────────────────────────────────────────────────────────────
 // 학생 상세 성적조회 탭 반영용 — StudentDetail.tsx가 이 함수만 호출해서 사용한다.
 // ────────────────────────────────────────────────────────────
+// IF 채점 quick-tap용 오답 문항 정보 (문항별 배점 기준)
+export interface WrongQuestionInfo {
+  questionId: string;
+  no: number;        // 문항 번호
+  points: number;     // 해당 문항 배점 (놓친 점수 계산 기준)
+}
+
 export interface StudentExamResult {
   examId: string;
   title: string;
@@ -218,6 +229,46 @@ export interface StudentExamResult {
   totalPoints: number;    // 만점
   earnedScore: number;    // 획득 점수(totalScore — isResultVisibleForStudent를 통과했으므로 항상 number)
   classId?: string;
+  // ─── 성적표 상세 통계 (같은 시험의 전체 제출 기준 산출) ────────────
+  averageScore?: number;      // 응시자 평균 점수
+  highestScore?: number;      // 응시자 최고 점수
+  participantCount?: number;  // 응시인원(결석 제외, 채점 완료된 제출만)
+  myRank?: number;            // 내 등수(1위부터, 동점자는 공동 순위)
+  // ─── IF 채점(quick-tap)용 오답 문항 목록 ───────────────────────────
+  wrongQuestions: WrongQuestionInfo[];
+}
+
+// 같은 시험의 전체 제출본(결석 제외, 채점 완료 = totalScore 확정)을 기준으로
+// 평균/최고점/응시인원/등수를 계산한다. isResultVisibleForStudent와 동일한
+// "유효 제출" 기준(결석 아님 + totalScore 확정)을 재사용해 통계와 공개 여부 판정이 항상 일치한다.
+function computeExamStatistics(
+  examId: string,
+  submissions: ExamSubmission[],
+  studentId: string
+): { averageScore?: number; highestScore?: number; participantCount?: number; myRank?: number } {
+  const valid = submissions.filter(
+    (s) => s.examId === examId && s.status !== '결석' && s.totalScore !== undefined
+  );
+  if (valid.length === 0) return {};
+  const scores = valid.map((s) => s.totalScore!);
+  const participantCount = valid.length;
+  const averageScore = Math.round((scores.reduce((sum, v) => sum + v, 0) / participantCount) * 10) / 10;
+  const highestScore = Math.max(...scores);
+  const mySubmission = valid.find((s) => s.studentId === studentId);
+  const myRank = mySubmission
+    ? scores.filter((v) => v > mySubmission.totalScore!).length + 1
+    : undefined;
+  return { averageScore, highestScore, participantCount, myRank };
+}
+
+// exam.questions + submission.answers를 대조해 오답 문항(정오 판정이 false인 문항)만 추려서
+// IF 채점 quick-tap에 필요한 최소 정보(문항 id/번호/배점)로 변환한다.
+function computeWrongQuestions(exam: Exam, submission: ExamSubmission): WrongQuestionInfo[] {
+  const answerById = new Map(submission.answers.map((a) => [a.questionId, a]));
+  return exam.questions
+    .filter((q) => answerById.get(q.id)?.isCorrect === false)
+    .map((q) => ({ questionId: q.id, no: q.no, points: q.points }))
+    .sort((a, b) => a.no - b.no);
 }
 
 // exams/submissions 전체에서 특정 학생에게 "지금 보여줘도 되는" 결과만 추려서 반환한다.
@@ -229,6 +280,7 @@ export function getPublishedResultsForStudent(exams: Exam[], submissions: ExamSu
     const sub = submissions.find((s) => s.examId === exam.id && s.studentId === studentId);
     if (!sub) return;
     if (!isResultVisibleForStudent(exam, sub)) return;
+    const stats = computeExamStatistics(exam.id, submissions, studentId);
     results.push({
       examId: exam.id,
       title: exam.title,
@@ -237,6 +289,8 @@ export function getPublishedResultsForStudent(exams: Exam[], submissions: ExamSu
       totalPoints: exam.totalScore,
       earnedScore: sub.totalScore!, // isResultVisibleForStudent가 undefined가 아님을 보장
       classId: exam.classId,
+      ...stats,
+      wrongQuestions: computeWrongQuestions(exam, sub),
     });
   });
   return results.sort((a, b) => b.examDate.localeCompare(a.examDate));

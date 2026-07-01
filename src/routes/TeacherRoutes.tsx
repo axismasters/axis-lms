@@ -14,6 +14,11 @@ import TeacherGrades from '@/pages/teacher/TeacherGrades';
 import TeacherVideos from '@/pages/teacher/TeacherVideos';
 import TeacherNotes from '@/pages/teacher/TeacherNotes';
 import TeacherHomework from '@/pages/teacher/TeacherHomework';
+import TeacherStudentGrowth from '@/pages/teacher/TeacherStudentGrowth';
+// ─── Phase 3A-1: 대학추천 데이터 관리 ─────────────────────────────────
+// ⚠ Phase 3A-2 Final Cleanup: TeacherAcademicInput(구 성적 입력 화면)은 제거되고
+//   /teacher/university-data로 완전히 대체되었다(아래 라우트에서 redirect 처리).
+import TeacherUniversityData from '@/pages/teacher/TeacherUniversityData';
 import TeacherLayout from '@/layouts/TeacherLayout';
 
 function TeacherPlaceholder({ title }: { title: string }) {
@@ -61,6 +66,14 @@ export default function TeacherRoutes() {
 
         {/* 담당 학생 성적 확인 */}
         <Route path="/teacher/grades" component={TeacherGrades} />
+
+        {/* Phase 3A: 학생 성장 요약 */}
+        <Route path="/teacher/growth" component={TeacherStudentGrowth} />
+
+        {/* Phase 3A-1: 대학추천 데이터 관리 */}
+        {/* ⚠ Phase 3A-2 Final Cleanup: 구 academic-input 경로는 university-data로 완전 대체 → redirect */}
+        <Route path="/teacher/academic-input" component={() => <Redirect to="/teacher/university-data" />} />
+        <Route path="/teacher/university-data" component={TeacherUniversityData} />
 
         {/* 내 수업영상 */}
         <Route path="/teacher/videos" component={TeacherVideos} />

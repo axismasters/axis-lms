@@ -1177,7 +1177,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
             ))}
           </div>
           <p className="text-xs mt-2" style={{ color: 'oklch(0.65 0.01 250)' }}>
-            실제 대학명·합격 가능성·추천 순위는 표시되지 않습니다.
+            실제 대학명·추천 순위 같은 확정 결과는 표시되지 않으며, 추천 적합도 중심의 참고 지표만 제공됩니다.
           </p>
         </div>
       </Area>
@@ -1365,7 +1365,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
         >
           <Info size={13} style={{ color: 'oklch(0.511 0.262 276.966)', flexShrink: 0, marginTop: 1 }} />
           <p className="text-xs" style={{ color: 'oklch(0.45 0.015 250)' }}>
-            실제 대학명·합격 가능성·추천 순위는 다음 단계에서 계산됩니다.
+            실제 대학명·추천 순위 같은 확정 결과는 다음 단계에서 계산되며, 지금은 추천 적합도 중심의 입력 조립 단계입니다.
           </p>
         </div>
 
@@ -1606,7 +1606,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
               IF 개선 시나리오
             </div>
             <p className="text-xs mb-2 leading-relaxed" style={{ color: 'oklch(0.6 0.01 250)' }}>
-              합격 가능성 변화 계산이 아닌, 수학 점수 향상을 가정하는 입력값입니다.
+              확정 결과 계산이 아닌, 수학 점수 향상 시 추천 변화를 가정하는 입력값입니다.
             </p>
 
             {/* 3-field input grid */}

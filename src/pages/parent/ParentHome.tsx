@@ -494,6 +494,41 @@ export default function ParentHome() {
                 </div>
               </Link>
             </section>
+
+            {/* 목표대학 추천 / 대학추천 요약 + 상담 리포트 입구 */}
+            <section className="space-y-2">
+              <div className="px-1 text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                추가 정보
+              </div>
+              <Link href="/parent/target-summary" style={{ display: 'block' }}>
+                <div className="axis-card p-4 flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#EDE9FE' }}>
+                      <span style={{ fontSize: 18 }}>🎓</span>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>목표대학 추천 요약</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>자녀의 준비 상태와 방향을 확인하세요</div>
+                    </div>
+                  </div>
+                  <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
+                </div>
+              </Link>
+              <Link href="/parent/consulting" style={{ display: 'block' }}>
+                <div className="axis-card p-4 flex items-center justify-between cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'oklch(0.94 0.04 250)' }}>
+                      <span style={{ fontSize: 18 }}>📋</span>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>상담 리포트</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>선생님 상담 기록을 조회합니다</div>
+                    </div>
+                  </div>
+                  <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
+                </div>
+              </Link>
+            </section>
           </>
         )}
 

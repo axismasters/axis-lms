@@ -3,16 +3,16 @@
 // 모바일/앱 확장 대비 — Bottom Navigation 기반 구조 (5탭).
 
 import { Link, useLocation } from 'wouter';
-import { Home, BookOpen, Users, BarChart2, Play, GraduationCap } from 'lucide-react';
+import { Home, BookOpen, Users, BarChart2, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 
 const TEACHER_NAV = [
-  { path: '/teacher',          label: '홈',   icon: Home },
-  { path: '/teacher/classes',  label: '담당반', icon: BookOpen },
-  { path: '/teacher/students', label: '학생',  icon: Users },
-  { path: '/teacher/exams',    label: '채점',  icon: BarChart2 },
-  { path: '/teacher/videos',   label: '자료',  icon: Play },
+  { path: '/teacher',                  label: '홈',     icon: Home },
+  { path: '/teacher/classes',          label: '담당반',  icon: BookOpen },
+  { path: '/teacher/students',         label: '학생',   icon: Users },
+  { path: '/teacher/exams',            label: '채점',   icon: BarChart2 },
+  { path: '/teacher/university-data',  label: '대학추천', icon: GraduationCap },
 ];
 
 interface TeacherLayoutProps {
