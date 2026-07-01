@@ -15,12 +15,13 @@
 //   - 학생 화면 수납/재무 노출 금지
 //   - 학생 성적 직접 입력 금지 (선생님이 입력)
 
-import { useState } from 'react';
-import { X, ClipboardList, Lightbulb, BarChart2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { X, ClipboardList, Lightbulb, BarChart2, TrendingUp, TrendingDown, Minus, Sparkles } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
-import { getPublishedResultsForStudent } from '@/lib/assessmentData';
+import { useGrowth } from '@/contexts/GrowthContext';
+import { getPublishedResultsForStudent, categoryLabel } from '@/lib/assessmentData';
 import {
   STUDENT_HIDDEN_CATEGORY_IDS,
   getSchoolGradeColor,
@@ -28,6 +29,10 @@ import {
 import type { StudentExamResult, ExamSubmission } from '@/lib/assessmentData';
 import { IF_REASONS, calcIfAnalysis, getIfMotivationComment, calcIfAnalysisFromQuestions, getIfMotivationCommentFromQuestions } from '@/lib/studentIfAnalysis';
 import type { IfReason, IfQuestionEntry } from '@/lib/studentIfAnalysis';
+import {
+  saveIfRecord, getIfRecordForExam, toGrowthIfFlags, markIfRecordGrowthLinked, loadIfRecords,
+} from '@/lib/studentIfRecord';
+import type { StudentIfRecord } from '@/lib/studentIfRecord';
 
 // ─── 성적 색상 ────────────────────────────────────────────────────────
 function scoreColor(pct: number) {
@@ -145,8 +150,232 @@ function ScoreVsAvgBar({ result }: { result: StudentExamResult }) {
   );
 }
 
+// ─── Phase 3B: 시험지 상세 누적 성장 그래프 ─────────────────────────
+// 별도 메뉴 없음 — "테스트" 성적표 상세(ResultDetailModal) 안에서만 노출된다.
+// 표시 위치: "성적 요약" 아래, IF 채점 블록 위.
+//
+// 6개 그래프:
+//   1. 최근 테스트 점수 추이(최근 5회)
+//   2. 시험군 내 하위 카테고리별 누적 성취도
+//   3. IF 점수 추이
+//   4. 놓친 점수 누적
+//   5. 계산 실수/개념 부족/시간 부족 비율
+//   6. 같은 시험군 내 성장 변화(첫 기록 대비)
+//
+// 데이터 구조는 Rival 비교/Emblem·SP 지급 트리거가 그대로 재사용할 수 있도록
+// studentIfRecord.ts의 저장 레코드 + StudentExamResult만 사용하고, 이 컴포넌트
+// 안에서만 쓰는 파생값은 별도 export하지 않는다(필요해지면 lib으로 승격).
+function MiniSparkline({ points, color }: { points: number[]; color: string }) {
+  if (points.length < 2) return null;
+  const W = 200, H = 56, pad = 6;
+  const min = Math.min(...points), max = Math.max(...points);
+  const range = max - min || 10;
+  const xs = points.map((_, i) => pad + (i / (points.length - 1)) * (W - 2 * pad));
+  const ys = points.map(p => H - pad - ((p - min) / range) * (H - 2 * pad));
+  const line = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxWidth: W }}>
+      <polyline points={line} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {xs.map((x, i) => <circle key={i} cx={x} cy={ys[i]} r={i === xs.length - 1 ? 3.5 : 2.5} fill={color} />)}
+    </svg>
+  );
+}
+
+function CumulativeGrowthSection({
+  currentResult, sameCategoryResults, studentId,
+}: {
+  currentResult: StudentExamResult;
+  sameCategoryResults: StudentExamResult[]; // 날짜 오름차순, currentResult 포함
+  studentId: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const upToNow = useMemo(
+    () => sameCategoryResults.filter(r => r.examDate <= currentResult.examDate),
+    [sameCategoryResults, currentResult.examDate]
+  );
+
+  // 1. 최근 테스트 점수 추이(최근 5회, 현재 시험까지)
+  const recent5 = upToNow.slice(-5);
+  const recent5Pcts = recent5.map(r => r.totalPoints > 0 ? Math.round(r.earnedScore / r.totalPoints * 100) : 0);
+
+  // 2. 시험군 내 하위 카테고리(단원)별 누적 평균
+  const byCategory = useMemo(() => {
+    const map = new Map<string, number[]>();
+    upToNow.forEach(r => {
+      const p = r.totalPoints > 0 ? Math.round(r.earnedScore / r.totalPoints * 100) : 0;
+      map.set(r.categoryId, [...(map.get(r.categoryId) ?? []), p]);
+    });
+    return Array.from(map.entries()).map(([categoryId, pcts]) => ({
+      categoryId,
+      avg: Math.round(pcts.reduce((s, p) => s + p, 0) / pcts.length),
+      count: pcts.length,
+    }));
+  }, [upToNow]);
+
+  // 3~5. IF 저장 데이터 기반 — 이 시험군에 속한 시험들의 저장된 IF 레코드만 사용
+  const ifRecords = useMemo(() => {
+    const examIds = new Set(upToNow.map(r => r.examId));
+    return loadIfRecords(studentId).filter(r => examIds.has(r.examId) && r.isComplete)
+      .sort((a, b) => a.examDate.localeCompare(b.examDate));
+  }, [studentId, upToNow]);
+
+  const ifScorePcts = ifRecords.map(r => r.totalPoints > 0 ? Math.round(r.ifScore / r.totalPoints * 100) : 0);
+  const cumulativeMissed = ifRecords.reduce((acc: number[], r) => {
+    const prev = acc.length > 0 ? acc[acc.length - 1] : 0;
+    acc.push(prev + r.missedPoints);
+    return acc;
+  }, []);
+  const reasonSummary = getIfCumulativeSummaryLocal(ifRecords);
+
+  // 6. 같은 시험군 내 성장 변화 — 첫 기록 대비 현재
+  const firstPct = upToNow.length > 0
+    ? (upToNow[0].totalPoints > 0 ? Math.round(upToNow[0].earnedScore / upToNow[0].totalPoints * 100) : 0)
+    : null;
+  const currentPct = currentResult.totalPoints > 0 ? Math.round(currentResult.earnedScore / currentResult.totalPoints * 100) : 0;
+  const growthChange = firstPct !== null ? currentPct - firstPct : null;
+
+  const hasAnyData = upToNow.length >= 2 || ifRecords.length > 0;
+  if (!hasAnyData) return null;
+
+  return (
+    <div className="mx-5 mb-5 rounded-xl overflow-hidden border" style={{ borderColor: 'oklch(0.88 0.06 200)' }}>
+      <button type="button" onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-3"
+        style={{ background: open ? 'oklch(0.94 0.05 200)' : 'oklch(0.97 0.02 200)' }}>
+        <div className="flex items-center gap-2">
+          <Sparkles size={14} style={{ color: 'oklch(0.5 0.14 200)' }} />
+          <span className="text-sm font-bold" style={{ color: 'oklch(0.25 0.02 250)' }}>누적 성장 그래프</span>
+          <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>이 시험까지의 변화</span>
+        </div>
+        <span className="text-xs font-medium" style={{ color: 'oklch(0.5 0.14 200)' }}>{open ? '닫기' : '보기'}</span>
+      </button>
+
+      {open && (
+        <div className="px-4 py-4 space-y-4 bg-white">
+          {/* 1. 최근 점수 추이 */}
+          {recent5Pcts.length >= 2 && (
+            <div>
+              <div className="text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                최근 테스트 점수 추이 (최근 {recent5Pcts.length}회)
+              </div>
+              <MiniSparkline points={recent5Pcts} color="oklch(0.511 0.262 276.966)" />
+            </div>
+          )}
+
+          {/* 2. 시험군 내 카테고리별 누적 성취도 */}
+          {byCategory.length > 0 && (
+            <div>
+              <div className="text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                시험군 내 누적 성취도
+              </div>
+              <div className="space-y-1.5">
+                {byCategory.map(({ categoryId, avg, count }) => (
+                  <div key={categoryId} className="flex items-center gap-2">
+                    <div className="text-xs w-20 flex-shrink-0 truncate" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                      {categoryLabel(categoryId)}
+                    </div>
+                    <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.93 0.006 250)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${avg}%`, background: scoreColor(avg) }} />
+                    </div>
+                    <div className="text-xs font-bold tabular-nums flex-shrink-0" style={{ color: scoreColor(avg), width: 40 }}>
+                      {avg}%
+                    </div>
+                    <div className="text-xs flex-shrink-0" style={{ color: 'oklch(0.65 0.015 250)' }}>({count}회)</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 3. IF 점수 추이 */}
+          {ifScorePcts.length >= 2 && (
+            <div>
+              <div className="text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                IF 점수 추이 (놓친 이유를 다 잡았다면?)
+              </div>
+              <MiniSparkline points={ifScorePcts} color="#7C3AED" />
+            </div>
+          )}
+
+          {/* 4. 놓친 점수 누적 */}
+          {cumulativeMissed.length > 0 && (
+            <div className="flex items-center justify-between rounded-lg p-3" style={{ background: 'oklch(0.97 0.004 247)' }}>
+              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                누적 놓친 점수 ({ifRecords.length}회 분석 기준)
+              </div>
+              <div className="font-black text-base tabular-nums" style={{ color: 'oklch(0.55 0.2 27)' }}>
+                {cumulativeMissed[cumulativeMissed.length - 1]}점
+              </div>
+            </div>
+          )}
+
+          {/* 5. IF 사유 비율 */}
+          {reasonSummary.total > 0 && (
+            <div>
+              <div className="text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                놓친 이유 비율
+              </div>
+              <div className="flex h-3 rounded-full overflow-hidden" style={{ background: 'oklch(0.93 0.006 250)' }}>
+                {reasonSummary.ratios.map(({ reason, pct }) => pct > 0 && (
+                  <div key={reason} style={{
+                    width: `${pct}%`,
+                    background: reason === '계산 실수' ? 'oklch(0.55 0.2 27)' : reason === '개념 부족' ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.55 0.15 80)',
+                  }} />
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2.5 mt-1.5">
+                {reasonSummary.ratios.map(({ reason, pct, count }) => (
+                  <div key={reason} className="flex items-center gap-1 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                    <span className="inline-block w-2 h-2 rounded-full" style={{
+                      background: reason === '계산 실수' ? 'oklch(0.55 0.2 27)' : reason === '개념 부족' ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.55 0.15 80)',
+                    }} />
+                    {reason} {pct}%({count})
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 6. 같은 시험군 내 성장 변화 */}
+          {growthChange !== null && upToNow.length >= 2 && (
+            <div className="rounded-lg px-3 py-2.5 text-xs flex items-center gap-2" style={{ background: 'oklch(0.95 0.05 200)', color: 'oklch(0.3 0.1 200)' }}>
+              {growthChange > 0 ? <TrendingUp size={14} /> : growthChange < 0 ? <TrendingDown size={14} /> : <Minus size={14} />}
+              같은 시험군 첫 기록({firstPct}%) 대비 {growthChange > 0 ? `+${growthChange}%p 상승` : growthChange < 0 ? `${growthChange}%p 하락` : '변화 없음'}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// getIfCumulativeSummary는 studentId 전체 기준 집계용이라, 이 컴포넌트처럼 "시험군으로
+// 좁힌 레코드 배열"에 바로 쓸 수 있는 로컬 버전을 별도로 둔다(요청 시 studentIfRecord.ts로 승격 가능).
+function getIfCumulativeSummaryLocal(records: StudentIfRecord[]): {
+  total: number;
+  ratios: { reason: IfReason; pct: number; count: number }[];
+} {
+  const counts: Record<IfReason, number> = { '계산 실수': 0, '개념 부족': 0, '시간 부족': 0 };
+  let total = 0;
+  records.forEach(r => r.selections.forEach(s => { counts[s.reason]++; total++; }));
+  const ratios = IF_REASONS.map(reason => ({
+    reason, count: counts[reason],
+    pct: total > 0 ? Math.round((counts[reason] / total) * 100) : 0,
+  })).sort((a, b) => b.count - a.count);
+  return { total, ratios };
+}
+
 // ─── 성적표 상세 모달 (IF 채점 포함) ────────────────────────────────
-function ResultDetailModal({ result, onClose }: { result: StudentExamResult; onClose: () => void }) {
+function ResultDetailModal({
+  result, sameCategoryResults, studentId, onClose,
+}: {
+  result: StudentExamResult;
+  sameCategoryResults: StudentExamResult[]; // 같은 시험군(탭) 결과, 날짜 오름차순
+  studentId: string;
+  onClose: () => void;
+}) {
+  const { onIfAnalysisResult, addStudentSP } = useGrowth();
   const pct = result.totalPoints > 0 ? Math.round(result.earnedScore / result.totalPoints * 100) : 0;
   const avgPct = result.averageScore != null && result.totalPoints > 0
     ? Math.round(result.averageScore / result.totalPoints * 100) : null;
@@ -159,9 +388,19 @@ function ResultDetailModal({ result, onClose }: { result: StudentExamResult; onC
   ).slice(0, 9);
 
   const [ifOpen, setIfOpen] = useState(false);
-  // 문항별 quick-tap 방식(오답 문항이 있는 시험) — 문항ID → 선택된 이유
-  const [questionReasons, setQuestionReasons] = useState<Record<string, IfReason | null>>({});
   const hasQuestionLevelData = result.wrongQuestions.length > 0;
+
+  // 문항별 quick-tap 방식(오답 문항이 있는 시험) — 문항ID → 선택된 이유
+  // Phase 3B: localStorage에 저장된 이전 선택을 불러와 이어보기를 지원한다.
+  const [questionReasons, setQuestionReasons] = useState<Record<string, IfReason | null>>(() => {
+    if (!hasQuestionLevelData) return {};
+    const saved = getIfRecordForExam(studentId, result.examId);
+    if (!saved) return {};
+    const map: Record<string, IfReason | null> = {};
+    saved.selections.forEach(s => { map[s.questionId] = s.reason; });
+    return map;
+  });
+
   const questionEntries: IfQuestionEntry[] = result.wrongQuestions.map(wq => ({
     questionId: wq.questionId, no: wq.no, points: wq.points,
     reason: questionReasons[wq.questionId] ?? null,
@@ -173,6 +412,30 @@ function ResultDetailModal({ result, onClose }: { result: StudentExamResult; onC
         questions: questionEntries,
       })
     : null;
+
+  // Phase 3B: 탭할 때마다 저장 + 오답 전체에 이유가 채워지면 1회만 Growth(Emblem/SP) 훅 연결.
+  useEffect(() => {
+    if (!hasQuestionLevelData) return;
+    const selections = questionEntries
+      .filter((q): q is IfQuestionEntry & { reason: IfReason } => q.reason !== null)
+      .map(q => ({ questionId: q.questionId, no: q.no, points: q.points, reason: q.reason }));
+    if (selections.length === 0) return; // 아직 하나도 안 골랐으면 저장할 것도 없음
+
+    const record = saveIfRecord({
+      studentId, examId: result.examId, examTitle: result.title, examDate: result.examDate,
+      categoryId: result.categoryId, actualScore: result.earnedScore, totalPoints: result.totalPoints,
+      totalWrongCount: result.wrongQuestions.length, selections,
+    });
+
+    if (record.isComplete && !record.growthLinked) {
+      onIfAnalysisResult({
+        studentId, examId: result.examId, ifFlags: toGrowthIfFlags(record),
+      });
+      addStudentSP(studentId, 5, 'IF 분석 완료 — 오답 회고', 'ASSESSMENT', result.examId, 'SYSTEM');
+      markIfRecordGrowthLinked(studentId, result.examId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionReasons]);
 
   // Fallback: 문항별 채점 데이터가 없는 legacy 시험은 기존 시험 전체 단위 방식을 그대로 사용한다.
   const [ifReason, setIfReason] = useState<IfReason>(IF_REASONS[0]);
@@ -228,6 +491,13 @@ function ResultDetailModal({ result, onClose }: { result: StudentExamResult; onC
             <ScoreVsAvgBar result={result} />
           </div>
         )}
+
+        {/* Phase 3B: 누적 성장 그래프 */}
+        <CumulativeGrowthSection
+          currentResult={result}
+          sameCategoryResults={sameCategoryResults}
+          studentId={studentId}
+        />
 
         {/* IF 채점 블록 */}
         {maxRecoverable > 0 && (
@@ -414,9 +684,10 @@ function TestCard({ result, onClick }: { result: StudentExamResult; onClick: () 
 }
 
 // ─── 탭 콘텐츠 ────────────────────────────────────────────────────────
-function TestTabContent({ results, tab }: { results: StudentExamResult[]; tab: TestTab }) {
+function TestTabContent({ results, tab, studentId }: { results: StudentExamResult[]; tab: TestTab; studentId: string }) {
   const [selectedResult, setSelectedResult] = useState<StudentExamResult | null>(null);
   const sorted = [...results].sort((a, b) => b.examDate.localeCompare(a.examDate));
+  const ascending = [...results].sort((a, b) => a.examDate.localeCompare(b.examDate)); // 누적 성장 그래프용(오름차순)
 
   // 요약 지표
   const pcts = sorted.map(r => r.totalPoints > 0 ? Math.round(r.earnedScore / r.totalPoints * 100) : 0);
@@ -468,7 +739,12 @@ function TestTabContent({ results, tab }: { results: StudentExamResult[]; tab: T
 
       {/* 상세 모달 */}
       {selectedResult && (
-        <ResultDetailModal result={selectedResult} onClose={() => setSelectedResult(null)} />
+        <ResultDetailModal
+          result={selectedResult}
+          sameCategoryResults={ascending}
+          studentId={studentId}
+          onClose={() => setSelectedResult(null)}
+        />
       )}
     </>
   );
@@ -534,7 +810,7 @@ export default function StudentGrades() {
         <div className="text-xs px-1" style={{ color: 'oklch(0.6 0.015 250)' }}>{activeTab.description}</div>
 
         {/* 탭 콘텐츠 */}
-        <TestTabContent results={tabResults} tab={activeTab} />
+        <TestTabContent results={tabResults} tab={activeTab} studentId={myStudentId} />
 
         {/* 대학추천 안내 */}
         <div className="axis-card px-4 py-3 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
