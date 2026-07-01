@@ -8,7 +8,6 @@ import StudentClasses from '@/pages/student/StudentClasses';
 import StudentGrades from '@/pages/student/StudentGrades';
 import StudentAttendance from '@/pages/student/StudentAttendance';
 import StudentHomework from '@/pages/student/StudentHomework';
-import StudentFinance from '@/pages/student/StudentFinance';
 import StudentMockExams from '@/pages/student/StudentMockExams';
 import StudentWeeklyMocks from '@/pages/student/StudentWeeklyMocks';
 import StudentLayout from '@/layouts/StudentLayout';
@@ -48,8 +47,8 @@ export default function StudentRoutes() {
         {/* 내 숙제 */}
         <Route path="/student/homework" component={StudentHomework} />
 
-        {/* 수납 내역 조회 (읽기 전용) */}
-        <Route path="/student/finance" component={StudentFinance} />
+        {/* Phase 3D v2: 학생 화면 재무 노출 절대 금지 — /student/finance는 항상 /student로 차단 리다이렉트 */}
+        <Route path="/student/finance" component={() => <Redirect to="/student" />} />
 
         {/* 모의고사 결과 조회 (읽기 전용) */}
         <Route path="/student/mock-exams" component={StudentMockExams} />

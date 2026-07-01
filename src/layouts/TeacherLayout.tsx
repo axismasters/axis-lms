@@ -3,7 +3,7 @@
 // 모바일/앱 확장 대비 — Bottom Navigation 기반 구조 (5탭).
 
 import { Link, useLocation } from 'wouter';
-import { Home, BookOpen, Users, BarChart2, GraduationCap } from 'lucide-react';
+import { Home, BookOpen, Users, BarChart2, GraduationCap, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 
@@ -21,8 +21,8 @@ interface TeacherLayoutProps {
 }
 
 export default function TeacherLayout({ children, title }: TeacherLayoutProps) {
-  const [location] = useLocation();
-  const { currentUser } = useAuth();
+  const [location, navigate] = useLocation();
+  const { currentUser, logout, canSwitchMode, activeMode, setActiveMode } = useAuth();
 
   const isActive = (path: string) => {
     if (path === '/teacher') return location === '/teacher';
@@ -42,6 +42,23 @@ export default function TeacherLayout({ children, title }: TeacherLayoutProps) {
       className="min-h-screen flex flex-col"
       style={{ fontFamily: "'Pretendard', -apple-system, sans-serif", background: 'oklch(0.97 0.005 250)' }}
     >
+      {/* Phase 3D v2: 원장/부원장이 강사 모드로 들어와 있을 때만 표시되는 복귀 바 */}
+      {canSwitchMode && activeMode === 'TEACHER_MODE' && (
+        <div
+          className="flex items-center justify-between px-4 py-1.5 text-xs"
+          style={{ background: 'oklch(0.15 0.02 250)', color: 'oklch(0.8 0.01 250)' }}
+        >
+          <span className="flex items-center gap-1.5"><ShieldCheck size={12} style={{ color: '#C9A84C' }} /> 강사 모드 (내 담당 반/학생 화면)</span>
+          <button
+            onClick={() => { setActiveMode('ADMIN_MODE'); navigate('/admin'); }}
+            className="font-medium px-2 py-0.5 rounded transition-colors hover:bg-white/10"
+            style={{ color: '#C9A84C' }}
+          >
+            관리자 모드로 돌아가기
+          </button>
+        </div>
+      )}
+
       {/* 상단 헤더 */}
       <header
         className="bg-white border-b sticky top-0 z-20 flex items-center justify-between px-4"
@@ -68,6 +85,14 @@ export default function TeacherLayout({ children, title }: TeacherLayoutProps) {
           <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>
             {currentUser.name}
           </span>
+          <button
+            onClick={logout}
+            className="text-xs px-1.5 py-1 rounded-md transition-colors hover:bg-slate-100 flex items-center gap-1"
+            style={{ color: 'oklch(0.55 0.015 250)' }}
+            aria-label="로그아웃"
+          >
+            <LogOut size={13} />
+          </button>
         </div>
       </header>
 

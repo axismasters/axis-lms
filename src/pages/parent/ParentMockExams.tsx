@@ -70,7 +70,7 @@ export default function ParentMockExams() {
 
   return (
     <ParentLayout title="자녀 모의고사 결과">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
 
         {/* 자녀 선택 (복수 자녀) */}
         {myChildren.length > 1 && (

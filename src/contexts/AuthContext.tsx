@@ -1,9 +1,13 @@
 // AXIS LMS v1.2 - AuthContext (Account Engine + RBAC Foundation)
-// ViewerContext(임시 role placeholder)를 대체한다. 실제 로그인 연동 전까지는
-// DEV/테스트용 사용자 전환만 제공하며, 기본 로그인 사용자는 "비활성/최소권한"으로 안전하게 설정한다.
+// ViewerContext(임시 role placeholder)를 대체한다.
 //
-// TODO(auth): 실제 로그인 연동 시 loginAs를 세션 발급 로직으로 교체하고,
-//             DEV 전환 UI(있다면)는 운영 배포 전 제거할 것.
+// Phase 3D v2: 첫 화면 로그인 페이지 + 원장/부원장 관리자모드/강사모드 전환 추가.
+//   - 실제 백엔드 인증 서버는 없으므로, DEV_USERS를 계정 원천으로 그대로 사용하되
+//     login(phone, password)로 휴대폰번호 + 데모 비밀번호(휴대폰 뒤 4자리) 검증을 거치게 했다.
+//     TODO(auth): 실제 로그인 연동 시 login()의 검증 로직만 실제 인증 서버 호출로 교체하면 되고,
+//     나머지 세션/모드 상태 관리 구조는 그대로 재사용 가능하도록 설계했다.
+//   - loginAs(dev 전용 즉시 전환)는 그대로 유지 — AdminLayout/DevRoleSwitcher가 이미 사용 중이며,
+//     운영 첫 화면(로그인 페이지)에는 노출되지 않으므로 안전하다.
 
 import { createContext, useContext, useMemo, useState, ReactNode } from 'react';
 import {
@@ -31,6 +35,7 @@ function makeUser(partial: Omit<AuthUser, 'permissions' | 'dataScope' | 'permiss
 export const DEV_USERS: AuthUser[] = [
   makeUser({ id: 'u-super', name: '한태준', phone: '010-0000-0001', position: 'SUPER_ADMIN', assignedClassIds: [], assignedStudentIds: [], status: '활성' }),
   makeUser({ id: 'u-director', name: '원장님', phone: '010-0000-0002', position: 'DIRECTOR', assignedClassIds: [], assignedStudentIds: [], status: '활성' }),
+  makeUser({ id: 'u-vice-director', name: '부원장님', phone: '010-0000-0007', position: 'VICE_DIRECTOR', assignedClassIds: [], assignedStudentIds: [], status: '활성' }),
   makeUser({ id: 'u-staff', name: '행정 담당', phone: '010-0000-0003', position: 'STAFF', assignedClassIds: [], assignedStudentIds: [], status: '활성' }),
   makeUser({
     id: 'u-teacher', name: '김민준', phone: '010-0000-0004', position: 'TEACHER',
@@ -50,12 +55,66 @@ export const DEV_USERS: AuthUser[] = [
 const FALLBACK_USER: AuthUser = DEV_USERS.find((u) => u.position === 'STUDENT')!;
 
 // ────────────────────────────────────────────────────────────
+// 세션 저장(데모) — "로그인 상태 유지" 체크 시 localStorage, 아니면 sessionStorage.
+// ────────────────────────────────────────────────────────────
+const SESSION_KEY = 'axis_lms_session_user_id';
+
+function readPersistedUserId(): string | null {
+  try {
+    return localStorage.getItem(SESSION_KEY) ?? sessionStorage.getItem(SESSION_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writePersistedUserId(userId: string, remember: boolean) {
+  try {
+    if (remember) {
+      localStorage.setItem(SESSION_KEY, userId);
+      sessionStorage.removeItem(SESSION_KEY);
+    } else {
+      sessionStorage.setItem(SESSION_KEY, userId);
+      localStorage.removeItem(SESSION_KEY);
+    }
+  } catch { /* noop — storage 비활성 환경에서도 로그인 자체는 동작해야 함 */ }
+}
+
+function clearPersistedUserId() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch { /* noop */ }
+}
+
+/** 데모 비밀번호 규칙: 휴대폰번호 숫자만 남긴 뒤 마지막 4자리. 실제 인증 서버 도입 전까지만 사용. */
+function demoPasswordFor(phone: string): string {
+  return phone.replace(/[^0-9]/g, '').slice(-4);
+}
+
+// ────────────────────────────────────────────────────────────
+// 관리자/강사 모드 (원장·부원장 전용 — 하나의 계정으로 두 화면을 오간다)
+// ────────────────────────────────────────────────────────────
+export type ActiveMode = 'ADMIN_MODE' | 'TEACHER_MODE';
+
+function canSwitchModeFor(position: Position): boolean {
+  return position === 'DIRECTOR' || position === 'VICE_DIRECTOR';
+}
+
+// ────────────────────────────────────────────────────────────
 // Context
 // ────────────────────────────────────────────────────────────
 interface AuthContextType {
   currentUser: AuthUser;
+  isAuthenticated: boolean;
+  login: (phone: string, password: string, remember: boolean) => boolean; // 성공 여부 반환
+  logout: () => void;
+
   devUsers: AuthUser[];          // DEV 전환용 — 운영 배포 시 노출 제거
   loginAs: (userId: string) => void; // DEV 전용 임시 전환. TODO(auth): 실제 로그인으로 교체.
+
+  activeMode: ActiveMode;
+  canSwitchMode: boolean;        // 현재 계정이 관리자모드/강사모드 전환이 가능한지(원장·부원장)
+  setActiveMode: (mode: ActiveMode) => void;
 
   can: (key: PermissionKey) => boolean;
   canAccessStudent: (studentId: string) => boolean;
@@ -69,10 +128,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children, initialUserId, students }: { children: ReactNode; initialUserId?: string; students?: Student[] }) {
-  const [userId, setUserId] = useState(initialUserId ?? FALLBACK_USER.id);
+  // 로그인 전(비인증) 상태는 userId === null로 표현한다.
+  const [userId, setUserId] = useState<string | null>(() => initialUserId ?? readPersistedUserId());
+  const [activeMode, setActiveModeState] = useState<ActiveMode>('ADMIN_MODE');
+
+  const isAuthenticated = userId !== null;
 
   const currentUser = useMemo(() => {
-    const base = DEV_USERS.find((u) => u.id === userId) ?? FALLBACK_USER;
+    const base = (userId && DEV_USERS.find((u) => u.id === userId)) || FALLBACK_USER;
     // 강사: assignedStudentIds = 본인 명시 배정 학생 ∪ assignedClassIds에 현재 수강중인 학생 (반 배정이 기준의 원천)
     if (base.accountType === 'TEACHER' && students) {
       const fromClasses = studentIdsInClasses(students, base.assignedClassIds);
@@ -81,6 +144,29 @@ export function AuthProvider({ children, initialUserId, students }: { children: 
     }
     return base;
   }, [userId, students]);
+
+  const canSwitchMode = canSwitchModeFor(currentUser.position);
+
+  const login = (phone: string, password: string, remember: boolean): boolean => {
+    const found = DEV_USERS.find((u) => u.phone === phone.trim());
+    if (!found || found.status !== '활성') return false;
+    if (password !== demoPasswordFor(found.phone)) return false;
+    setUserId(found.id);
+    setActiveModeState('ADMIN_MODE'); // 원장은 기본 ADMIN_MODE(요구사항)
+    writePersistedUserId(found.id, remember);
+    return true;
+  };
+
+  const logout = () => {
+    setUserId(null);
+    setActiveModeState('ADMIN_MODE');
+    clearPersistedUserId();
+  };
+
+  const setActiveMode = (mode: ActiveMode) => {
+    if (!canSwitchModeFor(currentUser.position)) return; // 원장/부원장 외에는 전환 무시
+    setActiveModeState(mode);
+  };
 
   const can = (key: PermissionKey) => currentUser.status === '활성' && currentUser.permissions.includes(key);
 
@@ -152,7 +238,9 @@ export function AuthProvider({ children, initialUserId, students }: { children: 
 
   return (
     <AuthContext.Provider value={{
-      currentUser, devUsers: DEV_USERS, loginAs: setUserId,
+      currentUser, isAuthenticated, login, logout,
+      devUsers: DEV_USERS, loginAs: setUserId,
+      activeMode, canSwitchMode, setActiveMode,
       can, canAccessStudent, canAccessClass, canAccessExam, canResetPassword, canViewFinance, canPublishExamResult,
     }}>
       {children}
@@ -165,7 +253,9 @@ export function useAuth(): AuthContextType {
   if (!ctx) {
     // Provider 누락 시에도 안전한 기본값으로 동작(최소 권한)
     const fallback: AuthContextType = {
-      currentUser: FALLBACK_USER, devUsers: DEV_USERS, loginAs: () => {},
+      currentUser: FALLBACK_USER, isAuthenticated: false, login: () => false, logout: () => {},
+      devUsers: DEV_USERS, loginAs: () => {},
+      activeMode: 'ADMIN_MODE', canSwitchMode: false, setActiveMode: () => {},
       can: () => false, canAccessStudent: () => false, canAccessClass: () => false,
       canAccessExam: () => false, canResetPassword: () => false, canViewFinance: () => false, canPublishExamResult: () => false,
     };

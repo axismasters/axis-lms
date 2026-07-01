@@ -302,12 +302,14 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
   const studentMap = useMemo(() => new Map(students.map((s) => [s.id, s])), [students]);
 
   return (
-    <div className="overflow-x-auto">
+    <div>
+    <div className="axis-table-wrap">
       <table className="w-full text-sm">
         <thead>
-          <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
+          <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
             {['학생명', '휴대폰번호', '응시상태', '획득점수', '채점상태', '공개여부', '관리'].map((h) => (
-              <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
+              <th key={h} className="axis-th-sticky axis-th-sticky-56 px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
+                style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -334,13 +336,14 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
                 <td className="px-3 py-2.5">
                   {canGrade && !locked && (
                     sub.status === '결석' ? (
-                      <button onClick={() => markAttended(exam.id, sub.studentId)} className="flex items-center gap-1 text-xs" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                      <Button variant="outline" size="sm" onClick={() => markAttended(exam.id, sub.studentId)} className="h-7 text-xs gap-1">
                         <UserCheck size={11} /> 결석 취소
-                      </button>
+                      </Button>
                     ) : (
-                      <button onClick={() => markAbsent(exam.id, sub.studentId)} className="flex items-center gap-1 text-xs" style={{ color: 'oklch(0.577 0.245 27.325)' }}>
+                      <Button variant="outline" size="sm" onClick={() => markAbsent(exam.id, sub.studentId)} className="h-7 text-xs gap-1"
+                        style={{ color: 'oklch(0.577 0.245 27.325)', borderColor: 'oklch(0.9 0.06 27)' }}>
                         <UserX size={11} /> 결석 처리
-                      </button>
+                      </Button>
                     )
                   )}
                 </td>
@@ -349,6 +352,7 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
           })}
         </tbody>
       </table>
+      </div>
       {submissions.length === 0 && <p className="text-center py-10 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>응시 대상이 없습니다.</p>}
     </div>
   );
@@ -397,18 +401,21 @@ function GradingTab({
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="axis-table-wrap">
         <table className="w-full text-sm">
           <thead>
-            <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
-              <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>학생명</th>
+            <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
+              <th className="axis-th-sticky axis-th-sticky-56 px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
+                style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>학생명</th>
               {exam.questions.map((q) => (
-                <th key={q.id} className="px-2 py-2.5 text-center text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                <th key={q.id} className="axis-th-sticky axis-th-sticky-56 px-2 py-2.5 text-center text-xs font-semibold whitespace-nowrap"
+                  style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>
                   {q.no}번<br /><span className="text-[10px]" style={{ color: isAutoGraded(q.type) ? 'oklch(0.5 0.13 160)' : 'oklch(0.5 0.13 60)' }}>{q.type}({q.points})</span>
                   {isAutoGraded(q.type) && <div className="text-[10px] mt-0.5" style={{ color: 'oklch(0.6 0.015 250)' }}>정답: {q.correctAnswer}</div>}
                 </th>
               ))}
-              <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>합계</th>
+              <th className="axis-th-sticky axis-th-sticky-56 px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap"
+                style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>합계</th>
             </tr>
           </thead>
           <tbody>
@@ -668,11 +675,13 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
             </span>
           )}
         </Label>
+        <div className="axis-table-wrap">
         <table className="w-full text-sm">
           <thead>
-            <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
+            <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
               {['학생명', '총점', '정정 이력', ''].map((h) => (
-                <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
+                <th key={h} className="axis-th-sticky axis-th-sticky-56 px-3 py-2.5 text-left text-xs font-semibold"
+                  style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -690,9 +699,9 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
                   </td>
                   <td className="px-3 py-2.5">
                     {canCorrect && locked && sub.status !== '결석' && sub.totalScore !== undefined && (
-                      <button onClick={() => openCorrection(sub.studentId, stu?.name ?? '', sub.totalScore!)} className="flex items-center gap-1 text-xs" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                      <Button variant="outline" size="sm" onClick={() => openCorrection(sub.studentId, stu?.name ?? '', sub.totalScore!)} className="h-7 text-xs gap-1">
                         <Pencil size={11} /> 정정
-                      </button>
+                      </Button>
                     )}
                   </td>
                 </tr>
@@ -700,6 +709,7 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       <Dialog open={!!correctionModal} onOpenChange={(o) => !o && setCorrectionModal(null)}>

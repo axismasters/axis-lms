@@ -4,20 +4,41 @@
 // - 보호자/재무/권한 정보 노출 금지
 // - 상담관리 독립 기능 없음
 
+import { useState } from 'react';
 import { useParams, Link } from 'wouter';
-import { ChevronLeft, BarChart2, CalendarCheck, FileText } from 'lucide-react';
+import { ChevronLeft, BarChart2, CalendarCheck, FileText, MessageSquare, Plus, X } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
+import {
+  CounselingRecord, CounselingType, CounselingTarget,
+  COUNSELING_TYPES, COUNSELING_TARGETS,
+  getCounselingRecordsForStudent, addCounselingRecord,
+} from '@/lib/counselingData';
+import { getLocalDateStr } from '@/utils/dateUtils';
 
 export default function TeacherStudentDetail() {
   const { studentId } = useParams<{ studentId: string }>();
-  const { currentUser } = useAuth();
+  const { currentUser, activeMode } = useAuth();
   const { students } = useStudents();
   const { exams, submissions } = useAssessment();
   const { sessions } = useAttendance();
+
+  // Phase 3D v2: 상담 기록 관련 상태 — Rules of Hooks 준수를 위해 아래 조기 return보다
+  // 반드시 앞에 선언해야 한다(이 컴포넌트는 studentId 유효성에 따라 조기 return이 있다).
+  const [showCounselingForm, setShowCounselingForm] = useState(false);
+  const [counselingRecords, setCounselingRecords] = useState<CounselingRecord[]>(() =>
+    studentId ? getCounselingRecordsForStudent(studentId) : []
+  );
+  const [form, setForm] = useState({
+    date: getLocalDateStr(),
+    type: COUNSELING_TYPES[0] as CounselingType,
+    target: COUNSELING_TARGETS[0] as CounselingTarget,
+    content: '',
+  });
 
   const assignedClassIds = currentUser.assignedClassIds ?? [];
   const assignedStudentIds = currentUser.assignedStudentIds ?? [];
@@ -82,9 +103,26 @@ export default function TeacherStudentDetail() {
     (r) => r.status === '지각' || r.status === '조퇴'
   ).length;
 
+  const handleAddCounseling = () => {
+    if (!form.content.trim()) return;
+    const record = addCounselingRecord({
+      studentId,
+      date: form.date,
+      type: form.type,
+      target: form.target,
+      content: form.content.trim(),
+      authorId: currentUser.id,
+      authorName: currentUser.name,
+      activeMode,
+    });
+    setCounselingRecords((prev) => [record, ...prev]);
+    setForm({ date: getLocalDateStr(), type: COUNSELING_TYPES[0], target: COUNSELING_TARGETS[0], content: '' });
+    setShowCounselingForm(false);
+  };
+
   return (
     <TeacherLayout title="학생 상세">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
 
         {/* 뒤로가기 */}
         <Link href="/teacher/students">
@@ -230,7 +268,111 @@ export default function TeacherStudentDetail() {
           </div>
         </section>
 
+        {/* 상담 기록 — Phase 3D v2 신규. 내부 기록용(학부모/학생 노출 없음).
+            PC 웹 최적화: 컴팩트 테이블 형태로 스캔하기 쉽게 구성. */}
+        <section>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center gap-2">
+              <MessageSquare size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+              <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                상담 기록 ({counselingRecords.length}건)
+              </span>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setShowCounselingForm(true)} className="h-7 text-xs gap-1">
+              <Plus size={12} /> 상담 기록 추가
+            </Button>
+          </div>
+
+          {counselingRecords.length === 0 ? (
+            <div className="axis-card p-6 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+              등록된 상담 기록이 없습니다.
+            </div>
+          ) : (
+            <div className="axis-card overflow-hidden">
+              <div className="axis-table-wrap">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
+                      {['상담일', '유형', '대상', '내용', '작성자'].map((h) => (
+                        <th key={h} className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap"
+                          style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {counselingRecords.map((rec) => (
+                      <tr key={rec.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
+                        <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{rec.date}</td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.95 0.02 277)', color: 'oklch(0.45 0.2 277)' }}>
+                            {rec.type}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{rec.target}</td>
+                        <td className="px-3 py-2.5 text-xs" style={{ color: 'oklch(0.3 0.02 250)', maxWidth: 320 }}>
+                          <span className="line-clamp-2">{rec.content}</span>
+                        </td>
+                        <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>{rec.authorName}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
+
       </div>
+
+      {/* 상담 기록 추가 모달 */}
+      {showCounselingForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.45)' }}
+          onClick={() => setShowCounselingForm(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
+              <h2 className="font-bold text-base" style={{ color: 'oklch(0.15 0.02 250)' }}>상담 기록 추가</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowCounselingForm(false)} className="h-8 w-8" aria-label="닫기">
+                <X size={17} style={{ color: 'oklch(0.5 0.015 250)' }} />
+              </Button>
+            </div>
+            <div className="p-5 flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>상담일</label>
+                  <input type="date" value={form.date} onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
+                    className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor: 'oklch(0.87 0.006 250)' }} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>상담 유형</label>
+                  <select value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value as CounselingType }))}
+                    className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor: 'oklch(0.87 0.006 250)' }}>
+                    {COUNSELING_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>상담 대상</label>
+                <select value={form.target} onChange={(e) => setForm((p) => ({ ...p, target: e.target.value as CounselingTarget }))}
+                  className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor: 'oklch(0.87 0.006 250)' }}>
+                  {COUNSELING_TARGETS.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>상담 내용</label>
+                <textarea value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
+                  rows={4} className="w-full border rounded-md px-3 py-2 text-sm resize-none" style={{ borderColor: 'oklch(0.87 0.006 250)' }} />
+              </div>
+              <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                이 기록은 내부용입니다. 학부모/학생 화면에는 노출되지 않습니다.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 p-5 border-t" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
+              <Button variant="outline" onClick={() => setShowCounselingForm(false)}>취소</Button>
+              <Button onClick={handleAddCounseling} style={{ background: 'oklch(0.511 0.262 276.966)' }}>저장</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </TeacherLayout>
   );
 }

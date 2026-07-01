@@ -526,10 +526,12 @@ export default function PermissionSettings() {
           <div className="axis-table-wrap">
             <table className="w-full text-sm" style={{ minWidth: 680 }}>
               <thead>
-                <tr style={{ background: 'oklch(0.97 0.006 250)', borderBottom: '1px solid oklch(0.9 0.008 250)' }}>
-                  <th className="text-left font-semibold px-4 py-2.5" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, minWidth: 180 }}>기능</th>
+                <tr style={{ background: 'oklch(0.97 0.006 250)' }}>
+                  <th className="axis-th-sticky axis-th-sticky-56 text-left font-semibold px-4 py-2.5"
+                    style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, minWidth: 180, background: 'oklch(0.97 0.006 250)', boxShadow: 'inset 0 -1px 0 oklch(0.9 0.008 250)' }}>기능</th>
                   {COL_LABELS.map((l) => (
-                    <th key={l} className="text-center font-semibold px-3 py-2.5 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12 }}>{l}</th>
+                    <th key={l} className="axis-th-sticky axis-th-sticky-56 text-center font-semibold px-3 py-2.5 whitespace-nowrap"
+                      style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'oklch(0.97 0.006 250)', boxShadow: 'inset 0 -1px 0 oklch(0.9 0.008 250)' }}>{l}</th>
                   ))}
                 </tr>
               </thead>

@@ -85,6 +85,7 @@ export interface Exam {
   questions: ExamQuestionDef[];
   status: ExamStatus;
   createdBy: string;
+  createdByMode?: 'ADMIN_MODE' | 'TEACHER_MODE'; // Phase 3D v2: 원장/부원장 모드 전환 대응 — 생성 당시 모드 기록
   createdAt: string;
   publishedBy?: string;
   publishedAt?: string;

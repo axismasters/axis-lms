@@ -15,12 +15,13 @@ import {
   ExamScope, EXAM_SCOPE_LABELS,
 } from '@/lib/assessmentData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash2, Info } from 'lucide-react';
+import { Plus, Minus, Trash2, Info, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { nanoid } from 'nanoid';
 
@@ -45,6 +46,42 @@ function emptyQuestion(no: number): ExamQuestionDef {
   return { id: nanoid(8), no, type: '객관식', points: 10, correctAnswer: '' };
 }
 
+// Phase 3D: 시험등록 기본 템플릿 — 교사가 "+ 문항 추가"를 여러 번 누르지 않아도
+// 기본 문항 구성이 한 번에 생성되도록 한다. 문항 type은 모두 '객관식' 기본값으로 생성하고
+// (개별 문항의 type/정답은 기존처럼 문항 구성 화면에서 자유롭게 수정 가능), 배점만
+// 템플릿 규칙에 맞게 자동 계산한다.
+const MIN_QUESTIONS = 1;
+
+// 수능형(실전모의고사) — 30문항, 총점 100점.
+// 1~6번 2점(12점) + 7~14번 3점(24점) + 15~22번 4점(32점) + 23~30번(선택과목) 4점(32점) = 100점.
+// (v1에서 104점으로 잘못 계산되었던 문제를 v2에서 수정 — 총점 100점 고정 검증됨)
+function buildSuneungTemplate(): ExamQuestionDef[] {
+  const bands: Array<[number, number, number]> = [
+    [1, 6, 2],
+    [7, 14, 3],
+    [15, 22, 4],
+    [23, 30, 4],
+  ];
+  const qs: ExamQuestionDef[] = [];
+  bands.forEach(([start, end, points]) => {
+    for (let no = start; no <= end; no++) qs.push({ id: nanoid(8), no, type: '객관식', points, correctAnswer: '' });
+  });
+  return qs;
+}
+
+// 내신형 대시 시험지 — 24문항, 총점 100점 기준 자동 배분(100 = 4점×20 + 5점×4).
+function buildNaeshinTemplate(): ExamQuestionDef[] {
+  const TOTAL_QUESTIONS = 24;
+  const TOTAL_POINTS = 100;
+  const base = Math.floor(TOTAL_POINTS / TOTAL_QUESTIONS);
+  const remainder = TOTAL_POINTS - base * TOTAL_QUESTIONS; // 남는 점수는 앞쪽 문항에 1점씩 더 배분
+  const qs: ExamQuestionDef[] = [];
+  for (let no = 1; no <= TOTAL_QUESTIONS; no++) {
+    qs.push({ id: nanoid(8), no, type: '객관식', points: no <= remainder ? base + 1 : base, correctAnswer: '' });
+  }
+  return qs;
+}
+
 const EMPTY_FORM = {
   title: '',
   categoryId: EXAM_CATEGORIES[0].id,
@@ -63,10 +100,17 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
   const { addExam } = useAssessment();
   const { classes: allClasses, getClassStudents } = useClasses();
   const { students } = useStudents();
-  const { currentUser } = useAuth();
+  const { currentUser, activeMode } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>('basic');
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [questions, setQuestions] = useState<ExamQuestionDef[]>([emptyQuestion(1)]);
+  // Phase 3D: 입력값(정답)이 있는 문항을 삭제/템플릿으로 덮어쓸 때 확인을 받기 위한 대기 상태.
+  // pendingAction이 있으면 확인 모달이 열린다.
+  const [pendingAction, setPendingAction] = useState<
+    | { type: 'removeQuestion'; id: string; label: string }
+    | { type: 'applyTemplate'; template: 'suneung' | 'naeshin'; label: string }
+    | null
+  >(null);
 
   const isTeacherMode = mode === 'teacher';
   // 교사 모드: 본인 담당 반만 대상 반 선택지로 노출(다른 반/다른 교사 반이 섞이지 않도록)
@@ -79,6 +123,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
       setActiveTab('basic');
       setForm({ ...EMPTY_FORM, scope: isTeacherMode ? 'TEACHER_PRIVATE' : 'ACADEMY_COMMON' });
       setQuestions([emptyQuestion(1)]);
+      setPendingAction(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -86,9 +131,57 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
   const totalScore = questions.reduce((sum, q) => sum + (q.points || 0), 0);
 
   const addQuestion = () => setQuestions((prev) => [...prev, emptyQuestion(prev.length + 1)]);
-  const removeQuestion = (id: string) => setQuestions((prev) => prev.filter((q) => q.id !== id).map((q, i) => ({ ...q, no: i + 1 })));
+  const removeQuestionById = (id: string) => setQuestions((prev) => prev.filter((q) => q.id !== id).map((q, i) => ({ ...q, no: i + 1 })));
   const updateQuestion = (id: string, patch: Partial<ExamQuestionDef>) =>
     setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, ...patch } : q)));
+
+  // 입력값(정답) 손실 가능성이 있으면 확인을 받고, 없으면 바로 삭제한다.
+  const requestRemoveQuestion = (q: ExamQuestionDef) => {
+    if (questions.length <= MIN_QUESTIONS) {
+      toast.error(`최소 ${MIN_QUESTIONS}문항은 유지해야 합니다.`);
+      return;
+    }
+    const hasData = (q.correctAnswer ?? '').trim() !== '';
+    if (hasData) {
+      setPendingAction({ type: 'removeQuestion', id: q.id, label: `${q.no}번 문항` });
+    } else {
+      removeQuestionById(q.id);
+    }
+  };
+
+  // "-" 버튼: 마지막 문항 삭제(문항 구성 영역 좌측 스테퍼)
+  const requestRemoveLast = () => {
+    const last = questions[questions.length - 1];
+    if (!last) return;
+    requestRemoveQuestion(last);
+  };
+
+  const hasAnyAnswerData = questions.some((q) => (q.correctAnswer ?? '').trim() !== '');
+
+  const applyTemplateNow = (template: 'suneung' | 'naeshin') => {
+    setQuestions(template === 'suneung' ? buildSuneungTemplate() : buildNaeshinTemplate());
+    toast.success(template === 'suneung' ? '수능형 템플릿(30문항)을 적용했습니다.' : '내신형 템플릿(24문항)을 적용했습니다.');
+  };
+
+  // 템플릿 적용은 현재 문항 구성을 전부 덮어쓰므로, 이미 입력한 정답이 있으면 확인을 받는다.
+  const requestApplyTemplate = (template: 'suneung' | 'naeshin', label: string) => {
+    if (hasAnyAnswerData) {
+      setPendingAction({ type: 'applyTemplate', template, label });
+    } else {
+      applyTemplateNow(template);
+    }
+  };
+
+  const confirmPendingAction = () => {
+    if (!pendingAction) return;
+    if (pendingAction.type === 'removeQuestion') {
+      removeQuestionById(pendingAction.id);
+    } else {
+      applyTemplateNow(pendingAction.template);
+    }
+    setPendingAction(null);
+  };
+
 
   const handleSave = () => {
     if (!form.title.trim()) { toast.error('시험명을 입력하세요.'); setActiveTab('basic'); return; }
@@ -122,6 +215,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
       {
         title: form.title.trim(), categoryId: form.categoryId, classId: form.classId || undefined,
         subject: form.subject || undefined, examDate: form.examDate, questions, createdBy,
+        createdByMode: activeMode,
         scope: isTeacherMode ? 'TEACHER_PRIVATE' : form.scope,
         ownerTeacherId: isTeacherMode ? currentUser.id : undefined,
         targetGrade: !isTeacherMode && form.scope === 'GRADE_COMMON' ? (form.targetGrade || undefined) : undefined,
@@ -244,11 +338,39 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
 
         {activeTab === 'questions' && (
           <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+            {/* Phase 3D: 기본 템플릿 — 문항 추가를 여러 번 누르지 않아도 기본 구성이 한 번에 생성됨 */}
+            <div className="flex items-center gap-1.5 flex-wrap mb-1">
+              <span className="text-xs flex items-center gap-1 mr-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                <Sparkles size={11} /> 빠른 구성:
+              </span>
+              <Button variant="outline" size="sm" onClick={() => requestApplyTemplate('suneung', '수능형 템플릿(30문항)')} className="h-7 text-xs">
+                수능형 (30문항 · 100점)
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => requestApplyTemplate('naeshin', '내신형 템플릿(24문항)')} className="h-7 text-xs">
+                내신형 대시 (24문항 · 100점 자동배분)
+              </Button>
+            </div>
+
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
                 총 {questions.length}문항 · 만점 {totalScore}점
               </p>
-              <Button variant="outline" size="sm" onClick={addQuestion} className="h-7 text-xs gap-1"><Plus size={12} /> 문항 추가</Button>
+              {/* 왼쪽 "-"(마지막 문항 삭제) / 오른쪽 "+"(문항 추가) 스테퍼 */}
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button" variant="outline" size="icon"
+                  onClick={requestRemoveLast}
+                  disabled={questions.length <= MIN_QUESTIONS}
+                  className="h-8 w-8"
+                  aria-label="마지막 문항 삭제"
+                >
+                  <Minus size={14} />
+                </Button>
+                <span className="text-xs tabular-nums w-10 text-center" style={{ color: 'oklch(0.4 0.015 250)' }}>{questions.length}문항</span>
+                <Button type="button" variant="outline" size="icon" onClick={addQuestion} className="h-8 w-8" aria-label="문항 추가">
+                  <Plus size={14} />
+                </Button>
+              </div>
             </div>
             {questions.map((q) => (
               <div key={q.id} className="flex items-center gap-2 p-2.5 rounded-md" style={{ border: '1px solid oklch(0.93 0.008 250)' }}>
@@ -286,9 +408,15 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
                 ) : (
                   <span className="flex-1 text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>채점현황 탭에서 수동 채점</span>
                 )}
-                <button onClick={() => removeQuestion(q.id)} className="flex-shrink-0" style={{ color: 'oklch(0.65 0.01 250)' }}>
-                  <Trash2 size={14} />
-                </button>
+                <Button
+                  type="button" variant="ghost" size="icon"
+                  onClick={() => requestRemoveQuestion(q)}
+                  disabled={questions.length <= MIN_QUESTIONS}
+                  className="h-8 w-8 flex-shrink-0"
+                  aria-label={`${q.no}번 문항 삭제`}
+                >
+                  <Trash2 size={14} style={{ color: 'oklch(0.55 0.015 250)' }} />
+                </Button>
               </div>
             ))}
           </div>
@@ -301,6 +429,28 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Phase 3D: 입력값 손실 가능성이 있는 삭제/템플릿 적용 확인 */}
+      <AlertDialog open={pendingAction !== null} onOpenChange={(o) => !o && setPendingAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingAction?.type === 'removeQuestion' ? '문항을 삭제할까요?' : '템플릿을 적용할까요?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingAction?.type === 'removeQuestion'
+                ? `${pendingAction.label}에 입력한 정답이 함께 삭제됩니다. 계속하시겠습니까?`
+                : `${pendingAction?.label} 적용 시 현재 입력한 문항 구성(정답 포함)이 모두 새 구성으로 대체됩니다. 계속하시겠습니까?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingAction(null)}>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPendingAction} style={{ background: 'oklch(0.577 0.245 27.325)' }}>
+              {pendingAction?.type === 'removeQuestion' ? '삭제' : '적용'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

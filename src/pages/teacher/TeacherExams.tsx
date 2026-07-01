@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import type { ExamSubmission } from '@/lib/assessmentData';
 import AssessmentFormModal from '@/components/AssessmentFormModal';
+import { Button } from '@/components/ui/button';
 
 type Tab = '미채점' | '전체';
 
@@ -165,9 +166,9 @@ export default function TeacherExams() {
                         )}
                       </div>
                       <Link href={`/teacher/exams/${exam.id}/grading`}>
-                        <div className="flex items-center gap-0.5 text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                        <Button size="sm" className="h-7 text-xs gap-0.5" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
                           채점하기 <ChevronRight size={12} />
-                        </div>
+                        </Button>
                       </Link>
                     </div>
                   )}

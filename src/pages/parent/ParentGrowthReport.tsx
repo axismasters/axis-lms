@@ -59,7 +59,7 @@ export default function ParentGrowthReport() {
 
   return (
     <ParentLayout title="자녀 성장 리포트">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
 
         {/* 자녀 선택 */}
         {myStudentIds.length > 1 && (

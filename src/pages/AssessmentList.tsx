@@ -252,9 +252,10 @@ export default function AssessmentList() {
           <div className="axis-table-wrap">
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
+              <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
                 {['시험명', '종류', '과목', '대상', '시험일', '응시/채점', '진행상태', '공개일', ''].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
+                  <th key={h} className="axis-th-sticky axis-th-sticky-56 px-4 py-3 text-left text-xs font-semibold whitespace-nowrap"
+                    style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -289,7 +290,8 @@ export default function AssessmentList() {
                       {exam.publishedAt ? exam.publishedAt.slice(0, 10) : '-'}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="flex items-center gap-0.5 text-xs" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                      <span className="inline-flex items-center gap-0.5 text-xs font-medium px-2 py-1 rounded-md"
+                        style={{ color: 'oklch(0.511 0.262 276.966)', background: 'oklch(0.96 0.02 277)' }}>
                         상세 <ChevronRight size={11} />
                       </span>
                     </td>

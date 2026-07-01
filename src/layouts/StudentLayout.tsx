@@ -13,7 +13,7 @@
 // ⚠ Phase 3A-1 금지: 수납/재무 관련 탭 추가 금지
 
 import { Link, useLocation } from 'wouter';
-import { Home, ClipboardList, Trophy, Swords, User, BarChart2 } from 'lucide-react';
+import { Home, ClipboardList, Trophy, Swords, User, BarChart2, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
@@ -26,7 +26,7 @@ interface StudentLayoutProps {
 
 export default function StudentLayout({ children, title }: StudentLayoutProps) {
   const [location] = useLocation();
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const { students } = useStudents();
 
   const myStudentId = currentUser.assignedStudentIds[0] ?? '';
@@ -73,6 +73,9 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
             style={{ background: 'oklch(0.6 0.15 60)' }}>
             {currentUser.name.charAt(0)}
           </div>
+          <button onClick={logout} className="p-1 rounded-md transition-colors hover:bg-slate-100" style={{ color: 'oklch(0.55 0.015 250)' }} aria-label="로그아웃">
+            <LogOut size={14} />
+          </button>
         </div>
       </header>
 

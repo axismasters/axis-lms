@@ -32,6 +32,7 @@ interface NewExamInput {
   examDate: string;
   questions: ExamQuestionDef[];
   createdBy: string;
+  createdByMode?: 'ADMIN_MODE' | 'TEACHER_MODE'; // Phase 3D v2: 생성 당시 모드(원장/부원장 모드전환 대응)
   // ─── Phase 3C: scope 분리 — 호출부(관리자 폼/교사 폼)가 명시적으로 지정한다 ─────
   scope: ExamScope;
   ownerTeacherId?: string | null;   // TEACHER_PRIVATE일 때 생성 교사 id
@@ -121,6 +122,7 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
       questions: input.questions,
       status: '준비중',
       createdBy: input.createdBy,
+      createdByMode: input.createdByMode,
       createdAt: new Date().toISOString(),
       scope: input.scope,
       ownerTeacherId: isPrivate ? (input.ownerTeacherId ?? input.createdBy) : null,

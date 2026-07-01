@@ -91,7 +91,7 @@ export default function ParentWeeklyMocks() {
 
   return (
     <ParentLayout title="자녀 수능실전 주간 루틴">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
 
         {/* 뒤로가기 */}
         <Link href="/parent/mock-exams">

@@ -3,16 +3,18 @@
 // 라이벌/엠블럼/경쟁 정보 노출 금지 원칙 유지.
 
 import { Link, useLocation } from 'wouter';
-import { Home, CalendarCheck, BarChart2, CreditCard, TrendingUp, GraduationCap } from 'lucide-react';
+import { Home, CalendarCheck, ClipboardList, CreditCard, TrendingUp, GraduationCap, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 
+// Phase 3D v2: 학생 화면의 "성적" → "테스트" 개편에 맞춰 학부모 화면도 동기화.
+// 자녀 성장(Emblem/SP/Tier) 확인 흐름 접근성을 위해 "성장" 탭 추가.
 const PARENT_NAV = [
   { path: '/parent',             label: '홈',    icon: Home },
   { path: '/parent/attendance',  label: '출결',   icon: CalendarCheck },
-  { path: '/parent/grades',      label: '성적',   icon: BarChart2 },
+  { path: '/parent/grades',      label: '테스트', icon: ClipboardList },
+  { path: '/parent/growth',      label: '성장',   icon: TrendingUp },
   { path: '/parent/finance',     label: '수납',   icon: CreditCard },
-  { path: '/parent/mock-exams',  label: '모의고사', icon: TrendingUp },
 ];
 
 interface ParentLayoutProps {
@@ -22,7 +24,7 @@ interface ParentLayoutProps {
 
 export default function ParentLayout({ children, title }: ParentLayoutProps) {
   const [location] = useLocation();
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
 
   const isActive = (path: string) =>
     path === '/parent' ? location === '/parent' : location.startsWith(path);
@@ -58,6 +60,9 @@ export default function ParentLayout({ children, title }: ParentLayoutProps) {
           <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>
             {currentUser.name}
           </span>
+          <button onClick={logout} className="p-1 rounded-md transition-colors hover:bg-slate-100" style={{ color: 'oklch(0.55 0.015 250)' }} aria-label="로그아웃">
+            <LogOut size={14} />
+          </button>
         </div>
       </header>
 

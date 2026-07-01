@@ -378,3 +378,25 @@ export function canAwardSP(t: AccountType): boolean {
 export function canAwardEmblem(t: AccountType): boolean {
   return t === 'SUPER_ADMIN' || t === 'DIRECTOR' || t === 'STAFF';
 }
+
+// ────────────────────────────────────────────────────────────
+// 상담 기록 권한 Helper (Phase 3D v2)
+// 학생/보호자 화면 노출 없음. 선생님은 담당 학생만(canAccessStudent와 함께 사용),
+// 최고관리자/원장은 전체 조회 가능.
+// ────────────────────────────────────────────────────────────
+
+/**
+ * 상담 기록 작성/조회(스코프 내) — TEACHER 포함. 반드시 canAccessStudent(studentId)와
+ * 함께 사용해야 담당 학생 범위로 제한된다(이 함수 자체는 "이 역할이 상담 기록 기능에
+ * 접근할 수 있는가"만 판단한다).
+ */
+export function canManageCounseling(t: AccountType): boolean {
+  return t === 'SUPER_ADMIN' || t === 'DIRECTOR' || t === 'TEACHER';
+}
+
+/**
+ * 전체 학생 상담 기록 조회 — 최고관리자/원장 전용(담당 학생 범위 제한 없음).
+ */
+export function canViewAllCounseling(t: AccountType): boolean {
+  return t === 'SUPER_ADMIN' || t === 'DIRECTOR';
+}

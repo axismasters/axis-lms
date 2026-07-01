@@ -45,7 +45,7 @@ export default function ParentTargetSummary() {
 
   return (
     <ParentLayout title={universityLabel}>
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
 
         {/* 자녀 선택 */}
         {myStudentIds.length > 1 && (

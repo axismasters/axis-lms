@@ -1,7 +1,11 @@
 // AXIS LMS v1.2 - 학생 상세 (Back Office)
-// 상단 요약 카드 + 탭: 기본정보 / 보호자·가족 / 수강현황 / 출결현황 / 성적조회 / 재무상태.
-// 상담기록 독립 탭은 두지 않는다. 운영메모 로그는 기본정보 탭 하단의 Back Office 내부 기록 섹션으로 유지
-//   (최고관리자/원장/행정만 조회, 학생·학부모 화면에는 절대 노출하지 않음).
+// 상단 요약 카드 + 탭: 기본정보 / 보호자·가족 / 수강현황 / 출결현황 / 성적조회 / 재무상태 / 성장 / 상담 기록.
+// 운영메모 로그(자유 텍스트, 기본정보 탭 하단)와 상담 기록(구조화된 필드, Phase 3D v2 신규 탭)은
+// 서로 다른 기능이다 — 운영메모는 학습 태도/결제 협의/반 이동 사유 등 범용 메모이고, 상담 기록은
+// 상담일·유형(학부모/학사/학습/기타)·대상(학부모/학생/내부논의)이 구조화된 전용 기록이다.
+//   (과거 "상담기록 독립 탭은 두지 않는다"는 방침이 있었으나, Phase 3D v2 지시에 따라
+//    "최고관리자/원장은 전체 상담 기록 조회 가능"을 만족하기 위해 조회 전용 탭을 추가했다.
+//    이 탭은 조회만 가능하며 작성은 선생님 화면(TeacherStudentDetail.tsx)에서만 이뤄진다.)
 // 출결현황·재무상태 탭은 조회 전용(입력은 출결관리/재무관리 엔진). 재무는 권한자에게만 노출.
 // 반 데이터(반유형·요일·시간·강의실·강사·수강료)는 ClassContext(실제 반)에서 연결한다.
 
@@ -12,7 +16,7 @@ import {
   ChevronLeft, Phone, User, CreditCard, CalendarCheck, BookOpen, BarChart2,
   Users, KeyRound, Power, Plus, ArrowRightLeft, Receipt, Target, FileText,
   Bell, CheckCircle2, XCircle, AlertTriangle, Info, Link2, StickyNote, X,
-  Trophy, Zap, Star, Swords, Award,
+  Trophy, Zap, Star, Swords, Award, MessageSquare,
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { StatusBadge, GradeBadge, formatDate } from '@/components/StatusBadge';
@@ -23,7 +27,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { useEnrollment } from '@/contexts/EnrollmentContext';
 import EnrollmentFormModal from '@/components/EnrollmentFormModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { isBackOfficeType, canViewStudentGrowth, canAwardSP, canAwardEmblem } from '@/lib/rbac';
+import { isBackOfficeType, canViewStudentGrowth, canAwardSP, canAwardEmblem, canViewAllCounseling } from '@/lib/rbac';
 import { STATUS_CONFIG, AttendanceStatus } from '@/lib/attendanceData';
 import { ClassRoom } from '@/lib/classData';
 import { Student, StudentStatus, ClassInfo, InternalScore, MockExamScore } from '@/lib/dummyData';
@@ -57,6 +61,7 @@ import {
 } from '@/lib/studentDerived';
 import { cn } from '@/lib/utils';
 import { useGrowth } from '@/contexts/GrowthContext';
+import { getCounselingRecordsForStudent } from '@/lib/counselingData';
 import {
   TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
   CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
@@ -114,28 +119,31 @@ function AttStatusPill({ status }: { status: AttendanceStatus }) {
 // ════════════════════════════════════════════════════════════
 // 메인
 // ════════════════════════════════════════════════════════════
-type TabKey = 'basic' | 'guardian' | 'enrollment' | 'attendance' | 'grades' | 'finance' | 'growth';
+type TabKey = 'basic' | 'guardian' | 'enrollment' | 'attendance' | 'grades' | 'finance' | 'growth' | 'counseling';
 
 export default function StudentDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { getStudent } = useStudents();
-  const { can, canAccessStudent, canViewFinance: authCanViewFinance } = useAuth();
+  const { can, canAccessStudent, canViewFinance: authCanViewFinance, currentUser } = useAuth();
 
   const student = getStudent(params.id);
   // 재무 탭은 finance.view 권한과 canAccessStudent(studentId)를 모두 통과해야 노출
   const showFinance = !!student && authCanViewFinance(student.id);
   const canEditStudent = can('student.update');
   const canWithdrawStudent = can('student.withdraw');
+  // Phase 3D v2: 상담 기록 탭 — 최고관리자/원장 전용(전체 조회, 담당 학생 범위 제한 없음)
+  const showCounseling = canViewAllCounseling(currentUser.accountType);
 
   const initial = useMemo(() => {
     const sp = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
     let tab = (sp.get('tab') as TabKey) || 'basic';
     if (tab === 'finance' && !showFinance) tab = 'basic';
-    const valid: TabKey[] = ['basic', 'guardian', 'enrollment', 'attendance', 'grades', 'finance', 'growth'];
+    if (tab === 'counseling' && !showCounseling) tab = 'basic';
+    const valid: TabKey[] = ['basic', 'guardian', 'enrollment', 'attendance', 'grades', 'finance', 'growth', 'counseling'];
     if (!valid.includes(tab)) tab = 'basic';
     return { tab, gradeType: gradeTypeFromParam(sp.get('gradeType')) };
-  }, [showFinance]);
+  }, [showFinance, showCounseling]);
 
   const [tab, setTab] = useState<TabKey>(initial.tab);
 
@@ -172,6 +180,7 @@ export default function StudentDetail() {
     { key: 'grades', label: '성적조회', icon: <BarChart2 size={14} /> },
     ...(showFinance ? [{ key: 'finance' as TabKey, label: '재무상태', icon: <CreditCard size={14} /> }] : []),
     ...(showGrowth ? [{ key: 'growth' as TabKey, label: '성장/진열장', icon: <Trophy size={14} /> }] : []),
+    ...(showCounseling ? [{ key: 'counseling' as TabKey, label: '상담 기록', icon: <MessageSquare size={14} /> }] : []),
   ];
 
   return (
@@ -209,6 +218,7 @@ export default function StudentDetail() {
       {tab === 'grades' && <GradesTab student={student} initialGradeType={initial.gradeType} />}
       {tab === 'finance' && showFinance && <FinanceTab student={student} />}
       {tab === 'growth' && showGrowth && <GrowthShowcaseTab studentId={student.id} studentName={student.name} />}
+      {tab === 'counseling' && showCounseling && <CounselingReadOnlyTab studentId={student.id} />}
     </AdminLayout>
   );
 }
@@ -2044,6 +2054,63 @@ function countAttendance(sessions: { records: { studentId: string; date: string;
 // SP 이력 + 수동 지급 + IF 힌트 + 진행 중 엠블럼 표시.
 // 관리자 Back Office 전용. 보호자 화면 없음.
 // ════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// 상담 기록 탭 (Phase 3D v2 신규) — 최고관리자/원장 전용, 조회만 가능.
+// 작성은 선생님 화면(TeacherStudentDetail.tsx)에서만 이뤄진다.
+// ════════════════════════════════════════════════════════════
+function CounselingReadOnlyTab({ studentId }: { studentId: string }) {
+  const records = getCounselingRecordsForStudent(studentId);
+
+  return (
+    <div className="axis-card overflow-hidden">
+      <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
+        <MessageSquare size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+        <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>상담 기록 ({records.length}건)</span>
+        <span className="text-xs ml-auto" style={{ color: 'oklch(0.6 0.015 250)' }}>조회 전용 — 작성은 선생님 화면에서</span>
+      </div>
+      {records.length === 0 ? (
+        <div className="p-10 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          등록된 상담 기록이 없습니다.
+        </div>
+      ) : (
+        <div className="axis-table-wrap">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
+                {['상담일', '유형', '대상', '내용', '작성자', '작성일'].map((h) => (
+                  <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
+                    style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {records.map((rec) => (
+                <tr key={rec.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
+                  <td className="px-4 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{rec.date}</td>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.95 0.02 277)', color: 'oklch(0.45 0.2 277)' }}>{rec.type}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{rec.target}</td>
+                  <td className="px-4 py-2.5 text-xs" style={{ color: 'oklch(0.3 0.02 250)', maxWidth: 360 }}>{rec.content}</td>
+                  <td className="px-4 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                    {rec.authorName}
+                    <span className="ml-1 text-[10px] px-1 py-0.5 rounded" style={{ background: 'oklch(0.95 0.005 250)', color: 'oklch(0.6 0.015 250)' }}>
+                      {rec.activeMode === 'TEACHER_MODE' ? '강사모드' : '관리자모드'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                    {rec.createdAt.slice(0, 10)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; studentName: string }) {
   const growth = useGrowth();
   const { students } = useStudents();

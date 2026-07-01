@@ -5,7 +5,10 @@ import { cn } from '@/lib/utils';
 export function AlertDialog({ open, onOpenChange, children }: { open: boolean; onOpenChange: (open: boolean) => void; children: ReactNode }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => onOpenChange(false)}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={(e) => { e.stopPropagation(); onOpenChange(false); }}
+    >
       <div onClick={(e) => e.stopPropagation()}>{children}</div>
     </div>
   );

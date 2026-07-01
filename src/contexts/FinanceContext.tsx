@@ -393,13 +393,19 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ─── Phase 3A-2: 학생 role 재무 데이터 원천 차단 ──────────────────────
-// StudentFinance.tsx는 이미 완전 격리되어 있고 어떤 학생 화면도 useFinance()를
-// 호출하지 않지만, "UI에서 숨기는 것만으로는 불충분하다"는 원칙에 따라
-// 데이터 계층(훅 레벨)에서 한 번 더 차단한다. App.tsx의 Provider 순서상
-// FinanceProvider가 AuthProvider보다 바깥(상위)에 위치해 FinanceProvider
-// 자체에서는 useAuth()를 호출할 수 없으므로, 실제 소비 지점인 useFinance()
-// 훅에서 role을 검사해 STUDENT 계정에는 실제 데이터를 절대 반환하지 않는다.
+// ─── Phase 3A-2 / Phase 3D v2: 학생 role 재무 데이터 원천 차단 ──────────────────────
+// (Phase 3D v2 재검증: v1 시점에는 StudentFinance.tsx가 라우팅되어 있었고 useFinance()를
+// 직접 호출하고 있었다 — 이 훅 레벨 차단 덕분에 실제 STUDENT 계정에는 항상 빈 배열/0원만
+// 반환되어 실데이터 유출은 없었지만, "UI에서 숨기는 것만으로는 불충분하다"는 원칙과
+// 별개로 재무 화면 자체가 URL로 도달 가능했던 것 자체가 정책 위반이었다. v2에서
+// StudentRoutes.tsx의 /student/finance 라우트와 import를 제거하고 StudentFinance.tsx를
+// useFinance()를 호출하지 않는 완전한 stub으로 교체해 이제는 아래 조건 자체가 실제로
+// "어떤 학생 화면도 useFinance()를 호출하지 않는다"를 만족한다.)
+// 그래도 이 데이터 계층(훅 레벨) 차단은 그대로 유지한다 — 앞으로 실수로 학생 화면에서
+// useFinance()가 다시 호출되더라도 실데이터가 반환되지 않도록 하는 이중 안전망이다.
+// App.tsx의 Provider 순서상 FinanceProvider가 AuthProvider보다 바깥(상위)에 위치해
+// FinanceProvider 자체에서는 useAuth()를 호출할 수 없으므로, 실제 소비 지점인
+// useFinance() 훅에서 role을 검사해 STUDENT 계정에는 실제 데이터를 절대 반환하지 않는다.
 const STUDENT_BLOCKED_REASON = '학생 계정은 재무 데이터에 접근할 수 없습니다.';
 
 const STUDENT_SAFE_FINANCE: FinanceContextType = {

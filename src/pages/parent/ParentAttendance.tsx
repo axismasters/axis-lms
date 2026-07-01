@@ -56,7 +56,7 @@ export default function ParentAttendance() {
 
   return (
     <ParentLayout title="자녀 출결">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
 
         {/* 자녀 선택 */}
         {myChildren.length > 1 && (

@@ -33,6 +33,7 @@ import {
   saveIfRecord, getIfRecordForExam, toGrowthIfFlags, markIfRecordGrowthLinked, loadIfRecords,
 } from '@/lib/studentIfRecord';
 import type { StudentIfRecord } from '@/lib/studentIfRecord';
+import { Button } from '@/components/ui/button';
 
 // ─── 성적 색상 ────────────────────────────────────────────────────────
 function scoreColor(pct: number) {
@@ -446,18 +447,21 @@ function ResultDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={onClose}>
-      <div className="axis-card w-full max-w-sm" style={{ maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div className="flex items-start justify-between p-5 pb-3">
+      <div className="axis-card w-full max-w-sm flex flex-col" style={{ maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
+        <div className="flex items-start justify-between p-5 pb-3 flex-shrink-0" style={{ borderBottom: '1px solid oklch(0.95 0.004 250)' }}>
           <div>
             <div className="text-xs font-medium mb-1" style={{ color: 'oklch(0.55 0.2 27)' }}>테스트 성적표</div>
             <h2 className="font-bold text-sm leading-snug" style={{ color: 'oklch(0.15 0.02 250)' }}>{result.title}</h2>
             <div className="text-xs mt-1" style={{ color: 'oklch(0.55 0.015 250)' }}>{result.examDate}</div>
           </div>
-          <button onClick={onClose} className="p-1" aria-label="닫기"><X size={18} style={{ color: 'oklch(0.55 0.015 250)' }} /></button>
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 flex-shrink-0" aria-label="닫기">
+            <X size={18} style={{ color: 'oklch(0.55 0.015 250)' }} />
+          </Button>
         </div>
 
+        <div className="overflow-y-auto min-h-0">
         {/* 점수 */}
-        <div className="px-5 pb-3">
+        <div className="px-5 pb-3 pt-3">
           <div className="flex items-end gap-2 mb-1">
             <span className="text-4xl font-black tabular-nums" style={{ color }}>{result.earnedScore}</span>
             <span className="text-lg font-semibold mb-1" style={{ color: 'oklch(0.5 0.015 250)' }}>/ {result.totalPoints}</span>
@@ -629,6 +633,7 @@ function ResultDetailModal({
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   );
@@ -642,7 +647,7 @@ function TestCard({ result, onClick }: { result: StudentExamResult; onClick: () 
     ? Math.round(result.averageScore / result.totalPoints * 100) : null;
 
   return (
-    <button type="button" onClick={onClick} className="axis-card p-4 w-full text-left">
+    <button type="button" onClick={onClick} className="axis-card axis-card-clickable p-4 w-full text-left">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="font-semibold text-sm truncate flex items-center gap-1.5" style={{ color: 'oklch(0.2 0.02 250)' }}>

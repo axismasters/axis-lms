@@ -1,14 +1,23 @@
-// AXIS LMS v1.2 - ParentHome (Parent Finance Home Bridge v1)
-// 보호자 전용 홈: 자녀 선택 / 수강 반 요약 / 출결 요약 / 공개 성적 / 수납 상태.
-// ✅ 성적: getPublishedResultsForStudent 정책 준수 (결석/미채점/미공개 제외)
+// AXIS LMS v1.2 - ParentHome (Parent Finance Home Bridge v1 → Phase 3D v2 개편)
+// 보호자 전용 홈: 자녀 선택 / 수강 반 요약 / 출결 요약 / 공개 테스트 결과 / 성장 흐름 / 수납 상태.
+//
+// ⚠ 학부모 페이지 헌법 (Phase 3D v2 추가 — docs/PARENT_PAGE_CONSTITUTION.md 참조):
+//   1. 학부모 페이지는 "확인 화면"이 아니라 "자녀 성장을 계속 들여다보고 싶은 화면"이다.
+//   2. 중심은 납부 확인이 아니라 자녀 성장 확인이다 — 수납은 보조 정보로 낮춘다.
+//   3. 클릭 가능한 카드/요약/상세 진입 요소는 버튼/카드 버튼처럼 명확히 보이게 만든다.
+//   4. 학부모는 확인자다 — 입력/수정 기능은 어떤 화면에도 넣지 않는다.
+//   5. 상담 기록 원문은 학부모에게 노출하지 않는다(내부 기록용, 공개 리포트는 별도 승인 절차 필요).
+//
+// ✅ 테스트: getPublishedResultsForStudent 정책 준수 (결석/미채점/미공개 제외)
 // ✅ 출결: 자녀 소속 반 세션만 필터링
-// ✅ 수납 상태: FinanceContext 실데이터 연결 (getInvoicesByStudent + getUnpaidAmount)
-// 🚫 라이벌/엠블럼/경쟁 정보 노출 금지
+// ✅ 수납 상태: 총액 대신 미납 유무 배지만 표시(Phase 3D v2 — 총액 과시형 화면 금지)
+// 🚫 라이벌 상세(상대 식별)/경쟁 정보 노출 금지 — Tier/Emblem/SP 흐름은 성장 리포트로 확인
 // 🚫 납부 등록/환불 요청/수정/삭제 버튼 없음
+// 🚫 선생님 상담 기록 원문 노출 금지(Phase 3D v2 — "상담 리포트" 카드 제거)
 
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { CalendarCheck, BarChart2, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2, X, ClipboardList, CalendarClock, CheckCircle2 } from 'lucide-react';
+import { CalendarCheck, ClipboardList, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2, X, CalendarClock, CheckCircle2, TrendingUp, Award } from 'lucide-react';
 import ParentLayout from '@/layouts/ParentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
@@ -19,7 +28,9 @@ import { useContent } from '@/contexts/ContentContext';
 import { useHomework } from '@/contexts/HomeworkContext';
 import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { useFinance } from '@/contexts/FinanceContext';
+import { useGrowth } from '@/contexts/GrowthContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
+import { TIER_LABELS, TIER_COLORS } from '@/lib/growthData';
 import type { ContentItem } from '@/lib/contentData';
 
 function scoreColor(pct: number) {
@@ -107,6 +118,7 @@ export default function ParentHome() {
   const { getForStudent } = useHomework();
   const { getStatus } = useHomeworkStatus();
   const { getInvoicesByStudent, getUnpaidAmount } = useFinance();
+  const { getProfile, getStudentEmblems } = useGrowth();
 
   // 연결된 자녀 목록 (assignedStudentIds 기준)
   const myChildren = students.filter((s) =>
@@ -165,12 +177,20 @@ export default function ParentHome() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  // 수납 요약 — selectedChildId 기준, CANCELED 제외
+  // 수납 요약 — selectedChildId 기준, CANCELED 제외. Phase 3D v2: 총액은 계산만 하고
+  // 화면에는 "미납 유무"만 노출한다(총액 과시형 화면 금지).
   const childInvoices = selectedChildId
     ? getInvoicesByStudent(selectedChildId).filter(inv => inv.status !== 'CANCELED')
     : [];
-  const financeTotalBilled = childInvoices.reduce((s, inv) => s + inv.finalAmount, 0);
-  const financeUnpaid      = childInvoices.reduce((s, inv) => s + getUnpaidAmount(inv.id), 0);
+  const financeUnpaid = childInvoices.reduce((s, inv) => s + getUnpaidAmount(inv.id), 0);
+  const hasUnpaid = financeUnpaid > 0;
+
+  // 성장 흐름(Tier/Emblem) — 학부모 홈에서 "눌러보고 싶은" 진입점으로 사용
+  const growthProfile = selectedChildId ? getProfile(selectedChildId) : undefined;
+  const achievedEmblemCount = selectedChildId ? getStudentEmblems(selectedChildId).filter(e => e.achieved).length : 0;
+  const tierColor = growthProfile ? TIER_COLORS[growthProfile.tier] : 'oklch(0.7 0.01 250)';
+  const tierLabel = growthProfile ? TIER_LABELS[growthProfile.tier] : null;
+
   const classNameOf = (classId: string) => (
     childActiveClasses.find(c => c.id === classId)?.name
     ?? classes.find(c => c.id === classId)?.name
@@ -191,7 +211,7 @@ export default function ParentHome() {
 
   return (
     <ParentLayout title="AXIS 학부모">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
 
         {/* 자녀 선택 */}
         <div className="axis-card p-4">
@@ -297,12 +317,12 @@ export default function ParentHome() {
               )}
             </section>
 
-            {/* 성적 요약 (공개 결과만) */}
+            {/* 테스트 요약 (공개 결과만) */}
             <section>
               <div className="flex items-center justify-between mb-2 px-1">
                 <div className="flex items-center gap-2">
-                  <BarChart2 size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
-                  <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 성적</span>
+                  <ClipboardList size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
+                  <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 테스트</span>
                 </div>
                 <Link href="/parent/grades">
                   <div className="flex items-center gap-0.5 text-xs cursor-pointer" style={{ color: 'oklch(0.45 0.15 160)' }}>
@@ -312,7 +332,7 @@ export default function ParentHome() {
               </div>
               {publishedResults.length === 0 ? (
                 <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
-                  공개된 성적이 없습니다.
+                  공개된 테스트 결과가 없습니다.
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -444,64 +464,82 @@ export default function ParentHome() {
               </section>
             )}
 
-            {/* 수납 상태 요약 — FinanceContext 실데이터 연결 */}
+            {/* 성장 리포트 — 학부모 페이지 헌법 원칙: 납부 확인이 아니라 자녀 성장 확인이 중심이다.
+                Tier/Emblem을 홈에서 미리 보여주고 눌러서 더 보고 싶게 만드는 진입 카드. */}
+            <section>
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <TrendingUp size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>성장 리포트</span>
+              </div>
+              <Link href="/parent/growth" style={{ display: 'block' }}>
+                <div
+                  className="axis-card axis-card-clickable p-4 flex items-center justify-between"
+                  style={{ background: `linear-gradient(135deg, ${tierColor}14, white)` }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
+                      style={{ background: tierColor }}
+                    >
+                      {child?.name.charAt(0) ?? '?'}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-sm flex items-center gap-1.5 flex-wrap" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                        {child?.name ?? '자녀'}의 성장 현황
+                        {tierLabel && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0"
+                            style={{ background: tierColor + '20', color: tierColor }}>
+                            {tierLabel}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                        <Award size={11} /> 획득 엠블럼 {achievedEmblemCount}개 · SP {growthProfile?.totalSP.toLocaleString() ?? 0}점 — 눌러서 자세히 보기
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} style={{ color: 'oklch(0.6 0.015 250)', flexShrink: 0 }} />
+                </div>
+              </Link>
+            </section>
+
+            {/* 수납 상태 — Phase 3D v2: 총 청구액/총 납부액 등 총액성 금액 표시를 제거하고
+                미납 유무 배지만 표시한다(상태 확인 중심, 총액 과시형 화면 금지). */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
                 <CreditCard size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>수납 상태</span>
               </div>
               <Link href="/parent/finance">
-                <div className="axis-card p-4 cursor-pointer">
+                <div className="axis-card axis-card-clickable p-4 flex items-center justify-between">
                   {childInvoices.length === 0 ? (
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
-                        수납 내역이 없습니다
-                      </div>
-                      <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
+                    <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                      수납 내역이 없습니다
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex gap-3 text-xs flex-wrap">
-                        <span style={{ color: 'oklch(0.55 0.015 250)' }}>
-                          청구{' '}
-                          <span className="font-semibold tabular-nums" style={{ color: 'oklch(0.25 0.02 250)' }}>
-                            {financeTotalBilled.toLocaleString()}원
-                          </span>
-                        </span>
-                        {financeUnpaid > 0 && (
-                          <span style={{ color: 'oklch(0.55 0.015 250)' }}>
-                            미납{' '}
-                            <span className="font-semibold tabular-nums" style={{ color: 'oklch(0.55 0.2 27)' }}>
-                              {financeUnpaid.toLocaleString()}원
-                            </span>
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span
-                          className="text-xs px-2 py-0.5 rounded-full font-medium"
-                          style={financeUnpaid > 0
-                            ? { background: 'oklch(0.93 0.1 25)',   color: 'oklch(0.45 0.15 25)' }
-                            : { background: 'oklch(0.92 0.08 145)', color: 'oklch(0.3 0.12 145)' }
-                          }
-                        >
-                          {financeUnpaid > 0 ? '미납 있음' : '완납'}
-                        </span>
-                        <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
-                      </div>
-                    </div>
+                    <span
+                      className="text-xs px-2.5 py-1 rounded-full font-semibold"
+                      style={hasUnpaid
+                        ? { background: 'oklch(0.93 0.1 25)',   color: 'oklch(0.45 0.15 25)' }
+                        : { background: 'oklch(0.92 0.08 145)', color: 'oklch(0.3 0.12 145)' }
+                      }
+                    >
+                      {hasUnpaid ? '미납 있음' : '미납 없음'}
+                    </span>
                   )}
+                  <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
                 </div>
               </Link>
             </section>
 
-            {/* 목표대학 추천 / 대학추천 요약 + 상담 리포트 입구 */}
+            {/* 목표대학 추천 / 대학추천 요약 — Phase 3D v2: "상담 리포트" 카드는 제거했다
+                (선생님 상담 기록 원문은 학부모에게 노출하지 않는다). */}
             <section className="space-y-2">
               <div className="px-1 text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>
                 추가 정보
               </div>
               <Link href="/parent/target-summary" style={{ display: 'block' }}>
-                <div className="axis-card p-4 flex items-center justify-between cursor-pointer">
+                <div className="axis-card axis-card-clickable p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#EDE9FE' }}>
                       <span style={{ fontSize: 18 }}>🎓</span>
@@ -509,20 +547,6 @@ export default function ParentHome() {
                     <div>
                       <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>목표대학 추천 요약</div>
                       <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>자녀의 준비 상태와 방향을 확인하세요</div>
-                    </div>
-                  </div>
-                  <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
-                </div>
-              </Link>
-              <Link href="/parent/consulting" style={{ display: 'block' }}>
-                <div className="axis-card p-4 flex items-center justify-between cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'oklch(0.94 0.04 250)' }}>
-                      <span style={{ fontSize: 18 }}>📋</span>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>상담 리포트</div>
-                      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>선생님 상담 기록을 조회합니다</div>
                     </div>
                   </div>
                   <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />

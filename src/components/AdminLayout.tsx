@@ -134,8 +134,8 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children, title, breadcrumbs }: AdminLayoutProps) {
-  const [location] = useLocation();
-  const { can, currentUser, loginAs, devUsers } = useAuth();
+  const [location, navigate] = useLocation();
+  const { can, currentUser, loginAs, devUsers, logout, activeMode, canSwitchMode, setActiveMode } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => { setMobileOpen(false); }, [location]);
@@ -235,11 +235,42 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
             {currentUser.name.charAt(0)}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-xs font-medium text-white truncate">{currentUser.name}</div>
             <div className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{POSITION_LABEL[currentUser.position]}</div>
           </div>
+          <button
+            onClick={logout}
+            className="text-xs px-2 py-1 rounded-md flex-shrink-0 transition-colors hover:bg-white/5"
+            style={{ color: 'oklch(0.6 0.015 250)' }}
+          >
+            로그아웃
+          </button>
         </div>
+
+        {/* Phase 3D v2: 원장/부원장 관리자모드/강사모드 전환 — 별도 강사 계정을 만들지 않고
+            하나의 계정에서 두 화면을 오간다. */}
+        {canSwitchMode && (
+          <div className="flex gap-1 p-1 rounded-lg mb-2" style={{ background: 'oklch(0.2 0.025 250)' }}>
+            {(['ADMIN_MODE', 'TEACHER_MODE'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => {
+                  setActiveMode(mode);
+                  navigate(mode === 'ADMIN_MODE' ? '/admin' : '/teacher');
+                }}
+                className="flex-1 text-xs py-1.5 rounded-md font-medium transition-colors"
+                style={{
+                  background: activeMode === mode ? 'oklch(0.511 0.262 276.966)' : 'transparent',
+                  color: activeMode === mode ? 'white' : 'oklch(0.65 0.015 250)',
+                }}
+              >
+                {mode === 'ADMIN_MODE' ? '관리자 모드' : '강사 모드'}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* ⚠ DEV/TEST ONLY */}
         <label className="flex items-center gap-1.5 mt-1">
           <span className="text-xs px-1.5 py-0.5 rounded font-mono flex-shrink-0" style={{ background: 'oklch(0.7 0.18 80)', color: 'oklch(0.2 0.02 250)' }}>DEV</span>

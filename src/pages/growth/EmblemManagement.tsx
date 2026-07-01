@@ -4,7 +4,7 @@
 // 강사/행정: 조회만 가능.
 
 import { useState } from 'react';
-import { Trophy, Plus, Eye, EyeOff, Edit2, X, Check } from 'lucide-react';
+import { Trophy, Plus, Eye, EyeOff, Edit2, X, Check, GripVertical } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { useGrowth } from '@/contexts/GrowthContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,8 @@ import {
   CATEGORY_LABELS, MATERIAL_LABELS, MATERIAL_BADGE, CATEGORY_BADGE,
 } from '@/lib/growthData';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { useDraggableModal } from '@/hooks/useDraggableModal';
 
 const CATEGORIES: EmblemCategory[] = ['LIFE', 'GROWTH', 'ASSESSMENT', 'RIVAL', 'SKILL', 'SPECIAL'];
 const MATERIALS: EmblemMaterial[] = ['WOOD', 'STONE', 'BRONZE', 'IRON', 'SILVER', 'GOLD', 'DIAMOND'];
@@ -49,6 +51,7 @@ export default function EmblemManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState<Emblem | null>(null);
   const [form, setForm] = useState<FormData>(DEFAULT_FORM);
+  const draggable = useDraggableModal(showModal);
 
   const filtered = emblems.filter(e => {
     if (filterCat !== 'ALL' && e.category !== filterCat) return false;
@@ -93,7 +96,7 @@ export default function EmblemManagement() {
         </div>
         {canManage && (
           <button onClick={openAdd}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-opacity hover:opacity-90 active:scale-95"
             style={{ background: 'oklch(0.15 0.02 250)', color: '#C9A84C' }}>
             <Plus size={14} /> 엠블럼 추가
           </button>
@@ -133,9 +136,10 @@ export default function EmblemManagement() {
         <div className="axis-table-wrap">
         <table className="w-full text-sm border-collapse" style={{ minWidth: 700 }}>
           <thead>
-            <tr style={{ background: 'oklch(0.97 0.004 250)', borderBottom: '1px solid oklch(0.92 0.006 250)' }}>
+            <tr style={{ background: 'oklch(0.97 0.004 250)' }}>
               {['엠블럼명', '카테고리', '재질 단계', '획득 조건', '필요 횟수', '숨김', '활성', '관리'].map(h => (
-                <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)' }}>{h}</th>
+                <th key={h} className="axis-th-sticky axis-th-sticky-56 text-left px-4 py-2.5 text-xs font-semibold"
+                  style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.97 0.004 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -173,22 +177,29 @@ export default function EmblemManagement() {
                   <td className="px-4 py-2.5 text-center text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{e.requiredCount}회</td>
                   <td className="px-4 py-2.5 text-center">
                     {canManage ? (
-                      <button onClick={() => { toggleEmblemHidden(e.id); toast.success(e.hidden ? '공개 전환' : '숨김 처리'); }}>
-                        {e.hidden ? <EyeOff size={15} style={{ color: '#8B5CF6' }} /> : <Eye size={15} style={{ color: 'oklch(0.7 0.01 250)' }} />}
-                      </button>
+                      <Button
+                        variant="ghost" size="icon"
+                        onClick={() => { toggleEmblemHidden(e.id); toast.success(e.hidden ? '공개 전환' : '숨김 처리'); }}
+                        className="h-8 w-8"
+                        aria-label={e.hidden ? '공개로 전환' : '숨김 처리'}
+                      >
+                        {e.hidden ? <EyeOff size={15} style={{ color: '#8B5CF6' }} /> : <Eye size={15} style={{ color: 'oklch(0.55 0.015 250)' }} />}
+                      </Button>
                     ) : (
-                      e.hidden ? <EyeOff size={15} style={{ color: '#8B5CF6' }} /> : <Eye size={15} style={{ color: 'oklch(0.8 0.01 250)' }} />
+                      <span className="inline-flex items-center justify-center h-8 w-8" aria-hidden>
+                        {e.hidden ? <EyeOff size={15} style={{ color: '#8B5CF6' }} /> : <Eye size={15} style={{ color: 'oklch(0.8 0.01 250)' }} />}
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-center">
                     {canManage ? (
                       <button onClick={() => { toggleEmblemActive(e.id); toast.success(e.active ? '비활성 처리' : '활성화'); }}
-                        className="text-xs px-2 py-0.5 rounded font-semibold"
-                        style={{ background: e.active ? '#D1FAE5' : '#FEE2E2', color: e.active ? '#065F46' : '#991B1B' }}>
+                        className="text-xs px-2.5 py-1 rounded-md font-semibold transition-colors hover:brightness-95 active:scale-95"
+                        style={{ background: e.active ? '#D1FAE5' : '#FEE2E2', color: e.active ? '#065F46' : '#991B1B', cursor: 'pointer' }}>
                         {e.active ? '활성' : '비활성'}
                       </button>
                     ) : (
-                      <span className="text-xs px-2 py-0.5 rounded font-semibold"
+                      <span className="text-xs px-2.5 py-1 rounded-md font-semibold"
                         style={{ background: e.active ? '#D1FAE5' : '#FEE2E2', color: e.active ? '#065F46' : '#991B1B' }}>
                         {e.active ? '활성' : '비활성'}
                       </span>
@@ -196,11 +207,9 @@ export default function EmblemManagement() {
                   </td>
                   <td className="px-4 py-2.5">
                     {canManage && (
-                      <button onClick={() => openEdit(e)}
-                        className="inline-flex items-center gap-1 text-xs font-medium"
-                        style={{ color: 'oklch(0.45 0.2 277)' }}>
+                      <Button variant="outline" size="sm" onClick={() => openEdit(e)} className="h-7 text-xs gap-1">
                         <Edit2 size={12} /> 수정
-                      </button>
+                      </Button>
                     )}
                   </td>
                 </tr>
@@ -211,15 +220,25 @@ export default function EmblemManagement() {
         </div>
       </div>
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
-              <h2 className="font-bold text-base" style={{ color: 'oklch(0.15 0.02 250)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }}
+          onClick={() => setShowModal(false)}>
+          <div ref={draggable.panelRef} onClick={(ev) => ev.stopPropagation()}
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md modal-enter flex flex-col"
+            style={{ ...draggable.style, maxHeight: '90vh' }}>
+            <div
+              {...draggable.dragHandleProps}
+              className="axis-modal-drag-handle flex items-center justify-between p-5 border-b flex-shrink-0"
+              style={{ borderColor: 'oklch(0.92 0.006 250)' }}
+            >
+              <h2 className="font-bold text-base flex items-center gap-1.5" style={{ color: 'oklch(0.15 0.02 250)' }}>
+                {!draggable.isMobile && <GripVertical size={15} style={{ color: 'oklch(0.75 0.01 250)' }} />}
                 {editTarget ? '엠블럼 수정' : '엠블럼 추가'}
               </h2>
-              <button onClick={() => setShowModal(false)}><X size={17} style={{ color: 'oklch(0.5 0.015 250)' }} /></button>
+              <Button variant="ghost" size="icon" onClick={() => setShowModal(false)} className="h-8 w-8" aria-label="닫기">
+                <X size={17} style={{ color: 'oklch(0.5 0.015 250)' }} />
+              </Button>
             </div>
-            <div className="p-5 flex flex-col gap-4">
+            <div className="p-5 flex flex-col gap-4 overflow-y-auto min-h-0">
               <div>
                 <label className="block text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>엠블럼 이름 *</label>
                 <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
@@ -268,15 +287,11 @@ export default function EmblemManagement() {
                 </label>
               </div>
             </div>
-            <div className="flex justify-end gap-2 p-5 border-t" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
-              <button onClick={() => setShowModal(false)}
-                className="px-4 py-1.5 text-sm rounded-md border"
-                style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.5 0.015 250)' }}>취소</button>
-              <button onClick={handleSave}
-                className="flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md font-semibold"
-                style={{ background: 'oklch(0.15 0.02 250)', color: '#C9A84C' }}>
+            <div className="flex justify-end gap-2 p-5 border-t flex-shrink-0" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
+              <Button variant="outline" size="default" onClick={() => setShowModal(false)} className="text-sm">취소</Button>
+              <Button onClick={handleSave} className="gap-1.5 text-sm" style={{ background: 'oklch(0.15 0.02 250)', color: '#C9A84C' }}>
                 <Check size={14} /> {editTarget ? '수정 완료' : '추가'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
