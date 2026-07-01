@@ -1,6 +1,94 @@
 # QA_PHASE3D.md
 
-## v2 검수 결과 (반려 대응)
+## v3 검수 결과 (반려 대응 — v2는 GitHub 업로드 금지 상태였음)
+
+**버전**: v3 — 이 섹션이 최신 검수 결과다. v2/v1 검수 결과는 아래에 각각 보존.
+
+### v3 검증 환경
+
+v1/v2와 동일한 8종 의존성 타입 스텁 방식으로 `tsc -p tsconfig.app.json --noEmit`을
+**src 전체(약 160개 파일 — 이번에 신규 4개: TeacherMaterials.tsx, TeacherExamScores.tsx,
+accountActionLog.ts + 문서 파일)**에 대해 실행했다. lucide-react 스텁은 v3에서 새로
+쓴 `UserCog` 아이콘 1개만 추가 등록(재추출 diff로 확인 — 그 외 아이콘은 기존 88개
+안에 이미 포함).
+
+### v3 최종 검수 결과 요약
+
+| # | 검수 기준 | 결과 |
+|---|---|---|
+| 1 | `tsc --noEmit`(전체 src) | **0 errors** |
+| 2 | 수정/신규 파일 49개 구문 파싱(TS 파서) | **전부 OK** |
+| 3 | 불변 파일 4종 MD5 | **완전 동일** |
+| 4 | 학생 화면 금지어(수납/재무/청구/미납/환불/영수증) | **0건**(주석만 존재) |
+| 5 | 금지 표현(합격률 등) 실제 UI | **0건** |
+| 6 | 상담 기록 원문 노출(학생/보호자) | **0건** |
+| 7 | 학생 성적 직접 입력 흐름 | **0건**(변경 없음, v2와 동일하게 유지) |
+| 8 | Rules of Hooks(신규 useState 추가 시 조기 return보다 앞에 선언) | **TeacherStudentDetail.tsx 재검토 완료** |
+| 9 | TEACHER_PRIVATE 시험 scope 이중 방어(신규 TeacherExamScores.tsx 포함) | **유지 확인** |
+| 10 | 로그인 하이픈 정규화 | **적용 확인**(§CHANGES 문서 "부가" 참조) |
+
+### §v3-1. Rules of Hooks 재검토(신규 useState 추가분)
+
+- `TeacherStudentDetail.tsx`: `confirmAction` state를 상담 기록 state들과 함께 조기
+  `return notAllowed;`보다 앞에 선언했는지 재확인 — 정상.
+- `StudentHome.tsx`: `selectedResult` state를 추가하면서, 이 컴포넌트에 조기 return이
+  있는지 전체를 다시 훑어봤다 — 이 컴포넌트는 조기 return이 없어(항상 최종 JSX까지
+  진행) 위치와 무관하게 안전하지만, 다른 훅들과 같은 블록(컴포넌트 최상단 변수 선언부)에
+  배치해 일관성을 유지했다.
+
+### §v3-2. 불변 파일 MD5 (v3 작업 후 재확인)
+
+```
+387bbf48a3d87ff63ce10d6dbc8bf33c  src/App.tsx
+3429a4ba81c0500e6596418edc639225  src/pages/teacher/TeacherExamGrading.tsx
+1eddaef5cf427e00666be685ea16f32f  src/lib/universityAnalysisAdapter.ts
+126d9e5e314de186bf1df0a63b3abf82  src/lib/classData.ts
+```
+v1/v2와 완전 동일. `TeacherExamGrading.tsx`가 결석 학생을 표시하지 못하고 정정 기능이
+없다는 한계를 신규 `TeacherExamScores.tsx`로 보완했을 뿐, 불변 파일 자체는 이번에도
+전혀 수정하지 않았다.
+
+### §v3-3. 학생/상담/재무 노출 재검증(v3)
+
+```
+grep -rlE "수납|재무|청구|미납|환불|영수증" src/pages/student/ src/layouts/StudentLayout.tsx
+→ 매치 파일은 모두 정책 선언 주석뿐(실제 렌더링 텍스트 0건, "금지"/"노출" 키워드가
+  포함된 라인만 필터링해도 결과가 남지 않음을 확인)
+
+grep -rln "counselingData|getCounselingRecords" src/pages/student/ src/pages/parent/
+→ 0건
+
+grep -rnE "합격률|합격 가능성|합격 보장|안정 합격|불합격" src/ --include="*.tsx" --include="*.ts"
+→ 주석(부정문) 외 실제 UI 매치 0건
+```
+
+### §v3-4. TeacherExamScores.tsx scope 이중 방어 확인
+
+```ts
+const visibleExam = rawExam && (
+  rawExam.scope === 'TEACHER_PRIVATE' ? rawExam.ownerTeacherId === currentUser.id : true
+) ? rawExam : undefined;
+if (!visibleExam) return <NotFoundScreen />;
+```
+다른 교사의 `TEACHER_PRIVATE` 시험 id를 URL에 직접 넣어 접근을 시도해도 `visibleExam`이
+`undefined`가 되어 `NotFoundScreen`으로 차단된다 — `AssessmentList.tsx`/`TeacherExams.tsx`와
+동일한 이중 방어 패턴을 그대로 재사용했다.
+
+### §v3-5. 로그인 하이픈 정규화 확인
+
+```ts
+function normalizePhoneDigits(phone: string): string {
+  return phone.replace(/[^0-9]/g, '');
+}
+// login()에서 저장된 phone과 입력 phone 모두 이 함수로 정규화한 뒤 비교
+```
+"010-0000-0002"로 저장된 계정에 "01000000002"(하이픈 없음)로 로그인 시도 시에도
+정상적으로 일치하는지 코드 추적으로 확인했다(정규화 후 두 값 모두 "01000000002"로
+동일해짐).
+
+---
+
+## (v2 검수 결과 — v1 대비, 반려 대응)
 
 **버전**: v2 — 이 섹션이 최신 검수 결과다. v1 검수 결과는 아래 "(v1 원본)" 섹션에 보존.
 

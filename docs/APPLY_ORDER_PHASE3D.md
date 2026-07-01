@@ -1,6 +1,70 @@
 # APPLY_ORDER_PHASE3D.md
 
-## v2 적용 안내 (반려 대응)
+## v3 적용 안내 (반려 대응 — v2는 GitHub 업로드 금지)
+
+**버전**: v3 — 이 섹션이 최신이다. v2/v1 적용 안내는 아래에 각각 보존.
+
+### 전제 (v3)
+
+이 zip(`axis-lms-v1_2-phase3d-ui-ux-interaction-exam-template-v3.zip`)은 Phase 3D v2
+상태(반려됨, 미배포) 위에 v3 수정사항이 모두 반영된 **완전한 프로젝트 상태**다.
+`-github-upload.zip`은 **Phase 3C v2 베이스라인 대비 v1+v2+v3 전체 누적 diff**다(v2가
+실제로는 한 번도 GitHub에 올라간 적이 없으므로, v3만의 증분이 아니라 처음부터의 전체
+변경분을 담았다 — 총 49개 파일).
+
+### GitHub 적용 순서 (신규/핵심 변경만 발췌 — 나머지는 MODIFIED_FILES 문서 참조)
+
+**1단계 — 데이터/유틸 레이어**
+1. `src/lib/rbac.ts` (`student.nicknameReset` 추가)
+2. `src/lib/studentProfile.ts` (`lastNicknameChangedAt`, 14일 게이트, `resetStudentNickname`)
+3. `src/lib/accountActionLog.ts` (신규)
+4. `src/lib/counselingData.ts`, `src/lib/assessmentData.ts` (v2와 동일, 변경 없음)
+
+**2단계 — Context**
+5. `src/contexts/AuthContext.tsx` (`canResetNickname` + 로그인 하이픈 정규화 — 라우트
+   파일들보다 반드시 먼저 적용)
+
+**3단계 — 페이지**
+6. `src/pages/student/StudentMyPage.tsx`, `StudentGrades.tsx`(`ResultDetailModal` export),
+   `StudentHome.tsx`(신규 import 반영이므로 5번보다 먼저 적용하면 안 됨 — `StudentGrades.tsx`가
+   먼저 적용되어 있어야 `StudentHome.tsx`의 import가 깨지지 않는다)
+7. `src/pages/teacher/TeacherMaterials.tsx`(신규), `TeacherExamScores.tsx`(신규),
+   `TeacherVideos.tsx`/`TeacherNotes.tsx`(stub 교체), `TeacherHome.tsx`, `TeacherExams.tsx`,
+   `TeacherStudents.tsx`, `TeacherStudentDetail.tsx`
+8. `src/pages/StudentDetail.tsx`, `src/pages/settings/PermissionSettings.tsx`
+9. `src/pages/parent/ParentTargetSummary.tsx`
+10. `src/pages/LoginPage.tsx`
+
+**4단계 — 라우트**
+11. `src/routes/TeacherRoutes.tsx`(`TeacherMaterials`/`TeacherExamScores` import가
+    6~7단계 파일에 의존하므로 반드시 그 이후에 적용)
+
+### 적용 후 수동 확인 권장 항목 (v3 추가분)
+
+- [ ] 휴대폰번호를 하이픈 없이("01000000002") 입력해도 로그인이 되는지 확인.
+- [ ] 강사 홈에서 "내 시험지" 카드 라벨과 "내 시험지 관리" 화면 제목이 보이는지, "수업자료"
+      카드가 하나만 있고 "수업노트" 카드가 따로 없는지 확인.
+- [ ] "수업자료" 화면에서 수업영상/수업노트 탭을 눌러도 페이지 전환 없이(URL이 안 바뀌고)
+      즉시 내용만 바뀌는지 확인. 구 URL `/teacher/videos`, `/teacher/notes`로 직접
+      접속해도 정상적으로 이동하는지 확인.
+- [ ] 담당 학생 목록에서 카드를 클릭했을 때는 아무 반응이 없고, "상세보기" 버튼을 눌렀을
+      때만 상세 페이지로 이동하는지 확인.
+- [ ] 강사 학생 상세에서 "비밀번호 초기화"/"닉네임 초기화" 버튼을 눌러 확인 모달 → 실행까지
+      진행해보고, 닉네임 초기화 후 해당 학생 계정으로 로그인해 마이페이지에서 즉시 새
+      닉네임을 설정할 수 있는지 확인.
+- [ ] 학생 계정으로 닉네임을 한 번 설정한 뒤 곧바로 다시 변경을 시도하면 "N일 남았습니다"
+      안내와 함께 수정 버튼이 비활성화되는지 확인.
+- [ ] 강사가 "내 시험지 관리"에서 시험지를 클릭 → 학생별 성적 화면에서 학생명/채점상태/
+      점수/응시결시/결과보기/채점 또는 정정이 모두 보이는지, 다른 선생님의 개인 시험지
+      id로 URL을 직접 조작해도 접근이 막히는지 확인.
+- [ ] 학생 홈 "최근 성적" 카드를 클릭하면 "테스트" 메뉴를 거치지 않고 바로 성적표 상세
+      (IF 요약 포함)가 열리는지 확인.
+- [ ] 학부모 "목표대학 추천" 화면에서 더 이상 "상담 리포트"라는 표현이나 클릭되지 않는
+      화살표 아이콘이 보이지 않는지 확인.
+
+---
+
+## (v2 적용 안내 — v1 대비, 반려 대응)
 
 **버전**: v2 — 이 섹션이 최신이다. v1 적용 안내는 아래 "(v1 원본)" 섹션에 보존.
 

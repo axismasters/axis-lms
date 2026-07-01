@@ -1,5 +1,38 @@
 # MODIFIED_FILES_PHASE3D.md
 
+## v3 변경분 (반려 대응 — v2는 GitHub 업로드 금지)
+
+### v3 신규 파일
+
+| 파일 | 내용 |
+|---|---|
+| `src/pages/teacher/TeacherMaterials.tsx` | 수업영상/학습자료 + 수업노트를 실제 로컬 탭으로 통합한 화면. |
+| `src/pages/teacher/TeacherExamScores.tsx` | "내 시험지 관리"에서 시험지 클릭 시 보이는 학생별 성적(조회+정정) 화면. |
+| `src/lib/accountActionLog.ts` | 비밀번호/닉네임 초기화 실행 로그(audit mock, localStorage 기반). |
+
+### v3 수정 파일
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/teacher/TeacherHome.tsx` | "시험 채점"→"내 시험지", "수업노트" 카드 제거(수업자료 하나로 통합), "채점하기" 바로가기 문구를 "내 시험지 보기"로 조정. |
+| `src/pages/teacher/TeacherExams.tsx` | 화면 제목 "채점"→"내 시험지 관리". 시험지 카드 전체 클릭 시 학생별 성적 화면으로 이동(nested-anchor 방지를 위해 outer는 div+navigate, inner "채점하기"만 실제 Link). |
+| `src/pages/teacher/TeacherStudents.tsx` | 학생 카드 전체 클릭 제거, "상세보기" 명시적 버튼으로 교체. |
+| `src/pages/teacher/TeacherStudentDetail.tsx` | "계정 관리" 섹션 신규(비밀번호/닉네임 초기화 버튼 + 확인 모달 + 감사로그 기록). |
+| `src/pages/teacher/TeacherVideos.tsx`, `TeacherNotes.tsx` | `TeacherMaterials.tsx`로 통합되어 더 이상 라우팅되지 않음 — 안전한 빈 stub(`return null`)으로 교체. |
+| `src/routes/TeacherRoutes.tsx` | `/teacher/materials` 라우트 추가, `/teacher/videos`·`/teacher/notes`를 해당 탭으로 리다이렉트, `/teacher/exams/:examId/scores` 라우트 추가. |
+| `src/pages/StudentDetail.tsx` | 관리자용 "닉네임 초기화" 버튼 추가(기존 "비밀번호 초기화" 옆), 기존 비밀번호 초기화 실행부에 감사로그 기록 추가(v2까지는 로그 없이 toast만 있었음). |
+| `src/lib/studentProfile.ts` | `StudentProfileData.lastNicknameChangedAt` 필드, 14일 제한 로직(`canChangeNicknameNow`), 학생용 게이트된 저장(`setStudentNickname` 반환형 변경: `void`→`{ok,reason?}`), 관리자/교사용 `resetStudentNickname` 추가. |
+| `src/pages/student/StudentMyPage.tsx` | 닉네임 변경 14일 게이트 적용, 안내 문구 추가, 쿨다운 중 버튼 비활성화 + 남은 일수 표시. |
+| `src/lib/rbac.ts` | `student.nicknameReset` 권한 키 추가(6개 직급 배열에 `student.passwordReset`과 동일하게 부여). |
+| `src/contexts/AuthContext.tsx` | `canResetNickname(studentId)` 추가. **로그인 하이픈 정규화**(`normalizePhoneDigits`) 추가 — v2 이후 별도 요청으로 반영. |
+| `src/pages/settings/PermissionSettings.tsx` | "학생 닉네임 초기화" 권한 매트릭스 행 추가. |
+| `src/pages/student/StudentGrades.tsx` | `ResultDetailModal`을 `export`로 전환(StudentHome.tsx에서 재사용). |
+| `src/pages/student/StudentHome.tsx` | "최근 성적" 카드 클릭 시 `ResultDetailModal`을 홈에서 바로 열도록 변경(테스트 메뉴 재진입 불필요). |
+| `src/pages/parent/ParentTargetSummary.tsx` | "상담 리포트" 표현을 "선생님 안내 필요" 수준으로 조정, 비기능 화살표 아이콘 제거. |
+| `src/pages/LoginPage.tsx` | 안내 문구를 "하이픈 없이 입력 가능"으로 갱신. |
+
+---
+
 ## v2 변경분 (반려 대응)
 
 ### v2 신규 파일

@@ -1,6 +1,151 @@
 # CHANGES_PHASE3D.md
 
-## 반려 대응 (v2)
+## 반려 대응 (v3)
+
+**버전**: v3 — v2는 GitHub 업로드 금지 상태였다. 이 섹션이 최신 내용이며, v2/v1 내용은
+아래에 각각 보존한다("(v2 반려 대응 — v1 대비)"와 "(v1 원본)" 섹션).
+
+작업명: Phase 3D v3 — 선생님 UX 정리 + 계정 관리(비밀번호/닉네임 초기화) + 학생 성적 진입 개선
+
+### 1. 선생님 홈 메뉴 정리 — "시험 채점" → "내 시험지 관리"
+
+- `TeacherHome.tsx`의 빠른 실행 카드 "시험 채점" → **"내 시험지"**로 변경.
+- `TeacherExams.tsx` 화면 제목을 "채점" → **"내 시험지 관리"**로 변경.
+- 시험지 카드 자체(전체)를 클릭하면 `/teacher/exams/:examId/scores`(§7 참조, 신규 화면)로
+  이동해 시험지를 만들고 학생별 성적을 확인하는 공간으로 재구성했다. "채점하기"는 미채점
+  인원이 있을 때만 카드 안에 보이는 보조 버튼으로 남겼다(클릭 시 이벤트 버블링을 막아
+  카드 전체 클릭과 충돌하지 않게 처리).
+- 홈 화면의 "미채점 시험" 섹션 상단 바로가기 문구도 "채점하기" → "내 시험지 보기"로 조정해,
+  "채점"이 화면 전체의 대표 동사처럼 보이지 않게 했다.
+
+### 2. 수업노트/수업자료 중복 제거
+
+- `TeacherHome.tsx`에서 "수업노트" 카드를 제거하고 "수업자료" 카드 하나만 남겼다
+  (경로 `/teacher/materials`).
+- 신규 `TeacherMaterials.tsx`: 기존 `TeacherVideos.tsx`(수업영상/학습자료)와
+  `TeacherNotes.tsx`(수업노트)의 화면 내용을 각각 탭 컴포넌트로 그대로 옮기고, 진짜
+  로컬 상태 탭으로 한 화면 안에서 전환되게 했다. (v1까지는 두 화면이 서로를 `<Link>`로
+  가리키는 "탭처럼 보이지만 실제로는 페이지 이동"이었다 — 이번에 실제 탭으로 바꿨다.)
+- `TeacherRoutes.tsx`: `/teacher/materials` 라우트를 추가하고, 기존 `/teacher/videos`,
+  `/teacher/notes`는 각각 대응하는 탭으로 리다이렉트(`?tab=videos`, `?tab=notes`)하도록
+  했다 — 구 경로로 들어와도 화면이 깨지지 않는다.
+- 이제 쓰이지 않는 `TeacherVideos.tsx`/`TeacherNotes.tsx`는 물리 삭제 대신 안전한 빈
+  stub(`return null`)으로 교체했다(다른 파일이 실수로 다시 import해도 빈 화면만 뜨고
+  에러가 나지 않도록).
+
+### 3. 담당 학생 목록 — 카드 클릭 대신 명시적 버튼
+
+- `TeacherStudents.tsx`: 학생 카드 전체를 감싸던 `<Link>`를 제거하고, 카드는 보기 전용
+  정보(이름/반/상태)만 표시한다. 우측에 별도 **"상세보기"** 버튼(`Button variant="outline"`)을
+  추가해 이 버튼을 눌렀을 때만 `/teacher/students/:studentId`로 이동한다.
+
+### 4. 선생님 학생 상세 — 비밀번호 초기화 / 닉네임 초기화
+
+- `TeacherStudentDetail.tsx`에 "계정 관리" 섹션 신규 추가. `canResetPassword`/
+  `canResetNickname`(모두 `canAccessStudent` 스코프 체크 포함)를 통과할 때만 각 버튼이
+  보인다 — 강사는 항상 본인 담당 학생 범위로만 제한된다.
+- **비밀번호 초기화**: 기존 비밀번호는 어디에도 표시하지 않는다. 확인 모달에서
+  "기존 비밀번호는 표시되지 않습니다"를 명시하고, 실행 후 toast로만 완료를 안내한다.
+- **닉네임 초기화**: 선생님이 새 닉네임을 대신 정하지 않는다 — `resetStudentNickname()`이
+  닉네임을 비우고 14일 변경 제한(§5)도 함께 해제해서, 학생이 마이페이지에서 즉시 새
+  닉네임을 설정할 수 있게 한다.
+- 두 액션 모두 실행 전 확인 모달을 거치며, 신규 `src/lib/accountActionLog.ts`
+  (localStorage 기반 audit mock — App.tsx가 불변이라 Provider 없이 구현)에
+  실행자 id/이름/activeMode/대상 학생/시각을 기록한다.
+- **관리자(원장/부원장/최고관리자) 측**: 기존에 `StudentDetail.tsx`(Back Office)에 이미
+  구현되어 있던 "비밀번호 초기화" 버튼 옆에 동일한 방식으로 "닉네임 초기화" 버튼을
+  추가했다 — `canResetNickname()`이 dataScope=ALL_ACADEMY인 원장/부원장/최고관리자에게는
+  사실상 전체 학생을 대상으로 허용한다. 기존 비밀번호 초기화 실행부에도 이번에
+  `logAccountAction()` 호출을 추가해 감사로그가 실제로 남도록 보완했다(v2까지는 toast만
+  띄우고 로그가 전혀 없었다).
+
+### 5. 닉네임 14일 변경 제한
+
+- `src/lib/studentProfile.ts`의 `StudentProfileData`에 `lastNicknameChangedAt: string | null`
+  필드 추가.
+- `NICKNAME_CHANGE_COOLDOWN_DAYS = 14`, `canChangeNicknameNow(studentId)`(허용 여부 +
+  남은 일수), 학생 본인 변경용 `setStudentNickname(studentId, nickname)`(게이트 통과 시에만
+  저장하고 타이머 갱신), 관리자/교사용 `resetStudentNickname(studentId)`(닉네임 비우고
+  타이머도 함께 해제) 함수를 신규 작성했다.
+- `StudentMyPage.tsx`: 안내 문구를 정확히 지시된 문장으로 추가했다 — "닉네임은 Rival,
+  Emblem, 성적 진열장에서 사용됩니다. 닉네임은 2주에 한 번만 변경할 수 있습니다." 14일이
+  지나지 않았으면 "수정/설정" 버튼을 비활성화하고 "다음 변경까지 N일 남았습니다"를 표시한다.
+
+### 6. RBAC 정합성 — `student.nicknameReset`
+
+- `rbac.ts`의 `PERMISSION_KEYS`에 `student.nicknameReset` 추가.
+- 기본 권한은 **`student.passwordReset`과 정확히 동일한 위치에 동일하게 부여**했다
+  (SUPER_ADMIN은 `ALL`로 자동 포함, DIRECTOR/VICE_DIRECTOR/HEAD_MANAGER/TEAM_LEAD/STAFF/
+  TEACHER 각 배열에 `student.passwordReset` 바로 옆에 추가) — 지시사항의 "최고관리자·
+  원장·부원장 가능, 강사는 담당 학생만, 행정/실장/팀장은 기존 권한 철학과 충돌 없이"를
+  만족하면서, 이미 검증된 `passwordReset` 배포 패턴을 그대로 재사용해 새로운 정책 판단
+  오류 위험을 최소화했다.
+- `PermissionSettings.tsx` 권한 매트릭스의 "학생관리" 카테고리에 **"학생 닉네임 초기화"**
+  행을 "학생 비밀번호 초기화" 바로 아래에 추가.
+- `AuthContext.tsx`에 `canResetNickname(studentId)` 추가 — `student.nicknameReset` 권한 +
+  `canAccessStudent(studentId)` 범위를 모두 통과해야 한다(요구사항 그대로). 대상이 항상
+  STUDENT 계정이므로 `canResetPassword`처럼 계정유형별 분기는 필요 없어 더 단순하게 구현했다.
+
+### 7. 내 시험지 관리 UX — 학생별 성적 화면 신규
+
+- 신규 `TeacherExamScores.tsx`(`/teacher/exams/:examId/scores`): 시험지 카드를 클릭하거나
+  "학생별 성적"을 누르면 진입하는 화면. 표시 항목은 지시사항 그대로
+  **학생명 / 채점상태 / 점수·만점 / 응시·결시 상태 / 결과 보기 / 채점하기 또는 정정**.
+  - "결과 보기": 점수/코멘트/정정 이력을 보여주는 조회 전용 모달.
+  - "채점하기": 아직 미채점인 학생만 노출, `TeacherExamGrading.tsx`(불변)로 이동.
+  - "정정": 이미 채점 완료된 학생만 노출, 이 화면 안에서 바로 새 점수+사유를 입력해
+    `correctScore()`(기존 AssessmentContext 함수, 강사도 `assessment.resultCorrect` 권한
+    보유)를 호출한다.
+  - 결석 학생도 목록에 함께 표시된다 — `TeacherExamGrading.tsx`(불변)는 결석 학생이
+    통째로 빠지는 한계가 있어, 그 한계를 보완하는 화면으로 별도 신설했다(불변 파일은
+    전혀 수정하지 않았다).
+- Phase 3C 원칙 이중 방어 유지: `TEACHER_PRIVATE` 시험은 `ownerTeacherId === 본인`일 때만
+  이 화면에서도 접근 가능하다(다른 교사의 개인 시험지는 여기서도 절대 보이지 않는다).
+
+### 8. 학생 홈 "최근 성적" 카드 → 바로 상세
+
+- `StudentGrades.tsx`의 `ResultDetailModal`을 `export`로 전환해 재사용 가능하게 했다.
+- `StudentHome.tsx`: "최근 성적" 카드를 `axis-card-clickable` 버튼으로 바꾸고, 클릭 시
+  `ResultDetailModal`을 홈 화면에서 바로 연다(더 이상 "테스트" 메뉴로 들어가서 다시
+  시험지를 클릭할 필요가 없다). `sameCategoryResults`(같은 시험군 추이 비교용)는 홈에서
+  보여주는 3건이 아니라 전체 공개 결과 목록을 기준으로 정확하게 계산해서 넘긴다.
+- IF 채점은 기존과 동일하게 이 상세 모달 안에서만 조회/선택 가능하며, 별도 IF 메뉴는
+  추가하지 않았다(요구사항 그대로).
+
+### 9. 학부모/상담 안전 재확인
+
+- `ParentTargetSummary.tsx`의 "상담 리포트는 선생님에게 문의하세요" 표현이 마치 클릭하면
+  내부 상담 기록을 볼 수 있는 것처럼 오해될 수 있어(실제로는 어디로도 이동하지 않는 장식용
+  화살표가 붙어 있었다), 문구를 **"자세한 안내는 선생님에게 문의하세요"**로 조정하고
+  클릭 가능해 보이는 화살표(ChevronRight)도 제거했다(애초에 클릭해도 아무 일도 일어나지
+  않는 요소였다 — 클릭 어포던스 원칙에도 맞지 않았다).
+- 학부모 홈 수납 상태는 v2와 동일하게 총액 없이 "미납 있음"/"미납 없음" 배지만 유지(변경 없음,
+  재확인만 완료).
+- 상담 기록 원문 노출 0건 재검증: `counselingData`/`getCounselingRecords`를 학생·보호자
+  화면 어디에서도 import하지 않음을 grep으로 재확인.
+
+### 10. 문서 정리
+
+- 이 문서(v3 최상단)에서 "수능형 104점" 문제는 **Phase 3D v2에서 이미 코드 레벨로
+  해결되었고(30문항 정확히 100점), v3에서도 재검증했다**는 것을 명확히 한다 — 더 이상
+  미해결 이슈가 아니다. 문서 하단의 "(v2 반려 대응 — v1 대비)"와 "(v1 원본)" 섹션에 남아
+  있는 104점 관련 서술은 전부 **그 시점 기준의 히스토리 기록**이며 현재 상태를 나타내지
+  않는다.
+- QA/MODIFIED_FILES/APPLY_ORDER 문서도 동일한 방식(v3 섹션 최상단 추가, 이전 버전은
+  아래에 보존)으로 정리했다.
+
+### 부가: 하이픈 없는 로그인 지원 (v2 종료 후 별도 요청 반영)
+
+Phase 3D v2 산출물 전달 후, 데모 로그인 시 휴대폰번호에 하이픈을 입력할 수 없는 환경
+(모바일 `tel` 키패드는 보통 '-'가 없음)에서 로그인이 실패하는 문제가 보고되어 v3에
+포함해 함께 수정했다. `AuthContext.tsx`의 `login()`이 휴대폰번호를 숫자만 남긴 뒤
+비교하도록 정규화했다 — "010-0000-0002"와 "01000000002" 모두 동일 계정으로 인식된다.
+데모 비밀번호 규칙(번호 뒤 4자리)도 동일한 정규화 함수를 사용하도록 통합했다.
+로그인 페이지의 안내 문구도 "하이픈 없이 입력 가능"으로 갱신했다.
+
+---
+
+## (v2 반려 대응 — v1 대비)
 
 **버전**: v2 — v1 반려 사유 전체 대응. 이 섹션이 최신 내용이며, v1 원본은 아래
 "(v1 원본)" 섹션에 그대로 보존한다.
