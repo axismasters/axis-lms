@@ -157,6 +157,22 @@ export function isSubmissionGraded(sub: ExamSubmission): boolean {
   return sub.answers.every((a) => a.score !== undefined);
 }
 
+// ────────────────────────────────────────────────────────────
+// [Phase 3D v3-r7 / v3-r7-r1] Assessment 상태 모델 엔진화
+//
+// 정책 확정: '응시예정'(아직 답안/채점 시작 전)과 '채점중'(진행 중이나 미완료)은 강사
+// 화면에서 항상 하나의 "채점 대기" 개념으로 취급한다. 원본 status 필드 자체는 계속 두
+// 값을 구분해서 저장하지만(더미데이터/이력 호환), 미채점 카운트·필터링·배지 표시는
+// 반드시 이 헬퍼를 통해서만 판단한다 — 화면에서 `status === '채점중'` / `status ===
+// '채점완료'`를 직접 비교하지 않는다(TeacherExamGrading.tsx 포함 전 화면 적용 완료).
+export function isPendingGrading(sub: Pick<ExamSubmission, 'status'>): boolean {
+  return sub.status === '응시예정' || sub.status === '채점중';
+}
+
+export function isGradedSubmission(sub: Pick<ExamSubmission, 'status'>): boolean {
+  return sub.status === '채점완료';
+}
+
 // 시험 전체가 공개 가능한 상태인지 — 미채점 응시자가 한 명이라도 있으면 공개 불가(AXIS 확정 정책)
 export function canPublishExam(submissions: ExamSubmission[]): boolean {
   if (submissions.length === 0) return false;

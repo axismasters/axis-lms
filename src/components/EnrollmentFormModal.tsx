@@ -133,7 +133,7 @@ export default function EnrollmentFormModal({ open, onClose, studentId }: Props)
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-xs">취소</Button>
-          <Button size="sm" onClick={handleSave} className="h-8 text-xs" style={{ background: 'oklch(0.511 0.262 276.966)' }}>등록</Button>
+          <Button size="sm" onClick={handleSave} className="h-8 text-xs" style={{ background: '#081F4D' }}>등록</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

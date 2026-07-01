@@ -29,10 +29,10 @@ function SPLogBar({ label, amount, maxAmount }: { label: string; amount: number;
     <div className="flex items-center gap-2">
       <div className="text-xs w-20 truncate flex-shrink-0" style={{ color: 'oklch(0.5 0.015 250)' }}>{label}</div>
       <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.93 0.006 250)' }}>
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'oklch(0.511 0.262 276.966)' }} />
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: '#081F4D' }} />
       </div>
       <div className="text-xs tabular-nums font-bold w-10 text-right flex-shrink-0"
-        style={{ color: 'oklch(0.511 0.262 276.966)' }}>+{amount}</div>
+        style={{ color: '#081F4D' }}>+{amount}</div>
     </div>
   );
 }
@@ -130,7 +130,7 @@ export default function StudentGrowthShowcase() {
           {/* 핵심 지표 4칸 */}
           <div className="grid grid-cols-4 gap-2">
             {[
-              { label: '시험 기록', value: `${allResults.length + schoolRecords.length + nationalMocks.length}건`, color: 'oklch(0.511 0.262 276.966)' },
+              { label: '시험 기록', value: `${allResults.length + schoolRecords.length + nationalMocks.length}건`, color: '#081F4D' },
               { label: '누적 SP', value: profile?.totalSP.toLocaleString() ?? '0', color: 'oklch(0.4 0.1 80)' },
               { label: '엠블럼', value: `${myEmblems.length}개`, color: 'oklch(0.45 0.15 160)' },
               { label: 'Rival 승', value: profile ? `${profile.rivalWins}승` : '-', color: '#7C3AED' },
@@ -153,7 +153,7 @@ export default function StudentGrowthShowcase() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {bestPct > 0 && (
                 <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.95 0.06 260)' }}>
-                  <div className="font-black text-xl tabular-nums" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{bestPct}%</div>
+                  <div className="font-black text-xl tabular-nums" style={{ color: '#081F4D' }}>{bestPct}%</div>
                   <div className="text-xs mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>학원 최고 달성률</div>
                   <div className="text-xs truncate mt-0.5" style={{ color: 'oklch(0.6 0.015 250)' }}>{bestResult?.title}</div>
                 </div>
@@ -196,7 +196,7 @@ export default function StudentGrowthShowcase() {
         {/* IF 채점 성과 */}
         <div className="axis-card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Lightbulb size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+            <Lightbulb size={15} style={{ color: '#081F4D' }} />
             <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>IF 채점 활용</span>
           </div>
           <div className="rounded-xl px-4 py-3 text-sm" style={{ background: 'oklch(0.95 0.06 260)', color: 'oklch(0.3 0.1 260)' }}>
@@ -204,7 +204,7 @@ export default function StudentGrowthShowcase() {
             "맞출 수 있었던 문제를 맞혔다면?" 시나리오로 점수 향상 가능성을 확인하세요.
           </div>
           <Link href="/student/grades">
-            <div className="mt-2 flex items-center gap-1 text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+            <div className="mt-2 flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
               성적 화면으로 이동 <ChevronRight size={12} />
             </div>
           </Link>
@@ -216,7 +216,7 @@ export default function StudentGrowthShowcase() {
             <button key={id} type="button" onClick={() => setActiveSection(id)}
               className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold flex-shrink-0"
               style={{
-                background: activeSection === id ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.95 0.004 250)',
+                background: activeSection === id ? '#081F4D' : 'oklch(0.95 0.004 250)',
                 color: activeSection === id ? 'white' : 'oklch(0.5 0.015 250)',
               }}>
               <Icon size={13} /> {label}
@@ -249,7 +249,7 @@ export default function StudentGrowthShowcase() {
                         </div>
                       </div>
                       <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'oklch(0.93 0.006 250)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'oklch(0.511 0.262 276.966)' }} />
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: '#081F4D' }} />
                       </div>
                     </div>
                   );
@@ -291,7 +291,7 @@ export default function StudentGrowthShowcase() {
                 ))}
                 <Link href="/student/grades">
                   <div className="axis-card p-3 flex items-center justify-center gap-1 cursor-pointer"
-                    style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                    style={{ color: '#081F4D' }}>
                     <span className="text-sm font-semibold">전체 성적 보기</span>
                     <ChevronRight size={15} />
                   </div>
@@ -361,7 +361,7 @@ export default function StudentGrowthShowcase() {
                   {[
                     { label: '승', value: `${rivalInfo.relation.wins}승`, color: 'oklch(0.45 0.15 145)' },
                     { label: '패', value: `${rivalInfo.relation.losses}패`, color: 'oklch(0.55 0.2 27)' },
-                    { label: '승률', value: `${rivalInfo.relation.winRate.toFixed(1)}%`, color: 'oklch(0.511 0.262 276.966)' },
+                    { label: '승률', value: `${rivalInfo.relation.winRate.toFixed(1)}%`, color: '#081F4D' },
                   ].map(({ label, value, color }) => (
                     <div key={label} className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
                       <div className="font-black text-lg" style={{ color }}>{value}</div>
@@ -383,7 +383,7 @@ export default function StudentGrowthShowcase() {
                 <Trophy size={24} className="mx-auto mb-2" style={{ color: 'oklch(0.8 0.01 250)' }} />
                 <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>아직 Rival이 없습니다.</div>
                 <Link href="/student/rival">
-                  <div className="mt-3 inline-flex items-center gap-1 text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                  <div className="mt-3 inline-flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
                     Rival 화면으로 이동 <ChevronRight size={12} />
                   </div>
                 </Link>

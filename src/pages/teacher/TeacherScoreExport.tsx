@@ -42,7 +42,7 @@ export default function TeacherScoreExport() {
     <TeacherLayout title="성적 출력">
       <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
         <Link href="/teacher/exams">
-          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
             <ChevronLeft size={14} /> 내 시험지 관리
           </div>
         </Link>

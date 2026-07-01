@@ -55,7 +55,7 @@ const TEST_TABS: TestTab[] = [
     id: 'unit-eval',
     label: '단원평가',
     categoryIds: ['unit-eval', 'certification'],
-    color: 'oklch(0.511 0.262 276.966)',
+    color: '#081F4D',
     accentBg: 'oklch(0.95 0.06 260)',
     description: '단원별 평가 결과 — 단원평가 + 인증평가',
   },
@@ -85,13 +85,13 @@ function TrendChart({ results }: { results: StudentExamResult[] }) {
   const points = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
   const areaPoints = `${xs[0]},${H - pad} ${points} ${xs[xs.length - 1]},${H - pad}`;
 
-  const color = trend > 0 ? 'oklch(0.45 0.15 145)' : trend < 0 ? 'oklch(0.55 0.2 27)' : 'oklch(0.511 0.262 276.966)';
+  const color = trend > 0 ? 'oklch(0.45 0.15 145)' : trend < 0 ? 'oklch(0.55 0.2 27)' : '#081F4D';
 
   return (
     <div className="axis-card p-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <BarChart2 size={13} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+          <BarChart2 size={13} style={{ color: '#081F4D' }} />
           <span className="text-xs font-semibold" style={{ color: 'oklch(0.35 0.02 250)' }}>점수 추이</span>
         </div>
         <div className="flex items-center gap-1 text-xs font-bold" style={{ color }}>
@@ -355,7 +355,7 @@ function CumulativeGrowthSection({
               <div className="text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
                 최근 테스트 점수 추이 (최근 {recent5Pcts.length}회)
               </div>
-              <MiniSparkline points={recent5Pcts} color="oklch(0.511 0.262 276.966)" />
+              <MiniSparkline points={recent5Pcts} color="#081F4D" />
             </div>
           )}
 
@@ -416,7 +416,7 @@ function CumulativeGrowthSection({
                 {reasonSummary.ratios.map(({ reason, pct }) => pct > 0 && (
                   <div key={reason} style={{
                     width: `${pct}%`,
-                    background: reason === '계산 실수' ? 'oklch(0.55 0.2 27)' : reason === '개념 부족' ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.55 0.15 80)',
+                    background: reason === '계산 실수' ? 'oklch(0.55 0.2 27)' : reason === '개념 부족' ? '#081F4D' : 'oklch(0.55 0.15 80)',
                   }} />
                 ))}
               </div>
@@ -424,7 +424,7 @@ function CumulativeGrowthSection({
                 {reasonSummary.ratios.map(({ reason, pct, count }) => (
                   <div key={reason} className="flex items-center gap-1 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
                     <span className="inline-block w-2 h-2 rounded-full" style={{
-                      background: reason === '계산 실수' ? 'oklch(0.55 0.2 27)' : reason === '개념 부족' ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.55 0.15 80)',
+                      background: reason === '계산 실수' ? 'oklch(0.55 0.2 27)' : reason === '개념 부족' ? '#081F4D' : 'oklch(0.55 0.15 80)',
                     }} />
                     {reason} {pct}%({count})
                   </div>
@@ -605,11 +605,11 @@ export function ResultDetailModal({
               className="w-full flex items-center justify-between px-4 py-3"
               style={{ background: ifOpen ? 'oklch(0.94 0.04 260)' : 'oklch(0.97 0.02 260)' }}>
               <div className="flex items-center gap-2">
-                <Lightbulb size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <Lightbulb size={14} style={{ color: '#081F4D' }} />
                 <span className="text-sm font-bold" style={{ color: 'oklch(0.25 0.02 250)' }}>IF 채점</span>
                 <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>맞출 수 있었던 문제를 맞혔다면?</span>
               </div>
-              <span className="text-xs font-medium" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{ifOpen ? '닫기' : '분석'}</span>
+              <span className="text-xs font-medium" style={{ color: '#081F4D' }}>{ifOpen ? '닫기' : '분석'}</span>
             </button>
             {ifOpen && (
               <div className="px-4 py-4 space-y-4 bg-white">
@@ -634,7 +634,7 @@ export function ResultDetailModal({
                                   <button key={r} type="button"
                                     onClick={() => setQuestionReasons(prev => ({ ...prev, [wq.questionId]: prev[wq.questionId] === r ? null : r }))}
                                     className="flex-1 py-1.5 rounded-md text-xs font-semibold"
-                                    style={{ background: selected === r ? 'oklch(0.511 0.262 276.966)' : 'white', color: selected === r ? 'white' : 'oklch(0.45 0.015 250)', border: '1px solid ' + (selected === r ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.9 0.008 250)') }}>
+                                    style={{ background: selected === r ? '#081F4D' : 'white', color: selected === r ? 'white' : 'oklch(0.45 0.015 250)', border: '1px solid ' + (selected === r ? '#081F4D' : 'oklch(0.9 0.008 250)') }}>
                                     {r}
                                   </button>
                                 ))}
@@ -649,7 +649,7 @@ export function ResultDetailModal({
                         <div className="grid grid-cols-2 gap-2">
                           {[
                             { label: '실제 점수', value: `${ifQuestionResult.actualScore}점`, c: color },
-                            { label: 'IF 점수', value: `${ifQuestionResult.ifScore}점`, c: 'oklch(0.511 0.262 276.966)' },
+                            { label: 'IF 점수', value: `${ifQuestionResult.ifScore}점`, c: '#081F4D' },
                             { label: '놓친 점수', value: `${ifQuestionResult.missedPoints}점`, c: 'oklch(0.55 0.2 27)' },
                             { label: '상승 가능성', value: `+${ifQuestionResult.improvementPct}%p`, c: '#059669' },
                           ].map(({ label, value, c }) => (
@@ -680,7 +680,7 @@ export function ResultDetailModal({
                         {IF_REASONS.map(r => (
                           <button key={r} type="button" onClick={() => setIfReason(r)}
                             className="flex-1 py-2 rounded-lg text-xs font-semibold"
-                            style={{ background: ifReason === r ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.95 0.004 250)', color: ifReason === r ? 'white' : 'oklch(0.45 0.015 250)' }}>
+                            style={{ background: ifReason === r ? '#081F4D' : 'oklch(0.95 0.004 250)', color: ifReason === r ? 'white' : 'oklch(0.45 0.015 250)' }}>
                             {r}
                           </button>
                         ))}
@@ -692,7 +692,7 @@ export function ResultDetailModal({
                         {recoveryOptions.map(pts => (
                           <button key={pts} type="button" onClick={() => setIfPoints(pts)}
                             className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                            style={{ background: ifPoints === pts ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.95 0.004 250)', color: ifPoints === pts ? 'white' : 'oklch(0.45 0.015 250)' }}>
+                            style={{ background: ifPoints === pts ? '#081F4D' : 'oklch(0.95 0.004 250)', color: ifPoints === pts ? 'white' : 'oklch(0.45 0.015 250)' }}>
                             {pts === 0 ? '선택 안함' : `+${pts}점`}
                           </button>
                         ))}
@@ -703,7 +703,7 @@ export function ResultDetailModal({
                         <div className="grid grid-cols-2 gap-2">
                           {[
                             { label: '실제 점수', value: `${ifResult.actualScore}점`, c: color },
-                            { label: 'IF 점수', value: `${ifResult.ifScore}점`, c: 'oklch(0.511 0.262 276.966)' },
+                            { label: 'IF 점수', value: `${ifResult.ifScore}점`, c: '#081F4D' },
                             { label: '놓친 점수', value: `${ifResult.missedPoints}점`, c: 'oklch(0.55 0.2 27)' },
                             { label: '상승 가능성', value: `+${ifResult.improvementPct}%p`, c: '#059669' },
                           ].map(({ label, value, c }) => (
@@ -821,7 +821,7 @@ function TestTabContent({ results, tab, studentId }: { results: StudentExamResul
       <div className="grid grid-cols-3 gap-2">
         {[
           { label: '최근 3회 평균', value: recent3Avg !== null ? `${recent3Avg}%` : '-', color: scoreColor(recent3Avg ?? 0) },
-          { label: '최고 기록', value: bestPct !== null ? `${bestPct}%` : '-', color: 'oklch(0.511 0.262 276.966)' },
+          { label: '최고 기록', value: bestPct !== null ? `${bestPct}%` : '-', color: '#081F4D' },
           { label: '이전 대비', value: prevChange !== null ? (prevChange >= 0 ? `+${prevChange}%p` : `${prevChange}%p`) : '-',
             color: prevChange !== null ? (prevChange > 0 ? 'oklch(0.45 0.15 145)' : prevChange < 0 ? 'oklch(0.55 0.2 27)' : 'oklch(0.5 0.015 250)') : 'oklch(0.5 0.015 250)' },
         ].map(({ label, value, color }) => (
@@ -884,20 +884,17 @@ export default function StudentGrades() {
 
   return (
     <StudentLayout title="테스트">
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
+      <div className="max-w-lg lg:max-w-6xl mx-auto px-4 py-4 space-y-3">
 
         {/* 안내 */}
-        <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid oklch(0.511 0.262 276.966)', color: 'oklch(0.5 0.015 250)' }}>
+        <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid #081F4D', color: 'oklch(0.5 0.015 250)' }}>
           단원평가와 내신대비 모의고사 결과를 확인하세요. 카드를 탭하면 성적표 상세와 IF 채점을 볼 수 있습니다.
         </div>
 
-        {/* Phase 3D v3-r6: 성적 추이 선그래프 — 시험 종류별(단원평가/내신대비모의고사)로 분리.
-            기존 탭 내부 막대/추이 그래프는 그대로 유지하고, 이 섹션은 추가로 제공된다. */}
-        <section className="space-y-2">
-          <div className="text-xs font-semibold px-1" style={{ color: 'oklch(0.45 0.015 250)' }}>성적 추이</div>
-          <ExamLineTrendChart title="단원평가" results={unitEvalOnlyResults} color="oklch(0.511 0.262 276.966)" />
-          <ExamLineTrendChart title="내신 대비 모의고사" results={mockSchoolOnlyResults} color="oklch(0.45 0.15 160)" />
-        </section>
+        {/* [Phase 3D v3-r7-r1] PC 최적화: 데스크톱에서는 좌측(메인: 탭+시험목록)과
+            우측(요약: 성적 추이 선그래프 2개) 2컬럼으로 재구성한다. */}
+        <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-5">
+          <div className="space-y-3 lg:col-span-2">
 
         {/* 탭 */}
         <div className="flex gap-2">
@@ -933,6 +930,18 @@ export default function StudentGrades() {
         {/* 대학추천 안내 */}
         <div className="axis-card px-4 py-3 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
           💡 실제내신 · 전국연합모의고사 · 수능실전 성적은 홈의 <strong>대학추천</strong> 카드에서 확인하세요.
+        </div>
+
+          </div>
+
+          {/* 우측 요약 패널: 성적 추이 선그래프 */}
+          <div className="lg:col-span-1">
+            <div className="text-xs font-semibold px-1 mb-2" style={{ color: 'oklch(0.45 0.015 250)' }}>성적 추이</div>
+            <div className="space-y-3">
+              <ExamLineTrendChart title="단원평가" results={unitEvalOnlyResults} color="#081F4D" />
+              <ExamLineTrendChart title="내신 대비 모의고사" results={mockSchoolOnlyResults} color="oklch(0.45 0.15 160)" />
+            </div>
+          </div>
         </div>
 
       </div>

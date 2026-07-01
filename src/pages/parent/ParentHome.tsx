@@ -242,18 +242,18 @@ export default function ParentHome() {
     if (dueDate < today) return { label: '마감', color: 'oklch(0.55 0.015 250)' };
     if (dueDate === today) return { label: '오늘 마감', color: 'oklch(0.577 0.245 27.325)' };
     const diff = Math.ceil((new Date(dueDate).getTime() - new Date(today).getTime()) / 86400000);
-    return { label: `D-${diff}`, color: 'oklch(0.511 0.262 276.966)' };
+    return { label: `D-${diff}`, color: '#081F4D' };
   };
   const homeworkStatusLabel = (homeworkId: string) => {
     const status = getStatus(homeworkId, selectedChildId)?.status ?? 'assigned';
     if (status === 'completed') return { label: '완료', color: 'oklch(0.45 0.15 160)' };
-    if (status === 'seen') return { label: '확인함', color: 'oklch(0.511 0.262 276.966)' };
+    if (status === 'seen') return { label: '확인함', color: '#081F4D' };
     return { label: '미확인', color: 'oklch(0.55 0.015 250)' };
   };
 
   return (
     <ParentLayout title="AXIS 학부모">
-      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-3xl lg:max-w-6xl mx-auto px-4 py-5 space-y-4">
 
         {/* 자녀 선택 */}
         <div className="axis-card p-4">
@@ -295,6 +295,12 @@ export default function ParentHome() {
 
         {child && (
           <>
+            {/* [Phase 3D v3-r7-r1] PC 최적화: 데스크톱에서는 좌측(메인: 수강반/출결/테스트/
+                숙제/수업자료/성장리포트) + 우측(요약: 객관지표/상담전확인카드/자녀에게해줄말/
+                수납상태/목표대학) 2컬럼으로 재구성한다. */}
+            <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-5">
+              <div className="space-y-4 lg:col-span-2">
+
             {/* 수강 반 */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
@@ -477,7 +483,7 @@ export default function ParentHome() {
                       className="axis-card p-3 flex items-start gap-3 w-full text-left"
                     >
                       {item.type === 'note'
-                        ? <FileText size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                        ? <FileText size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#081F4D' }} />
                         : <Play size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.45 0.15 160)' }} />
                       }
                       <div className="flex-1 min-w-0">
@@ -510,18 +516,18 @@ export default function ParentHome() {
                 학생용 게임형 지표 대신 테스트·출결·대학추천 요약으로 눌러서 더 보고 싶게 만드는 진입 카드. */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
-                <TrendingUp size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <TrendingUp size={15} style={{ color: '#081F4D' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>성장 리포트</span>
               </div>
               <Link href="/parent/growth" style={{ display: 'block' }}>
                 <div
                   className="axis-card axis-card-clickable p-4 flex items-center justify-between"
-                  style={{ background: 'linear-gradient(135deg, oklch(0.511 0.262 276.966 / 0.08), white)' }}
+                  style={{ background: 'linear-gradient(135deg, #081F4D14, white)' }}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
-                      style={{ background: 'oklch(0.511 0.262 276.966)' }}
+                      style={{ background: '#081F4D' }}
                     >
                       {child?.name.charAt(0) ?? '?'}
                     </div>
@@ -539,11 +545,15 @@ export default function ParentHome() {
               </Link>
             </section>
 
+              </div>
+
+              <div className="space-y-4 lg:col-span-1">
+
             {/* Phase 3D v3-r4-r1: 객관 지표 — 감정적 경고가 아니라 수치 기반 객관 정보로 표시.
                 Rival/Emblem/SP/Tier 등 학생용 게임형 지표는 포함하지 않는다. */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
-                <BarChart2 size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <BarChart2 size={15} style={{ color: '#081F4D' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>객관 지표</span>
               </div>
               <div className="axis-card p-4 grid grid-cols-2 gap-3">
@@ -602,7 +612,7 @@ export default function ParentHome() {
                 상담 기록 원문은 포함하지 않는다(학부모 노출 절대 금지 원칙 유지). */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
-                <MessageSquare size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <MessageSquare size={15} style={{ color: '#081F4D' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>상담 전 확인 카드</span>
               </div>
               <div className="axis-card p-4 space-y-3">
@@ -698,6 +708,9 @@ export default function ParentHome() {
                 </div>
               </Link>
             </section>
+
+              </div>
+            </div>
           </>
         )}
 

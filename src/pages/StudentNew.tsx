@@ -157,7 +157,7 @@ export default function StudentNew() {
           {/* 학생 기본 정보 */}
           <div className="axis-card p-6">
             <div className="flex items-center gap-2 mb-5 pb-4 border-b" style={{ borderColor: 'oklch(0.92 0.005 250)' }}>
-              <User size={16} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+              <User size={16} style={{ color: '#081F4D' }} />
               <h2 className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>학생 기본 정보</h2>
             </div>
 
@@ -221,7 +221,7 @@ export default function StudentNew() {
 
           {/* Account Engine 안내 */}
           <div className="rounded-lg px-4 py-3 flex items-start gap-3" style={{ background: 'oklch(0.95 0.04 250)', border: '1px solid oklch(0.85 0.08 250)' }}>
-            <Info size={15} className="mt-0.5 flex-shrink-0" style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+            <Info size={15} className="mt-0.5 flex-shrink-0" style={{ color: '#081F4D' }} />
             <div className="text-xs" style={{ color: 'oklch(0.35 0.15 250)' }}>
               <span className="font-semibold">Account Engine 자동 계정 생성</span>
               <span className="ml-1">— 학생 등록 완료 시 Account Engine에서 계정이 자동으로 생성됩니다.</span>
@@ -234,7 +234,7 @@ export default function StudentNew() {
           <div className="axis-card p-6">
             <div className="flex items-center justify-between mb-5 pb-4 border-b" style={{ borderColor: 'oklch(0.92 0.005 250)' }}>
               <div className="flex items-center gap-2">
-                <Users size={16} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <Users size={16} style={{ color: '#081F4D' }} />
                 <h2 className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>보호자 정보</h2>
                 <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'oklch(0.95 0.005 250)', color: 'oklch(0.55 0.015 250)' }}>
                   선택 · 여러 명 등록 가능
@@ -330,7 +330,7 @@ export default function StudentNew() {
                   {/* 가족 자동 연결 감지 UI */}
                   {guardian.familyMatch && guardian.familyMatch.length > 0 && (
                     <div className="mt-3 rounded-lg p-3 flex items-start gap-2.5" style={{ background: 'oklch(0.97 0.05 250)', border: '1px solid oklch(0.88 0.1 250)' }}>
-                      <Link2 size={14} className="mt-0.5 flex-shrink-0" style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                      <Link2 size={14} className="mt-0.5 flex-shrink-0" style={{ color: '#081F4D' }} />
                       <div className="flex-1">
                         <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.35 0.15 250)' }}>
                           가족 자동 연결 감지
@@ -387,7 +387,7 @@ export default function StudentNew() {
               type="submit"
               disabled={submitting}
               className="h-9 px-5 text-sm gap-2"
-              style={{ background: 'oklch(0.511 0.262 276.966)' }}
+              style={{ background: '#081F4D' }}
             >
               {submitting ? (
                 <>

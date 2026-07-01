@@ -36,7 +36,7 @@ export default function UniversityReportManagement() {
       <div className="max-w-3xl space-y-4">
 
         {/* 안내 배너 */}
-        <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid oklch(0.511 0.262 276.966)', color: 'oklch(0.5 0.015 250)' }}>
+        <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid #081F4D', color: 'oklch(0.5 0.015 250)' }}>
           이 화면은 관리자·원장 전용 상세 리포트 화면입니다.
           학생용 프리뷰(목표 변화 방향)와 분리되어 있으며, 상담 참고 리포트 및 PDF 준비에 사용됩니다.
           <strong className="block mt-1" style={{ color: 'oklch(0.45 0.2 27)' }}>
@@ -48,7 +48,7 @@ export default function UniversityReportManagement() {
         {activeSection === 'list' && (
           <>
             <div className="flex items-center gap-2 mb-2 px-1">
-              <GraduationCap size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+              <GraduationCap size={15} style={{ color: '#081F4D' }} />
               <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>
                 재원생 대학추천/목표대학 현황
               </span>
@@ -64,7 +64,7 @@ export default function UniversityReportManagement() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white"
-                          style={{ background: gl === '고3' ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.6 0.15 145)' }}>
+                          style={{ background: gl === '고3' ? '#081F4D' : 'oklch(0.6 0.15 145)' }}>
                           {gl ?? '?'}
                         </div>
                         <div>
@@ -104,14 +104,14 @@ export default function UniversityReportManagement() {
           <>
             <button type="button" onClick={() => setActiveSection('list')}
               className="text-xs flex items-center gap-1"
-              style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+              style={{ color: '#081F4D' }}>
               ← 목록으로
             </button>
 
             <div className="axis-card p-5">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold text-white"
-                  style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+                  style={{ background: '#081F4D' }}>
                   {selectedStudent.name.charAt(0)}
                 </div>
                 <div>
@@ -175,7 +175,7 @@ export default function UniversityReportManagement() {
                 {/* 리포트/PDF 섹션 */}
                 <div className="rounded-xl p-4" style={{ background: 'oklch(0.95 0.04 260)' }}>
                   <div className="flex items-center gap-2 mb-3">
-                    <FileText size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                    <FileText size={15} style={{ color: '#081F4D' }} />
                     <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
                       상담 리포트 / PDF 준비
                     </span>

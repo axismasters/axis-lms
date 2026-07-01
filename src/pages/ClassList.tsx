@@ -58,7 +58,7 @@ function CapacityBar({ enrolled, capacity }: { enrolled: number; capacity: numbe
     ? 'oklch(0.577 0.245 27.325)'
     : isNearFull
     ? 'oklch(0.7 0.18 60)'
-    : 'oklch(0.511 0.262 276.966)';
+    : '#081F4D';
 
   return (
     <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export default function ClassList() {
         <Button
           onClick={() => setFormModal({ open: true })}
           className="gap-2 text-sm font-semibold h-9"
-          style={{ background: 'oklch(0.511 0.262 276.966)' }}
+          style={{ background: '#081F4D' }}
         >
           <Plus size={15} /> 반 개설
         </Button>
@@ -187,7 +187,7 @@ export default function ClassList() {
       {/* 요약 카드 */}
       <div className="grid grid-cols-4 gap-3 mb-5">
         {[
-          { label: '전체 반', value: stats.total, sub: `운영중 ${stats.active}개`, color: 'oklch(0.511 0.262 276.966)' },
+          { label: '전체 반', value: stats.total, sub: `운영중 ${stats.active}개`, color: '#081F4D' },
           { label: '총 수강생', value: stats.totalEnrolled, sub: `정원 ${stats.totalCapacity}명`, color: 'oklch(0.5 0.15 160)' },
           { label: '정원 마감', value: stats.full, sub: '운영중 기준', color: 'oklch(0.577 0.245 27.325)' },
           { label: '평균 충원율', value: `${stats.totalCapacity > 0 ? Math.round((stats.totalEnrolled / stats.totalCapacity) * 100) : 0}%`, sub: '운영중 반 기준', color: 'oklch(0.6 0.15 60)' },
@@ -257,12 +257,12 @@ export default function ClassList() {
             <Button variant="outline" size="sm" onClick={() => setFormModal({ open: true })}>반 개설하기</Button>
           </div>
         ) : (
-          <div className="axis-table-wrap">
+          <div className="axis-table-scroll" style={{ maxHeight: 620 }}>
           <table className="w-full text-sm" style={{ minWidth: 800 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid oklch(0.92 0.005 250)', background: 'oklch(0.985 0.003 250)' }}>
                 {['반 이름', '과목 / 수준', '담당 강사', '시간표', '정원 현황', '강의실', '상태', '관리'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -360,7 +360,7 @@ export default function ClassList() {
                           className="p-1.5 rounded transition-colors hover:bg-indigo-50"
                           title="상세보기"
                         >
-                          <Eye size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                          <Eye size={14} style={{ color: '#081F4D' }} />
                         </button>
                         <button
                           onClick={() => setFormModal({ open: true, editId: cls.id })}

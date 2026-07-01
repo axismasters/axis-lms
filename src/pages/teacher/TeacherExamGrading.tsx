@@ -5,6 +5,8 @@
 // - local state는 입력 폼값(score/comment)만 관리, 저장 상태는 Context submissions에서 파생
 // - exam.status 내부값 노출 금지
 // - classId 없는 학원 전체 시험: 담당 학생 submission 1개 이상일 때만 허용
+// [Phase 3D v3-r7-r1] 미채점/채점완료 판정은 항상 isPendingGrading()/isGradedSubmission()
+// (assessmentData.ts)를 통해서만 한다 — status 문자열 직접 비교 금지.
 
 import { useState } from 'react';
 import { useParams, Link } from 'wouter';
@@ -13,6 +15,7 @@ import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useStudents } from '@/contexts/StudentContext';
+import { isPendingGrading, isGradedSubmission } from '@/lib/assessmentData';
 
 type FormInput = { score: string; comment: string };
 
@@ -21,7 +24,7 @@ function NotFoundScreen() {
     <TeacherLayout title="채점">
       <div className="max-w-lg mx-auto px-4 py-5">
         <Link href="/teacher/exams">
-          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#081F4D' }}>
             <ChevronLeft size={14} />
             시험 목록
           </div>
@@ -79,8 +82,8 @@ export default function TeacherExamGrading() {
   const assignedStudents = students.filter((s) => assignedStudentIds.includes(s.id));
 
   // Context에서 파생 — 저장 즉시 Context 업데이트 → 자동 반영
-  const ungradedSubs = mySubmissions.filter((s) => s.status === '채점중');
-  const gradedSubs = mySubmissions.filter((s) => s.status === '채점완료');
+  const ungradedSubs = mySubmissions.filter((s) => isPendingGrading(s));
+  const gradedSubs = mySubmissions.filter((s) => isGradedSubmission(s));
 
   function getInput(studentId: string): FormInput {
     return inputs[studentId] ?? { score: '', comment: '' };
@@ -124,11 +127,11 @@ export default function TeacherExamGrading() {
 
   return (
     <TeacherLayout title="채점">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-lg lg:max-w-5xl mx-auto px-4 py-5 space-y-4">
 
         {/* 뒤로가기 */}
         <Link href="/teacher/exams">
-          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
             <ChevronLeft size={14} />
             시험 목록
           </div>
@@ -163,6 +166,11 @@ export default function TeacherExamGrading() {
             </div>
           </div>
         )}
+
+        {/* [Phase 3D v3-r7-r1] PC 최적화: 데스크톱에서는 채점 대기(메인, 넓게)와
+            채점 완료(요약, 좁게)를 2컬럼으로 나란히 배치한다. */}
+        <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-5">
+          <div className="lg:col-span-2">
 
         {/* ── 채점 대기 ── */}
         {ungradedSubs.length > 0 && (
@@ -234,7 +242,7 @@ export default function TeacherExamGrading() {
                         disabled={!isValidScore}
                         className="w-full py-2 rounded-lg text-sm font-medium text-white"
                         style={{
-                          background: isValidScore ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.85 0.01 250)',
+                          background: isValidScore ? '#081F4D' : 'oklch(0.85 0.01 250)',
                           cursor: isValidScore ? 'pointer' : 'not-allowed',
                         }}
                       >
@@ -247,6 +255,10 @@ export default function TeacherExamGrading() {
             </div>
           </section>
         )}
+
+          </div>
+
+          <div className="lg:col-span-1">
 
         {/* ── 채점 완료 (Context state 기반) ── */}
         {gradedSubs.length > 0 && (
@@ -290,6 +302,9 @@ export default function TeacherExamGrading() {
             </div>
           </section>
         )}
+
+          </div>
+        </div>
 
       </div>
     </TeacherLayout>

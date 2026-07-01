@@ -1,5 +1,7 @@
 // AXIS LMS v1.2 - Admin Back Office Layout
-// Design: Structured Authority - Slate-900 sidebar + Slate-50 main area
+// [Phase 3D v3-r7-r1] Design: AXIS 밝은 프리미엄 브랜드 톤 — Navy(#081F4D) 사이드바
+// 내비게이션 레일 + Ivory/Warm White 메인 콘텐츠 영역. 화면 전체를 다크 테마로 만들지
+// 않는다(메인 콘텐츠는 항상 밝은 배경).
 // Mobile/App Optimization Readiness v1: 모바일 폭에서 collapsible sidebar 대응
 // Role Separation v1: 모든 관리자 경로 /admin/** 기준으로 업데이트.
 
@@ -97,10 +99,11 @@ const NAV_ITEMS: NavItem[] = [
         path: '/admin/growth',
         icon: <Trophy size={16} />,
         requiresFn: (_can, accountType) => canAccessGrowth(accountType as import('@/lib/rbac').AccountType),
+        // [Phase 3D v3-r7] 성장관리 메뉴 비중 축소: 엠블럼 지급/라이벌 승패 같은 "운영"
+        // 작업은 여기서 빼고 학생 상세 > 성장/진열장 탭에서 바로 처리한다(StudentDetail.tsx
+        // GrowthShowcaseTab 참조). 이 메뉴에는 정책/템플릿/시즌 설정만 남긴다.
         children: [
           { label: '성장현황', path: '/admin/growth/overview' },
-          { label: '엠블럼관리', path: '/admin/growth/emblems' },
-          { label: '라이벌관리', path: '/admin/growth/rivals' },
           { label: 'Rival 시즌 관리', path: '/admin/growth/rival-seasons' },
           { label: '진열장 노출 정책', path: '/admin/growth/showcase-policy' },
         ],
@@ -184,8 +187,8 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
   const SidebarContent = () => (
     <>
       <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'oklch(0.22 0.02 250)', minHeight: 56 }}>
-        <div className="flex items-center justify-center rounded-md" style={{ width: 32, height: 32, background: 'oklch(0.511 0.262 276.966)' }}>
-          <GraduationCap size={18} color="white" />
+        <div className="flex items-center justify-center rounded-md" style={{ width: 32, height: 32, background: '#C8A15A' }}>
+          <GraduationCap size={18} color="#081F4D" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-bold text-white text-sm tracking-wide">AXIS LMS</div>
@@ -210,10 +213,10 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
             <Link href={item.path}>
               <div
                 className={cn('flex items-center gap-3 mx-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-150 cursor-pointer',
-                  isActive(item.path) ? 'text-white' : 'hover:text-white')}
+                  isActive(item.path) ? '' : 'hover:text-white')}
                 style={{
-                  background: isActive(item.path) ? 'oklch(0.511 0.262 276.966)' : 'transparent',
-                  color: isActive(item.path) ? 'white' : 'oklch(0.7 0.015 250)',
+                  background: isActive(item.path) ? '#C8A15A' : 'transparent',
+                  color: isActive(item.path) ? '#081F4D' : 'oklch(0.7 0.015 250)',
                 }}
                 onMouseEnter={e => { if (!isActive(item.path)) { (e.currentTarget as HTMLElement).style.background = 'oklch(0.2 0.025 250)'; (e.currentTarget as HTMLElement).style.color = 'white'; } }}
                 onMouseLeave={e => { if (!isActive(item.path)) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'oklch(0.7 0.015 250)'; } }}
@@ -244,7 +247,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
 
       <div className="px-5 py-4 border-t" style={{ borderColor: 'oklch(0.22 0.02 250)' }}>
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: '#C8A15A', color: '#081F4D' }}>
             {currentUser.name.charAt(0)}
           </div>
           <div className="min-w-0 flex-1">
@@ -273,8 +276,8 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
                 }}
                 className="flex-1 text-xs py-1.5 rounded-md font-medium transition-colors"
                 style={{
-                  background: activeMode === mode ? 'oklch(0.511 0.262 276.966)' : 'transparent',
-                  color: activeMode === mode ? 'white' : 'oklch(0.65 0.015 250)',
+                  background: activeMode === mode ? '#C8A15A' : 'transparent',
+                  color: activeMode === mode ? '#081F4D' : 'oklch(0.65 0.015 250)',
                 }}
               >
                 {mode === 'ADMIN_MODE' ? '관리자 모드' : '강사 모드'}
@@ -300,7 +303,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
   );
 
   return (
-    <div className="flex min-h-screen" style={{ fontFamily: "'Pretendard', -apple-system, sans-serif", background: 'oklch(0.984 0.003 247)' }}>
+    <div className="flex min-h-screen" style={{ fontFamily: "'Pretendard', -apple-system, sans-serif", background: 'oklch(0.98 0.008 75)' }}>
       <aside className="axis-sidebar flex-col fixed left-0 top-0 z-30 hidden lg:flex" style={{ width: 240 }}>
         <SidebarContent />
       </aside>

@@ -25,12 +25,12 @@ export default function TeacherClasses() {
 
   return (
     <TeacherLayout title="담당 반">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-lg lg:max-w-4xl mx-auto px-4 py-5 space-y-4">
 
         {/* 요약 */}
         <div className="grid grid-cols-2 gap-2">
           {[
-            { label: '담당 반', value: assignedClasses.length, color: 'oklch(0.511 0.262 276.966)' },
+            { label: '담당 반', value: assignedClasses.length, color: '#081F4D' },
             { label: '운영중',  value: activeClasses.length,   color: 'oklch(0.45 0.15 160)' },
           ].map(({ label, value, color }) => (
             <div key={label} className="axis-card p-3 text-center">
@@ -44,7 +44,7 @@ export default function TeacherClasses() {
         {activeClasses.length > 0 && (
           <section>
             <div className="text-xs font-semibold mb-2 px-1" style={{ color: 'oklch(0.45 0.015 250)' }}>운영중</div>
-            <div className="space-y-2">
+            <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
               {activeClasses.map((cls) => (
                 <Link key={cls.id} href={`/teacher/classes/${cls.id}`} style={{ display: 'block' }}>
                   <div className="axis-card axis-card-clickable p-4">
@@ -63,7 +63,7 @@ export default function TeacherClasses() {
                       </div>
                       <div className="text-right ml-3 flex-shrink-0 flex items-center gap-2">
                         <div>
-                          <div className="font-bold tabular-nums text-sm" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                          <div className="font-bold tabular-nums text-sm" style={{ color: '#081F4D' }}>
                             {cls.enrolledCount}
                             <span className="text-xs font-normal" style={{ color: 'oklch(0.6 0.015 250)' }}>
                               /{cls.capacity}명
@@ -90,7 +90,7 @@ export default function TeacherClasses() {
         {otherClasses.length > 0 && (
           <section>
             <div className="text-xs font-semibold mb-2 px-1" style={{ color: 'oklch(0.45 0.015 250)' }}>기타</div>
-            <div className="space-y-2">
+            <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
               {otherClasses.map((cls) => (
                 <div key={cls.id} className="axis-card p-4 opacity-70">
                   <div className="flex items-center justify-between">

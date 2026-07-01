@@ -134,6 +134,10 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
     setExams((prev) => [newExam, ...prev]);
     setSubmissions((prev) => [
       ...prev,
+      // [Phase 3D v3-r7-r1] 초기 상태는 의미대로 '응시예정'(아직 채점 시작 전)을 사용한다.
+      // v3-r7에서는 TeacherExamGrading.tsx가 status==='채점중'만 인식해서 '채점중'으로
+      // 두는 임시 우회가 있었지만, 이제 그 화면도 isPendingGrading()을 통해 '응시예정'과
+      // '채점중'을 동일하게 "채점 대기"로 인식하므로 더 이상 우회가 필요 없다.
       ...targetStudentIds.map((studentId) => ({
         id: `sub-${id}-${studentId}`,
         examId: id,
@@ -165,6 +169,8 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
 
   // 결석 취소 — 다시 응시 대상으로 되돌린다. answers를 동일하게 빈 답안으로 리셋해
   // "미채점" 상태에서 새로 채점을 시작하도록 한다(결석 이전의 채점 데이터를 그대로 복원하지 않음).
+  // [Phase 3D v3-r7-r1] addExam()과 동일한 이유로 '응시예정'을 그대로 사용한다 —
+  // TeacherExamGrading.tsx가 isPendingGrading()을 쓰므로 더 이상 우회가 필요 없다.
   const markAttended = useCallback((examId: string, studentId: string) => {
     setSubmissions((prev) => prev.map((s) => {
       if (s.examId !== examId || s.studentId !== studentId) return s;
@@ -323,8 +329,8 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
 
     // Phase 3C v2 반려 대응(2차 방어): TeacherExamGradingGuard가 라우트 레벨에서 이미 막지만,
     // Context 데이터 계층에서도 한 번 더 검증한다. gradeSubmissionByTeacher는 gradedBy로 이름
-    // 문자열만 받으므로(TeacherExamGrading.tsx가 currentUser.name을 그대로 넘김 — 이 파일은
-    // 불변이라 시그니처를 바꿀 수 없다), ownerTeacherId(계정 id)를 이름으로 역조회해 비교한다.
+    // 문자열만 받으므로(TeacherExamGrading.tsx가 currentUser.name을 그대로 넘김), ownerTeacherId
+    // (계정 id)를 이름으로 역조회해 비교한다.
     // 동명이인이 있으면 이 이름 비교만으로는 완벽하지 않지만, 라우트 가드가 1차로 이미 막고
     // 있어 실질적으로는 이중 방어 중 두 번째 안전망 역할이다.
     if (exam.scope === 'TEACHER_PRIVATE' && exam.ownerTeacherId) {

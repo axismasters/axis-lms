@@ -140,7 +140,7 @@ export default function EmployeeDetail() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
-              style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+              style={{ background: '#081F4D' }}>
               {emp.name.charAt(0)}
             </div>
             <div>
@@ -205,7 +205,7 @@ export default function EmployeeDetail() {
               <button onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50"
                 style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
               <button onClick={saveEdit} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-medium text-white"
-                style={{ background: 'oklch(0.511 0.262 276.966)' }}><Save size={13} /> 저장</button>
+                style={{ background: '#081F4D' }}><Save size={13} /> 저장</button>
             </div>
           </div>
         ) : (

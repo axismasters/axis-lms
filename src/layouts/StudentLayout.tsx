@@ -1,5 +1,8 @@
 // AXIS LMS v1.2 — Phase 3A-1: StudentLayout (Role-Based Portal Buildfix v1)
-// 학생 전용 레이아웃 — Bottom Navigation 5탭
+// 학생 전용 레이아웃.
+// [Phase 3D v3-r7] PC 웹 최적화: 데스크톱(lg 이상)에서는 하단 고정 네비게이션 대신
+// 상단 가로 내비게이션을 사용한다. 모바일/태블릿(lg 미만)에서는 기존 Bottom Navigation
+// (5탭)을 그대로 유지한다.
 //
 // Phase 3A-1 탭 구조:
 //   1. 홈 (/student)
@@ -49,18 +52,41 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
 
   return (
     <div className="min-h-screen flex flex-col"
-      style={{ fontFamily: "'Pretendard', -apple-system, sans-serif", background: 'oklch(0.97 0.005 250)' }}>
+      style={{ fontFamily: "'Pretendard', -apple-system, sans-serif", background: 'oklch(0.98 0.008 75)' }}>
       {/* 상단 헤더 */}
-      <header className="bg-white border-b sticky top-0 z-20 flex items-center justify-between px-4"
+      <header className="bg-white border-b sticky top-0 z-20 flex items-center justify-between px-4 lg:px-6"
         style={{ height: 52, borderColor: 'oklch(0.9 0.008 250)' }}>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center rounded-md"
-            style={{ width: 28, height: 28, background: 'oklch(0.511 0.262 276.966)' }}>
-            <BarChart2 size={15} color="white" />
+        <div className="flex items-center gap-2 lg:gap-6">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center rounded-md"
+              style={{ width: 28, height: 28, background: '#081F4D' }}>
+              <BarChart2 size={15} color="white" />
+            </div>
+            <span className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
+              {title ?? 'AXIS 학생'}
+            </span>
           </div>
-          <span className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
-            {title ?? 'AXIS 학생'}
-          </span>
+
+          {/* [PC 최적화] 데스크톱 상단 내비게이션 */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {STUDENT_NAV.map(({ path, label, icon: Icon }) => {
+              const active = isActive(path);
+              return (
+                <Link key={path} href={path}>
+                  <div
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors"
+                    style={{
+                      background: active ? '#C8A15A1A' : 'transparent',
+                      color: active ? '#081F4D' : 'oklch(0.5 0.015 250)',
+                    }}
+                  >
+                    <Icon size={15} />
+                    {label}
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
         </div>
         <div className="flex items-center gap-2">
           {gradeLevel && (
@@ -79,23 +105,23 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
         </div>
       </header>
 
-      {/* 메인 콘텐츠 */}
-      <main className="flex-1 pb-20">
+      {/* 메인 콘텐츠 — 모바일은 하단 네비게이션 여백, 데스크톱은 상단 내비게이션으로 대체 */}
+      <main className="flex-1 pb-20 lg:pb-6">
         {children}
       </main>
 
       {/* DEV ONLY */}
       <DevRoleSwitcher />
 
-      {/* Bottom Navigation — 5탭 */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t z-30 flex"
+      {/* Bottom Navigation — 5탭. 모바일/태블릿(lg 미만) 전용. */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t z-30 flex lg:hidden"
         style={{ borderColor: 'oklch(0.9 0.008 250)', height: 60 }}>
         {STUDENT_NAV.map(({ path, label, icon: Icon }) => {
           const active = isActive(path);
           return (
             <Link key={path} href={path} style={{ flex: 1, display: 'flex' }}>
               <div className="flex flex-col items-center justify-center gap-0.5 w-full py-1 cursor-pointer transition-colors"
-                style={{ color: active ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.6 0.015 250)' }}>
+                style={{ color: active ? '#081F4D' : 'oklch(0.6 0.015 250)' }}>
                 <Icon size={20} />
                 <span className="font-medium" style={{ fontSize: 9 }}>{label}</span>
               </div>

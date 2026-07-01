@@ -14,7 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { useEmployees } from '@/contexts/EmployeeContext';
-import { EXAM_CATEGORIES, ExamPhase, getExamPhase, categoryLabel, ExamScope, EXAM_SCOPE_LABELS } from '@/lib/assessmentData';
+import { EXAM_CATEGORIES, ExamPhase, getExamPhase, categoryLabel, ExamScope, EXAM_SCOPE_LABELS, isGradedSubmission } from '@/lib/assessmentData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -149,7 +149,7 @@ export default function AssessmentList() {
           </p>
         </div>
         {canCreate && (
-          <Button onClick={() => setFormOpen(true)} className="gap-1.5" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+          <Button onClick={() => setFormOpen(true)} className="gap-1.5" style={{ background: '#081F4D' }}>
             <Plus size={14} /> 시험 등록
           </Button>
         )}
@@ -159,7 +159,7 @@ export default function AssessmentList() {
       <div className="grid grid-cols-4 gap-3 mb-4">
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>전체 시험</div>
-          <div className="text-2xl font-bold" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{stats.total}</div>
+          <div className="text-2xl font-bold" style={{ color: '#081F4D' }}>{stats.total}</div>
         </div>
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>미채점 있음</div>
@@ -265,7 +265,7 @@ export default function AssessmentList() {
                 const cfg = PHASE_CONFIG[phase];
                 const cls = exam.classId ? getClass(exam.classId) : undefined;
                 const subs = getSubmissionsByExam(exam.id);
-                const gradedCnt = subs.filter((s) => s.status === '채점완료' || s.status === '결석').length;
+                const gradedCnt = subs.filter((s) => isGradedSubmission(s) || s.status === '결석').length;
                 return (
                   <tr key={exam.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                     <td className="px-4 py-3 font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</td>

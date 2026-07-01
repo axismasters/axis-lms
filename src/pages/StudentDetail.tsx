@@ -14,7 +14,7 @@ import { useParams, useLocation } from 'wouter';
 import { toast } from 'sonner';
 import {
   ChevronLeft, Phone, User, CreditCard, CalendarCheck, BookOpen, BarChart2,
-  Users, KeyRound, UserCog, Power, Plus, ArrowRightLeft, Receipt, Target, FileText,
+  Users, KeyRound, UserCog, Power, Plus, Minus, StopCircle, ArrowRightLeft, Receipt, Target, FileText,
   Bell, CheckCircle2, XCircle, AlertTriangle, Info, Link2, StickyNote, X,
   Trophy, Zap, Star, Swords, Award, MessageSquare,
 } from 'lucide-react';
@@ -27,7 +27,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { useEnrollment } from '@/contexts/EnrollmentContext';
 import EnrollmentFormModal from '@/components/EnrollmentFormModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { isBackOfficeType, canViewStudentGrowth, canAwardSP, canAwardEmblem, canViewAllCounseling } from '@/lib/rbac';
+import { isBackOfficeType, canViewStudentGrowth, canAwardSP, canAwardEmblem, canViewAllCounseling, canManageRivals } from '@/lib/rbac';
 import { STATUS_CONFIG, AttendanceStatus } from '@/lib/attendanceData';
 import { ClassRoom } from '@/lib/classData';
 import { Student, StudentStatus, ClassInfo, InternalScore, MockExamScore } from '@/lib/dummyData';
@@ -192,7 +192,7 @@ export default function StudentDetail() {
       </button>
 
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0" style={{ background: 'oklch(0.511 0.262 276.966)' }}>{student.name.charAt(0)}</div>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0" style={{ background: '#081F4D' }}>{student.name.charAt(0)}</div>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold" style={{ color: 'oklch(0.2 0.02 250)' }}>{student.name}</h1>
@@ -208,7 +208,7 @@ export default function StudentDetail() {
         {TABS.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)} className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors relative" style={{ color: tab === t.key ? 'oklch(0.45 0.2 277)' : 'oklch(0.5 0.015 250)' }}>
             {t.icon}{t.label}
-            {tab === t.key && <span className="absolute left-2 right-2 -bottom-px h-0.5 rounded" style={{ background: 'oklch(0.511 0.262 276.966)' }} />}
+            {tab === t.key && <span className="absolute left-2 right-2 -bottom-px h-0.5 rounded" style={{ background: '#081F4D' }} />}
           </button>
         ))}
       </div>
@@ -382,7 +382,7 @@ function BasicInfoTab({ student }: { student: Student }) {
       <div className="grid lg:grid-cols-2 gap-3">
         <Area title="학생 기본정보">
           <div className="flex gap-4">
-            <div className="w-20 h-20 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl font-bold text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+            <div className="w-20 h-20 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl font-bold text-white" style={{ background: '#081F4D' }}>
               {student.photo ? <img src={student.photo} alt={student.name} className="w-full h-full object-cover rounded-lg" /> : student.name.charAt(0)}
             </div>
             <div className="flex-1">
@@ -447,7 +447,7 @@ function BasicInfoTab({ student }: { student: Student }) {
         >
           <div className="flex gap-2 mb-3">
             <input value={memoText} onChange={(e) => setMemoText(e.target.value)} placeholder="운영메모를 입력하세요 (예: 학습 태도, 결제 협의, 반 이동 사유 등)" className="flex-1 text-sm px-3 py-2 rounded-md border" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
-            <button onClick={addMemo} className="inline-flex items-center gap-1 px-3 py-2 rounded-md text-sm text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}><Plus size={14} /> 기록</button>
+            <button onClick={addMemo} className="inline-flex items-center gap-1 px-3 py-2 rounded-md text-sm text-white" style={{ background: '#081F4D' }}><Plus size={14} /> 기록</button>
           </div>
           {student.operationMemos.length === 0 ? (
             <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>기록된 운영메모가 없습니다.</p>
@@ -480,7 +480,7 @@ function BasicInfoTab({ student }: { student: Student }) {
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setResetConfirmOpen(false)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
-              <button onClick={confirmResetPw} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>초기화 실행</button>
+              <button onClick={confirmResetPw} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: '#081F4D' }}>초기화 실행</button>
             </div>
           </div>
         </div>
@@ -502,7 +502,7 @@ function BasicInfoTab({ student }: { student: Student }) {
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setNicknameResetConfirmOpen(false)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
-              <button onClick={confirmResetNickname} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>초기화 실행</button>
+              <button onClick={confirmResetNickname} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: '#081F4D' }}>초기화 실행</button>
             </div>
           </div>
         </div>
@@ -555,7 +555,7 @@ function GuardianFamilyTab({ student, onOpenStudent }: { student: Student; onOpe
           title="보호자 정보"
           desc="보호자는 여러 명 등록할 수 있습니다."
           action={canEdit ? (
-            <button onClick={() => setAdding((v) => !v)} className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}><Plus size={12} /> 보호자 추가</button>
+            <button onClick={() => setAdding((v) => !v)} className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md text-white" style={{ background: '#081F4D' }}><Plus size={12} /> 보호자 추가</button>
           ) : undefined}
         >
           {!canEdit && (
@@ -566,7 +566,7 @@ function GuardianFamilyTab({ student, onOpenStudent }: { student: Student; onOpe
               <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="보호자명" className="text-xs px-2 py-1.5 rounded border" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
               <select value={form.relation} onChange={(e) => setForm({ ...form, relation: e.target.value })} className="text-xs px-2 py-1.5 rounded border" style={{ borderColor: 'oklch(0.9 0.008 250)' }}>{['어머니', '아버지', '할머니', '할아버지', '기타'].map((r) => <option key={r}>{r}</option>)}</select>
               <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="010-0000-0000" className="text-xs px-2 py-1.5 rounded border tabular-nums" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
-              <button onClick={addGuardian} className="col-span-3 text-xs py-1.5 rounded text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>저장</button>
+              <button onClick={addGuardian} className="col-span-3 text-xs py-1.5 rounded text-white" style={{ background: '#081F4D' }}>저장</button>
             </div>
           )}
           {student.guardians.length === 0 && <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>등록된 보호자가 없습니다.</p>}
@@ -690,7 +690,7 @@ function EnrollmentTab({ student }: { student: Student }) {
         title="현재 수강반"
         desc="학생 1명은 여러 반을 동시에 수강할 수 있습니다. 반유형·요일·시간은 반관리(ClassContext)에서 가져옵니다."
         action={canManageEnrollment ? (
-          <button onClick={() => setFormOpen(true)} className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+          <button onClick={() => setFormOpen(true)} className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md text-white" style={{ background: '#081F4D' }}>
             <Plus size={12} /> 반 등록
           </button>
         ) : undefined}
@@ -698,11 +698,11 @@ function EnrollmentTab({ student }: { student: Student }) {
         {active.length === 0 ? (
           <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>수강 중인 반이 없습니다.</p>
         ) : (
-          <div className="axis-table-wrap">
+          <div className="axis-table-scroll" style={{ maxHeight: 420 }}>
             <table className="w-full text-sm" style={{ minWidth: 900 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
-                  {['반명', '반유형', '담당강사', '수업요일', '수업시간', '수강 시작일', '수강료', '관리'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12 }}>{h}</th>)}
+                  {['반명', '반유형', '담당강사', '수업요일', '수업시간', '수강 시작일', '수강료', '관리'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -811,7 +811,7 @@ function EnrollmentTab({ student }: { student: Student }) {
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setMemoModal(null)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>닫기</button>
-              {canEdit && <button onClick={saveMemo} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>저장</button>}
+              {canEdit && <button onClick={saveMemo} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: '#081F4D' }}>저장</button>}
             </div>
           </div>
         </div>
@@ -859,11 +859,11 @@ function AttendanceTab({ student }: { student: Student }) {
         {records.length === 0 ? (
           <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>출결 기록이 없습니다.</p>
         ) : (
-          <div className="axis-table-wrap">
+          <div className="axis-table-scroll" style={{ maxHeight: 420 }}>
             <table className="w-full text-sm" style={{ minWidth: 720 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
-                  {['날짜', '수강반', '출결 상태', '사유', '입력자', '알림 발송'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12 }}>{h}</th>)}
+                  {['날짜', '수강반', '출결 상태', '사유', '입력자', '알림 발송'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -1103,7 +1103,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
       <div className="flex gap-1.5 mb-3 flex-wrap">
         {GRADE_TYPES.map((t) => (
           <button key={t} onClick={() => setGradeType(t)} className="px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
-            style={{ borderColor: gradeType === t ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.9 0.008 250)', background: gradeType === t ? 'oklch(0.511 0.262 276.966)' : 'white', color: gradeType === t ? 'white' : 'oklch(0.4 0.02 250)' }}>{t}</button>
+            style={{ borderColor: gradeType === t ? '#081F4D' : 'oklch(0.9 0.008 250)', background: gradeType === t ? '#081F4D' : 'white', color: gradeType === t ? 'white' : 'oklch(0.4 0.02 250)' }}>{t}</button>
         ))}
       </div>
 
@@ -1418,7 +1418,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
           className="flex items-start gap-2 px-3 py-2.5 rounded-lg"
           style={{ background: 'oklch(0.97 0.04 250)', border: '1px solid oklch(0.93 0.008 250)' }}
         >
-          <Info size={13} style={{ color: 'oklch(0.511 0.262 276.966)', flexShrink: 0, marginTop: 1 }} />
+          <Info size={13} style={{ color: '#081F4D', flexShrink: 0, marginTop: 1 }} />
           <p className="text-xs" style={{ color: 'oklch(0.45 0.015 250)' }}>
             실제 대학명·추천 순위 같은 확정 결과는 다음 단계에서 계산되며, 지금은 추천 적합도 중심의 입력 조립 단계입니다.
           </p>
@@ -1448,9 +1448,9 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                   onClick={() => setDraftGradeLevel(g === draftGradeLevel ? null : g)}
                   className="px-2.5 py-1 rounded-md text-xs font-medium border transition-colors"
                   style={{
-                    background:  draftGradeLevel === g ? 'oklch(0.511 0.262 276.966)' : 'white',
+                    background:  draftGradeLevel === g ? '#081F4D' : 'white',
                     color:       draftGradeLevel === g ? 'white' : 'oklch(0.45 0.015 250)',
-                    borderColor: draftGradeLevel === g ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.9 0.008 250)',
+                    borderColor: draftGradeLevel === g ? '#081F4D' : 'oklch(0.9 0.008 250)',
                   }}
                 >
                   고{g}
@@ -1469,9 +1469,9 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                   onClick={() => setDraftTrack(t === draftTrack ? null : t)}
                   className="px-2.5 py-1 rounded-md text-xs font-medium border transition-colors"
                   style={{
-                    background:   draftTrack === t ? 'oklch(0.511 0.262 276.966)' : 'white',
+                    background:   draftTrack === t ? '#081F4D' : 'white',
                     color:        draftTrack === t ? 'white' : 'oklch(0.45 0.015 250)',
-                    borderColor:  draftTrack === t ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.9 0.008 250)',
+                    borderColor:  draftTrack === t ? '#081F4D' : 'oklch(0.9 0.008 250)',
                   }}
                 >
                   {t}
@@ -1598,7 +1598,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                 style={{
                   background: (!targetInput.univName.trim() || !targetInput.deptName.trim())
                     ? 'oklch(0.95 0.005 250)'
-                    : 'oklch(0.511 0.262 276.966)',
+                    : '#081F4D',
                   color: (!targetInput.univName.trim() || !targetInput.deptName.trim())
                     ? 'oklch(0.65 0.01 250)'
                     : 'white',
@@ -1619,7 +1619,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                     className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs"
                     style={{ background: 'oklch(0.96 0.008 250)', color: 'oklch(0.3 0.02 250)' }}
                   >
-                    <span className="font-semibold flex-shrink-0 tabular-nums" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                    <span className="font-semibold flex-shrink-0 tabular-nums" style={{ color: '#081F4D' }}>
                       {idx + 1}
                     </span>
                     <span className="flex-1 min-w-0 truncate">
@@ -1835,7 +1835,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                         <div key={band} className="mb-2 last:mb-0">
                           <div
                             className="text-xs font-medium mb-1"
-                            style={{ color: 'oklch(0.511 0.262 276.966)' }}
+                            style={{ color: '#081F4D' }}
                           >
                             {bandLabel}
                           </div>
@@ -1893,9 +1893,9 @@ function InternalScores({ scores }: { scores: InternalScore[] }) {
       ) : (
         <>
           {latest && <ScoreSummary title={`${latest.year} ${latest.semester} ${latest.examType}`} score={`${latest.rawScore}점`} grade={`${latest.grade}등급`} sub={latest.subject} />}
-          <div className="axis-table-wrap">
+          <div className="axis-table-scroll" style={{ maxHeight: 420 }}>
             <table className="w-full text-sm" style={{ minWidth: 620 }}>
-              <thead><tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>{['학년도', '학기', '시험', '과목', '원점수', '등급', '비고'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12 }}>{h}</th>)}</tr></thead>
+              <thead><tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>{['학년도', '학기', '시험', '과목', '원점수', '등급', '비고'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}</tr></thead>
               <tbody>
                 {scores.map((s) => (
                   <tr key={s.id} style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
@@ -1970,7 +1970,7 @@ function AssessmentResultList({ title, results, note }: { title: string; results
               <div className="text-sm font-medium" style={{ color: 'oklch(0.22 0.02 250)' }}>{r.title}</div>
               <div className="text-xs tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>{categoryLabel(r.categoryId)} · {formatDate(r.examDate)}</div>
             </div>
-            <div className="text-sm font-semibold tabular-nums" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{r.earnedScore} / {r.totalPoints}점</div>
+            <div className="text-sm font-semibold tabular-nums" style={{ color: '#081F4D' }}>{r.earnedScore} / {r.totalPoints}점</div>
           </div>
         ))}
       </div>
@@ -2009,9 +2009,9 @@ function FinanceTab({ student }: { student: Student }) {
 
       {f.classBills.length > 0 && (
         <Area title="수강별 청구 내역" desc="수강료·반유형은 반관리(ClassContext) 실제 반 데이터. 일할 계산은 재무관리 엔진에서 등록일/퇴원일 기준으로 처리.">
-          <div className="axis-table-wrap">
+          <div className="axis-table-scroll" style={{ maxHeight: 420 }}>
             <table className="w-full text-sm" style={{ minWidth: 680 }}>
-              <thead><tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>{['수강반', '반유형', '월 수강료', '일할', '청구액', '납부 상태'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12 }}>{h}</th>)}</tr></thead>
+              <thead><tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>{['수강반', '반유형', '월 수강료', '일할', '청구액', '납부 상태'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}</tr></thead>
               <tbody>
                 {f.classBills.map((b, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
@@ -2109,7 +2109,7 @@ function CounselingReadOnlyTab({ studentId }: { studentId: string }) {
   return (
     <div className="axis-card overflow-hidden">
       <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
-        <MessageSquare size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+        <MessageSquare size={14} style={{ color: '#081F4D' }} />
         <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>상담 기록 ({records.length}건)</span>
         <span className="text-xs ml-auto" style={{ color: 'oklch(0.6 0.015 250)' }}>조회 전용 — 작성은 선생님 화면에서</span>
       </div>
@@ -2118,13 +2118,13 @@ function CounselingReadOnlyTab({ studentId }: { studentId: string }) {
           등록된 상담 기록이 없습니다.
         </div>
       ) : (
-        <div className="axis-table-wrap">
+        <div className="axis-table-scroll" style={{ maxHeight: 480 }}>
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
                 {['상담일', '유형', '대상', '내용', '작성자', '작성일'].map((h) => (
                   <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
-                    style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)' }}>{h}</th>
+                    style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -2162,6 +2162,10 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
   const { currentUser } = useAuth();
   const canGrant       = canAwardSP(currentUser.accountType);
   const canGrantEmblem = canAwardEmblem(currentUser.accountType);
+  // Phase 3D v3-r7: 성장관리 대메뉴 비중 축소 — 라이벌 승/패/종료 운영을 별도 관리자
+  // 메뉴가 아니라 이 학생 상세 성장 탭에서 바로 처리할 수 있게 한다.
+  const canManageRival = canManageRivals(currentUser.accountType);
+  const [confirmEndRival, setConfirmEndRival] = useState(false);
 
   const [spModal, setSpModal] = useState(false);
   const [spAmount, setSpAmount] = useState('');
@@ -2201,6 +2205,27 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
     } else toast.error(res.reason ?? '오류');
   };
 
+  // Phase 3D v3-r7: 라이벌 승/패/종료 — 이 학생의 현재 라이벌 관계(relation)에 한해서만
+  // 조작한다(별도 관리자 메뉴로 이동하지 않고 학생 상세에서 바로 처리).
+  const handleRivalWin = () => {
+    if (!relation) return;
+    const res = growth.addRivalWin(relation.id);
+    if (res.ok) toast.success('승리 기록이 추가되었습니다.');
+    else toast.error(res.reason ?? '오류');
+  };
+  const handleRivalLoss = () => {
+    if (!relation) return;
+    const res = growth.addRivalLoss(relation.id);
+    if (res.ok) toast.success('패배 기록이 추가되었습니다.');
+    else toast.error(res.reason ?? '오류');
+  };
+  const handleRivalEnd = () => {
+    if (!relation) return;
+    growth.endRivalRelation(relation.id);
+    toast.success('라이벌 관계가 종료되었습니다.');
+    setConfirmEndRival(false);
+  };
+
   if (!profile) {
     return (
       <div className="axis-card p-12 text-center">
@@ -2218,10 +2243,10 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
   return (
     <div className="flex flex-col gap-4">
       {/* 진열장 헤더 */}
-      <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, oklch(0.15 0.02 250) 0%, oklch(0.22 0.03 260) 100%)' }}>
+      <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, #081F4D 0%, #0F2E63 100%)' }}>
         <div className="flex items-start justify-between">
           <div>
-            <div className="text-xs font-bold tracking-widest mb-1" style={{ color: '#C9A84C' }}>AXIS 진열장</div>
+            <div className="text-xs font-bold tracking-widest mb-1" style={{ color: '#C8A15A' }}>AXIS 진열장</div>
             <div className="text-xl font-bold text-white mb-2">{profile.nickname}</div>
             <div className="flex items-center gap-2">
               <span className="inline-block px-3 py-1 rounded-full text-xs font-bold"
@@ -2267,7 +2292,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
       {/* SP / 전적 / 엠블럼 카드 */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: '누적 SP', value: profile.totalSP.toLocaleString(), icon: <Zap size={15} />, color: '#C9A84C' },
+          { label: '누적 SP', value: profile.totalSP.toLocaleString(), icon: <Zap size={15} />, color: '#C8A15A' },
           { label: '이번 시즌 SP', value: profile.seasonSP.toLocaleString(), icon: <Star size={15} />, color: '#3B82F6' },
           { label: '보유 엠블럼', value: `${achievedEmblems.length}개`, icon: <Award size={15} />, color: '#8B5CF6' },
           { label: '라이벌 전적', value: `${profile.rivalWins}승 ${profile.rivalLosses}패`, icon: <Swords size={15} />, color: '#EF4444' },
@@ -2292,6 +2317,27 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               <div className="text-base font-bold mb-1" style={{ color: 'oklch(0.18 0.02 250)' }}>{rivalStudentName}</div>
               <div className="text-xs font-semibold mb-1" style={{ color: TIER_COLORS[currentRivalProfile.tier as StudentTier] }}>{TIER_LABELS[currentRivalProfile.tier as StudentTier]}</div>
               <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>SP {currentRivalProfile.totalSP.toLocaleString()} · 엠블럼 {growth.getAchievedEmblems(currentRivalProfile.studentId).length}개</div>
+              {/* [Phase 3D v3-r7] 라이벌 운영(승/패/종료)을 이 카드에서 바로 처리 —
+                  별도 관리자 "라이벌관리" 메뉴로 이동하지 않아도 된다. */}
+              {canManageRival && relation && (
+                <div className="flex gap-1.5 flex-wrap mt-3 pt-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
+                  <button onClick={handleRivalWin}
+                    className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all duration-150 hover:brightness-95 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
+                    style={{ background: '#D1FAE5', color: '#065F46', border: '1px solid #A7F3D0', outlineColor: '#059669' }}>
+                    <Plus size={10} />승
+                  </button>
+                  <button onClick={handleRivalLoss}
+                    className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all duration-150 hover:brightness-95 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
+                    style={{ background: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA', outlineColor: '#DC2626' }}>
+                    <Minus size={10} />패
+                  </button>
+                  <button onClick={() => setConfirmEndRival(true)}
+                    className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded text-xs cursor-pointer transition-all duration-150 hover:bg-slate-100 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
+                    style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.87 0.006 250)', outlineColor: 'oklch(0.6 0.015 250)' }}>
+                    <StopCircle size={10} />종료
+                  </button>
+                </div>
+              )}
             </div>
           ) : <p className="text-sm" style={{ color: 'oklch(0.65 0.015 250)' }}>라이벌 없음</p>}
         </div>
@@ -2308,7 +2354,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
       {/* SP 최근 이력 */}
       <div className="axis-card p-4">
         <div className="flex items-center gap-1.5 mb-3">
-          <Zap size={14} style={{ color: '#C9A84C' }} />
+          <Zap size={14} style={{ color: '#C8A15A' }} />
           <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>SP 최근 이력</span>
         </div>
         {recentSPLogs.length === 0 ? (
@@ -2347,7 +2393,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
       <div className="axis-card p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
-            <Award size={14} style={{ color: '#C9A84C' }} />
+            <Award size={14} style={{ color: '#C8A15A' }} />
             <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>최근 획득 엠블럼</span>
           </div>
           <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>전체 {achievedEmblems.length}개</span>
@@ -2464,7 +2510,27 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
             </select>
             <div className="flex gap-2 justify-end">
               <button onClick={() => setEmbModal(false)} className="px-4 py-1.5 text-sm rounded-md border" style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.5 0.015 250)' }}>취소</button>
-              <button onClick={handleEmblemSubmit} className="px-4 py-1.5 text-sm rounded-md font-semibold" style={{ background: 'oklch(0.15 0.02 250)', color: '#C9A84C' }}>지급</button>
+              <button onClick={handleEmblemSubmit} className="px-4 py-1.5 text-sm rounded-md font-semibold" style={{ background: '#081F4D', color: '#C8A15A' }}>지급</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* [Phase 3D v3-r7] 라이벌 관계 종료 확인 모달 */}
+      {confirmEndRival && relation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-80">
+            <h3 className="font-bold text-base mb-2" style={{ color: 'oklch(0.15 0.02 250)' }}>라이벌 관계 종료</h3>
+            <p className="text-sm mb-5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+              {studentName} 학생의 라이벌 관계를 종료합니다. 기록은 유지되며 삭제되지 않습니다.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setConfirmEndRival(false)}
+                className="px-4 py-1.5 text-sm rounded-md border transition-colors hover:bg-slate-50 active:scale-95"
+                style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.5 0.015 250)' }}>취소</button>
+              <button onClick={handleRivalEnd}
+                className="px-4 py-1.5 text-sm rounded-md font-semibold transition-colors hover:brightness-90 active:scale-95"
+                style={{ background: '#EF4444', color: '#fff' }}>종료 확인</button>
             </div>
           </div>
         </div>

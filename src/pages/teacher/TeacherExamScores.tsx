@@ -2,9 +2,9 @@
 // "내 시험지 관리"에서 시험지를 클릭하거나 "학생별 성적" 버튼을 눌렀을 때 보이는 화면.
 // 담당 학생 기준 학생명/채점상태/점수·만점/응시·결시 상태/결과 보기/채점 또는 정정을 한 번에 보여준다.
 //
-// TeacherExamGrading.tsx(불변, /teacher/exams/:examId/grading)는 "채점 대기 입력" 전용이라
+// TeacherExamGrading.tsx(/teacher/exams/:examId/grading)는 "채점 대기 입력" 전용이라
 // 결석 학생이 빠지고, 이미 채점된 건에 대한 정정 기능도 없다 — 이 화면은 그 둘을 보완하는
-// "조회+정정" 화면이다(불변 파일은 전혀 건드리지 않았다).
+// "조회+정정" 화면이다.
 //
 // Phase 3C 원칙 유지: TEACHER_PRIVATE 시험은 ownerTeacherId === 본인일 때만 접근 가능.
 // 다른 교사의 개인 시험지는 이 화면에서도 절대 보이지 않는다(scope 이중 방어).
@@ -18,14 +18,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useStudents } from '@/contexts/StudentContext';
 import type { ExamSubmission } from '@/lib/assessmentData';
-import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS } from '@/lib/assessmentData';
+import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS, isPendingGrading, isGradedSubmission } from '@/lib/assessmentData';
 
 function NotFoundScreen() {
   return (
     <TeacherLayout title="내 시험지 관리">
       <div className="max-w-lg mx-auto px-4 py-5">
         <Link href="/teacher/exams">
-          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#081F4D' }}>
             <ChevronLeft size={14} /> 내 시험지 목록
           </div>
         </Link>
@@ -40,8 +40,11 @@ function NotFoundScreen() {
   );
 }
 
+// [Phase 3D v3-r7] '응시예정'/'채점중'은 정책상 "채점 대기" 하나의 개념이므로 배지
+// 라벨도 동일하게 "미채점"으로 통일한다(Record는 SubmissionStatus 4종을 전부 요구하므로
+// 두 키를 계속 각각 두되, 표시 라벨만 맞춘다).
 const STATUS_BADGE: Record<ExamSubmission['status'], { label: string; bg: string; text: string }> = {
-  '응시예정': { label: '응시예정', bg: 'oklch(0.95 0.005 250)', text: 'oklch(0.5 0.015 250)' },
+  '응시예정': { label: '미채점', bg: 'oklch(0.95 0.08 60)', text: 'oklch(0.42 0.14 60)' },
   '결석': { label: '결석', bg: 'oklch(0.96 0.08 27)', text: 'oklch(0.45 0.2 27)' },
   '채점중': { label: '미채점', bg: 'oklch(0.95 0.08 60)', text: 'oklch(0.42 0.14 60)' },
   '채점완료': { label: '채점완료', bg: 'oklch(0.94 0.08 160)', text: 'oklch(0.28 0.15 160)' },
@@ -77,7 +80,7 @@ export default function TeacherExamScores() {
   const studentMap = new Map(students.map((s) => [s.id, s]));
 
   // Phase 3D v3-r1: 결과 보기 모달의 담당 평균/최고점 비교용
-  const gradedScores = mySubmissions.filter((s) => s.status === '채점완료' && s.totalScore != null).map((s) => s.totalScore as number);
+  const gradedScores = mySubmissions.filter((s) => isGradedSubmission(s) && s.totalScore != null).map((s) => s.totalScore as number);
   const gradedAvg = gradedScores.length > 0 ? gradedScores.reduce((a, b) => a + b, 0) / gradedScores.length : 0;
   const gradedMax = gradedScores.length > 0 ? Math.max(...gradedScores) : 0;
 
@@ -86,7 +89,7 @@ export default function TeacherExamScores() {
   // 정답 처리한다(부분점수 문항은 "만점=정답"으로 간주하는 단순화된 근사치).
   const questionAccuracy = visibleExam.questions.map((q) => {
     const answered = mySubmissions
-      .filter((s) => s.status === '채점완료')
+      .filter((s) => isGradedSubmission(s))
       .map((s) => s.answers.find((a) => a.questionId === q.id))
       .filter((a): a is NonNullable<typeof a> => !!a && a.score !== undefined);
     const correctCount = answered.filter((a) => (a.isCorrect ?? (a.score ?? 0) >= q.points)).length;
@@ -115,7 +118,7 @@ export default function TeacherExamScores() {
       <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
 
         <Link href="/teacher/exams">
-          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
             <ChevronLeft size={14} /> 내 시험지 목록
           </div>
         </Link>
@@ -171,8 +174,8 @@ export default function TeacherExamScores() {
                     const student = studentMap.get(sub.studentId);
                     const badge = STATUS_BADGE[sub.status];
                     const isAbsent = sub.status === '결석';
-                    const isGraded = sub.status === '채점완료';
-                    const isPending = sub.status === '채점중';
+                    const isGraded = isGradedSubmission(sub);
+                    const isPending = isPendingGrading(sub);
                     return (
                       <tr key={sub.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                         <td className="px-3 py-2.5 font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>
@@ -207,7 +210,7 @@ export default function TeacherExamScores() {
                         <td className="px-3 py-2.5">
                           {isPending && (
                             <Link href={`/teacher/exams/${visibleExam.id}/grading`}>
-                              <Button size="sm" className="h-7 text-xs" style={{ background: 'oklch(0.511 0.262 276.966)' }}>채점하기</Button>
+                              <Button size="sm" className="h-7 text-xs" style={{ background: '#081F4D' }}>채점하기</Button>
                             </Link>
                           )}
                           {isGraded && (
@@ -254,7 +257,7 @@ export default function TeacherExamScores() {
                   {gradedScores.length > 0 && resultModalSub.totalScore != null && (
                     <div className="space-y-1.5 pt-1">
                       {([
-                        { label: '이 학생', value: resultModalSub.totalScore, color: 'oklch(0.511 0.262 276.966)' },
+                        { label: '이 학생', value: resultModalSub.totalScore, color: '#081F4D' },
                         { label: '담당 평균', value: Math.round(gradedAvg), color: 'oklch(0.6 0.015 250)' },
                         { label: '담당 최고', value: gradedMax, color: 'oklch(0.45 0.15 145)' },
                       ]).map((row) => {
@@ -330,7 +333,7 @@ export default function TeacherExamScores() {
             </div>
             <div className="flex justify-end gap-2 p-5 border-t" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
               <Button variant="outline" onClick={() => setCorrectModalSub(null)}>취소</Button>
-              <Button onClick={handleCorrectSubmit} style={{ background: 'oklch(0.511 0.262 276.966)' }}>정정 저장</Button>
+              <Button onClick={handleCorrectSubmit} style={{ background: '#081F4D' }}>정정 저장</Button>
             </div>
           </div>
         </div>

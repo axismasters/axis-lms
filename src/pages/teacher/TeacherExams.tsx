@@ -14,7 +14,7 @@ import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import type { ExamSubmission } from '@/lib/assessmentData';
-import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS } from '@/lib/assessmentData';
+import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS, isPendingGrading, isGradedSubmission } from '@/lib/assessmentData';
 import AssessmentFormModal from '@/components/AssessmentFormModal';
 import { Button } from '@/components/ui/button';
 
@@ -26,8 +26,8 @@ function getExamBadge(examId: string, mySubmissions: ExamSubmission[]) {
   if (subs.length === 0) {
     return { label: '진행 전', bg: 'oklch(0.95 0.005 250)', text: 'oklch(0.55 0.015 250)' };
   }
-  const hasPending = subs.some((s) => s.status === '채점중');
-  const hasGraded = subs.some((s) => s.status === '채점완료');
+  const hasPending = subs.some((s) => isPendingGrading(s));
+  const hasGraded = subs.some((s) => isGradedSubmission(s));
   if (hasPending) {
     return { label: '미채점', bg: 'oklch(0.95 0.1 60)', text: 'oklch(0.45 0.15 60)' };
   }
@@ -64,7 +64,7 @@ export default function TeacherExams() {
 
   // 미채점 탭: 담당 학생 중 채점중 항목이 있는 시험
   const ungradedExams = candidateExams.filter((e) =>
-    mySubmissions.some((s) => s.examId === e.id && s.status === '채점중')
+    mySubmissions.some((s) => s.examId === e.id && isPendingGrading(s))
   );
 
   // 전체 탭:
@@ -81,12 +81,12 @@ export default function TeacherExams() {
 
   return (
     <TeacherLayout title="내 시험지 관리">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-lg lg:max-w-4xl mx-auto px-4 py-5 space-y-4">
 
         {/* Phase 3C: 내 시험 만들기 */}
         <button type="button" onClick={() => setFormOpen(true)}
           className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold"
-          style={{ background: 'oklch(0.511 0.262 276.966)', color: 'white' }}>
+          style={{ background: '#081F4D', color: 'white' }}>
           <Plus size={15} /> 내 시험 만들기
         </button>
 
@@ -111,7 +111,7 @@ export default function TeacherExams() {
               className="flex-1 py-2 rounded-md text-sm font-medium transition-all"
               style={{
                 background: tab === t ? 'white' : 'transparent',
-                color: tab === t ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.5 0.015 250)',
+                color: tab === t ? '#081F4D' : 'oklch(0.5 0.015 250)',
                 boxShadow: tab === t ? '0 1px 3px oklch(0 0 0 / 0.1)' : 'none',
               }}
             >
@@ -137,12 +137,12 @@ export default function TeacherExams() {
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
             {displayExams.map((exam) => {
               // 담당 학생 기준 counts
               const myExamSubs = mySubmissions.filter((s) => s.examId === exam.id);
-              const pendingCount = myExamSubs.filter((s) => s.status === '채점중').length;
-              const gradedCount = myExamSubs.filter((s) => s.status === '채점완료').length;
+              const pendingCount = myExamSubs.filter((s) => isPendingGrading(s)).length;
+              const gradedCount = myExamSubs.filter((s) => isGradedSubmission(s)).length;
               const badge = getExamBadge(exam.id, mySubmissions);
 
               return (
@@ -192,7 +192,7 @@ export default function TeacherExams() {
                         )}
                       </div>
                       <Link href={`/teacher/exams/${exam.id}/grading`}>
-                        <Button size="sm" className="h-7 text-xs gap-0.5" onClick={(e) => e.stopPropagation()} style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+                        <Button size="sm" className="h-7 text-xs gap-0.5" onClick={(e) => e.stopPropagation()} style={{ background: '#081F4D' }}>
                           채점하기 <ChevronRight size={12} />
                         </Button>
                       </Link>
@@ -203,7 +203,7 @@ export default function TeacherExams() {
                       <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
                         담당 학생 {gradedCount}명 채점 완료 · 만점 {exam.totalScore}점
                       </div>
-                      <span className="inline-flex items-center gap-0.5 text-xs font-medium" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                      <span className="inline-flex items-center gap-0.5 text-xs font-medium" style={{ color: '#081F4D' }}>
                         <Users size={11} /> 학생별 성적 <ChevronRight size={11} />
                       </span>
                     </div>

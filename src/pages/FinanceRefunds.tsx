@@ -182,7 +182,7 @@ export default function FinanceRefunds() {
           </p>
         </div>
         {canRequest && (
-          <Button onClick={openRequestModal} className="gap-1.5" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+          <Button onClick={openRequestModal} className="gap-1.5" style={{ background: '#081F4D' }}>
             <Plus size={14} /> 환불 요청 등록
           </Button>
         )}
@@ -192,7 +192,7 @@ export default function FinanceRefunds() {
       <div className="grid grid-cols-4 gap-3 mb-4">
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>환불 요청 건수</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{summary.requestCount}건</div>
+          <div className="text-lg font-bold" style={{ color: '#081F4D' }}>{summary.requestCount}건</div>
         </div>
         <div className="axis-card p-4 text-center">
           <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>승인 대기 금액</div>
@@ -213,12 +213,12 @@ export default function FinanceRefunds() {
         {sorted.length === 0 ? (
           <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>환불 요청 내역이 없습니다.</div>
         ) : (
-          <div className="axis-table-wrap">
+          <div className="axis-table-scroll" style={{ maxHeight: 620 }}>
             <table className="w-full text-sm" style={{ minWidth: 1320 }}>
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
                   {['요청일', '청구월', '학생명', '반명', '수강상태', '요청금액', '승인금액', '상태', '요청자', '승인자', '사유', '관리'].map(h => (
-                    <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
+                    <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -341,7 +341,7 @@ export default function FinanceRefunds() {
               onClick={saveRequest}
               disabled={isRefundBlocked}
               className="h-8 text-xs"
-              style={{ background: isRefundBlocked ? undefined : 'oklch(0.511 0.262 276.966)' }}
+              style={{ background: isRefundBlocked ? undefined : '#081F4D' }}
             >
               {isRefundBlocked ? '환불 불가' : '요청 등록'}
             </Button>
@@ -377,7 +377,7 @@ export default function FinanceRefunds() {
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setApproveModal(null)} className="h-8 text-xs">취소</Button>
-            <Button size="sm" onClick={confirmApprove} className="h-8 text-xs" style={{ background: 'oklch(0.511 0.262 276.966)' }}>승인</Button>
+            <Button size="sm" onClick={confirmApprove} className="h-8 text-xs" style={{ background: '#081F4D' }}>승인</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

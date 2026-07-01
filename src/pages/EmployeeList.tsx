@@ -204,7 +204,7 @@ export default function EmployeeList() {
           <button
             onClick={() => navigate('/admin/employees?new=1')}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-sm font-medium text-white"
-            style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+            style={{ background: '#081F4D' }}>
             <UserPlus size={14} /> 직원 등록
           </button>
         )}
@@ -249,13 +249,13 @@ export default function EmployeeList() {
 
       {/* 직원 목록 */}
       <div className="axis-card overflow-hidden">
-        <div className="axis-table-wrap">
+        <div className="axis-table-scroll" style={{ maxHeight: 620 }}>
           <table className="w-full text-sm" style={{ minWidth: 700 }}>
             <thead>
               <tr style={{ background: 'oklch(0.98 0.004 247)', borderBottom: '1px solid oklch(0.9 0.008 250)' }}>
                 {['이름', '직급', '휴대폰번호', '재직상태', '입사일', '계정상태', '관리'].map((h) => (
                   <th key={h} className="text-left font-semibold px-3 py-2.5 whitespace-nowrap"
-                    style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12 }}>{h}</th>
+                    style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'oklch(0.98 0.004 247)', boxShadow: 'inset 0 -1px 0 oklch(0.9 0.008 250)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -271,7 +271,7 @@ export default function EmployeeList() {
                   <td className="px-3 py-3 font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                        style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+                        style={{ background: '#081F4D' }}>
                         {emp.name.charAt(0)}
                       </div>
                       {emp.name}

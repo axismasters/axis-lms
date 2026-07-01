@@ -43,7 +43,7 @@ export default function StudentRival() {
               Rival 기능은 닉네임 설정 후 사용할 수 있습니다. 실명은 상대방에게 노출되지 않습니다.
             </div>
             <Link href="/student/my">
-              <button className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+              <button className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: '#081F4D' }}>
                 마이페이지에서 설정하기
               </button>
             </Link>
@@ -90,7 +90,7 @@ export default function StudentRival() {
                 <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>패</div>
               </div>
               <div className="rounded-lg p-2.5 text-center" style={{ background: 'white' }}>
-                <div className="font-black text-base tabular-nums" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{relation.winRate.toFixed(0)}%</div>
+                <div className="font-black text-base tabular-nums" style={{ color: '#081F4D' }}>{relation.winRate.toFixed(0)}%</div>
                 <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>승률</div>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function StudentRival() {
         {rivalProfile && (
           <div className="axis-card p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Shield size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+              <Shield size={15} style={{ color: '#081F4D' }} />
               <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>현재 Rival 상대</span>
             </div>
             <div className="flex items-center gap-3">
@@ -133,10 +133,10 @@ export default function StudentRival() {
         {/* 나에게 도전한 학생 수 — 식별 정보 없이 건수만 */}
         <div className="axis-card p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Users size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+            <Users size={15} style={{ color: '#081F4D' }} />
             <span className="text-sm font-medium" style={{ color: 'oklch(0.3 0.02 250)' }}>나에게 도전한 학생</span>
           </div>
-          <span className="font-bold text-sm tabular-nums" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{challengersCount}명</span>
+          <span className="font-bold text-sm tabular-nums" style={{ color: '#081F4D' }}>{challengersCount}명</span>
         </div>
 
         {/* 성장 진열장 바로가기 */}

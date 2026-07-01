@@ -8,7 +8,7 @@ import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useStudents } from '@/contexts/StudentContext';
-import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS } from '@/lib/assessmentData';
+import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS, isGradedSubmission } from '@/lib/assessmentData';
 
 export default function TeacherGrades() {
   const { currentUser } = useAuth();
@@ -32,7 +32,7 @@ export default function TeacherGrades() {
       (e) =>
         (TEACHER_CREATABLE_EXAM_CATEGORY_IDS as readonly string[]).includes(e.categoryId) &&
         (assignedClassIds.includes(e.classId ?? '') || !e.classId) &&
-        mySubmissions.some((s) => s.examId === e.id && s.status === '채점완료')
+        mySubmissions.some((s) => s.examId === e.id && isGradedSubmission(s))
     )
     .sort((a, b) => b.examDate.localeCompare(a.examDate));
 
@@ -55,7 +55,7 @@ export default function TeacherGrades() {
           gradedExams.map((exam) => {
             // 담당 학생 기준 채점완료 submissions
             const examSubs = mySubmissions.filter(
-              (s) => s.examId === exam.id && s.status === '채점완료'
+              (s) => s.examId === exam.id && isGradedSubmission(s)
             );
             const scores = examSubs.map((s) => s.totalScore ?? 0);
             const stats =
@@ -83,7 +83,7 @@ export default function TeacherGrades() {
                 {stats && (
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     {[
-                      { label: '담당 평균', value: stats.avg, color: 'oklch(0.511 0.262 276.966)' },
+                      { label: '담당 평균', value: stats.avg, color: '#081F4D' },
                       { label: '최고점',   value: stats.max, color: 'oklch(0.45 0.15 160)' },
                       { label: '최저점',   value: stats.min, color: 'oklch(0.55 0.2 27)' },
                     ].map(({ label, value, color }) => (
@@ -123,7 +123,7 @@ export default function TeacherGrades() {
                                 pct >= 80
                                   ? 'oklch(0.45 0.15 160)'
                                   : pct >= 60
-                                  ? 'oklch(0.511 0.262 276.966)'
+                                  ? '#081F4D'
                                   : 'oklch(0.55 0.2 27)',
                             }}
                           />

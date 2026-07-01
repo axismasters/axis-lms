@@ -184,7 +184,7 @@ export default function TeacherAttendance() {
             {/* 안내 */}
             <div
               className="axis-card px-4 py-3 text-xs"
-              style={{ borderLeft: '3px solid oklch(0.511 0.262 276.966)', color: 'oklch(0.5 0.015 250)' }}
+              style={{ borderLeft: '3px solid #081F4D', color: 'oklch(0.5 0.015 250)' }}
             >
               전체 자동 출석 기준입니다. 예외 사항만 변경하세요.
               <br />
@@ -219,7 +219,7 @@ export default function TeacherAttendance() {
                         <div className="flex items-center gap-2">
                           <div
                             className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm"
-                            style={{ background: 'oklch(0.511 0.262 276.966)' }}
+                            style={{ background: '#081F4D' }}
                           >
                             {student.name.charAt(0)}
                           </div>
@@ -304,7 +304,7 @@ export default function TeacherAttendance() {
               <button
                 onClick={handleSave}
                 className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all"
-                style={{ background: saved ? 'oklch(0.45 0.15 160)' : 'oklch(0.511 0.262 276.966)' }}
+                style={{ background: saved ? 'oklch(0.45 0.15 160)' : '#081F4D' }}
               >
                 {saved ? `✓ ${selectedDate} 출결 저장 완료` : `${selectedDate} 출결 저장`}
               </button>

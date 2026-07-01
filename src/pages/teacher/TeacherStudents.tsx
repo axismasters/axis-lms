@@ -35,7 +35,7 @@ export default function TeacherStudents() {
         {/* 요약 */}
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: '전체', value: assignedStudents.length, color: 'oklch(0.511 0.262 276.966)' },
+            { label: '전체', value: assignedStudents.length, color: '#081F4D' },
             { label: '재원',  value: activeCount,             color: 'oklch(0.45 0.15 160)' },
             { label: '기타',  value: otherCount,              color: 'oklch(0.55 0.015 250)' },
           ].map(({ label, value, color }) => (
@@ -72,7 +72,7 @@ export default function TeacherStudents() {
                         <div className="flex items-center gap-2.5">
                           <div
                             className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0"
-                            style={{ background: student.status === '재원' ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.7 0.01 250)' }}
+                            style={{ background: student.status === '재원' ? '#081F4D' : 'oklch(0.7 0.01 250)' }}
                           >
                             {student.name.charAt(0)}
                           </div>

@@ -172,7 +172,7 @@ export default function PasswordResetManagement() {
         </div>
         <div className="flex justify-end gap-2">
           <button onClick={resetSearch} className="px-3 py-2 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>초기화</button>
-          <button onClick={() => setSearched(true)} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-sm font-medium text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+          <button onClick={() => setSearched(true)} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-sm font-medium text-white" style={{ background: '#081F4D' }}>
             <Search size={14} /> 검색
           </button>
         </div>
@@ -244,7 +244,7 @@ export default function PasswordResetManagement() {
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setConfirmTarget(null)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
-              <button onClick={doConfirm} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>초기화 실행</button>
+              <button onClick={doConfirm} className="px-3 py-1.5 rounded-md text-sm text-white" style={{ background: '#081F4D' }}>초기화 실행</button>
             </div>
           </div>
         </div>

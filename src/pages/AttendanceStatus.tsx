@@ -235,9 +235,9 @@ export default function AttendanceStatusPage() {
                 onClick={() => handlePeriodChange(p.key)}
                 className="px-3 py-1.5 rounded text-xs font-medium transition-colors"
                 style={{
-                  background: periodPreset === p.key ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.97 0.003 250)',
+                  background: periodPreset === p.key ? '#081F4D' : 'oklch(0.97 0.003 250)',
                   color: periodPreset === p.key ? 'white' : 'oklch(0.5 0.015 250)',
-                  border: `1px solid ${periodPreset === p.key ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.9 0.005 250)'}`,
+                  border: `1px solid ${periodPreset === p.key ? '#081F4D' : 'oklch(0.9 0.005 250)'}`,
                 }}
               >
                 {p.label}
@@ -301,7 +301,7 @@ export default function AttendanceStatusPage() {
               type="button"
               onClick={onClick}
               className="axis-card axis-card-clickable p-3 text-center transition-colors"
-              style={active ? { borderColor: 'oklch(0.511 0.262 276.966)', boxShadow: '0 0 0 1px oklch(0.511 0.262 276.966)' } : undefined}
+              style={active ? { borderColor: '#081F4D', boxShadow: '0 0 0 1px #081F4D' } : undefined}
             >
               <div className="text-xs mb-1 truncate flex items-center justify-center gap-1" style={{ color: active ? 'oklch(0.45 0.2 277)' : 'oklch(0.6 0.015 250)' }}>
                 {card.label}
@@ -348,7 +348,7 @@ export default function AttendanceStatusPage() {
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{row.classType}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{row.classTime}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <button onClick={() => navigate(`/admin/students/${row.studentId}?tab=attendance`)} className="text-xs font-medium hover:underline" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                        <button onClick={() => navigate(`/admin/students/${row.studentId}?tab=attendance`)} className="text-xs font-medium hover:underline" style={{ color: '#081F4D' }}>
                           {row.studentName}
                         </button>
                       </td>
@@ -380,7 +380,7 @@ export default function AttendanceStatusPage() {
                           <button
                             onClick={() => navigate(`/attendance/check?classId=${row.classId}&date=${row.date}`)}
                             className="flex items-center gap-0.5 text-xs hover:underline"
-                            style={{ color: 'oklch(0.511 0.262 276.966)' }}
+                            style={{ color: '#081F4D' }}
                           >
                             상세/수정 <ChevronRight size={11} />
                           </button>

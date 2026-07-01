@@ -66,7 +66,7 @@ function ParentResultDetailModal({
           {/* IF 요약 — 조회 전용. 학생이 이미 선택한 결과만 보여주고, 여기서 선택/수정할 수 없다. */}
           <div className="rounded-xl p-4" style={{ background: 'oklch(0.97 0.004 247)' }}>
             <div className="flex items-center gap-1.5 mb-2">
-              <Lightbulb size={13} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+              <Lightbulb size={13} style={{ color: '#081F4D' }} />
               <span className="text-xs font-semibold" style={{ color: 'oklch(0.35 0.015 250)' }}>IF 채점 요약</span>
             </div>
             {!ifRecord ? (
@@ -78,7 +78,7 @@ function ParentResultDetailModal({
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-lg p-2.5 text-center" style={{ background: 'white' }}>
                     <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>IF 점수</div>
-                    <div className="font-black text-sm tabular-nums" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{ifRecord.ifScore}점</div>
+                    <div className="font-black text-sm tabular-nums" style={{ color: '#081F4D' }}>{ifRecord.ifScore}점</div>
                   </div>
                   <div className="rounded-lg p-2.5 text-center" style={{ background: 'white' }}>
                     <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>놓친 점수</div>
@@ -200,7 +200,7 @@ export default function ParentGrades() {
             <div className="grid grid-cols-3 gap-2">
               {[
                 { label: '응시 시험', value: `${results.length}회`, color: 'oklch(0.45 0.15 160)' },
-                { label: '평균',     value: avg !== null ? `${avg}%` : '-',   color: 'oklch(0.511 0.262 276.966)' },
+                { label: '평균',     value: avg !== null ? `${avg}%` : '-',   color: '#081F4D' },
                 { label: '최고',     value: best !== null ? `${best}%` : '-', color: 'oklch(0.55 0.15 80)' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="axis-card p-3 text-center">

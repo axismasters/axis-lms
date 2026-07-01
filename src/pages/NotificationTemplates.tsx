@@ -328,12 +328,12 @@ export default function NotificationTemplates() {
           <div className="px-5 py-3 border-b" style={{ borderColor: 'oklch(0.93 0.01 250)' }}>
             <span className="text-sm font-medium" style={{ color: 'oklch(0.3 0.02 250)' }}>총 {filtered.length}건</span>
           </div>
-          <div className="axis-table-wrap">
+          <div className="axis-table-scroll" style={{ maxHeight: 620 }}>
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: 'oklch(0.97 0.005 250)' }}>
                   {['템플릿명', '알림유형', '채널', '사용여부', '기본', '변수', '수정일', '관리'].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{h}</th>
+                    <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', background: 'oklch(0.97 0.005 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>

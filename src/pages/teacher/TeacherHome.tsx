@@ -21,7 +21,7 @@ import { loadIfRecords } from '@/lib/studentIfRecord';
 import { collectObservations, computeSubjectGaps } from '@/lib/observationSignals';
 import type { StudentSignalBundle } from '@/lib/observationSignals';
 import ObservationPanel from '@/components/ObservationPanel';
-import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS } from '@/lib/assessmentData';
+import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS, isPendingGrading, isGradedSubmission } from '@/lib/assessmentData';
 
 const DAY_LABEL = ['일', '월', '화', '수', '목', '금', '토'] as const;
 
@@ -36,8 +36,8 @@ function useTodayClasses(assignedClassIds: string[]): ClassRoom[] {
 const QUICK_ACTIONS = [
   { icon: CalendarCheck, label: '출결 체크', path: '/teacher/attendance', color: 'oklch(0.45 0.15 160)' },
   { icon: BarChart2,     label: '내 시험지', path: '/teacher/exams',      color: 'oklch(0.577 0.245 27.325)' },
-  { icon: Users,         label: '담당 학생', path: '/teacher/students',   color: 'oklch(0.511 0.262 276.966)' },
-  { icon: Play,          label: '수업자료',  path: '/teacher/materials',  color: 'oklch(0.511 0.262 276.966)' },
+  { icon: Users,         label: '담당 학생', path: '/teacher/students',   color: '#081F4D' },
+  { icon: Play,          label: '수업자료',  path: '/teacher/materials',  color: '#081F4D' },
   { icon: ClipboardList, label: '숙제 관리', path: '/teacher/homework',   color: 'oklch(0.45 0.15 160)' },
 ];
 
@@ -124,18 +124,18 @@ export default function TeacherHome() {
 
   // 미채점 시험: 담당 학생 submissions에 채점중 항목이 있는 시험
   const ungradedExams = candidateExams.filter((e) =>
-    mySubmissions.some((s) => s.examId === e.id && s.status === '채점중')
+    mySubmissions.some((s) => s.examId === e.id && isPendingGrading(s))
   );
 
   // 최근 테스트 결과: 담당 학생이 채점완료된 시험 최근 2건
   const recentGradedExams = candidateExams
-    .filter((e) => mySubmissions.some((s) => s.examId === e.id && s.status === '채점완료'))
+    .filter((e) => mySubmissions.some((s) => s.examId === e.id && isGradedSubmission(s)))
     .sort((a, b) => b.examDate.localeCompare(a.examDate))
     .slice(0, 2);
 
   return (
     <TeacherLayout title="AXIS 강사">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-lg lg:max-w-6xl mx-auto px-4 py-5 space-y-4">
 
         {/* 인사 */}
         <div className="axis-card p-4">
@@ -157,6 +157,11 @@ export default function TeacherHome() {
           scopeNote="담당 학생 기준"
           detailHref={(id) => `/teacher/students/${id}`}
         />
+
+        {/* [Phase 3D v3-r7-r1] PC 최적화: 데스크톱에서는 좌측(메인: 빠른실행/숙제/오늘수업)
+            + 우측(요약: 미채점시험/최근테스트결과) 2컬럼으로 재구성한다. */}
+        <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-5">
+          <div className="space-y-4 lg:col-span-2">
 
         {/* 빠른 실행 */}
         <section>
@@ -199,7 +204,7 @@ export default function TeacherHome() {
               )}
             </div>
             <Link href="/teacher/homework">
-              <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>숙제 관리</span>
+              <span className="text-xs cursor-pointer" style={{ color: '#081F4D' }}>숙제 관리</span>
             </Link>
           </div>
 
@@ -255,7 +260,7 @@ export default function TeacherHome() {
         {/* 오늘 수업 */}
         <section>
           <div className="flex items-center gap-2 mb-2 px-1">
-            <Clock size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+            <Clock size={15} style={{ color: '#081F4D' }} />
             <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>오늘 수업</span>
           </div>
           {todayClasses.length === 0 ? (
@@ -305,13 +310,17 @@ export default function TeacherHome() {
           )}
         </section>
 
+          </div>
+
+          <div className="space-y-4 lg:col-span-1">
+
         {/* 미채점 시험 — 담당 학생 기준 */}
         <section>
           <div className="flex items-center justify-between mb-2 px-1">
             <div className="flex items-center gap-2">
               <BarChart2
                 size={15}
-                style={{ color: ungradedExams.length > 0 ? 'oklch(0.577 0.245 27.325)' : 'oklch(0.511 0.262 276.966)' }}
+                style={{ color: ungradedExams.length > 0 ? 'oklch(0.577 0.245 27.325)' : '#081F4D' }}
               />
               <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>미채점 시험</span>
               {ungradedExams.length > 0 && (
@@ -324,7 +333,7 @@ export default function TeacherHome() {
               )}
             </div>
             <Link href="/teacher/exams">
-              <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>내 시험지 보기</span>
+              <span className="text-xs cursor-pointer" style={{ color: '#081F4D' }}>내 시험지 보기</span>
             </Link>
           </div>
           {ungradedExams.length === 0 ? (
@@ -336,7 +345,7 @@ export default function TeacherHome() {
             <div className="space-y-2">
               {ungradedExams.slice(0, 1).map((exam) => {
                 const pendingCount = mySubmissions.filter(
-                  (s) => s.examId === exam.id && s.status === '채점중'
+                  (s) => s.examId === exam.id && isPendingGrading(s)
                 ).length;
                 return (
                   <Link key={exam.id} href={`/teacher/exams/${exam.id}/grading`} style={{ display: 'block' }}>
@@ -359,7 +368,7 @@ export default function TeacherHome() {
               })}
               {ungradedExams.length > 1 && (
                 <Link href="/teacher/exams">
-                  <div className="text-center text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                  <div className="text-center text-xs cursor-pointer" style={{ color: '#081F4D' }}>
                     외 {ungradedExams.length - 1}건 더 보기
                   </div>
                 </Link>
@@ -373,17 +382,17 @@ export default function TeacherHome() {
           <section>
             <div className="flex items-center justify-between mb-2 px-1">
               <div className="flex items-center gap-2">
-                <BarChart2 size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <BarChart2 size={15} style={{ color: '#081F4D' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 테스트 결과</span>
               </div>
               <Link href="/teacher/grades">
-                <span className="text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>학생별 성적 보기</span>
+                <span className="text-xs cursor-pointer" style={{ color: '#081F4D' }}>학생별 성적 보기</span>
               </Link>
             </div>
             <div className="space-y-2">
               {recentGradedExams.map((exam) => {
                 const examSubs = mySubmissions.filter(
-                  (s) => s.examId === exam.id && s.status === '채점완료'
+                  (s) => s.examId === exam.id && isGradedSubmission(s)
                 );
                 const avg =
                   examSubs.length > 0
@@ -401,7 +410,7 @@ export default function TeacherHome() {
                     </div>
                     {avg !== null && (
                       <div className="text-right">
-                        <div className="font-bold tabular-nums text-sm" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                        <div className="font-bold tabular-nums text-sm" style={{ color: '#081F4D' }}>
                           {avg}점
                         </div>
                         <div className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>담당 평균</div>
@@ -413,6 +422,9 @@ export default function TeacherHome() {
             </div>
           </section>
         )}
+
+          </div>
+        </div>
 
       </div>
     </TeacherLayout>

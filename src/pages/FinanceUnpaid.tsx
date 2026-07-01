@@ -136,7 +136,7 @@ export default function FinanceUnpaid() {
         {unpaidList.length === 0 ? (
           <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>미납 내역이 없습니다.</div>
         ) : (
-          <div className="axis-table-wrap">
+          <div className="axis-table-scroll" style={{ maxHeight: 620 }}>
             <table className="w-full text-sm" style={{ minWidth: 1280 }}>
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
@@ -145,7 +145,7 @@ export default function FinanceUnpaid() {
                     '수강상태',  // Stability v1 추가 — 퇴원/종료 학생의 미납을 즉시 식별하기 위함
                     '청구월', '청구금액', '수납금액', '미납금액', '납부기한', '미납일수', '알림상태', '관리',
                   ].map(h => (
-                    <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
+                    <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -201,7 +201,7 @@ export default function FinanceUnpaid() {
                             onClick={() => handleNotify(inv.id, inv.studentId, stu?.name ?? '')}
                             disabled={notified}
                             className="flex items-center gap-1 text-xs hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
-                            style={{ color: 'oklch(0.511 0.262 276.966)' }}
+                            style={{ color: '#081F4D' }}
                           >
                             <Send size={11} /> {notified ? '발송완료' : '알림 발송'}
                           </button>

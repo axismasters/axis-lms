@@ -208,7 +208,7 @@ export default function StudentTargetPreview() {
         {nationalMocks.length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-2 px-1">
-              <BarChart2 size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+              <BarChart2 size={15} style={{ color: '#081F4D' }} />
               <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>전국연합모의고사</span>
               <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>{nationalMocks.length}회</span>
             </div>
@@ -269,7 +269,7 @@ export default function StudentTargetPreview() {
             </div>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: '응시 횟수', value: `${suneungMocks.length}회`, color: 'oklch(0.511 0.262 276.966)' },
+                { label: '응시 횟수', value: `${suneungMocks.length}회`, color: '#081F4D' },
                 { label: '최고 수학 등급', value: suneungMocks.some(r => r.math.grade) ? `${Math.min(...suneungMocks.filter(r => r.math.grade).map(r => r.math.grade!))}등급` : '-', color: 'oklch(0.45 0.15 145)' },
                 { label: '최고 국어 등급', value: suneungMocks.some(r => r.korean.grade) ? `${Math.min(...suneungMocks.filter(r => r.korean.grade).map(r => r.korean.grade!))}등급` : '-', color: 'oklch(0.45 0.15 145)' },
               ].map(({ label, value, color }) => (

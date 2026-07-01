@@ -28,6 +28,7 @@ import { getLocalDateStr } from '@/utils/dateUtils';
 import { loadIfRecords } from '@/lib/studentIfRecord';
 import { computeSubjectGaps } from '@/lib/observationSignals';
 import type { StudentSignalBundle } from '@/lib/observationSignals';
+import { isGradedSubmission } from '@/lib/assessmentData';
 import { computeParentInsight } from '@/lib/parentInsightEngine';
 import { computeBriefing } from '@/lib/studentBriefingEngine';
 
@@ -69,7 +70,7 @@ export default function TeacherStudentDetail() {
     <TeacherLayout title="학생 상세">
       <div className="max-w-lg mx-auto px-4 py-5">
         <Link href="/teacher/students">
-          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer mb-4" style={{ color: '#081F4D' }}>
             <ChevronLeft size={14} />
             담당 학생 목록
           </div>
@@ -101,7 +102,7 @@ export default function TeacherStudentDetail() {
 
   // 이 학생의 채점완료 submissions (담당 시험 기준, 최근 3건)
   const studentSubs = submissions
-    .filter((s) => s.studentId === studentId && myExamIds.has(s.examId) && s.status === '채점완료')
+    .filter((s) => s.studentId === studentId && myExamIds.has(s.examId) && isGradedSubmission(s))
     .sort((a, b) => {
       const ea = exams.find((e) => e.id === a.examId);
       const eb = exams.find((e) => e.id === b.examId);
@@ -221,21 +222,27 @@ export default function TeacherStudentDetail() {
 
   return (
     <TeacherLayout title="학생 상세">
-      <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-2xl lg:max-w-6xl mx-auto px-4 py-5 space-y-4">
 
         {/* 뒤로가기 */}
         <Link href="/teacher/students">
-          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+          <div className="flex items-center gap-1 text-xs cursor-pointer" style={{ color: '#081F4D' }}>
             <ChevronLeft size={14} />
             담당 학생 목록
           </div>
         </Link>
 
+        {/* [Phase 3D v3-r7-r1] PC 최적화: 데스크톱에서는 좌측(메인: 기본정보/계정관리/브리핑/
+            담당수업/출결/최근테스트) + 우측(요약: 수업자료/학부모코멘트/상담기록) 2컬럼으로
+            재구성한다. */}
+        <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-5">
+          <div className="space-y-4 lg:col-span-2">
+
         {/* 기본 정보 */}
         <div className="axis-card p-4 flex items-center gap-3">
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg flex-shrink-0"
-            style={{ background: 'oklch(0.511 0.262 276.966)' }}
+            style={{ background: '#081F4D' }}
           >
             {student.name.charAt(0)}
           </div>
@@ -342,7 +349,7 @@ export default function TeacherStudentDetail() {
         {/* 출결 요약 */}
         <section>
           <div className="flex items-center gap-2 mb-2 px-1">
-            <CalendarCheck size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+            <CalendarCheck size={14} style={{ color: '#081F4D' }} />
             <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>
               출결 요약 (최근 10건)
             </span>
@@ -370,7 +377,7 @@ export default function TeacherStudentDetail() {
         {/* 최근 테스트 결과 */}
         <section>
           <div className="flex items-center gap-2 mb-2 px-1">
-            <BarChart2 size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+            <BarChart2 size={14} style={{ color: '#081F4D' }} />
             <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>최근 테스트 결과</span>
           </div>
           {studentSubs.length === 0 ? (
@@ -397,7 +404,7 @@ export default function TeacherStudentDetail() {
                         className="font-bold tabular-nums text-sm"
                         style={{
                           color:
-                            pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.55 0.2 27)',
+                            pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? '#081F4D' : 'oklch(0.55 0.2 27)',
                         }}
                       >
                         {score}/{exam.totalScore}
@@ -411,15 +418,19 @@ export default function TeacherStudentDetail() {
           )}
         </section>
 
+          </div>
+
+          <div className="space-y-4 lg:col-span-1">
+
         {/* 수업자료에서 수업노트 확인 */}
         <section>
           <div className="flex items-center gap-2 mb-2 px-1">
-            <FileText size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+            <FileText size={14} style={{ color: '#081F4D' }} />
             <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>수업자료</span>
           </div>
           <div className="axis-card p-4 text-center">
             <Link href="/teacher/materials?tab=notes">
-              <span className="text-sm cursor-pointer" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+              <span className="text-sm cursor-pointer" style={{ color: '#081F4D' }}>
                 수업자료 열기 →
               </span>
             </Link>
@@ -465,7 +476,7 @@ export default function TeacherStudentDetail() {
         <section>
           <div className="flex items-center justify-between mb-2 px-1">
             <div className="flex items-center gap-2">
-              <MessageSquare size={14} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+              <MessageSquare size={14} style={{ color: '#081F4D' }} />
               <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>
                 상담 기록 ({counselingRecords.length}건)
               </span>
@@ -481,13 +492,13 @@ export default function TeacherStudentDetail() {
             </div>
           ) : (
             <div className="axis-card overflow-hidden">
-              <div className="axis-table-wrap">
+              <div className="axis-table-scroll" style={{ maxHeight: 420 }}>
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
                       {['상담일', '유형', '대상', '내용', '작성자'].map((h) => (
                         <th key={h} className="px-3 py-2 text-left text-xs font-semibold whitespace-nowrap"
-                          style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)' }}>{h}</th>
+                          style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -513,6 +524,9 @@ export default function TeacherStudentDetail() {
             </div>
           )}
         </section>
+
+          </div>
+        </div>
 
       </div>
 
@@ -593,7 +607,7 @@ export default function TeacherStudentDetail() {
             </div>
             <div className="flex justify-end gap-2 p-5 border-t" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
               <Button variant="outline" onClick={() => setShowCounselingForm(false)}>취소</Button>
-              <Button onClick={handleAddCounseling} style={{ background: 'oklch(0.511 0.262 276.966)' }}>저장</Button>
+              <Button onClick={handleAddCounseling} style={{ background: '#081F4D' }}>저장</Button>
             </div>
           </div>
         </div>

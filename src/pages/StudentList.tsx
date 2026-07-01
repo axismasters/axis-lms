@@ -44,13 +44,13 @@ function SummaryFilterCard({
       type="button"
       onClick={onClick}
       className="axis-card axis-card-clickable p-4 flex items-center gap-3 text-left w-full transition-colors"
-      style={active ? { borderColor: 'oklch(0.511 0.262 276.966)', boxShadow: '0 0 0 1px oklch(0.511 0.262 276.966)' } : undefined}
+      style={active ? { borderColor: '#081F4D', boxShadow: '0 0 0 1px #081F4D' } : undefined}
     >
       <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: tone }}>{icon}</div>
       <div className="min-w-0">
         <div className="text-xs flex items-center gap-1" style={{ color: active ? 'oklch(0.45 0.2 277)' : 'oklch(0.5 0.015 250)' }}>
           {label}
-          {active && <span className="text-xs px-1 py-0 rounded" style={{ background: 'oklch(0.511 0.262 276.966)', color: 'white' }}>✓</span>}
+          {active && <span className="text-xs px-1 py-0 rounded" style={{ background: '#081F4D', color: 'white' }}>✓</span>}
         </div>
         <div className="text-xl font-bold tabular-nums" style={{ color: 'oklch(0.2 0.02 250)' }}>
           {value}<span className="text-xs font-normal ml-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>명</span>
@@ -261,7 +261,7 @@ export default function StudentList() {
         </div>
         {can('student.create') && (
           <Link href="/admin/students/new">
-            <button className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+            <button className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90" style={{ background: '#081F4D' }}>
               <UserPlus size={15} /> 학생 등록
             </button>
           </Link>
@@ -313,7 +313,7 @@ export default function StudentList() {
           </div>
           <button onClick={() => setShowFilters((v) => !v)} className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-50" style={{ border: '1px solid oklch(0.9 0.008 250)', color: 'oklch(0.35 0.02 250)' }}>
             <SlidersHorizontal size={14} /> 상세 필터
-            {activeFilterCount > 0 && <span className="text-xs px-1.5 rounded-full text-white" style={{ background: 'oklch(0.511 0.262 276.966)' }}>{activeFilterCount}</span>}
+            {activeFilterCount > 0 && <span className="text-xs px-1.5 rounded-full text-white" style={{ background: '#081F4D' }}>{activeFilterCount}</span>}
             <ChevronDown size={14} className="transition-transform" style={{ transform: showFilters ? 'rotate(180deg)' : 'none' }} />
           </button>
         </div>

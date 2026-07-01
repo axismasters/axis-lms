@@ -98,7 +98,7 @@ export default function EmblemManagement() {
       <div className="flex items-start justify-between mb-5">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Trophy size={18} style={{ color: '#C9A84C' }} />
+            <Trophy size={18} style={{ color: '#C8A15A' }} />
             <h1 className="text-lg font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>엠블럼관리</h1>
           </div>
           <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
@@ -109,7 +109,7 @@ export default function EmblemManagement() {
         {canManage && (
           <button onClick={openAdd}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-opacity hover:opacity-90 active:scale-95"
-            style={{ background: 'oklch(0.15 0.02 250)', color: '#C9A84C' }}>
+            style={{ background: '#081F4D', color: '#C8A15A' }}>
             <Plus size={14} /> 엠블럼 추가
           </button>
         )}
@@ -122,8 +122,8 @@ export default function EmblemManagement() {
             <button key={cat} onClick={() => setFilterCat(cat)}
               className="px-2.5 py-1 text-xs rounded-md font-medium transition-colors"
               style={{
-                background: filterCat === cat ? 'oklch(0.15 0.02 250)' : 'oklch(0.96 0.004 250)',
-                color: filterCat === cat ? '#C9A84C' : 'oklch(0.5 0.015 250)',
+                background: filterCat === cat ? '#081F4D' : 'oklch(0.96 0.004 250)',
+                color: filterCat === cat ? '#C8A15A' : 'oklch(0.5 0.015 250)',
               }}>
               {cat === 'ALL' ? '전체' : CATEGORY_LABELS[cat]}
             </button>
@@ -307,7 +307,7 @@ export default function EmblemManagement() {
             </div>
             <div className="flex justify-end gap-2 p-5 border-t flex-shrink-0" style={{ borderColor: 'oklch(0.92 0.006 250)' }}>
               <Button variant="outline" size="default" onClick={() => setShowModal(false)} className="text-sm">취소</Button>
-              <Button onClick={handleSave} className="gap-1.5 text-sm" style={{ background: 'oklch(0.15 0.02 250)', color: '#C9A84C' }}>
+              <Button onClick={handleSave} className="gap-1.5 text-sm" style={{ background: '#081F4D', color: '#C8A15A' }}>
                 <Check size={14} /> {editTarget ? '수정 완료' : '추가'}
               </Button>
             </div>

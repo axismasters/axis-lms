@@ -320,3 +320,87 @@
 ### 불변 유지(변경 없음) — MD5 확인
 - `src/lib/universityAnalysisAdapter.ts`(1eddaef5) · `src/pages/teacher/TeacherExamGrading.tsx`(3429a4ba)
   · `src/App.tsx`(387bbf48) · `src/lib/classData.ts`(126d9e5e)
+
+---
+
+## Phase 3D v3-r7 (QA architecture layout cleanup)
+
+기준: v3-r6(소스 검수 통과).
+
+### 수정 파일 (MODIFIED) — 25개
+- `src/lib/assessmentData.ts` — isPendingGrading/isGradedSubmission 공용 헬퍼 신규.
+- `src/contexts/AssessmentContext.tsx` — addExam/markAttended 초기 상태 응시예정→채점중.
+- `src/pages/teacher/TeacherHome.tsx` / `TeacherExams.tsx` / `TeacherExamScores.tsx` —
+  status 직접 비교 11곳을 공용 헬퍼로 교체.
+- `src/layouts/TeacherLayout.tsx` / `StudentLayout.tsx` / `ParentLayout.tsx` — 데스크톱
+  상단 내비게이션 신규, 모바일 하단 내비게이션 lg:hidden으로 전환.
+- `src/pages/teacher/TeacherClasses.tsx` / `TeacherExams.tsx`(중복, 컨테이너 폭) /
+  `src/pages/student/StudentGrades.tsx` / `src/pages/parent/ParentHome.tsx` — 컨테이너
+  폭 확장 + 데스크톱 그리드 전환.
+- `src/components/AdminLayout.tsx` — 성장관리 하위 메뉴에서 엠블럼관리/라이벌관리 제거.
+- `src/pages/StudentDetail.tsx` — 성장/진열장 탭에 라이벌 승/패/종료 버튼 + 종료 확인
+  모달 신규.
+- `src/pages/growth/GrowthOverview.tsx` — 엠블럼/라이벌 전체 관리 보조 링크 추가,
+  학생 상세 링크 `/admin` 접두사 누락 버그 수정.
+- `src/pages/ClassList.tsx` / `EmployeeList.tsx` / `AttendanceCheck.tsx` /
+  `NotificationHistory.tsx` / `NotificationTemplates.tsx` /
+  `src/pages/teacher/TeacherStudentDetail.tsx` / `FinanceUnpaid.tsx` / `FinancePayments.tsx` /
+  `FinanceSettlements.tsx` / `FinanceRefunds.tsx` / `FinanceStatistics.tsx` — axis-table-wrap
+  → axis-table-scroll 표준 전환(sticky 헤더 수정).
+
+### 문서 (DOCS)
+- `docs/CHANGES_PHASE3D.md` / `docs/QA_PHASE3D.md` / `docs/MODIFIED_FILES_PHASE3D.md` /
+  `docs/APPLY_ORDER_PHASE3D.md` — v3-r7 섹션 추가.
+
+### 변경 없음(검증만 완료)
+- `StudentFinance.tsx`(이미 삭제) / `StudentRoutes.tsx`(이미 일치) — 학생 재무 화면
+  상태가 이미 완전히 일치되어 있어 코드 변경 없음.
+
+### 불변 유지(변경 없음) — MD5 확인
+- `src/lib/universityAnalysisAdapter.ts`(1eddaef5) · `src/pages/teacher/TeacherExamGrading.tsx`(3429a4ba)
+  · `src/App.tsx`(387bbf48) · `src/lib/classData.ts`(126d9e5e)
+
+---
+
+## Phase 3D v3-r7-r1 (v3-r7 반려 대응 완결판)
+
+기준: v3-r6(GitHub main). v3-r7 산출물은 반려.
+
+### 정책 변경
+- `TeacherExamGrading.tsx` 불변(MD5 고정) 지정 해제(명시적 지시) — 이제 불변 파일은
+  `universityAnalysisAdapter.ts` / `App.tsx` / `classData.ts` 3종.
+
+### 수정 파일 — Assessment 엔진 완성
+- `src/pages/teacher/TeacherExamGrading.tsx` — 헬퍼 직접 적용(최초 수정, MD5 변경).
+- `src/lib/assessmentData.ts` / `src/contexts/AssessmentContext.tsx` /
+  `src/pages/teacher/TeacherExamGradingGuard.tsx` / `src/pages/teacher/TeacherExamScores.tsx`
+  — 우회 주석 정리, addExam/markAttended 초기값 원복.
+- `src/pages/AssessmentDetail.tsx` / `src/pages/AssessmentList.tsx` — admin 화면에
+  남아있던 직접 status 비교 추가 정리.
+
+### 수정 파일 — 성장관리 축소
+- `src/pages/growth/GrowthOverview.tsx` — 전면 재작성(SP/엠블럼 지급 UI, 엠블럼/라이벌
+  전체관리 버튼 제거).
+
+### 수정 파일 — PC 최적화(6개 핵심 화면)
+- `src/pages/teacher/TeacherHome.tsx` / `src/pages/teacher/TeacherExamGrading.tsx`(중복 표기,
+  레이아웃 재구성) / `src/pages/teacher/TeacherStudentDetail.tsx` /
+  `src/pages/student/StudentHome.tsx` / `src/pages/student/StudentGrades.tsx`(v3-r7 대비
+  추가 확장) / `src/pages/parent/ParentHome.tsx`(v3-r7 대비 추가 확장).
+
+### 수정 파일 — 브랜드 톤
+- `src/pages/LoginPage.tsx` — 전면 재설계(다크 배경 제거, Ivory/Navy/Gold).
+- 57개 파일 — 구 primary color(`oklch(0.511 0.262 276.966)`) → `#081F4D` 전역 치환(292건).
+- `src/layouts/TeacherLayout.tsx` / `src/pages/growth/EmblemManagement.tsx` /
+  `src/pages/growth/GrowthOverview.tsx` / `src/pages/StudentDetail.tsx` — 근사 골드
+  (`#C9A84C`) → 정확한 `#C8A15A`(12건), 근사 네이비 → `#081F4D`(EmblemManagement 3건,
+  StudentDetail 2건).
+
+### 확인만 완료(이미 반영되어 있던 상태)
+- `src/components/AdminLayout.tsx` / `src/layouts/StudentLayout.tsx` /
+  `src/layouts/ParentLayout.tsx` / `src/index.css` — Navy/Gold 사이드바·로고·활성상태
+  적용이 이미 되어 있는 상태를 확인(변경 불필요).
+
+### 불변 유지(변경 없음) — MD5 확인
+- `src/lib/universityAnalysisAdapter.ts`(1eddaef5) · `src/App.tsx`(387bbf48) ·
+  `src/lib/classData.ts`(126d9e5e)

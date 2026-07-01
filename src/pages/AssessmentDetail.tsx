@@ -12,7 +12,7 @@ import { useClasses } from '@/contexts/ClassContext';
 import { useStudents } from '@/contexts/StudentContext';
 import {
   Exam, ExamSubmission, ExamQuestionDef, categoryLabel, isAutoGraded, isSubmissionGraded,
-  getExamPhase, requiresPublishAction, isResultVisibleForStudent, ExamPhase,
+  getExamPhase, requiresPublishAction, isResultVisibleForStudent, ExamPhase, isGradedSubmission,
 } from '@/lib/assessmentData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -171,7 +171,7 @@ export default function AssessmentDetail() {
                 <CheckCircle2 size={11} /> 채점 완료 · 공개 대기
               </div>
               {canPublishPerm && (
-                <Button size="sm" onClick={() => setPublishConfirmOpen(true)} className="h-8 text-xs gap-1.5" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+                <Button size="sm" onClick={() => setPublishConfirmOpen(true)} className="h-8 text-xs gap-1.5" style={{ background: '#081F4D' }}>
                   <Unlock size={12} /> 성적 공개
                 </Button>
               )}
@@ -182,7 +182,7 @@ export default function AssessmentDetail() {
               onClick={() => setPublishConfirmOpen(true)}
               disabled={!canPublish(exam.id)}
               className="h-8 text-xs gap-1.5"
-              style={{ background: canPublish(exam.id) ? 'oklch(0.511 0.262 276.966)' : undefined }}
+              style={{ background: canPublish(exam.id) ? '#081F4D' : undefined }}
               title={canPublish(exam.id) ? undefined : '미채점 응시자가 있어 공개할 수 없습니다.'}
             >
               <Unlock size={12} /> 성적 공개
@@ -208,7 +208,7 @@ export default function AssessmentDetail() {
               key={t.key}
               onClick={() => setTab(t.key)}
               className="flex items-center gap-1.5 px-5 py-3 text-xs font-medium border-b-2 -mb-px transition-colors"
-              style={{ borderColor: tab === t.key ? 'oklch(0.511 0.262 276.966)' : 'transparent', color: tab === t.key ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.55 0.015 250)' }}
+              style={{ borderColor: tab === t.key ? '#081F4D' : 'transparent', color: tab === t.key ? '#081F4D' : 'oklch(0.55 0.015 250)' }}
             >
               {t.icon} {t.label}
             </button>
@@ -239,7 +239,7 @@ export default function AssessmentDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setPublishConfirmOpen(false)} className="h-8 text-xs">취소</Button>
-            <Button size="sm" onClick={handlePublish} className="h-8 text-xs gap-1" style={{ background: 'oklch(0.511 0.262 276.966)' }}>
+            <Button size="sm" onClick={handlePublish} className="h-8 text-xs gap-1" style={{ background: '#081F4D' }}>
               <Unlock size={11} /> 공개 확정
             </Button>
           </DialogFooter>
@@ -325,8 +325,8 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
                 <td className="px-3 py-2.5 text-xs tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>
                   {sub.totalScore !== undefined ? `${sub.totalScore} / ${exam.totalScore}` : '-'}
                 </td>
-                <td className="px-3 py-2.5 text-xs" style={{ color: sub.status === '채점완료' ? 'oklch(0.35 0.15 145)' : 'oklch(0.55 0.015 250)' }}>
-                  {sub.status === '결석' ? '결석' : sub.status === '채점완료' ? '완료' : '미채점'}
+                <td className="px-3 py-2.5 text-xs" style={{ color: isGradedSubmission(sub) ? 'oklch(0.35 0.15 145)' : 'oklch(0.55 0.015 250)' }}>
+                  {sub.status === '결석' ? '결석' : isGradedSubmission(sub) ? '완료' : '미채점'}
                 </td>
                 <td className="px-3 py-2.5 text-xs">
                   <span style={{ color: isVisible ? 'oklch(0.35 0.15 145)' : 'oklch(0.6 0.01 250)' }}>
@@ -470,7 +470,7 @@ function GradingTab({
                       </td>
                     );
                   })}
-                  <td className="px-3 py-2 text-center text-xs font-semibold tabular-nums" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                  <td className="px-3 py-2 text-center text-xs font-semibold tabular-nums" style={{ color: '#081F4D' }}>
                     {isAbsent ? '결석' : (sub.totalScore !== undefined ? sub.totalScore : '미채점')}
                   </td>
                 </tr>
@@ -600,7 +600,7 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
               const heightPct = (b.count / maxCount) * 100;
               return (
                 <div key={b.label} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="w-full rounded-t" style={{ height: `${Math.max(heightPct, 4)}%`, background: b.count > 0 ? 'oklch(0.511 0.262 276.966)' : 'oklch(0.92 0.005 250)', minHeight: 4 }} />
+                  <div className="w-full rounded-t" style={{ height: `${Math.max(heightPct, 4)}%`, background: b.count > 0 ? '#081F4D' : 'oklch(0.92 0.005 250)', minHeight: 4 }} />
                   <span className="text-xs tabular-nums" style={{ color: 'oklch(0.55 0.01 250)', fontSize: 10 }}>{b.count}명</span>
                   <span className="text-xs" style={{ color: 'oklch(0.65 0.01 250)', fontSize: 9 }}>{b.label}</span>
                 </div>
@@ -619,7 +619,7 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
               <div key={className} className="flex items-center gap-3 text-xs">
                 <span className="w-36 flex-shrink-0 truncate" style={{ color: 'oklch(0.4 0.02 250)' }}>{className}</span>
                 <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.round((cAvg / exam.totalScore) * 100)}%`, background: 'oklch(0.511 0.262 276.966)' }} />
+                  <div className="h-full rounded-full" style={{ width: `${Math.round((cAvg / exam.totalScore) * 100)}%`, background: '#081F4D' }} />
                 </div>
                 <span className="w-24 text-right tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{cAvg}점 ({count}명)</span>
               </div>
@@ -637,7 +637,7 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
               <div key={q.id} className="flex items-center gap-2 text-xs">
                 <span className="w-12 flex-shrink-0" style={{ color: 'oklch(0.5 0.015 250)' }}>{q.no}번</span>
                 <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                  <div className="h-full rounded-full" style={{ width: `${rate}%`, background: 'oklch(0.511 0.262 276.966)' }} />
+                  <div className="h-full rounded-full" style={{ width: `${rate}%`, background: '#081F4D' }} />
                 </div>
                 <span className="w-10 text-right tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{rate}%</span>
               </div>
@@ -730,7 +730,7 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setCorrectionModal(null)} className="h-8 text-xs">취소</Button>
-            <Button size="sm" onClick={handleCorrectionSave} className="h-8 text-xs" style={{ background: 'oklch(0.511 0.262 276.966)' }}>정정 저장</Button>
+            <Button size="sm" onClick={handleCorrectionSave} className="h-8 text-xs" style={{ background: '#081F4D' }}>정정 저장</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -742,7 +742,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="axis-card p-3.5 text-center">
       <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>{label}</div>
-      <div className="text-lg font-bold" style={{ color: 'oklch(0.511 0.262 276.966)' }}>{value}</div>
+      <div className="text-lg font-bold" style={{ color: '#081F4D' }}>{value}</div>
     </div>
   );
 }

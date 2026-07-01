@@ -56,7 +56,7 @@ function ContentDetailModal({
           <X size={18} />
         </button>
 
-        <div className="text-xs font-semibold" style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+        <div className="text-xs font-semibold" style={{ color: '#081F4D' }}>
           {typeLabel[item.type] ?? item.type}
         </div>
         <div className="pr-8 font-bold text-base leading-snug" style={{ color: 'oklch(0.2 0.02 250)' }}>
@@ -84,7 +84,7 @@ function ContentDetailModal({
         {item.url && (
           <a href={item.url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-sm font-medium"
-            style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+            style={{ color: '#081F4D' }}>
             <Link2 size={14} /> 링크 열기
           </a>
         )}
@@ -119,7 +119,7 @@ export default function StudentClasses() {
         {/* 요약 */}
         <div className="grid grid-cols-2 gap-2">
           {[
-            { label: '수강중', value: enrolledNow.length, color: 'oklch(0.511 0.262 276.966)' },
+            { label: '수강중', value: enrolledNow.length, color: '#081F4D' },
             { label: '수강완료', value: pastClasses.length, color: 'oklch(0.55 0.015 250)' },
           ].map(({ label, value, color }) => (
             <div key={label} className="axis-card p-3 text-center">
@@ -195,7 +195,7 @@ export default function StudentClasses() {
                               style={{ background: 'oklch(0.98 0.004 250)' }}
                             >
                               {item.type === 'note'
-                                ? <FileText size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                                ? <FileText size={11} className="flex-shrink-0 mt-0.5" style={{ color: '#081F4D' }} />
                                 : <Play size={11} className="flex-shrink-0 mt-0.5" style={{ color: 'oklch(0.45 0.15 160)' }} />
                               }
                               <div className="flex-1 min-w-0">
@@ -206,7 +206,7 @@ export default function StudentClasses() {
                                   <span>{item.date}</span>
                                   {item.url && (
                                     <span className="inline-flex items-center gap-0.5"
-                                      style={{ color: 'oklch(0.511 0.262 276.966)' }}>
+                                      style={{ color: '#081F4D' }}>
                                       <Link2 size={10} /> 링크
                                     </span>
                                   )}

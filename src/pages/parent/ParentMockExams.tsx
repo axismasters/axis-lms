@@ -138,7 +138,7 @@ export default function ParentMockExams() {
             <div className="grid grid-cols-3 gap-2">
               {[
                 { label: '응시 횟수', value: `${mockResults.length}회`, color: 'oklch(0.45 0.15 160)' },
-                { label: '평균',      value: avg !== null ? `${avg}%` : '-',   color: 'oklch(0.511 0.262 276.966)' },
+                { label: '평균',      value: avg !== null ? `${avg}%` : '-',   color: '#081F4D' },
                 { label: '최고',      value: best !== null ? `${best}%` : '-', color: 'oklch(0.55 0.15 80)' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="axis-card p-3 text-center">
