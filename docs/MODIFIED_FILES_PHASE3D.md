@@ -1,5 +1,70 @@
 # MODIFIED_FILES_PHASE3D.md
 
+## v3-r2 변경분 (v3-r1 반려 대응)
+
+신규/삭제 파일 없음 — 전부 기존 파일 수정.
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/StudentList.tsx` | 메인 데이터 테이블을 `.axis-table-scroll`(max-height 620px)로 전환. |
+| `src/pages/AttendanceStatus.tsx` | 메인 데이터 테이블을 `.axis-table-scroll`(max-height 620px)로 전환. |
+| `src/pages/AssessmentList.tsx` | 행 전체 클릭(`cursor-pointer`+`onClick`) 제거, "상세 보기" `Button`으로 전환. |
+| `src/pages/teacher/TeacherHome.tsx` | "최근 성적"→"최근 테스트 결과", "성적 보기"→"학생별 성적 보기". |
+| `src/pages/teacher/TeacherStudentDetail.tsx` | "최근 성적"→"최근 테스트 결과", "성적 데이터"→"테스트 결과 데이터", "수업노트 바로가기"→"수업자료에서 수업노트 확인", "수업노트 작성/확인하기"→"수업자료 열기"(링크도 `/teacher/materials?tab=notes`로 갱신). |
+| `src/pages/teacher/TeacherGrades.tsx` | "성적 데이터"→"테스트 결과 데이터", "담당 학생 성적 확인"→"담당 학생 테스트 결과 확인". |
+| `src/routes/TeacherRoutes.tsx` | 주석 "담당 학생 성적 확인"→"담당 학생 테스트 결과 확인". |
+| `src/layouts/TeacherLayout.tsx` | `isActive` 로직의 구 `/teacher/videos` 죽은 코드 제거, "채점 탭"→"시험지 탭" 주석 정리. |
+| `src/layouts/ParentLayout.tsx` | "자녀 성장(Emblem/SP/Tier)" 표현 정리. |
+| `src/pages/parent/ParentHome.tsx` | 헌법 원칙에 6번째 항목 추가, Rival/Emblem/SP 나열식 주석 4곳 정리. |
+| `src/pages/parent/ParentGrowthReport.tsx` | 헤더 주석 정리. |
+| `docs/PARENT_PAGE_CONSTITUTION.md` | 5개→6개 원칙 갱신(신규 원칙 추가 + 1·2번 원칙 본문 정확성 수정). |
+| `docs/PARENT_PAGE_ENGAGEMENT_IDEAS.md` | 도입부 원칙 문구 정리. |
+| `docs/APPLY_ORDER_PHASE3D.md` | github-upload zip 구조를 diff→전체 프로젝트 패키지로 전환 명시. |
+
+---
+
+## v3-r1 변경분 (v3 반려 대응 + 추가 요구사항)
+
+### v3-r1 신규 파일
+
+| 파일 | 내용 |
+|---|---|
+| `src/pages/student/StudentRival.tsx` | 학생용 Rival 조회 화면(Foundation, 신규 라우트 연결). |
+| `src/lib/parentComments.ts` | 선생님이 학부모용으로 작성하는 공개 코멘트(내부 상담기록과 분리). |
+| `docs/PARENT_PAGE_ENGAGEMENT_IDEAS.md` | 학부모 페이지 체류시간 강화 아이디어 기록. |
+
+### v3-r1 물리 삭제 파일
+
+| 파일 | 사유 |
+|---|---|
+| `src/pages/student/StudentFinance.tsx` | 어디서도 import되지 않는 것을 확인 후 stub 상태에서 완전 삭제. |
+
+### v3-r1 수정 파일
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/routes/StudentRoutes.tsx` | `/student/my`, `/student/target-preview`, `/student/growth`, `/student/rival` 실제 컴포넌트 연결. |
+| `src/pages/StudentList.tsx` | 요약 카드 → 클릭 가능 필터 카드(재원/휴원/퇴원/미납), 필터명 라벨, 행 전체 클릭 제거. |
+| `src/pages/AttendanceStatus.tsx` | 요약 카드 → 클릭 가능 필터(상태별 + 알림발송 신규 필터), 필터명 라벨. |
+| `src/pages/growth/EmblemManagement.tsx` | Hooks 규칙 위반 수정, 팝업 max-height/드래그핸들범위/ESC 수정, 표 wrapper 전환. |
+| `src/pages/growth/RivalManagement.tsx` | Hooks 규칙 위반 수정, 표 wrapper 전환. |
+| `src/pages/growth/GrowthOverview.tsx` | "상세" 링크→Button 전환, 표 wrapper 전환(학생목록+SP지급이력 2개). |
+| `src/pages/settings/PermissionSettings.tsx` | 표 wrapper 전환. |
+| `src/pages/teacher/TeacherExamScores.tsx` | 표 wrapper 전환, 결과보기 모달에 평균/최고점 비교 막대 그래프 추가. |
+| `src/pages/teacher/TeacherStudents.tsx` | 카드 목록 → 표 형태 전환(sticky header). |
+| `src/pages/AssessmentList.tsx`, `AssessmentDetail.tsx` | 표 wrapper 전환(총 4개 표). |
+| `src/index.css` | `.axis-table-scroll` 신규 패턴 추가(bounded height + 내부 스크롤 + sticky thead top:0). |
+| `src/layouts/TeacherLayout.tsx` | 하단 네비 라벨 "채점"→"시험지". |
+| `src/pages/teacher/TeacherExamGradingGuard.tsx` | 타이틀 "채점"→"내 시험지 관리". |
+| `src/pages/teacher/TeacherGrades.tsx` | 타이틀 "성적 확인"→"학생별 성적". |
+| `src/pages/parent/ParentHome.tsx` | 성장 리포트 카드에서 Tier/Emblem/SP 노출 완전 제거, GrowthContext 의존 제거. |
+| `src/pages/parent/ParentGrowthReport.tsx` | **전면 재작성** — 탭(테스트/출결/목표대학/리포트) + 기간필터 + SVG 그래프 + 시험 상세 모달 + 학부모 공개 코멘트, Rival/Emblem/SP 완전 제거. |
+| `src/pages/teacher/TeacherStudentDetail.tsx` | "학부모 공개 코멘트 작성" 섹션 신규 추가. |
+| `src/pages/student/StudentGrades.tsx` | `ScoreVsAvgBar`에 최고점 막대 추가. |
+| `src/utils/dateUtils.ts` | `getLocalDateStr()`에 선택적 Date 인자 추가(하위 호환, 과거 날짜 포맷팅 재사용 목적). |
+
+---
+
 ## v3 변경분 (반려 대응 — v2는 GitHub 업로드 금지)
 
 ### v3 신규 파일

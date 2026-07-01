@@ -1,5 +1,181 @@
 # QA_PHASE3D.md
 
+## v3-r2 검수 결과 (v3-r1 반려 대응)
+
+**버전**: v3-r2 — 이 섹션이 최신 검수 결과다. v3-r1/v3/v2/v1 검수 결과는 아래에 각각 보존.
+
+### 검증 명령 실행 결과
+
+```
+npm install
+→ npm error code E403
+→ npm error 403 Forbidden - GET https://registry.npmjs.org/@tailwindcss%2fvite
+```
+
+v3-r1과 동일하게 재시도했으나 이 작업 환경은 여전히 `registry.npmjs.org` 접근이
+차단되어 있다. **이 환경 제약은 산출물의 결함이 아니며, 이 대화 세션 안에서 Claude가
+직접 해결할 수 있는 문제가 아니다.** `npm install`이 실패하므로 같은 환경에서
+`npm run typecheck`/`npm run build`도 실행할 수 없다.
+
+**대체 검증**(v1부터 유지해온 방식): 실제 `tsconfig.app.json` 설정 그대로에 프로젝트
+의존성 8종 타입 스텁을 만들어 `node_modules`에 연결한 뒤 `tsc -p tsconfig.app.json
+--noEmit`을 src 전체(약 165개 파일)에 대해 실행했다.
+
+```
+결과: 0 errors
+```
+
+검증 후 심볼릭 링크/스텁은 모두 제거했고 최종 산출물에는 `node_modules`가 포함되지
+않는다.
+
+**⚠️ 실제 서비스 반영 전 반드시 로컬 또는 GitHub Actions에서 `npm install && npm run
+typecheck && npm run build`를 1회 실행해 확인해야 한다.** `docs/APPLY_ORDER_PHASE3D.md`
+의 v3-r2 섹션에 이 절차를 명시했다.
+
+### v3-r2 항목별 재검수
+
+| # | 항목 | 결과 |
+|---|---|---|
+| 1 | `StudentList.tsx`/`AttendanceStatus.tsx` 메인 테이블 `axis-table-scroll` 전환 | **완료, grep 재검증 — axis-table-wrap 잔여 0건** |
+| 2 | `AssessmentList.tsx` 행 전체 클릭 제거 + "상세 보기" 버튼 | **완료 — tr의 onClick/cursor-pointer 제거, Button 컴포넌트로 전환** |
+| 3 | 선생님 페이지 용어 6종 교체 | **완료** — TeacherHome/TeacherStudentDetail/TeacherGrades/TeacherRoutes/TeacherLayout 전수 확인 |
+| 4 | 학부모 페이지 Rival/Emblem/SP/Tier 주석·문서 정리 | **완료** — 소스 코드 주석 + 헌법 문서(6번째 원칙 추가) + 아이디어 문서 정리 |
+| 5 | github-upload zip 구조 명확화 | **완료** — v3-r2부터 diff 방식을 버리고 전체 프로젝트 패키지 1종으로 통합, `APPLY_ORDER_PHASE3D.md`에 명시 |
+| 6 | 불변 파일 4종 MD5 | **완전 동일** |
+
+### 선생님 문구 교체 세부 확인
+
+```
+최근 성적 → 최근 테스트 결과           (TeacherHome.tsx, TeacherStudentDetail.tsx)
+성적 보기 → 학생별 성적 보기            (TeacherHome.tsx)
+성적 데이터 → 테스트 결과 데이터        (TeacherStudentDetail.tsx, TeacherGrades.tsx)
+담당 학생 성적 확인 → 담당 학생 테스트 결과 확인  (TeacherGrades.tsx, TeacherRoutes.tsx)
+수업노트 바로가기 → 수업자료에서 수업노트 확인    (TeacherStudentDetail.tsx)
+수업노트 작성/확인하기 → 수업자료 열기            (TeacherStudentDetail.tsx, 링크도 /teacher/materials?tab=notes로 갱신)
+```
+
+재검증 결과, 남아있는 "채점"/"성적" 표현은 전부 다음 두 경우뿐임을 grep으로 확인했다:
+1. 실제 채점 행위를 뜻하는 동사적 표현(채점하기/채점완료/미채점/"채점이 완료되면" 등) —
+   지시사항이 명시적으로 유지를 허용한 표현.
+2. `TeacherExamGrading.tsx`(불변 파일)의 `title="채점"` — 파일 자체를 수정할 수 없어
+   유일하게 남은 예외(§GPT 전달 의견 참조, v3-r1부터 동일하게 안내 중).
+
+### 학부모 페이지 문구 정리 세부 확인
+
+```
+grep -rn "Rival|Emblem|엠블럼|라이벌|useGrowth|totalSP|TIER_LABELS|TIER_COLORS" src/pages/parent/*.tsx src/layouts/ParentLayout.tsx
+→ 0건(주석 포함 완전 제거 확인 — v3-r1까지는 주석에 일부 남아있었음)
+```
+
+- `src/layouts/ParentLayout.tsx`: "자녀 성장(Emblem/SP/Tier) 확인 흐름" → 단순화.
+- `src/pages/parent/ParentHome.tsx`: 헌법 원칙에 6번째 항목("학생용 게임형 지표 미노출")
+  추가, 관련 주석 4곳 단순화.
+- `src/pages/parent/ParentGrowthReport.tsx`: 헤더 주석 단순화.
+- `docs/PARENT_PAGE_CONSTITUTION.md`: 5개 원칙 → 6개 원칙으로 갱신(신규 원칙 추가),
+  1번·2번 원칙 본문에서 Tier/Emblem/SP 나열식 표현 제거.
+- `docs/PARENT_PAGE_ENGAGEMENT_IDEAS.md`: 도입부 원칙 문구 단순화.
+- ⚠️ `docs/CHANGES_PHASE3D.md`/`MODIFIED_FILES_PHASE3D.md`/`QA_PHASE3D.md`의 **과거
+  라운드(v3-r1 이하) 기록**에는 "Tier/Emblem/SP를 제거했다"는 서술이 그대로 남아있다.
+  이는 실제로 일어난 과거 작업(무엇을 제거했는지)을 설명하는 이력 기록이라 의도적으로
+  남겨뒀다 — 무엇을 제거했는지 설명하려면 그 이름을 한 번은 언급해야 하기 때문이다.
+  현재 시점의 정책 문서(헌법, 아이디어 문서)와 소스 코드 주석만 간결화 대상으로 삼았다.
+
+### 불변 파일 MD5 (v3-r2 작업 후 재확인)
+
+```
+387bbf48a3d87ff63ce10d6dbc8bf33c  src/App.tsx
+3429a4ba81c0500e6596418edc639225  src/pages/teacher/TeacherExamGrading.tsx
+1eddaef5cf427e00666be685ea16f32f  src/lib/universityAnalysisAdapter.ts
+126d9e5e314de186bf1df0a63b3abf82  src/lib/classData.ts
+```
+
+---
+
+## v3-r1 검수 결과 (v3 반려 대응 + 추가 요구사항)
+
+**버전**: v3-r1 — 이 섹션이 최신 검수 결과다. v3/v2/v1 검수 결과는 아래에 각각 보존.
+
+### 검증 명령 실행 결과
+
+```
+npm install
+→ npm error code E403
+→ npm error 403 Forbidden - GET https://registry.npmjs.org/@tailwindcss%2fvite
+```
+이 작업 환경은 v1 시점부터 지금까지 계속 `registry.npmjs.org`에 대한 네트워크 접근이
+차단되어 있다(모든 패키지가 아니라 특정 패키지에서 403이 발생 — 사내/샌드박스 레지스트리
+정책으로 추정). `npm install`이 실패하므로 `npm run typecheck`/`npm run build`도 이
+환경에서는 실행할 수 없다.
+
+**대체 검증**: v1부터 유지해온 방식대로, 실제 `tsconfig.app.json` 설정 그대로에 프로젝트
+의존성 8종의 타입 스텁을 만들어 `node_modules`에 연결한 뒤 `tsc -p tsconfig.app.json
+--noEmit`을 **src 전체(약 165개 파일)**에 대해 실행했다.
+
+```
+결과: 0 errors
+```
+
+이번 라운드에 새로 쓴 아이콘(Flame)도 스텁에 반영해 재검증했다. 검증 후 심볼릭 링크/스텁은
+모두 제거했고 최종 산출물에는 `node_modules`가 포함되지 않는다.
+
+⚠️ **로컬(실제 node_modules 보유) 환경 또는 GitHub Actions에서 `npm install && npm run
+typecheck && npm run build` 1회 실행을 최종 확인 절차로 반드시 권장한다.** 이 스텁 검증은
+타입 수준의 오류만 잡아낼 수 있고, 실제 패키지 버전 차이·번들러 설정 문제·런타임 오류는
+잡아내지 못한다.
+
+### v3-r1 항목별 검수
+
+| # | 항목 | 결과 |
+|---|---|---|
+| 1 | 학생 라우트 복구(/student/my, /target-preview, /growth, /rival) | **전부 실제 컴포넌트에 연결 확인** |
+| 2 | 학생 화면 헌법(재무/수납 금지어, IF 조회전용, 금지표현) | **grep 재검증 0건**, `StudentFinance.tsx` 물리 삭제 확인 |
+| 3 | 관리자 학생 목록 요약카드 클릭 필터 | **필터 동작 + active 표시 + 필터명 라벨 + 행 클릭 제거 확인** |
+| 4 | 출결현황 요약카드 클릭 필터 | **상태별 필터 + 알림발송 필터 + active 표시 확인** |
+| 5 | 클릭 가능 UI 전수 정리 | GrowthOverview "상세" 링크를 Button으로 전환 등 주요 지점 수정 (상세 범위는 아래 §GPT 의견 참조) |
+| 6 | 테이블 wrapper 재구조화(8개 대상) | **8개 전부 `.axis-table-scroll`(bounded height + 내부 스크롤 + sticky thead top:0)로 전환 확인** |
+| 7 | 엠블럼 팝업(max-height/ESC/드래그-X버튼 분리) | **적용 확인** — 드래그 핸들을 제목 영역에만 한정, ESC 리스너 추가, `calc(100vh - 48px)` 적용 |
+| 8 | Hooks 규칙(EmblemManagement/RivalManagement/GrowthOverview) | EmblemManagement·RivalManagement 위반 발견 후 수정, **GrowthOverview는 원래부터 위반 없음 확인** |
+| 9 | 학부모 페이지 Rival/Emblem/SP 미노출 | **grep 재검증 — 주석 제외 실제 코드 매치 0건** |
+| 10 | 선생님 페이지 용어 정리 | `TeacherLayout.tsx` 하단 네비 "채점"→"시험지"(가장 노출도 높은 지점) 등 수정 — 불변 파일 `TeacherExamGrading.tsx`의 "채점" 타이틀은 정책상 예외(§GPT 의견 참조) |
+| 11 | 시험지별 그래프 강화 | 학생/학부모/선생님 3개 화면 모두에 점수 비교 막대 그래프 추가 확인 |
+| 12 | 불변 파일 4종 MD5 | **완전 동일**(아래 §참조) |
+
+### 불변 파일 MD5 (v3-r1 작업 후 재확인)
+
+```
+387bbf48a3d87ff63ce10d6dbc8bf33c  src/App.tsx
+3429a4ba81c0500e6596418edc639225  src/pages/teacher/TeacherExamGrading.tsx
+1eddaef5cf427e00666be685ea16f32f  src/lib/universityAnalysisAdapter.ts
+126d9e5e314de186bf1df0a63b3abf82  src/lib/classData.ts
+```
+
+### 학생 화면 금지어 재검증
+
+```
+grep -rnE "수납|재무|청구|미납|환불|영수증" src/pages/student/ src/layouts/StudentLayout.tsx
+→ 0건(주석 제외)
+grep -rnE "합격률|합격 가능성|합격 보장|안정 합격|불합격" src/ --include="*.tsx" --include="*.ts"
+→ 0건(주석 제외)
+```
+
+### 학부모 화면 Rival/Emblem/SP 미노출 재검증
+
+```
+grep -rn "Rival|Emblem|엠블럼|라이벌|useGrowth|totalSP|TIER_LABELS|TIER_COLORS" src/pages/parent/*.tsx
+→ 주석 1건(정책 설명 문구)만 매치, 실제 코드 노출 0건
+```
+
+### 신규 라우트 동작 확인(코드 추적)
+
+- `/student/my` → `StudentMyPage` 컴포넌트 직접 연결 확인(StudentRoutes.tsx)
+- `/student/target-preview` → `StudentTargetPreview` 컴포넌트 직접 연결 확인
+- `/student/growth` → `StudentGrowthShowcase` 컴포넌트 직접 연결 확인(기존 placeholder 제거)
+- `/student/rival` → 신규 `StudentRival.tsx` 연결 확인
+- 학생 하단 네비게이션 5탭(홈/테스트/진열장/Rival/마이) 전부 실제 라우트에 대응하는지
+  `StudentLayout.tsx`의 `STUDENT_NAV` 배열과 교차 확인 — 5개 전부 일치.
+
+---
+
 ## v3 검수 결과 (반려 대응 — v2는 GitHub 업로드 금지 상태였음)
 
 **버전**: v3 — 이 섹션이 최신 검수 결과다. v2/v1 검수 결과는 아래에 각각 보존.

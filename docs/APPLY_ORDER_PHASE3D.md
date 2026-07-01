@@ -1,5 +1,135 @@
 # APPLY_ORDER_PHASE3D.md
 
+## v3-r2 적용 안내 — GitHub 업로드 zip 구조 명확화
+
+**버전**: v3-r2 — 이 섹션이 최신이다. v3-r1/v3/v2/v1 적용 안내는 아래에 각각 보존.
+
+### ⚠ v3-r1까지의 혼동 정리
+
+v3-r1까지는 `-github-upload.zip`을 "v1 원본 베이스라인 대비 누적 diff(변경/신규 파일만)"
+방식으로 만들었다. 이 방식은 두 가지 문제가 있었다:
+
+1. **삭제된 파일(`StudentFinance.tsx`)을 diff zip에 표현할 방법이 없었다** — zip은
+   "이 파일을 지워라"라는 지시를 담을 수 없고, 파일이 없다는 사실만으로는 전달되지 않는다.
+   적용하는 사람이 문서를 읽고 수동으로 삭제해야 했는데, 이 과정이 누락되기 쉽다.
+2. **"패치용인지 전체 업로드용인지"가 zip 자체만 봐서는 불명확했다.**
+
+### v3-r2부터의 원칙 — github-upload.zip = 전체 프로젝트 패키지
+
+**이번 v3-r2부터 `-github-upload.zip`은 diff/패치가 아니라 프로젝트 전체 구조를 담은
+완전한 패키지다.** 즉, v3-r1까지 별도로 제공하던 "전체본(v3-r1.zip)"과 "GitHub
+업로드용(diff)"의 구분을 없애고, **하나의 zip으로 통합**했다.
+
+**적용 방법 — 아래 둘 중 하나만 선택:**
+
+- **A) 기존 저장소를 통째로 교체**: 저장소의 기존 내용을 전부 지우고(또는 새 브랜치를
+  만들어서) 이 zip의 `axis-lms-main/` 폴더 내용을 그대로 덮어쓴다. `node_modules`는
+  포함되어 있지 않으므로 `npm install`을 다시 실행해야 한다. **삭제된 파일
+  (`StudentFinance.tsx`)은 애초에 이 zip 안에 존재하지 않으므로, "통째로 교체" 방식에서는
+  삭제 처리를 신경 쓸 필요가 없다** — 새 zip 내용 자체가 이미 삭제 반영된 최종 상태다.
+- **B) 새 저장소로 그대로 업로드**: GitHub에서 새 저장소를 만들고 이 zip 압축을 풀어
+  나온 `axis-lms-main/` 폴더 내용을 그대로 커밋하면 끝난다.
+
+**기존 저장소에 부분 패치(diff)만 적용하고 싶다면**(비권장 — 위 두 방법을 우선 권장):
+1. 이 zip 안의 내용과 기존 저장소를 direct diff(`diff -rq` 또는 Git 상에서 새 브랜치로
+   전체를 올린 뒤 기존 브랜치와 비교)해서 실제 변경분을 직접 뽑아내야 한다.
+2. **`src/pages/student/StudentFinance.tsx`는 반드시 수동으로 삭제해야 한다** — 이 zip에는
+   애초에 존재하지 않는 파일이므로, diff 도구가 자동으로 삭제를 감지하지 못할 수 있다.
+3. 이 방식은 실수 위험이 있으므로 위 A) 또는 B) 방법을 강력히 권장한다.
+
+### 전제
+
+`axis-lms-v1_2-phase3d-ui-ux-interaction-exam-template-v3-r2-github-upload.zip`
+하나만 제공한다(요청된 산출물 파일명 기준). 이 zip을 풀면 `axis-lms-main/` 폴더 하나가
+나오고, 그 안에 프로젝트 전체(v1 베이스라인 + Phase 3D v1~v3-r2 누적 수정사항 전부
+반영된 최종 상태)가 들어있다.
+
+### 적용 후 필수 검증
+
+1. `npm install`
+2. `npm run typecheck`
+3. `npm run build`
+
+세 명령 모두 **반드시 실제 네트워크 접근이 가능한 로컬 환경 또는 GitHub Actions에서
+실행**해야 한다. 이 작업 환경 자체는 `registry.npmjs.org` 접근이 막혀 있어 `npm
+install`을 실행할 수 없다(상세는 `docs/QA_PHASE3D.md` 참조) — 이는 산출물의 결함이
+아니라 이 작업 환경의 네트워크 제약이다.
+
+### 적용 후 수동 확인 권장 항목(v3-r2 추가분)
+
+- [ ] 관리자 학생 목록(`/admin/students`)과 출결현황(`/admin/attendance/status`)
+      테이블 모두 헤더가 스크롤 중 고정되는지, 좌우 스크롤이 표 영역 안에서만 발생하고
+      페이지 전체가 함께 밀리지 않는지 확인.
+- [ ] 관리자 시험 목록(`/admin/scores`)에서 행을 클릭해도 아무 반응이 없고, "상세 보기"
+      버튼을 눌러야만 상세 화면으로 이동하는지 확인.
+- [ ] 선생님 화면 전체(홈/담당학생/시험지/학생별성적)에서 "시험 채점"이나 단독 "채점"이
+      화면 제목·메뉴명으로 보이지 않는지 확인(단, 실제 채점 화면 안의 "채점하기" 버튼,
+      TeacherExamGrading.tsx 자체의 타이틀은 불변 파일 제약으로 예외).
+- [ ] 학부모 성장 리포트 화면 소스를 열어 Rival/Emblem/SP/Tier 관련 표현이 실제 UI에도,
+      주요 주석에도 남아있지 않은지 확인.
+
+---
+
+## v3-r1 적용 안내 (v3 반려 대응 + 추가 요구사항)
+
+**버전**: v3-r1 — 이 섹션이 최신이다. v3/v2/v1 적용 안내는 아래에 각각 보존.
+
+### 전제
+
+`axis-lms-v1_2-phase3d-ui-ux-interaction-exam-template-v3-r1.zip`은 v3 상태 위에
+v3-r1 수정사항이 모두 반영된 완전한 프로젝트 상태다. `-github-upload.zip`은 v1 원본
+베이스라인 대비 지금까지의 전체 누적 diff(60개 파일)를 담고 있다.
+
+### 파일 적용 순서
+
+**1단계 — CSS/유틸(다른 파일이 의존)**
+1. `src/index.css`(`.axis-table-scroll` 신규 패턴)
+2. `src/utils/dateUtils.ts`(`getLocalDateStr` 인자 추가)
+
+**2단계 — 데이터 레이어**
+3. `src/lib/parentComments.ts`(신규)
+4. `src/lib/studentProfile.ts`, `src/lib/rbac.ts`, `src/lib/accountActionLog.ts`(v3 유지분 재확인)
+
+**3단계 — 라우트/레이아웃**
+5. `src/routes/StudentRoutes.tsx`(신규 라우트 4개 연결 — `StudentRival.tsx`보다 반드시 나중에 적용)
+6. `src/layouts/TeacherLayout.tsx`(네비 라벨 수정)
+
+**4단계 — 페이지(위 레이어에 의존)**
+7. `src/pages/student/StudentRival.tsx`(신규 — 5번보다 먼저 존재해야 함)
+8. `src/pages/student/StudentFinance.tsx` **삭제**(레포에서 파일 자체를 제거)
+9. `src/pages/StudentList.tsx`, `src/pages/AttendanceStatus.tsx`(필터 카드)
+10. `src/pages/growth/EmblemManagement.tsx`, `RivalManagement.tsx`, `GrowthOverview.tsx`
+11. `src/pages/settings/PermissionSettings.tsx`
+12. `src/pages/teacher/TeacherExamScores.tsx`, `TeacherStudents.tsx`, `TeacherExamGradingGuard.tsx`, `TeacherGrades.tsx`
+13. `src/pages/AssessmentList.tsx`, `AssessmentDetail.tsx`
+14. `src/pages/parent/ParentHome.tsx`, `ParentGrowthReport.tsx`(전면 재작성본)
+15. `src/pages/teacher/TeacherStudentDetail.tsx`(학부모 공개 코멘트 작성 UI)
+16. `src/pages/student/StudentGrades.tsx`
+
+**5단계 — 문서**
+17. `docs/PARENT_PAGE_ENGAGEMENT_IDEAS.md`(신규) + 갱신된 문서 4종 병합.
+
+### 적용 후 수동 확인 권장 항목(v3-r1 추가분)
+
+- [ ] `npm install && npm run typecheck && npm run build`를 실제 네트워크 접근 가능한
+      환경(로컬 또는 GitHub Actions)에서 반드시 1회 실행 — 이 작업 환경은 계속
+      네트워크가 차단되어 있어 스텁 기반 tsc 검증만 완료된 상태다.
+- [ ] 학생 계정으로 로그인 → 하단 네비 5탭(홈/테스트/진열장/Rival/마이) 전부 정상
+      진입되는지, 404나 "다음 단계에서 구현됩니다" placeholder가 뜨지 않는지 확인.
+- [ ] 관리자 학생 목록에서 "재원" 카드 클릭 → 목록이 재원 학생만 보이는지, 카드가
+      active 표시되는지, 다시 클릭하면 해제되는지 확인.
+- [ ] 출결현황에서 "알림 발송 건수" 카드 클릭 → 알림 발송된 기록만 보이는지 확인.
+- [ ] 엠블럼관리 팝업을 열고 ESC 키를 눌러 닫히는지, 제목을 드래그해도 X 버튼이 여전히
+      클릭되는지 확인.
+- [ ] 학부모 계정으로 로그인 → "성장 리포트" 진입 → 4개 탭(테스트/출결/목표대학/리포트)
+      전부 정상 동작하는지, 화면 어디에도 Rival/Emblem/SP 관련 표현이 없는지 확인.
+- [ ] 선생님 학생상세에서 "학부모 공개 코멘트 작성" → 저장 후 같은 학생의 학부모
+      성장 리포트 "리포트" 탭에 바로 나타나는지 확인.
+- [ ] 시험지 결과 상세(선생님/학생/학부모 3개 화면 모두)에서 점수 비교 막대 그래프가
+      표시되는지 확인.
+
+---
+
 ## v3 적용 안내 (반려 대응 — v2는 GitHub 업로드 금지)
 
 **버전**: v3 — 이 섹션이 최신이다. v2/v1 적용 안내는 아래에 각각 보존.
