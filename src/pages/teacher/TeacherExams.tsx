@@ -14,6 +14,7 @@ import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import type { ExamSubmission } from '@/lib/assessmentData';
+import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS } from '@/lib/assessmentData';
 import AssessmentFormModal from '@/components/AssessmentFormModal';
 import { Button } from '@/components/ui/button';
 
@@ -52,7 +53,11 @@ export default function TeacherExams() {
 
   // Phase 3C: 담당 반/학원 전체 공통 시험 후보 + 본인 소유 개인 시험(TEACHER_PRIVATE) 후보를 분리해서 계산한다.
   // 다른 교사의 TEACHER_PRIVATE 시험은 assignedClassIds/classId 매칭과 무관하게 항상 제외한다(이중 방어).
+  // [교사 화면 시험 구조 정리] "내 시험지 관리"는 강사가 직접 만드는 단원평가/내신대비모의고사만
+  // 대상으로 한다. 입학테스트/인증평가(관리자 전용 출제)와 수능실전모의고사(성적 입력 자료로
+  // 재분류됨)는 이 목록에 나타나지 않는다 — /teacher/university-data의 "성적 입력"에서 다룬다.
   const candidateExams = exams.filter((e) => {
+    if (!(TEACHER_CREATABLE_EXAM_CATEGORY_IDS as readonly string[]).includes(e.categoryId)) return false;
     if (e.scope === 'TEACHER_PRIVATE') return e.ownerTeacherId === currentUser.id;
     return assignedClassIds.includes(e.classId ?? '') || !e.classId;
   });

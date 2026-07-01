@@ -8,6 +8,12 @@
 
 // ────────────────────────────────────────────────────────────
 // 시험 종류 카탈로그 — 고정 union이 아닌 배열 구조로 추후 무제한 생성 가능하게 한다.
+//
+// [교사 화면 시험 구조 정리] 시험 출제/채점 관리(문항 기반 Exam)와 성적 입력 자료를 섞지
+// 않는다. 전국모의고사(national-mock)/실제내신성적(school-record)/수능실전주간루틴
+// (weekly-suneung)은 문항 기반 시험으로 생성된 적이 없고 앞으로도 생성 대상이 아니므로
+// 카탈로그에서 완전히 제거했다(실제내신/전국연합모의고사 성적은 teacherSchoolRecordInput.ts
+// / teacherMockExamInput.ts의 별도 "성적 입력" 데이터 계층에서 다룬다 — /teacher/university-data).
 // ────────────────────────────────────────────────────────────
 export interface ExamCategoryDef {
   id: string;
@@ -15,16 +21,21 @@ export interface ExamCategoryDef {
 }
 
 export const EXAM_CATEGORIES: ExamCategoryDef[] = [
-  { id: 'entrance-test',  label: '입학테스트' },      // ❌ 학생 화면 미표시 (배치/상담 내부 자료)
+  { id: 'entrance-test',  label: '입학테스트' },       // ❌ 학생 화면 미표시(배치/상담 내부 자료). 최고관리자/원장 전용 출제.
   { id: 'unit-eval',      label: '단원평가' },
-  { id: 'certification',  label: '인증평가' },
+  { id: 'certification',  label: '인증평가' },         // 최고관리자/원장 전용 출제.
   { id: 'mock-school',    label: '내신대비모의고사' },
-  { id: 'mock-suneung',   label: '수능실전모의고사' },
-  // Phase 2D 추가 카테고리 ──────────────────────────────────────
-  { id: 'national-mock',  label: '전국모의고사' },     // 전국연합/학평/교육청/평가원 (Phase 2D)
-  { id: 'school-record',  label: '실제내신성적' },     // 학교 중간/기말 (Phase 2D)
-  { id: 'weekly-suneung', label: '수능실전주간루틴' }, // 주간 실전모의 별도 구분 (Phase 2D)
+  { id: 'mock-suneung',   label: '수능실전모의고사' },  // 성적 입력 자료로 재분류됨 — 신규 시험지 생성 대상 아님(기존 데이터 라벨링용으로만 카탈로그 유지).
 ];
+
+// 강사가 "내 시험지 관리"에서 직접 만들고 채점하는 문항 기반 시험 카테고리.
+// 입학테스트/인증평가(관리자 전용 출제)와 수능실전모의고사(성적 입력 자료)는 포함하지 않는다.
+export const TEACHER_CREATABLE_EXAM_CATEGORY_IDS = ['unit-eval', 'mock-school'] as const;
+export type TeacherCreatableExamCategoryId = (typeof TEACHER_CREATABLE_EXAM_CATEGORY_IDS)[number];
+
+// AssessmentFormModal의 관리자 모드에서 선택 가능한 카테고리 — "성적 입력 자료"인
+// 수능실전모의고사(mock-suneung)는 관리자도 문항 기반으로 신규 생성하지 않는다.
+export const ADMIN_CREATABLE_EXAM_CATEGORY_IDS = ['entrance-test', 'unit-eval', 'certification', 'mock-school'] as const;
 
 export function categoryLabel(categoryId: string): string {
   return EXAM_CATEGORIES.find((c) => c.id === categoryId)?.label ?? categoryId;

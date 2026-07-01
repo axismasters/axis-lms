@@ -21,6 +21,7 @@ import { loadIfRecords } from '@/lib/studentIfRecord';
 import { collectObservations, computeSubjectGaps } from '@/lib/observationSignals';
 import type { StudentSignalBundle } from '@/lib/observationSignals';
 import ObservationPanel from '@/components/ObservationPanel';
+import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS } from '@/lib/assessmentData';
 
 const DAY_LABEL = ['일', '월', '화', '수', '목', '금', '토'] as const;
 
@@ -112,8 +113,13 @@ export default function TeacherHome() {
   );
 
   // 담당 반 시험 또는 학원 전체 시험 후보
+  // [교사 화면 시험 구조 정리] 홈 위젯(미채점/최근 테스트 결과)도 "내 시험지 관리"와 동일한
+  // 범위(단원평가/내신대비모의고사)만 대상으로 한다 — 관리자 전용/성적 입력 자료 시험은
+  // 홈에서도 노출하지 않는다.
   const candidateExams = exams.filter(
-    (e) => assignedClassIds.includes(e.classId ?? '') || !e.classId
+    (e) =>
+      (TEACHER_CREATABLE_EXAM_CATEGORY_IDS as readonly string[]).includes(e.categoryId) &&
+      (assignedClassIds.includes(e.classId ?? '') || !e.classId)
   );
 
   // 미채점 시험: 담당 학생 submissions에 채점중 항목이 있는 시험

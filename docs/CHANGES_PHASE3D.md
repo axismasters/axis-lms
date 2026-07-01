@@ -1047,3 +1047,104 @@ sticky header, 엠블럼 팝업 드래그, 클릭 가능 UI 버튼/칩화는 전
 
 시험지별 그래프 심화 · 테이블 UI 심화 감사 · ParentGrowthReport.tsx 중복 연결(스펙의
 "학부모 홈 또는 성장 리포트" OR 조건은 ParentHome 연결로 충족) · 입시 인사이트(구현 보류).
+
+---
+
+# Phase 3D v3-r5 — teacher exam structure cleanup
+
+기준: v3-r4-r1(GitHub 업로드 승인됨). 이번 라운드는 선생님 화면의 "시험 구조"를 정리한다 —
+시험 출제/문항관리/채점관리(문항 기반 Exam)와 성적 입력 자료(내신/전국연합/수능실전모의고사
+점수 기록)를 명확히 분리한다. 커밋 요약: `Phase 3D v3-r5 teacher exam structure cleanup`.
+
+## 1. 시험 종류 카탈로그 정리 (`src/lib/assessmentData.ts`)
+
+- `EXAM_CATEGORIES`에서 `national-mock`(전국모의고사)·`school-record`(실제내신성적)·
+  `weekly-suneung`(수능실전주간루틴) 3개를 완전히 제거했다. 전수 조사 결과 이 3개는
+  단 하나의 실제 시험(Exam)에도 categoryId로 쓰인 적이 없었다(순수 카탈로그상의 죽은
+  항목) — 제거해도 기존 공개 성적 라벨 표시에 영향 없음을 확인.
+- 남은 5개: `entrance-test`(입학테스트, 관리자 전용) · `unit-eval`(단원평가) ·
+  `certification`(인증평가, 관리자 전용) · `mock-school`(내신대비모의고사) ·
+  `mock-suneung`(수능실전모의고사, 성적 입력 자료로 재분류 — 기존 데이터 라벨링용으로만
+  카탈로그 유지, 신규 생성 대상 아님).
+- 신규 상수 2개 추가:
+  - `TEACHER_CREATABLE_EXAM_CATEGORY_IDS = ['unit-eval', 'mock-school']` — 강사가
+    "내 시험지 관리"에서 만들고 채점하는 문항 기반 시험만.
+  - `ADMIN_CREATABLE_EXAM_CATEGORY_IDS = ['entrance-test', 'unit-eval', 'certification', 'mock-school']`
+    — 관리자도 수능실전모의고사는 문항 기반으로 새로 만들지 않는다(성적 입력으로 이관).
+
+## 2. `src/lib/phase2dData.ts` — weekly-suneung 제거
+
+- `GRADE_TABS`의 'suneung' 탭 `categoryIds`에서 `weekly-suneung` 제거(`['mock-suneung']`만 남음).
+- `EXAM_TYPE_MAP`에서 `weekly-suneung` 항목 삭제.
+- `national-mock`/`school-record`는 그대로 유지 — 이 둘은 Assessment Engine과 무관하게
+  `teacherSchoolRecordInput.ts`/`teacherMockExamInput.ts`(성적 입력) → `PHASE2D_SCHOOL_RECORDS`/
+  `PHASE2D_NATIONAL_MOCKS`를 거쳐 학생 성적 탭(실제내신/전국모의)에 표시되는 정상 경로이며,
+  시험지 생성(AssessmentFormModal) 대상이었던 적이 없다.
+
+## 3. 시험 종류 선택지 역할 분리 (`src/components/AssessmentFormModal.tsx`)
+
+- `EMPTY_FORM.categoryId` 기본값을 `EXAM_CATEGORIES[0].id`(구 기본값이 우연히
+  'entrance-test'였음)에서 `'unit-eval'`로 변경(관리자/교사 모두 유효한 카테고리).
+- 시험 종류 `<Select>`가 이제 `EXAM_CATEGORIES` 전체 대신 역할별 `categoryOptions`
+  (교사: `TEACHER_CREATABLE_EXAM_CATEGORY_IDS`, 관리자: `ADMIN_CREATABLE_EXAM_CATEGORY_IDS`)만
+  보여준다. 모달이 열릴 때 `categoryId`도 그 역할의 첫 옵션으로 재설정된다.
+
+## 4. 교사 시험 목록/채점 화면에서 제외 (defense-in-depth 이중 방어 포함)
+
+- `TeacherExams.tsx`("내 시험지 관리" 목록) — `candidateExams`에
+  `TEACHER_CREATABLE_EXAM_CATEGORY_IDS` 필터 추가. 입학테스트/인증평가/수능실전모의고사가
+  더 이상 미채점/전체 탭 어디에도 나타나지 않는다.
+- `TeacherHome.tsx`(홈 위젯: 미채점 시험/최근 테스트 결과) — 동일 필터 적용, 목록과
+  일관되게 홈 대시보드에서도 제외.
+- `TeacherGrades.tsx`(학생별 성적) — `gradedExams` 필터에 동일 카테고리 조건 추가.
+- `TeacherExamScores.tsx`(시험지 클릭 시 상세) — `visibleExam` 판정에 카테고리 조건
+  추가(URL 직접 접근 방어 — 기존 TEACHER_PRIVATE 소유권 이중 방어와 동일한 패턴).
+- `TeacherExamGradingGuard.tsx`(채점 화면 진입점, 불변 파일 `TeacherExamGrading.tsx`의
+  래퍼) — `isNonTeacherCategory` 체크 추가, 안내 문구 분기(관리자 전용/성적 입력 자료
+  vs 다른 교사 개인 시험). **불변 파일 자체는 전혀 수정하지 않음**(MD5 `3429a4ba` 불변
+  재확인).
+
+## 5. "성적 입력" 구조 — 이미 충족되어 있음(코드 변경 불필요)
+
+`/teacher/university-data`(`TeacherUniversityData.tsx`, 강사 레이아웃 nav "대학추천")가
+이미 정확히 요청된 구조를 갖추고 있었다: 탭 1~3이 "내신성적 입력 / 전국연합모의고사 입력 /
+수능실전모의고사 입력"이며, `teacherSchoolRecordInput.ts`/`teacherMockExamInput.ts`라는
+Assessment Engine과 완전히 독립된 데이터 계층을 사용한다(문항/채점 없음, 과목별 점수
+직접 입력 방식). 이번 라운드에서는 이 화면의 라벨 정확도만 다듬었다(아래 6번).
+
+## 6. "수능실전주간루틴" 명칭 제거 — 화면 노출명 정리
+
+`수능실전주간루틴`은 개발 설명용 내부 개념일 뿐 화면에 노출되는 이름이 아니어야 한다는
+지시에 따라, 화면에 보이는 모든 지점을 "수능실전모의고사 입력/결과"로 정리했다.
+
+- `StudentMockExams.tsx`(학생 테스트 메뉴) / `ParentMockExams.tsx`(학부모 시험 항목) —
+  "수능실전 주간 루틴 바로가기" 진입 카드를 완전히 제거. 미사용 `Link`/`ChevronRight`
+  import도 함께 정리.
+- `StudentWeeklyMocks.tsx` / `ParentWeeklyMocks.tsx` — 화면 타이틀을 각각
+  `"수능실전 주간 루틴"` → `"수능실전모의고사 결과"`, `"자녀 수능실전 주간 루틴"` →
+  `"자녀 수능실전모의고사 결과"`로 변경. 라우트 경로(`/student/weekly-mocks` 등)와
+  파일명은 내부 코드명일 뿐 사용자에게 노출되지 않으므로 유지(진입 카드가 제거되어
+  직접 URL로만 도달 가능 — 별도 시험 종류가 아니라 mock-suneung 결과의 회차별 누적
+  조회 화면이라는 원래 설계 의도 그대로 유지, 데이터/로직 변경 없음).
+- `teacherMockExamInput.ts`의 `getMockExamLabel()` — 저장값 `examType`(내부 분류값,
+  변경하지 않음)을 화면에 표시할 때만 `'수능실전'` → `'수능실전모의고사'`로 풀어서
+  보여주는 `displayExamType()` 헬퍼 추가(학생 화면 `StudentTargetPreview.tsx`에 그대로
+  반영됨).
+- `TeacherUniversityData.tsx` — 수능실전모의고사 입력 탭의 성적표 헤더(`"수능실전 성적표
+  입력"` → `"수능실전모의고사 성적표 입력"`)와 읽기전용 "시험 종류" 표시(`"수능실전"` →
+  `"수능실전모의고사"`) 텍스트 정정. 저장 로직(`examType: '수능실전'` 내부값)은 변경하지
+  않음 — 화면 표시 문자열만 수정.
+- `StudentRoutes.tsx`/`ParentRoutes.tsx`의 라우트 주석도 새 명칭 정책에 맞게 갱신
+  (코드 주석이라 사용자에게 노출되지는 않지만 일관성을 위해 정리).
+
+## 검증
+
+- 불변 파일 4종 MD5 유지 확인(전혀 변경 없음).
+- 이번 라운드 변경 16개 파일 전체 괄호 균형 통과.
+- 제거된 3개 categoryId('national-mock'/'school-record'/'weekly-suneung') site-wide
+  재검색 — `national-mock`/`school-record`의 잔여 참조는 모두 phase2dData.ts(학생 성적
+  탭, 정상 유지 대상)와 TeacherUniversityData.tsx(성적 입력 탭 TabId, Assessment Engine과
+  무관)뿐임을 확인. `weekly-suneung`은 사이트 전체에서 잔여 참조 0건.
+- `EXAM_CATEGORIES.find()`/`category.label` 무null-체크 사용처(StudentMockExams.tsx 등)
+  전수 확인 — 모두 여전히 카탈로그에 남아있는 categoryId(mock-school/mock-suneung)만
+  대상이라 회귀 없음.

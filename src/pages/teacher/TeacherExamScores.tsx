@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useStudents } from '@/contexts/StudentContext';
 import type { ExamSubmission } from '@/lib/assessmentData';
+import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS } from '@/lib/assessmentData';
 
 function NotFoundScreen() {
   return (
@@ -62,9 +63,13 @@ export default function TeacherExamScores() {
   const rawExam = examId ? exams.find((e) => e.id === examId) : undefined;
 
   // Phase 3C scope 이중 방어: TEACHER_PRIVATE면 반드시 본인 소유만.
-  const visibleExam = rawExam && (
-    rawExam.scope === 'TEACHER_PRIVATE' ? rawExam.ownerTeacherId === currentUser.id : true
-  ) ? rawExam : undefined;
+  // [교사 화면 시험 구조 정리] 입학테스트/인증평가(관리자 전용)·수능실전모의고사(성적 입력
+  // 자료)는 "내 시험지 관리" 목록에서 이미 제외되지만, URL 직접 접근을 막기 위해 여기서도
+  // 카테고리를 다시 확인한다(이중 방어).
+  const visibleExam = rawExam
+    && (TEACHER_CREATABLE_EXAM_CATEGORY_IDS as readonly string[]).includes(rawExam.categoryId)
+    && (rawExam.scope === 'TEACHER_PRIVATE' ? rawExam.ownerTeacherId === currentUser.id : true)
+    ? rawExam : undefined;
 
   if (!visibleExam) return <NotFoundScreen />;
 

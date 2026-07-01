@@ -190,8 +190,14 @@ export function getMockExamRecordsForStudent(studentId: string): TeacherMockExam
 }
 
 // ─── 시험 표시 레이블 ────────────────────────────────────────────────
+// ⚠ examType 저장값('수능실전' 등)은 내부 분류값이며, 화면에는 항상 "수능실전모의고사"로
+// 풀어서 표시한다("수능실전주간루틴" 같은 개발 내부 개념이 아니라 정식 시험명으로 노출).
+function displayExamType(examType: MockExamType): string {
+  return examType === '수능실전' ? '수능실전모의고사' : examType;
+}
+
 export function getMockExamLabel(record: TeacherMockExamInput): string {
-  return `${record.examYear}년 ${record.examMonth}월 ${record.examType} (${record.gradeLevel})`;
+  return `${record.examYear}년 ${record.examMonth}월 ${displayExamType(record.examType)} (${record.gradeLevel})`;
 }
 
 // ─── 수능실전 레코드 필터 ────────────────────────────────────────────

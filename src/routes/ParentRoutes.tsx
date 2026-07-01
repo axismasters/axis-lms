@@ -48,7 +48,7 @@ export default function ParentRoutes() {
         {/* 자녀 모의고사 결과 조회 (읽기 전용) */}
         <Route path="/parent/mock-exams" component={ParentMockExams} />
 
-        {/* 고3 자녀 수능실전 주간 루틴 조회 (읽기 전용) */}
+        {/* 자녀 수능실전모의고사 결과(회차별 누적) — 화면 타이틀은 "자녀 수능실전모의고사 결과"(개발 내부 코드명만 weekly-mocks) */}
         <Route path="/parent/weekly-mocks" component={ParentWeeklyMocks} />
 
         {/* 자녀 성장 리포트 (Tier/Emblem/SP/IF 요약) — Phase 3D v2: 이전까지 페이지는 있었으나

@@ -246,3 +246,35 @@
 ### 불변 유지(변경 없음) — MD5 확인
 - `src/lib/universityAnalysisAdapter.ts`(1eddaef5) · `src/pages/teacher/TeacherExamGrading.tsx`(3429a4ba)
   · `src/App.tsx`(387bbf48) · `src/lib/classData.ts`(126d9e5e)
+
+---
+
+## Phase 3D v3-r5 (teacher exam structure cleanup)
+
+기준: v3-r4-r1(GitHub 업로드 승인됨).
+
+### 수정 파일 (MODIFIED) — 16개
+- `src/lib/assessmentData.ts` — EXAM_CATEGORIES에서 national-mock/school-record/
+  weekly-suneung 제거, TEACHER_CREATABLE_EXAM_CATEGORY_IDS/ADMIN_CREATABLE_EXAM_CATEGORY_IDS 신규.
+- `src/lib/phase2dData.ts` — GRADE_TABS 'suneung' 탭·EXAM_TYPE_MAP에서 weekly-suneung 제거.
+- `src/components/AssessmentFormModal.tsx` — 시험 종류 선택지 역할별 분리(교사/관리자).
+- `src/pages/teacher/TeacherExams.tsx` — candidateExams에 카테고리 필터 추가.
+- `src/pages/teacher/TeacherExamScores.tsx` — visibleExam 판정에 카테고리 조건 추가.
+- `src/pages/teacher/TeacherGrades.tsx` — gradedExams에 카테고리 필터 추가.
+- `src/pages/teacher/TeacherExamGradingGuard.tsx` — 카테고리 가드 추가(불변 파일 자체는 미수정).
+- `src/pages/teacher/TeacherHome.tsx` — candidateExams(미채점/최근 성적 위젯)에 카테고리 필터 추가.
+- `src/pages/student/StudentMockExams.tsx` — 수능실전 주간 루틴 진입 카드 제거, 미사용 import 정리.
+- `src/pages/parent/ParentMockExams.tsx` — 동일.
+- `src/pages/student/StudentWeeklyMocks.tsx` — 화면 타이틀 "수능실전모의고사 결과"로 변경.
+- `src/pages/parent/ParentWeeklyMocks.tsx` — 화면 타이틀 "자녀 수능실전모의고사 결과"로 변경.
+- `src/routes/StudentRoutes.tsx` / `src/routes/ParentRoutes.tsx` — 라우트 주석 정리(코드 주석만).
+- `src/lib/teacherMockExamInput.ts` — getMockExamLabel() 표시 문자열 "수능실전모의고사"로 정정.
+- `src/pages/teacher/TeacherUniversityData.tsx` — 성적표 헤더/시험 종류 표시 텍스트 정정.
+
+### 문서 (DOCS)
+- `docs/CHANGES_PHASE3D.md` / `docs/QA_PHASE3D.md` / `docs/MODIFIED_FILES_PHASE3D.md` /
+  `docs/APPLY_ORDER_PHASE3D.md` — v3-r5 섹션 추가.
+
+### 불변 유지(변경 없음) — MD5 확인
+- `src/lib/universityAnalysisAdapter.ts`(1eddaef5) · `src/pages/teacher/TeacherExamGrading.tsx`(3429a4ba)
+  · `src/App.tsx`(387bbf48) · `src/lib/classData.ts`(126d9e5e)

@@ -3,7 +3,13 @@
 //
 // 시험 유형 분류:
 //   기존 AssessmentContext 데이터 (unit-eval, certification, mock-school, mock-suneung)
-//   + Phase 2D 신규 데이터 (school-record, national-mock, weekly-suneung-mock)
+//   + Phase 2D 신규 데이터 (school-record, national-mock)
+//   실제내신성적(school-record)/전국모의고사(national-mock)는 문항 기반 Exam이 아니라
+//   teacherSchoolRecordInput.ts/teacherMockExamInput.ts의 "성적 입력" 자료를 그대로
+//   학생 성적 탭에 반영한 것이며, AssessmentFormModal(시험지 생성)의 대상이 아니다.
+//   [교사 화면 시험 구조 정리] weekly-suneung(수능실전주간루틴)은 실제 시험 데이터가
+//   없던 미사용 카테고리라 제거했다 — "수능실전 주간 루틴"은 mock-suneung 결과를
+//   회차순으로 누적 조회하는 별도 화면(StudentWeeklyMocks.tsx 등)일 뿐, 시험 종류가 아니다.
 //
 // 학생 화면 숨김 정책:
 //   - entrance-test (입학테스트): 학생 화면 완전 숨김
@@ -63,8 +69,8 @@ export const GRADE_TABS: GradeTab[] = [
   {
     id: 'suneung',
     label: '수능실전',
-    description: '학원 수능실전 주간 루틴 및 실전모의',
-    categoryIds: ['mock-suneung', 'weekly-suneung'],
+    description: '학원 수능실전모의고사',
+    categoryIds: ['mock-suneung'],
     color: '#7C3AED',
     accentColor: '#EDE9FE',
   },
@@ -86,7 +92,6 @@ export const EXAM_TYPE_MAP: ExamTypeInfo[] = [
   { categoryId: 'school-record',  label: '실제내신',        tabId: 'school-record', showToStudent: true,  description: '학교 중간/기말 실제 성적' },
   { categoryId: 'national-mock',  label: '전국모의고사',    tabId: 'national',      showToStudent: true,  description: '전국연합/학평/교육청/평가원' },
   { categoryId: 'mock-suneung',   label: '수능실전모의',    tabId: 'suneung',       showToStudent: true,  description: '학원 수능실전모의고사' },
-  { categoryId: 'weekly-suneung', label: '수능실전주간',    tabId: 'suneung',       showToStudent: true,  description: '학원 수능실전 주간 루틴' },
   { categoryId: 'entrance-test',  label: '입학테스트',      tabId: '',              showToStudent: false, description: '배치/상담/진단용 내부 자료 — 학생 화면 미표시' },
 ];
 

@@ -391,7 +391,7 @@ function MockExamTab({
               onChange={v => U('examType', v)} />
           )}
           {isSuneung && (
-            <SelectField label="시험 종류" value="수능실전" options={['수능실전']} onChange={() => {}} />
+            <SelectField label="시험 종류" value="수능실전모의고사" options={['수능실전모의고사']} onChange={() => {}} />
           )}
         </div>
         <SelectField label="계열" value={record.track} options={['인문','자연','통합']} onChange={v => U('track', v)} />
@@ -400,7 +400,7 @@ function MockExamTab({
       {/* 과목별 성적 입력표 */}
       <div className="axis-card overflow-hidden">
         <div className="px-4 py-2 text-xs font-semibold" style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.3 0.02 250)' }}>
-          {isSuneung ? '수능실전 성적표 입력' : '전국연합모의고사 성적표 입력'}
+          {isSuneung ? '수능실전모의고사 성적표 입력' : '전국연합모의고사 성적표 입력'}
         </div>
 
         {/* 국어 */}

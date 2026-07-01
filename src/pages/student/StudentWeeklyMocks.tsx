@@ -1,7 +1,12 @@
 // AXIS LMS v1.2 - StudentWeeklyMocks (Senior Weekly Mock Routine Foundation v1)
 // ✅ Senior Mock Accumulation Bridge v1: 누적 요약 섹션 추가
-// 학생 전용 고3 수능실전 주간 루틴 조회 — 읽기 전용.
-// ✅ mock-suneung 카테고리 공개 결과만 표시 (주간 루틴 기준)
+// 학생 전용 수능실전모의고사 회차별 결과 조회 — 읽기 전용.
+// ⚠ "수능실전주간루틴"은 개발 설명용 내부 개념일 뿐, 화면에 노출되는 이름이 아니다.
+//   고3 주간 반복 운영은 별도 시험 종류가 아니라 수능실전모의고사 성적 입력 → 내부 분석 →
+//   대학추천/보완 과목/브리핑 반영으로 이어지는 처리 흐름이며, 화면 타이틀은 항상
+//   "수능실전모의고사 결과"로 표시한다(라우트 경로 /student/weekly-mocks는 내부 경로명일
+//   뿐 사용자에게 노출되지 않으므로 유지).
+// ✅ mock-suneung 카테고리 공개 결과만 표시 (회차순 누적)
 // ✅ getPublishedResultsForStudent() 공개 필터 경유 (미공개/미채점/결석 제외)
 // ✅ 본인(assignedStudentIds[0]) 데이터만 조회
 // ✅ 시험일 오름차순(회차순) 표시 + 전회 대비 점수 추이 표시
@@ -84,7 +89,7 @@ export default function StudentWeeklyMocks() {
   const summary = getMockAccumulationSummary(weeklyResults);
 
   return (
-    <StudentLayout title="수능실전 주간 루틴">
+    <StudentLayout title="수능실전모의고사 결과">
       <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
 
         {/* 뒤로가기 */}

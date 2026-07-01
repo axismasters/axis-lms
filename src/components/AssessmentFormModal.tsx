@@ -12,7 +12,7 @@ import { useStudents } from '@/contexts/StudentContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   ExamQuestionDef, QuestionType, EXAM_CATEGORIES, AUTO_GRADED_TYPES, MANUAL_GRADED_TYPES, isAutoGraded,
-  ExamScope, EXAM_SCOPE_LABELS,
+  ExamScope, EXAM_SCOPE_LABELS, TEACHER_CREATABLE_EXAM_CATEGORY_IDS, ADMIN_CREATABLE_EXAM_CATEGORY_IDS,
 } from '@/lib/assessmentData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -84,7 +84,7 @@ function buildNaeshinTemplate(): ExamQuestionDef[] {
 
 const EMPTY_FORM = {
   title: '',
-  categoryId: EXAM_CATEGORIES[0].id,
+  categoryId: 'unit-eval', // 관리자/교사 모두 선택 가능한 카테고리를 기본값으로(입학테스트 등 관리자 전용을 기본값으로 두지 않는다)
   classId: '', // '' = 학원 전체 대상
   subject: '수학' as string,
   examDate: '',
@@ -118,10 +118,24 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
     ? allClasses.filter((c) => (currentUser.assignedClassIds ?? []).includes(c.id))
     : allClasses;
 
+  // [교사 화면 시험 구조 정리] 시험 종류 선택지도 역할별로 분리한다.
+  // 교사: 단원평가/내신대비모의고사만(내 시험지 관리 대상). 관리자: 입학테스트/인증평가까지
+  // 포함하되, 성적 입력 자료로 재분류된 수능실전모의고사는 관리자도 문항 기반으로 새로
+  // 만들지 않는다(전국연합모의고사/실제내신성적/수능실전모의고사는 /teacher/university-data의
+  // "성적 입력" 탭에서 입력한다).
+  const creatableCategoryIds: readonly string[] = isTeacherMode
+    ? TEACHER_CREATABLE_EXAM_CATEGORY_IDS
+    : ADMIN_CREATABLE_EXAM_CATEGORY_IDS;
+  const categoryOptions = EXAM_CATEGORIES.filter((c) => creatableCategoryIds.includes(c.id));
+
   useEffect(() => {
     if (open) {
       setActiveTab('basic');
-      setForm({ ...EMPTY_FORM, scope: isTeacherMode ? 'TEACHER_PRIVATE' : 'ACADEMY_COMMON' });
+      setForm({
+        ...EMPTY_FORM,
+        categoryId: categoryOptions[0]?.id ?? EMPTY_FORM.categoryId,
+        scope: isTeacherMode ? 'TEACHER_PRIVATE' : 'ACADEMY_COMMON',
+      });
       setQuestions([emptyQuestion(1)]);
       setPendingAction(null);
     }
@@ -263,7 +277,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
                 <Select value={form.categoryId} onValueChange={(v) => setForm((f) => ({ ...f, categoryId: v }))}>
                   <SelectTrigger className="h-9 text-sm w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {EXAM_CATEGORIES.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}
+                    {categoryOptions.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

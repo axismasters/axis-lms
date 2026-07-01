@@ -6,8 +6,7 @@
 // 🚫 대학추천/합격가능성/등급/백분위 미구현 (향후 단계)
 // 🚫 라이벌/엠블럼/경쟁 정보 없음
 
-import { TrendingUp, ChevronRight } from 'lucide-react';
-import { Link } from 'wouter';
+import { TrendingUp } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
@@ -71,20 +70,6 @@ export default function StudentMockExams() {
         >
           내신대비모의고사 및 수능실전모의고사 공개 결과만 표시됩니다. 채점 중이거나 미공개된 결과는 표시되지 않습니다.
         </div>
-
-        {/* 수능실전 주간 루틴 바로가기 */}
-        <Link href="/student/weekly-mocks" style={{ display: 'block' }}>
-          <div className="axis-card p-4 flex items-center justify-between cursor-pointer">
-            <div className="flex items-center gap-2">
-              <TrendingUp size={16} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
-              <div>
-                <div className="text-sm font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>수능실전 주간 루틴</div>
-                <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>수능실전모의고사 회차별 추이 보기</div>
-              </div>
-            </div>
-            <ChevronRight size={16} style={{ color: 'oklch(0.7 0.01 250)' }} />
-          </div>
-        </Link>
 
         {mockResults.length === 0 ? (
           <div className="axis-card p-10 text-center">

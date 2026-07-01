@@ -63,7 +63,7 @@ export default function StudentRoutes() {
         {/* 모의고사 결과 조회 (읽기 전용) */}
         <Route path="/student/mock-exams" component={StudentMockExams} />
 
-        {/* 고3 수능실전 주간 루틴 조회 (읽기 전용) */}
+        {/* 수능실전모의고사 결과(회차별 누적) — 화면 타이틀은 "수능실전모의고사 결과"(개발 내부 코드명만 weekly-mocks) */}
         <Route path="/student/weekly-mocks" component={StudentWeeklyMocks} />
 
         {/* 마이페이지(닉네임/프로필) — v3-r1: 실제 연결 */}

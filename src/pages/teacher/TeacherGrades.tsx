@@ -8,6 +8,7 @@ import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useStudents } from '@/contexts/StudentContext';
+import { TEACHER_CREATABLE_EXAM_CATEGORY_IDS } from '@/lib/assessmentData';
 
 export default function TeacherGrades() {
   const { currentUser } = useAuth();
@@ -24,9 +25,12 @@ export default function TeacherGrades() {
   // 성적 확인 가능한 시험:
   //   - 담당 반 시험 or 학원 전체 시험
   //   - 담당 학생 중 채점완료 submissions가 있어야 표시
+  //   - [교사 화면 시험 구조 정리] 입학테스트/인증평가/수능실전모의고사(성적 입력 자료로
+  //     재분류)는 이 목록에서 제외한다 — 단원평가/내신대비모의고사만 대상.
   const gradedExams = exams
     .filter(
       (e) =>
+        (TEACHER_CREATABLE_EXAM_CATEGORY_IDS as readonly string[]).includes(e.categoryId) &&
         (assignedClassIds.includes(e.classId ?? '') || !e.classId) &&
         mySubmissions.some((s) => s.examId === e.id && s.status === '채점완료')
     )
