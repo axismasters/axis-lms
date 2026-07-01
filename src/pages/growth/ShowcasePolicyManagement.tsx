@@ -103,9 +103,10 @@ export default function ShowcasePolicyManagement() {
         </div>
 
         {/* 정책 항목 토글 */}
-        <div className="axis-card divide-y" style={{ divideColor: 'oklch(0.93 0.006 250)' }}>
+        <div className="axis-card">
           {POLICY_ITEMS.map(({ key, label, desc, risk }) => (
-            <div key={key} className="flex items-center justify-between px-4 py-3.5">
+            <div key={key} className="flex items-center justify-between px-4 py-3.5 border-b last:border-b-0"
+              style={{ borderColor: 'oklch(0.93 0.006 250)' }}>
               <div className="flex-1 min-w-0 mr-4">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{label}</span>
