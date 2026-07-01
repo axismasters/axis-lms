@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useParams, Link } from 'wouter';
-import { ChevronLeft, BarChart2, CalendarCheck, FileText, MessageSquare, Plus, X, KeyRound, UserCog } from 'lucide-react';
+import { ChevronLeft, BarChart2, CalendarCheck, FileText, MessageSquare, Plus, X, KeyRound, UserCog, Sparkles } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -14,6 +14,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
+import { useHomework } from '@/contexts/HomeworkContext';
+import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import {
   CounselingRecord, CounselingType, CounselingTarget,
   COUNSELING_TYPES, COUNSELING_TARGETS,
@@ -23,13 +25,20 @@ import { resetStudentNickname } from '@/lib/studentProfile';
 import { logAccountAction } from '@/lib/accountActionLog';
 import { getParentCommentsForStudent, addParentComment, ParentComment } from '@/lib/parentComments';
 import { getLocalDateStr } from '@/utils/dateUtils';
+import { loadIfRecords } from '@/lib/studentIfRecord';
+import { computeSubjectGaps } from '@/lib/observationSignals';
+import type { StudentSignalBundle } from '@/lib/observationSignals';
+import { computeParentInsight } from '@/lib/parentInsightEngine';
+import { computeBriefing } from '@/lib/studentBriefingEngine';
 
 export default function TeacherStudentDetail() {
   const { studentId } = useParams<{ studentId: string }>();
   const { currentUser, activeMode, canResetPassword, canResetNickname } = useAuth();
   const { students } = useStudents();
-  const { exams, submissions } = useAssessment();
+  const { exams, submissions, getPublishedResultsForStudent } = useAssessment();
   const { sessions } = useAttendance();
+  const { getForStudent } = useHomework();
+  const { getStatus } = useHomeworkStatus();
 
   // Phase 3D v2: 상담 기록 관련 상태 — Rules of Hooks 준수를 위해 아래 조기 return보다
   // 반드시 앞에 선언해야 한다(이 컴포넌트는 studentId 유효성에 따라 조기 return이 있다).
@@ -114,6 +123,38 @@ export default function TeacherStudentDetail() {
   const lateCount = attendanceRecords.filter(
     (r) => r.status === '지각' || r.status === '조퇴'
   ).length;
+
+  // Phase 3D v3-r4-r1: "담당 학생 빠른 브리핑" — 표시용 attendanceRecords(최근 10건)와 별개로,
+  // 신호 계산용 전체 데이터(공개 성적/출결/숙제/IF/과목 갭)를 모아 브리핑 엔진에 넘긴다.
+  const briefingResults = getPublishedResultsForStudent(studentId);
+  const briefingAttendance = sessions
+    .filter((sess) => assignedClassIds.includes(sess.classId))
+    .flatMap((sess) =>
+      sess.records
+        .filter((r) => r.studentId === studentId)
+        .map((r) => ({ date: sess.date, status: r.status }))
+    );
+  const briefingHomework = getForStudent(myClasses.map((c) => c.id))
+    .filter((hw) => hw.status === 'published')
+    .map((hw) => ({
+      date: hw.createdAt.slice(0, 10),
+      completed: getStatus(hw.id, studentId)?.status === 'completed',
+    }));
+  const briefingSubjectGaps = computeSubjectGaps(
+    briefingResults,
+    (examId) => exams.find((e) => e.id === examId)?.subject
+  );
+  const signalBundle: StudentSignalBundle = {
+    studentId,
+    studentName: student.name,
+    results: briefingResults,
+    ifRecords: loadIfRecords(studentId),
+    attendanceRecords: briefingAttendance,
+    homeworkItems: briefingHomework,
+    subjectGaps: briefingSubjectGaps,
+  };
+  const parentInsight = computeParentInsight(signalBundle);
+  const briefing = computeBriefing(signalBundle, parentInsight);
 
   // Phase 3D v3-r1: 학부모 공개 코멘트 — 상담 기록 원문과 별개로, 학부모에게 보여줄
   // 문장을 선생님이 직접 다시 써서 저장한다.
@@ -231,6 +272,46 @@ export default function TeacherStudentDetail() {
             </div>
           </div>
         )}
+
+        {/* Phase 3D v3-r4-r1: 담당 학생 빠른 브리핑 — 규칙 기반 자동 요약(AI 호출 없음, 입력 없음) */}
+        <section
+          className="rounded-lg overflow-hidden"
+          style={{ border: '1px solid oklch(0.88 0.06 276)', background: 'white', boxShadow: '0 1px 3px oklch(0 0 0 / 0.06)' }}
+        >
+          <div
+            className="flex items-center gap-2 px-4 py-2.5"
+            style={{ background: 'oklch(0.97 0.03 276)', borderBottom: '1px solid oklch(0.9 0.05 276)' }}
+          >
+            <Sparkles size={15} style={{ color: 'oklch(0.5 0.2 276)' }} />
+            <span className="text-sm font-bold" style={{ color: 'oklch(0.4 0.18 276)' }}>담당 학생 빠른 브리핑</span>
+          </div>
+          <div className="p-4 space-y-3">
+            <p className="text-sm leading-relaxed" style={{ color: 'oklch(0.3 0.02 250)' }}>
+              {briefing.teacherBriefing}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {briefing.highlights.map((h, i) => (
+                <span
+                  key={i}
+                  className="text-xs px-2 py-1 rounded-md"
+                  style={{ background: 'oklch(0.96 0.004 250)', color: 'oklch(0.4 0.02 250)' }}
+                >
+                  {h}
+                </span>
+              ))}
+            </div>
+            {briefing.checkPoints.length > 0 && (
+              <div>
+                <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.5 0.14 60)' }}>확인할 지점</div>
+                <ul className="space-y-0.5">
+                  {briefing.checkPoints.map((c, i) => (
+                    <li key={i} className="text-xs" style={{ color: 'oklch(0.45 0.015 250)' }}>· {c}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* 담당 수업 */}
         <section>

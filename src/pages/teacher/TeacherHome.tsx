@@ -2,6 +2,7 @@
 // 강사 전용 홈: 인사 / 빠른 실행 / 오늘 수업 / 미채점 시험 / 최근 테스트 결과.
 // 모든 시험/성적/통계는 담당 학생(assignedStudentIds) 기준으로만 계산.
 
+import { useMemo } from 'react';
 import { Link } from 'wouter';
 import {
   CalendarCheck, BarChart2, Users, Play,
@@ -13,8 +14,13 @@ import { useClasses } from '@/contexts/ClassContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useHomework } from '@/contexts/HomeworkContext';
+import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { useAttendance } from '@/contexts/AttendanceContext';
 import type { ClassRoom } from '@/lib/classData';
+import { loadIfRecords } from '@/lib/studentIfRecord';
+import { collectObservations, computeSubjectGaps } from '@/lib/observationSignals';
+import type { StudentSignalBundle } from '@/lib/observationSignals';
+import ObservationPanel from '@/components/ObservationPanel';
 
 const DAY_LABEL = ['일', '월', '화', '수', '목', '금', '토'] as const;
 
@@ -38,9 +44,10 @@ export default function TeacherHome() {
   const { currentUser } = useAuth();
   const { classes } = useClasses();
   const { students } = useStudents();
-  const { exams, submissions } = useAssessment();
-  const { getByTeacher } = useHomework();
-  const { getSession } = useAttendance();
+  const { exams, submissions, getPublishedResultsForStudent } = useAssessment();
+  const { getByTeacher, getForStudent } = useHomework();
+  const { getStatus } = useHomeworkStatus();
+  const { getSession, sessions } = useAttendance();
 
   const assignedClassIds = currentUser.assignedClassIds ?? [];
   const assignedStudentIds = currentUser.assignedStudentIds ?? [];
@@ -63,6 +70,46 @@ export default function TeacherHome() {
     .slice(0, 3);
   const classNameOf = (classId: string) =>
     classes.find((c) => c.id === classId)?.name ?? classId;
+
+  // Phase 3D v3-r4-r1: 담당 학생 기준 "확인 필요한 학생" 신호 — 테스트/IF뿐 아니라
+  // 출결·숙제·목표 대비 과목까지 포함해 기존 데이터로 자동 산출한다(입력 없음).
+  const observations = useMemo(
+    () =>
+      collectObservations(
+        assignedStudents.map((s): StudentSignalBundle => {
+          const results = getPublishedResultsForStudent(s.id);
+          // 담당 반 세션에서 이 학생 기록만 추출(TeacherStudentDetail.tsx와 동일한 스코프 방식)
+          const attendanceRecords = sessions
+            .filter((sess) => assignedClassIds.includes(sess.classId))
+            .flatMap((sess) =>
+              sess.records
+                .filter((r) => r.studentId === s.id)
+                .map((r) => ({ date: sess.date, status: r.status }))
+            );
+          // 이 학생이 수강 중인 반 중 담당 반만 숙제 스코프로 사용
+          const studentClassIds = s.classes
+            .filter((c) => c.status === '수강중' && assignedClassIds.includes(c.id))
+            .map((c) => c.id);
+          const homeworkItems = getForStudent(studentClassIds)
+            .filter((hw) => hw.status === 'published')
+            .map((hw) => ({
+              date: hw.createdAt.slice(0, 10),
+              completed: getStatus(hw.id, s.id)?.status === 'completed',
+            }));
+          const subjectGaps = computeSubjectGaps(results, (examId) => exams.find((e) => e.id === examId)?.subject);
+          return {
+            studentId: s.id,
+            studentName: s.name,
+            results,
+            ifRecords: loadIfRecords(s.id),
+            attendanceRecords,
+            homeworkItems,
+            subjectGaps,
+          };
+        })
+      ),
+    [assignedStudents, getPublishedResultsForStudent, sessions, assignedClassIds, getForStudent, getStatus, exams]
+  );
 
   // 담당 반 시험 또는 학원 전체 시험 후보
   const candidateExams = exams.filter(
@@ -96,6 +143,14 @@ export default function TeacherHome() {
             오늘 수업 {todayClasses.length}개 · 담당 반 {assignedClasses.length}개 · 담당 학생 {assignedStudents.length}명
           </div>
         </div>
+
+        {/* Phase 3D v3-r4: 확인 필요한 학생 (담당 학생 기준) */}
+        <ObservationPanel
+          observations={observations}
+          title="오늘의 관찰 필요 학생"
+          scopeNote="담당 학생 기준"
+          detailHref={(id) => `/teacher/students/${id}`}
+        />
 
         {/* 빠른 실행 */}
         <section>

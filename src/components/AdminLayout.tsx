@@ -189,7 +189,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
         </button>
       </div>
 
-      <nav className="flex-1 py-3 overflow-y-auto">
+      <nav className="flex-1 min-h-0 py-3 overflow-y-auto">
         <div className="px-3 mb-2">
           <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'oklch(0.45 0.015 250)' }}>메뉴</span>
         </div>
@@ -289,7 +289,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
 
   return (
     <div className="flex min-h-screen" style={{ fontFamily: "'Pretendard', -apple-system, sans-serif", background: 'oklch(0.984 0.003 247)' }}>
-      <aside className="axis-sidebar flex-col fixed left-0 top-0 h-full z-30 hidden lg:flex" style={{ width: 240 }}>
+      <aside className="axis-sidebar flex-col fixed left-0 top-0 z-30 hidden lg:flex" style={{ width: 240 }}>
         <SidebarContent />
       </aside>
 
@@ -299,7 +299,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
       )}
 
       <aside
-        className={cn('axis-sidebar flex flex-col fixed left-0 top-0 h-full z-50 lg:hidden transition-transform duration-300 ease-in-out',
+        className={cn('axis-sidebar flex flex-col fixed left-0 top-0 z-50 lg:hidden transition-transform duration-300 ease-in-out',
           mobileOpen ? 'translate-x-0' : '-translate-x-full')}
         style={{ width: 240 }} aria-hidden={!mobileOpen}
       >

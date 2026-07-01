@@ -20,7 +20,7 @@
 
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { CalendarCheck, ClipboardList, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2, X, CalendarClock, CheckCircle2, TrendingUp } from 'lucide-react';
+import { CalendarCheck, ClipboardList, CreditCard, ChevronDown, BookOpen, ChevronRight, Play, FileText, Link2, X, CalendarClock, CheckCircle2, TrendingUp, BarChart2, MessageSquare } from 'lucide-react';
 import ParentLayout from '@/layouts/ParentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
@@ -33,9 +33,22 @@ import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import type { ContentItem } from '@/lib/contentData';
+import { loadIfRecords } from '@/lib/studentIfRecord';
+import { computeSubjectGaps } from '@/lib/observationSignals';
+import type { StudentSignalBundle } from '@/lib/observationSignals';
+import { computeParentInsight } from '@/lib/parentInsightEngine';
+import { computeBriefing } from '@/lib/studentBriefingEngine';
 
 function scoreColor(pct: number) {
   return pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)';
+}
+
+// Phase 3D v3-r4-r1: 객관 지표 카드의 톤(positive/neutral/watch)별 색상.
+// 감정적 경고가 아니라 객관 톤 구분용이므로 채도를 낮게 유지한다.
+function toneColor(tone: 'positive' | 'neutral' | 'watch') {
+  if (tone === 'positive') return 'oklch(0.45 0.15 160)';
+  if (tone === 'watch') return 'oklch(0.5 0.14 60)';
+  return 'oklch(0.45 0.015 250)';
 }
 
 function ContentDetailModal({
@@ -185,6 +198,37 @@ export default function ParentHome() {
     : [];
   const financeUnpaid = childInvoices.reduce((s, inv) => s + getUnpaidAmount(inv.id), 0);
   const hasUnpaid = financeUnpaid > 0;
+
+  // Phase 3D v3-r4-r1: 학부모 객관 지표 + 상담 전 확인 카드 + 자녀에게 해줄 말 —
+  // 화면 표시용으로 위에서 이미 슬라이스한 데이터(publishedResults 2건/childRecords 10건)와
+  // 별개로, 신호 계산에는 전체 데이터를 사용해야 "최근 2회 연속 하락" 같은 판정이 정확하다.
+  // Rival/Emblem/SP/Tier 등 학생용 게임형 지표는 여기서도 전혀 참조하지 않는다.
+  const allChildResults = selectedChildId
+    ? getPublishedResultsForStudent(exams, submissions, selectedChildId)
+    : [];
+  const allChildAttendance = sessions
+    .filter(sess => childClassIds.has(sess.classId))
+    .flatMap(sess =>
+      sess.records
+        .filter(r => r.studentId === selectedChildId)
+        .map(r => ({ date: sess.date, status: r.status }))
+    );
+  const childHomeworkLite = childHomework.map(hw => ({
+    date: hw.createdAt.slice(0, 10),
+    completed: getStatus(hw.id, selectedChildId)?.status === 'completed',
+  }));
+  const childSubjectGaps = computeSubjectGaps(allChildResults, (examId) => exams.find(e => e.id === examId)?.subject);
+  const childSignalBundle: StudentSignalBundle = {
+    studentId: selectedChildId,
+    studentName: child?.name ?? '',
+    results: allChildResults,
+    ifRecords: selectedChildId ? loadIfRecords(selectedChildId) : [],
+    attendanceRecords: allChildAttendance,
+    homeworkItems: childHomeworkLite,
+    subjectGaps: childSubjectGaps,
+  };
+  const parentInsight = computeParentInsight(childSignalBundle);
+  const parentBriefing = computeBriefing(childSignalBundle, parentInsight);
 
   // 성장 리포트 진입점 — 학부모 홈에서 "눌러보고 싶은" 카드로 사용.
   // 학생용 게임형 지표는 학부모 화면에 노출하지 않으므로 GrowthContext 의존을 두지 않는다.
@@ -493,6 +537,115 @@ export default function ParentHome() {
                   <ChevronRight size={16} style={{ color: 'oklch(0.6 0.015 250)', flexShrink: 0 }} />
                 </div>
               </Link>
+            </section>
+
+            {/* Phase 3D v3-r4-r1: 객관 지표 — 감정적 경고가 아니라 수치 기반 객관 정보로 표시.
+                Rival/Emblem/SP/Tier 등 학생용 게임형 지표는 포함하지 않는다. */}
+            <section>
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <BarChart2 size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>객관 지표</span>
+              </div>
+              <div className="axis-card p-4 grid grid-cols-2 gap-3">
+                {[
+                  parentInsight.recentTestChange,
+                  parentInsight.averagePosition,
+                  parentInsight.attendanceStability,
+                  parentInsight.homeworkFlow,
+                  parentInsight.ifMissedChange,
+                ].map((m, i) => (
+                  <div key={i}>
+                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{m.label}</div>
+                    <div className="text-xs font-semibold mt-0.5" style={{ color: toneColor(m.tone) }}>{m.value}</div>
+                  </div>
+                ))}
+                <div>
+                  <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>목표 대비 보완 과목</div>
+                  <div className="text-xs font-semibold mt-0.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                    {parentInsight.targetGapSubjects.length === 0
+                      ? '해당 없음'
+                      : parentInsight.targetGapSubjects.map(g => `${g.subject}(${g.gapToTarget}%p)`).join(' · ')}
+                  </div>
+                </div>
+              </div>
+              {(parentInsight.improvedPoints.length > 0 || parentInsight.checkPoints.length > 0) && (
+                <div className="axis-card p-4 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.45 0.15 160)' }}>좋아진 지표</div>
+                    {parentInsight.improvedPoints.length === 0 ? (
+                      <div className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>아직 특별히 눈에 띄는 변화는 없습니다.</div>
+                    ) : (
+                      <ul className="space-y-0.5">
+                        {parentInsight.improvedPoints.map((p, i) => (
+                          <li key={i} className="text-xs" style={{ color: 'oklch(0.35 0.02 250)' }}>· {p}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.5 0.14 60)' }}>확인할 지점</div>
+                    {parentInsight.checkPoints.length === 0 ? (
+                      <div className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>지금은 특별히 확인할 지점이 없습니다.</div>
+                    ) : (
+                      <ul className="space-y-0.5">
+                        {parentInsight.checkPoints.map((p, i) => (
+                          <li key={i} className="text-xs" style={{ color: 'oklch(0.35 0.02 250)' }}>· {p}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* Phase 3D v3-r4-r1: 상담 전 확인 카드 — 규칙 기반 자동 브리핑(AI 호출 없음, 입력 없음).
+                상담 기록 원문은 포함하지 않는다(학부모 노출 절대 금지 원칙 유지). */}
+            <section>
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <MessageSquare size={15} style={{ color: 'oklch(0.511 0.262 276.966)' }} />
+                <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>상담 전 확인 카드</span>
+              </div>
+              <div className="axis-card p-4 space-y-3">
+                <p className="text-sm leading-relaxed" style={{ color: 'oklch(0.3 0.02 250)' }}>
+                  {parentBriefing.parentBriefing}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {parentBriefing.highlights.map((h, i) => (
+                    <span
+                      key={i}
+                      className="text-xs px-2 py-1 rounded-md"
+                      style={{ background: 'oklch(0.96 0.004 250)', color: 'oklch(0.4 0.02 250)' }}
+                    >
+                      {h}
+                    </span>
+                  ))}
+                </div>
+                <div>
+                  <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>선생님께 물어보면 좋은 질문</div>
+                  <ul className="space-y-0.5">
+                    {parentBriefing.suggestedQuestions.map((q, i) => (
+                      <li key={i} className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>· {q}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            {/* Phase 3D v3-r4-r1: 자녀에게 해줄 말 추천 — 낙인/압박/불안 조장 문구 금지,
+                항상 협력적·격려형 어투로만 구성된다. */}
+            <section>
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <CheckCircle2 size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
+                <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>자녀에게 해줄 말</span>
+              </div>
+              <div
+                className="axis-card p-4"
+                style={{ background: 'linear-gradient(135deg, oklch(0.45 0.15 160 / 0.06), white)' }}
+              >
+                <p className="text-sm font-medium leading-relaxed" style={{ color: 'oklch(0.3 0.1 160)' }}>
+                  "{parentBriefing.parentTalkSuggestion}"
+                </p>
+              </div>
             </section>
 
             {/* 수납 상태 — Phase 3D v2: 총 청구액/총 납부액 등 총액성 금액 표시를 제거하고

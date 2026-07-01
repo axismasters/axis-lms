@@ -909,3 +909,141 @@ sticky header, 엠블럼 팝업 드래그, 클릭 가능 UI 버튼/칩화는 전
   닫히는 버그를 이번에 발견·수정했다. 향후 다른 화면에서도 확인 모달을 중첩해서 쓸 일이
   많아질 것으로 예상되어, 이 수정이 공용으로 도움이 될 것으로 판단해 별도 지시 없이
   반영했다.
+
+---
+
+# Phase 3D v3-r4 — parent engagement + risk alerts (트랜치 1)
+
+기준: GitHub main `Phase 3D v3-r3` (Build Check #109 통과). 불변 파일 4종 MD5 유지 확인.
+이번 라운드는 두 v3-r4 스펙(문구/그래프/테이블 + 사이드바/위험알림판/학부모브리핑)을 합쳐
+진행하며, 검증 위험이 낮은 항목부터 트랜치 1로 반영한다. 오프라인 환경이라 `npm run build`는
+로컬에서 실행 필요(자세한 사유는 QA_PHASE3D.md v3-r4 참조).
+
+## 1. 관리자 모바일 사이드바 스크롤 보완 (신규 스펙 #1)
+
+- `src/index.css` `.axis-sidebar`: `min-height:100vh` 제거 → `height:100vh; height:100dvh;
+  overflow:hidden;`. 콘텐츠가 뷰포트보다 길어도 사이드바 자체가 늘어나지 않아 하단
+  (사용자/모드전환/DEV) 영역이 잘리지 않는다. 100dvh로 모바일 URL바 변화에 대응.
+- `src/components/AdminLayout.tsx`:
+  - 스크롤 대상 `<nav>`에 `min-h-0` 추가 → flex column 안에서 정상 축소·스크롤(플렉스
+    min-height 기본값 auto로 인해 스크롤이 동작하지 않던 문제 해결).
+  - 데스크톱/모바일 `<aside>`에서 `h-full`(=height:100%) 제거 → 높이를 `.axis-sidebar`의
+    100dvh로 일원화(100% vs 100dvh 충돌 제거). 로고/하단 영역은 고정, 가운데 메뉴만 스크롤.
+- 본문(`.axis-main`)은 기존 `overflow-x:hidden` 유지, 세로 스크롤은 문서 흐름 그대로 —
+  사이드바 내부 스크롤과 충돌 없음.
+
+## 2. 확인 필요한 학생 알림판 (신규 스펙 #2, 이번 라운드 플래그십)
+
+- 신규 `src/lib/observationSignals.ts` (순수 함수, 컨텍스트 비의존):
+  `computeObservation()` / `collectObservations()` + `OBSERVATION_LEVEL_STYLE`.
+  기존 데이터(공개 테스트 결과 + IF 레코드)만으로 신호 자동 산출. 구현 규칙:
+  최근 2회 연속 하락(흐름 하락) / 최근 하위 반복(반복 약점) / 반평균 하회(확인 필요) /
+  IF 놓친 점수 증가(확인 필요) / 최근 활동 없음(학습 리듬 확인).
+- 신규 `src/components/ObservationPanel.tsx`: 상단 강조 헤더 + 좌측 액센트의 공유 패널.
+  학생명 · 상태 배지 · 감지 이유 칩 · 최근 변화 · [상세 보기] 버튼. 신호 없으면 차분한
+  빈 상태 안내.
+- `src/pages/teacher/TeacherHome.tsx`: 인사 카드 아래에 담당 학생 기준 패널 연결
+  (`제목: 오늘의 관찰 필요 학생`, detailHref `/teacher/students/:id`).
+- `src/pages/StudentList.tsx`: 관리자 랜딩 상단(헤더와 요약카드 사이)에 전체 학생 기준 패널
+  연결(`제목: 확인 필요한 학생`, detailHref `/admin/students/:id`). 접근 권한(canAccessStudent)
+  범위 내 학생만 계산.
+- 표현 정책: 허용어(관찰 필요/확인 필요/흐름 하락/반복 약점/학습 리듬 확인)만 사용,
+  금지어(위험/문제 학생, 경고 대상, 탈락, 불합격, 합격 가능성/합격률 하락) 미사용.
+- 선생님이 글을 추가로 쓰게 만드는 입력 기능 없음(자동 요약만).
+
+## 3. 선생님 문구 통일 검증 + 불변 파일 충돌 정리 (구 스펙 #3)
+
+- 전수 조사 결과, `시험 채점`/단독 `채점` 화면 제목·메뉴는 v3-r3에서 이미 `내 시험지 관리`/
+  `내 시험지`로 통일됨. `수업노트`/`수업자료` 중복도 `TeacherMaterials.tsx`(수업영상·수업노트
+  2탭)로 통합 완료, 레거시 라우트(`/teacher/notes`,`/teacher/videos`)는 리다이렉트 처리됨.
+- **남은 유일한 예외**: `src/pages/teacher/TeacherExamGrading.tsx`의 `<TeacherLayout
+  title="채점">`. 이 파일은 **불변(MD5 3429a4ba 고정)** 이라 이번 라운드에 변경 불가.
+  래퍼 `TeacherExamGradingGuard.tsx`는 접근 허용 시 이 컴포넌트를 그대로 위임하므로 제목을
+  덮어쓸 수 없다. → 코드 변경 없이 이슈로 남김(개발 총괄 GPT 권고안은 QA_PHASE3D.md 참조).
+
+## 4. AXIS 헌법 전수 감사 (구 스펙 #5)
+
+- 학생 화면(재무/수납/청구/미납/환불/영수증) · 전 소스(합격률/합격 가능성/합격 보장/
+  안정 합격/불합격) · 학생 직접 성적 입력 흔적 전수 grep.
+- 결과 **위반 0건**. 매칭된 항목은 전부 "금지를 재확인하는 주석" 또는 university 어댑터의
+  "포함하지 않음" 문서 문구였고, 실제 렌더링/UI 위반은 없음. 코드 변경 없음.
+
+## 트랜치 2로 순연(문서화 완료, 미구현)
+
+학부모 객관지표 카드 강화(#3) · 자녀에게 해줄 말(#4) · 자동 브리핑 카드(#5) ·
+출결/숙제 기반 위험신호 2종 · 시험지 그래프 심화(구 #2) · 테이블 UI 심화 감사(구 #4).
+상세는 `docs/PARENT_PAGE_ENGAGEMENT_IDEAS.md` v3-r4 섹션.
+
+---
+
+# Phase 3D v3-r4-r1 — briefing insight completion (v3-r4 반려 후 재작성)
+
+⚠ **v3-r4는 반려되었다.** GitHub 업로드 금지 지시 수신. 기준은 GitHub main
+`Phase 3D v3-r3`(Build Check #109 통과)로 재설정하고, v3-r4에서 유지 지시를 받은 3가지만
+가져와 다시 쌓았다: `observationSignals.ts`, `ObservationPanel.tsx`, 관리자 모바일
+사이드바 스크롤 보완. 그 위에 이번 라운드 필수 항목 4가지를 실제 코드로 구현하고 화면에
+연결했다(문서로만 끝내지 않음). 커밋 요약: `Phase 3D v3-r4-r1 briefing insight completion`.
+
+## 1. 위험 신호 엔진 확장
+
+`src/lib/observationSignals.ts`를 확장(신규 파일 아님, 기존 파일 확장):
+- 신규 타입: `AttendanceRecordLite`, `HomeworkItemLite`, `SubjectGapLite`,
+  `StudentSignalBundle`(= `ObservationInput` 별칭 — 다른 두 엔진이 재사용).
+- 신규 헬퍼: `computeSubjectGaps(results, getSubject, targetPct=90)` — ParentGrowthReport.tsx의
+  기존 과목별 보완 필요도 계산과 동일한 알고리즘(표본 2건 미만 과목은 변화 미계산)을
+  재사용해 화면 간 수치가 어긋나지 않게 했다.
+- 신규 신호 3종(`ObservationKind` 추가): `attendance-decline`(최근 14일 결석/지각 ≥2건
+  & 직전 14일보다 증가) · `homework-decline`(최근 14일 미제출 ≥2건 & 직전보다 증가) ·
+  `target-gap-worsening`(목표 미달 + 최근 절반이 이전 절반보다 3%p 이상 하락한 과목).
+- 배지 어휘는 기존 5종 그대로 유지(신규 신호는 학습 리듬 확인/확인 필요로 매핑).
+- `ObservationInput`에 `attendanceRecords?/homeworkItems?/subjectGaps?` optional 필드
+  추가(없으면 해당 신호만 계산 생략 — 하위 호환).
+
+`src/pages/teacher/TeacherHome.tsx` / `src/pages/StudentList.tsx`: 학생별로 출결 세션
+(담당 반 스코프 / 권한 범위 전체), 숙제 완료 현황, 과목별 목표 격차를 모아
+`StudentSignalBundle`을 구성하도록 갱신. 선생님 홈은 `assignedStudentIds` 기준,
+관리자 화면은 `canAccessStudent()` 기준으로 스코프 유지(변경 없음).
+
+## 2. 자동 브리핑 엔진 (신규 파일)
+
+`src/lib/studentBriefingEngine.ts` — AI API 호출 없음(fetch/OpenAI/Claude/Gemini 미사용,
+전부 결정적 템플릿 함수). 선생님 수동 입력창 없음. 상담 기록 원문(counselingData.ts)을
+입력으로 사용하지 않음(학부모 노출 금지 원칙 유지).
+- `computeBriefing(bundle, insight)` → `{ parentBriefing, teacherBriefing, highlights,
+  checkPoints, parentTalkSuggestion, suggestedQuestions }`.
+- `parentTalkSuggestion`은 감지된 신호의 우선순위(테스트 하락 > IF 증가 > 출결 흔들림 >
+  숙제 흐름 저하 > 목표대비 악화 > 상승 칭찬 > 기본 격려)에 따라 사전 정의 문장 중 하나를
+  고르며, 낙인/압박/불안 조장 표현을 쓰지 않는다(항상 "같이 확인해보자" 톤).
+
+## 3. 학부모 객관 지표 엔진 (신규 파일)
+
+`src/lib/parentInsightEngine.ts` — AI API 호출 없음. `computeParentInsight(bundle)` →
+8종 산출: 최근 테스트 변화 · 평균 대비 위치 · 출결 안정도(최근 30일) · 숙제 수행 흐름
+(최근 14일) · IF 놓친 점수 변화 · 목표 대비 보완 과목(상위 3개) · 좋아진 지표(문장) ·
+확인할 지점(문장). 각 지표는 `positive/neutral/watch` 톤을 가지며, Rival/Emblem/SP/Tier는
+어떤 출력에도 포함하지 않는다.
+
+## 4. 실제 UI 연결
+
+- `src/pages/parent/ParentHome.tsx`: 성장 리포트 진입 카드 아래에 **객관 지표**(8종
+  그리드 + 좋아진 지표/확인할 지점 2열), **상담 전 확인 카드**(parentBriefing 문단 +
+  highlights 칩 + 선생님께 물어볼 질문), **자녀에게 해줄 말**(인용 카드) 3개 섹션 신규
+  추가. 화면 표시용으로 기존에 슬라이스해 쓰던 데이터(publishedResults 2건/childRecords
+  10건)와 별개로, 신호 계산에는 전체 데이터를 새로 모아 `StudentSignalBundle`을 구성했다
+  (기존 표시 로직은 건드리지 않음 — 회귀 없음).
+- `src/pages/teacher/TeacherStudentDetail.tsx`: 계정 관리 카드 아래·담당 수업 섹션 위에
+  **담당 학생 빠른 브리핑** 카드 신규 추가(teacherBriefing + highlights 칩 + 확인할 지점).
+
+## 검증
+
+- 불변 파일 4종 MD5 유지 확인(변경 없음).
+- 변경/생성 10개 파일 전체 괄호 균형 통과.
+- AI API 호출(fetch/OpenAI/Claude/Gemini) grep 결과 0건(주석 설명 문구만 검출).
+- 금지 표현(합격률 등, 위험/문제 학생 등) grep 결과 0건(주석 설명 문구만 검출).
+- Rival/Emblem/SP/Tier grep 결과 — 학부모 화면·엔진 파일에는 금지 원칙을 설명하는
+  주석만 존재, 실제 노출 없음.
+
+## 이번에도 순연
+
+시험지별 그래프 심화 · 테이블 UI 심화 감사 · ParentGrowthReport.tsx 중복 연결(스펙의
+"학부모 홈 또는 성장 리포트" OR 조건은 ParentHome 연결로 충족) · 입시 인사이트(구현 보류).

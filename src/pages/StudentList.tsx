@@ -21,6 +21,14 @@ import {
   getUnivDataStatus, UnivStatus, UNIV_STATUS_STYLE, isUnpaid, getFinance,
 } from '@/lib/studentDerived';
 import { cn } from '@/lib/utils';
+import { useAssessment } from '@/contexts/AssessmentContext';
+import { useAttendance } from '@/contexts/AttendanceContext';
+import { useHomework } from '@/contexts/HomeworkContext';
+import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
+import { loadIfRecords } from '@/lib/studentIfRecord';
+import { collectObservations, computeSubjectGaps } from '@/lib/observationSignals';
+import type { StudentSignalBundle } from '@/lib/observationSignals';
+import ObservationPanel from '@/components/ObservationPanel';
 
 const STATUS_OPTIONS: (StudentStatus | '전체')[] = ['전체', '재원', '휴원', '퇴원', '대기'];
 const UNIV_OPTIONS: (UnivStatus | '전체')[] = ['전체', '데이터 부족', '준비 중', '충분'];
@@ -115,6 +123,45 @@ export default function StudentList() {
   const { students: allStudents } = useStudents();
   const { classes, getClass } = useClasses();
   const { currentUser, can, canAccessStudent, canViewFinance } = useAuth();
+  const { exams, getPublishedResultsForStudent } = useAssessment();
+  const { sessions } = useAttendance();
+  const { getForStudent } = useHomework();
+  const { getStatus } = useHomeworkStatus();
+  // Phase 3D v3-r4-r1: 전체 학생(접근 권한/dataScope 범위) 기준 "확인 필요한 학생" 신호 —
+  // 테스트/IF뿐 아니라 출결·숙제·목표 대비 과목까지 포함해 기존 데이터로 자동 산출한다.
+  const observations = useMemo(
+    () =>
+      collectObservations(
+        allStudents
+          .filter((s) => canAccessStudent(s.id))
+          .map((s): StudentSignalBundle => {
+            const results = getPublishedResultsForStudent(s.id);
+            const attendanceRecords = sessions.flatMap((sess) =>
+              sess.records
+                .filter((r) => r.studentId === s.id)
+                .map((r) => ({ date: sess.date, status: r.status }))
+            );
+            const studentClassIds = s.classes.filter((c) => c.status === '수강중').map((c) => c.id);
+            const homeworkItems = getForStudent(studentClassIds)
+              .filter((hw) => hw.status === 'published')
+              .map((hw) => ({
+                date: hw.createdAt.slice(0, 10),
+                completed: getStatus(hw.id, s.id)?.status === 'completed',
+              }));
+            const subjectGaps = computeSubjectGaps(results, (examId) => exams.find((e) => e.id === examId)?.subject);
+            return {
+              studentId: s.id,
+              studentName: s.name,
+              results,
+              ifRecords: loadIfRecords(s.id),
+              attendanceRecords,
+              homeworkItems,
+              subjectGaps,
+            };
+          })
+      ),
+    [allStudents, canAccessStudent, getPublishedResultsForStudent, sessions, getForStudent, getStatus, exams]
+  );
   // 목록 단위 노출(요약카드/필터/컬럼 헤더)은 finance.view 보유 여부로 1차 게이트.
   // 행 단위 표시는 각 학생에 대해 canViewFinance(studentId)(=finance.view && canAccessStudent)로 최종 판단.
   const showFinanceColumn = can('finance.view');
@@ -219,6 +266,16 @@ export default function StudentList() {
             </button>
           </Link>
         )}
+      </div>
+
+      {/* Phase 3D v3-r4: 확인 필요한 학생 (전체 학생 기준) — 관리자 랜딩 상단 강조 패널 */}
+      <div className="mb-5">
+        <ObservationPanel
+          observations={observations}
+          title="확인 필요한 학생"
+          scopeNote="전체 학생 기준"
+          detailHref={(id) => `/admin/students/${id}`}
+        />
       </div>
 
       {/* 요약 카드 — 클릭하면 아래 목록이 해당 조건으로 필터링된다(Phase 3D v3-r1) */}

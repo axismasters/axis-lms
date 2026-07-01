@@ -185,3 +185,64 @@
 - `TeacherExamGradingGuard.tsx`, `TeacherRoutes.tsx`, `AdminRoutes.tsx` — 라우팅/권한 가드
   구조 미변경.
 - `src/pages/student/StudentFinance.tsx` — 기존 stub 상태 그대로 유지.
+
+---
+
+## Phase 3D v3-r4 (parent engagement + risk alerts, 트랜치 1)
+
+### 신규 파일 (NEW)
+- `src/lib/observationSignals.ts` — 관찰 필요 신호 산출(순수 함수) + 배지 스타일.
+- `src/components/ObservationPanel.tsx` — "확인 필요한 학생" 공유 강조 패널.
+
+### 수정 파일 (MODIFIED)
+- `src/index.css` — `.axis-sidebar` 높이 100dvh 고정 + overflow:hidden(모바일 사이드바 잘림 해결).
+- `src/components/AdminLayout.tsx` — `<nav>`에 `min-h-0`, `<aside>` `h-full` 제거(높이 CSS 일원화).
+- `src/pages/teacher/TeacherHome.tsx` — 담당 학생 기준 ObservationPanel 연결.
+- `src/pages/StudentList.tsx` — 관리자 랜딩 상단 전체 학생 기준 ObservationPanel 연결.
+
+### 문서 (DOCS)
+- `docs/PARENT_PAGE_ENGAGEMENT_IDEAS.md` / `docs/CHANGES_PHASE3D.md` / `docs/QA_PHASE3D.md`
+  / `docs/MODIFIED_FILES_PHASE3D.md` / `docs/APPLY_ORDER_PHASE3D.md` — v3-r4 섹션 추가.
+
+### 불변 유지(변경 없음) — MD5 확인
+- `src/lib/universityAnalysisAdapter.ts`(1eddaef5) · `src/pages/teacher/TeacherExamGrading.tsx`(3429a4ba)
+  · `src/App.tsx`(387bbf48) · `src/lib/classData.ts`(126d9e5e)
+
+---
+
+## Phase 3D v3-r4-r1 (briefing insight completion) — v3-r4 반려 후 재작성
+
+기준: GitHub main v3-r3 + 유지 지시 3항목(아래 "유지" 표시). v3-r4 산출물은 미채택.
+
+### 신규 파일 (NEW)
+- `src/lib/parentInsightEngine.ts` — 학부모 객관 지표 8종 엔진(AI 호출 없음).
+- `src/lib/studentBriefingEngine.ts` — 자동 브리핑 5+1종 엔진(AI 호출 없음).
+
+### 유지(v3-r4에서 그대로 가져옴, 이번 라운드 변경 없음)
+- `src/lib/observationSignals.ts` — 단, 이번 라운드에 **확장**됨(아래 MODIFIED 참조).
+- `src/components/ObservationPanel.tsx` — 변경 없음.
+- `.axis-sidebar` 모바일 스크롤 수정(`src/index.css`, `src/components/AdminLayout.tsx`) —
+  변경 없음.
+
+### 수정 파일 (MODIFIED)
+- `src/lib/observationSignals.ts` — 신호 3종 추가(결석/지각 증가, 숙제 미제출 증가,
+  목표 대비 보완 과목 악화), `computeSubjectGaps()` 신규 헬퍼, `StudentSignalBundle`
+  타입 별칭, `AttendanceRecordLite`/`HomeworkItemLite`/`SubjectGapLite` 신규 타입.
+- `src/pages/teacher/TeacherHome.tsx` — 확장된 신호 계산을 위해 출결/숙제/과목갭 데이터
+  수집 추가(useHomeworkStatus 신규 사용, sessions/getForStudent 활용 확대).
+- `src/pages/StudentList.tsx` — 동일 확장(useAttendance/useHomework/useHomeworkStatus
+  신규 사용).
+- `src/pages/teacher/TeacherStudentDetail.tsx` — "담당 학생 빠른 브리핑" 카드 신규 추가
+  (useHomework/useHomeworkStatus 신규 사용, parentInsightEngine/studentBriefingEngine 연결).
+- `src/pages/parent/ParentHome.tsx` — "객관 지표"/"상담 전 확인 카드"/"자녀에게 해줄 말"
+  3개 섹션 신규 추가(parentInsightEngine/studentBriefingEngine 연결). 기존 표시 로직
+  (수강 반/출결 요약/성적/숙제/콘텐츠/수납)은 변경 없음.
+
+### 문서 (DOCS)
+- `docs/PARENT_PAGE_ENGAGEMENT_IDEAS.md` — v3-r4 섹션에 반려 표시 추가, v3-r4-r1 섹션 신규.
+- `docs/CHANGES_PHASE3D.md` / `docs/QA_PHASE3D.md` / `docs/MODIFIED_FILES_PHASE3D.md` /
+  `docs/APPLY_ORDER_PHASE3D.md` — v3-r4-r1 섹션 추가.
+
+### 불변 유지(변경 없음) — MD5 확인
+- `src/lib/universityAnalysisAdapter.ts`(1eddaef5) · `src/pages/teacher/TeacherExamGrading.tsx`(3429a4ba)
+  · `src/App.tsx`(387bbf48) · `src/lib/classData.ts`(126d9e5e)

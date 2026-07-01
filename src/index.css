@@ -149,7 +149,13 @@
   .axis-sidebar {
     background-color: oklch(0.13 0.025 250);
     width: 240px;
-    min-height: 100vh;
+    /* Phase 3D v3-r4: 사이드바를 뷰포트 높이에 고정(100vh/100dvh)하고 자체 overflow는 숨긴다.
+       내부 메뉴 영역(nav.min-h-0.overflow-y-auto)만 스크롤되어, 짧은 화면에서도
+       하단(사용자/모드전환/DEV) 영역이 잘리지 않는다. 기존 min-height:100vh는 콘텐츠가
+       길어질 때 사이드바 자체가 늘어나 하단이 화면 밖으로 밀려나던 원인이라 제거함. */
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
     flex-shrink: 0;
   }
 
