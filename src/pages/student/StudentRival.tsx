@@ -64,7 +64,7 @@ export default function StudentRival() {
         {/* 내 Rival 카드 */}
         <div className="axis-card p-5" style={{ background: `linear-gradient(135deg, ${tierColor}14, white)` }}>
           <div className="flex items-center gap-2 mb-1">
-            <Swords size={16} style={{ color: '#7C3AED' }} />
+            <Swords size={16} style={{ color: '#081F4D' }} />
             <span className="text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>내 Rival 전적</span>
           </div>
           <div className="flex items-center justify-between mt-2">

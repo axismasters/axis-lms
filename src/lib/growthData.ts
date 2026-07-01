@@ -107,7 +107,7 @@ export const TIER_COLORS: Record<StudentTier, string> = {
   IRON:     'oklch(0.35 0.02 250)',
   SILVER:   'oklch(0.65 0.05 240)',
   GOLD:     'oklch(0.72 0.16 80)',
-  DIAMOND:  'oklch(0.55 0.22 290)',
+  DIAMOND:  'oklch(0.35 0.10 262)',
 };
 
 export const CATEGORY_LABELS: Record<EmblemCategory, string> = {
@@ -127,7 +127,7 @@ export const MATERIAL_BADGE: Record<EmblemMaterial, { bg: string; text: string; 
   IRON:    { bg: '#F1F5F9', text: '#374151', border: '#CBD5E1' },
   SILVER:  { bg: '#F0F9FF', text: '#0C4A6E', border: '#BAE6FD' },
   GOLD:    { bg: '#FFFBEB', text: '#92400E', border: '#FCD34D' },
-  DIAMOND: { bg: '#F5F3FF', text: '#4C1D95', border: '#DDD6FE' },
+  DIAMOND: { bg: '#EEF1F6', text: '#1F3A66', border: '#C7D0E3' },
 };
 
 export const CATEGORY_BADGE: Record<EmblemCategory, { bg: string; text: string }> = {
@@ -135,7 +135,7 @@ export const CATEGORY_BADGE: Record<EmblemCategory, { bg: string; text: string }
   GROWTH:     { bg: '#EFF6FF', text: '#1E40AF' },
   ASSESSMENT: { bg: '#FFF7ED', text: '#9A3412' },
   RIVAL:      { bg: '#FEF2F2', text: '#991B1B' },
-  SKILL:      { bg: '#FAF5FF', text: '#6B21A8' },
+  SKILL:      { bg: '#E7EBF3', text: '#081F4D' },
   SPECIAL:    { bg: '#FFFBEB', text: '#92400E' },
 };
 

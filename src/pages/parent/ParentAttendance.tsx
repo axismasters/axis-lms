@@ -14,7 +14,7 @@ import type { AttendanceStatus } from '@/lib/attendanceData';
 const STATUS_STYLE: Record<AttendanceStatus, { bg: string; text: string }> = {
   '출석':    { bg: 'oklch(0.94 0.08 160)',  text: 'oklch(0.35 0.12 160)' },
   '지각':    { bg: 'oklch(0.95 0.08 80)',   text: 'oklch(0.45 0.15 80)' },
-  '조퇴':    { bg: 'oklch(0.94 0.06 280)',  text: 'oklch(0.4 0.12 280)' },
+  '조퇴':    { bg: 'oklch(0.91 0.035 262)',  text: 'oklch(0.254 0.090 262.09)' },
   '결석':    { bg: 'oklch(0.95 0.08 27)',   text: 'oklch(0.45 0.15 27)' },
   '보강출석': { bg: 'oklch(0.94 0.08 160)', text: 'oklch(0.35 0.12 160)' },
   '공결':    { bg: 'oklch(0.95 0.005 250)', text: 'oklch(0.45 0.015 250)' },

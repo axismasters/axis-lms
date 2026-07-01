@@ -68,8 +68,8 @@ export default function StudentTargetPreview() {
         {/* 헤더 */}
         <div className="axis-card p-5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#EDE9FE' }}>
-              <GraduationCap size={20} style={{ color: '#7C3AED' }} />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#F8F0DC' }}>
+              <GraduationCap size={20} style={{ color: '#C8A15A' }} />
             </div>
             <div>
               <div className="font-bold text-base" style={{ color: 'oklch(0.15 0.02 250)' }}>{menuLabel}</div>
@@ -82,7 +82,7 @@ export default function StudentTargetPreview() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {gradeLevel && (
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#EDE9FE', color: '#7C3AED' }}>
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#F8F0DC', color: '#C8A15A' }}>
                 {gradeLevel}
               </span>
             )}
@@ -286,7 +286,7 @@ export default function StudentTargetPreview() {
         {payload.mathImprovementScenarios.length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-2 px-1">
-              <TrendingUp size={15} style={{ color: '#7C3AED' }} />
+              <TrendingUp size={15} style={{ color: '#C8A15A' }} />
               <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>수학 성적 향상 시 목표 변화</span>
             </div>
             <div className="axis-card p-4 space-y-2">
@@ -298,7 +298,7 @@ export default function StudentTargetPreview() {
                   <span className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>{s.scenarioLabel}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold" style={{ color: gradeColor(s.improvedGrade) }}>{s.improvedGrade}등급</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#EDE9FE', color: '#7C3AED' }}>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#F8F0DC', color: '#C8A15A' }}>
                       → {s.direction}
                     </span>
                   </div>

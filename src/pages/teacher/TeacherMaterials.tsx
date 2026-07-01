@@ -129,7 +129,7 @@ function VideoMaterialTabContent() {
                   className="py-2 rounded-lg text-sm font-medium border transition-colors"
                   style={{
                     borderColor: form.type === t ? '#081F4D' : 'oklch(0.9 0.008 250)',
-                    background: form.type === t ? 'oklch(0.96 0.06 276)' : 'white',
+                    background: form.type === t ? 'oklch(0.93 0.03 262)' : 'white',
                     color: form.type === t ? '#081F4D' : 'oklch(0.5 0.015 250)',
                   }}
                 >
@@ -225,7 +225,7 @@ function VideoMaterialTabContent() {
                 <div key={item.id} className="axis-card p-4">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ background: item.type === 'video' ? 'oklch(0.94 0.06 276)' : 'oklch(0.96 0.04 160)' }}>
+                      style={{ background: item.type === 'video' ? 'oklch(0.91 0.035 262)' : 'oklch(0.96 0.04 160)' }}>
                       <Icon size={14} style={{ color: item.type === 'video' ? '#081F4D' : 'oklch(0.45 0.15 160)' }} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -238,7 +238,7 @@ function VideoMaterialTabContent() {
                       <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
                         {cls?.name ?? item.classId} · {item.date} ·{' '}
                         <span className="px-1.5 py-0.5 rounded text-xs"
-                          style={{ background: item.type === 'video' ? 'oklch(0.94 0.06 276)' : 'oklch(0.96 0.04 160)', color: item.type === 'video' ? '#081F4D' : 'oklch(0.45 0.15 160)' }}>
+                          style={{ background: item.type === 'video' ? 'oklch(0.91 0.035 262)' : 'oklch(0.96 0.04 160)', color: item.type === 'video' ? '#081F4D' : 'oklch(0.45 0.15 160)' }}>
                           {TYPE_LABEL[item.type as 'video' | 'material'] ?? item.type}
                         </span>
                       </div>

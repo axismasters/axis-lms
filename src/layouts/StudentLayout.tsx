@@ -16,11 +16,12 @@
 // ⚠ Phase 3A-1 금지: 수납/재무 관련 탭 추가 금지
 
 import { Link, useLocation } from 'wouter';
-import { Home, ClipboardList, Trophy, Swords, User, BarChart2, LogOut } from 'lucide-react';
+import { Home, ClipboardList, Trophy, Swords, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
+import { AxisMark } from '@/components/brand/AxisMark';
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -60,7 +61,7 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center rounded-md"
               style={{ width: 28, height: 28, background: '#081F4D' }}>
-              <BarChart2 size={15} color="white" />
+              <AxisMark size={15} letterColor="#F7F4EE" slashColor="#C8A15A" />
             </div>
             <span className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
               {title ?? 'AXIS 학생'}
@@ -91,7 +92,7 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
         <div className="flex items-center gap-2">
           {gradeLevel && (
             <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-              style={{ background: '#EDE9FE', color: '#7C3AED' }}>
+              style={{ background: '#F8F0DC', color: '#C8A15A' }}>
               {gradeLevel}
             </span>
           )}

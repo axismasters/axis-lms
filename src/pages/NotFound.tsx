@@ -6,7 +6,7 @@ export default function NotFound() {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 12 }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, color: 'oklch(0.2 0.02 250)' }}>404</h1>
       <p style={{ fontSize: 14, color: 'oklch(0.5 0.015 250)' }}>페이지를 찾을 수 없습니다.</p>
-      <a href="/admin/students" style={{ fontSize: 13, color: 'oklch(0.45 0.2 277)' }}>학생 목록으로 이동</a>
+      <a href="/admin/students" style={{ fontSize: 13, color: 'oklch(0.254 0.090 262.09)' }}>학생 목록으로 이동</a>
     </div>
   );
 }

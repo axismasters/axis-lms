@@ -144,7 +144,7 @@ function ExamLineTrendChart({ title, results, color }: { title: string; results:
     <div className="axis-card p-4">
       <div className="flex items-center gap-1.5 mb-2">
         <TrendingUp size={13} style={{ color }} />
-        <span className="text-xs font-semibold" style={{ color: 'oklch(0.35 0.02 250)' }}>{title} 성적 추이</span>
+        <span className="text-xs font-semibold" style={{ color: 'oklch(0.35 0.02 250)' }}>{title} 결과 추이</span>
         {sorted.length > 0 && (
           <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>· 총 {sorted.length}회</span>
         )}
@@ -390,7 +390,7 @@ function CumulativeGrowthSection({
               <div className="text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
                 IF 점수 추이 (놓친 이유를 다 잡았다면?)
               </div>
-              <MiniSparkline points={ifScorePcts} color="#7C3AED" />
+              <MiniSparkline points={ifScorePcts} color="#C8A15A" />
             </div>
           )}
 
@@ -806,10 +806,10 @@ function TestTabContent({ results, tab, studentId }: { results: StudentExamResul
       <div className="axis-card p-8 text-center">
         <ClipboardList size={24} className="mx-auto mb-2" style={{ color: 'oklch(0.8 0.01 250)' }} />
         <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
-          아직 등록된 {tab.label} 성적이 없습니다.
+          아직 등록된 {tab.label} 결과가 없습니다.
         </div>
         <div className="text-xs mt-1" style={{ color: 'oklch(0.7 0.01 250)' }}>
-          선생님이 성적을 입력하면 여기에 표시됩니다.
+          선생님이 결과를 입력하면 여기에 표시됩니다.
         </div>
       </div>
     );
@@ -888,11 +888,11 @@ export default function StudentGrades() {
 
         {/* 안내 */}
         <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid #081F4D', color: 'oklch(0.5 0.015 250)' }}>
-          단원평가와 내신대비 모의고사 결과를 확인하세요. 카드를 탭하면 성적표 상세와 IF 채점을 볼 수 있습니다.
+          단원평가와 내신대비 모의고사 결과를 확인하세요. 카드를 탭하면 테스트 결과 상세와 IF 채점을 볼 수 있습니다.
         </div>
 
         {/* [Phase 3D v3-r7-r1] PC 최적화: 데스크톱에서는 좌측(메인: 탭+시험목록)과
-            우측(요약: 성적 추이 선그래프 2개) 2컬럼으로 재구성한다. */}
+            우측(요약: 결과 추이 선그래프 2개) 2컬럼으로 재구성한다. */}
         <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-5">
           <div className="space-y-3 lg:col-span-2">
 
@@ -934,9 +934,9 @@ export default function StudentGrades() {
 
           </div>
 
-          {/* 우측 요약 패널: 성적 추이 선그래프 */}
+          {/* 우측 요약 패널: 결과 추이 선그래프 — [Phase 3D v3-r8] "성적"→"결과/테스트" 표현 정리 */}
           <div className="lg:col-span-1">
-            <div className="text-xs font-semibold px-1 mb-2" style={{ color: 'oklch(0.45 0.015 250)' }}>성적 추이</div>
+            <div className="text-xs font-semibold px-1 mb-2" style={{ color: 'oklch(0.45 0.015 250)' }}>결과 추이</div>
             <div className="space-y-3">
               <ExamLineTrendChart title="단원평가" results={unitEvalOnlyResults} color="#081F4D" />
               <ExamLineTrendChart title="내신 대비 모의고사" results={mockSchoolOnlyResults} color="oklch(0.45 0.15 160)" />

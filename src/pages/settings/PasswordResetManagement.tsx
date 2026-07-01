@@ -182,7 +182,7 @@ export default function PasswordResetManagement() {
       {searched && (
         <div className="axis-card overflow-hidden">
           <div className="px-4 py-2.5 text-xs" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)', color: 'oklch(0.5 0.015 250)' }}>
-            검색 결과 <b style={{ color: 'oklch(0.45 0.2 277)' }}>{results.length}</b>건
+            검색 결과 <b style={{ color: 'oklch(0.254 0.090 262.09)' }}>{results.length}</b>건
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm" style={{ minWidth: 720 }}>

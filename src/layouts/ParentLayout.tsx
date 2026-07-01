@@ -6,9 +6,10 @@
 // 라이벌/엠블럼/경쟁 정보 노출 금지 원칙 유지.
 
 import { Link, useLocation } from 'wouter';
-import { Home, CalendarCheck, ClipboardList, CreditCard, TrendingUp, GraduationCap, LogOut } from 'lucide-react';
+import { Home, CalendarCheck, ClipboardList, CreditCard, TrendingUp, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
+import { AxisMark } from '@/components/brand/AxisMark';
 
 // Phase 3D v2: 학생 화면의 "성적" → "테스트" 개편에 맞춰 학부모 화면도 동기화.
 // 자녀 성장 리포트(테스트 변화·출결 흐름·대학추천 요약) 접근성을 위해 "성장" 탭 추가.
@@ -49,7 +50,7 @@ export default function ParentLayout({ children, title }: ParentLayoutProps) {
               className="flex items-center justify-center rounded-md"
               style={{ width: 28, height: 28, background: '#081F4D' }}
             >
-              <GraduationCap size={15} color="white" />
+              <AxisMark size={15} letterColor="#F7F4EE" slashColor="#C8A15A" />
             </div>
             <span className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
               {title ?? 'AXIS 학부모'}

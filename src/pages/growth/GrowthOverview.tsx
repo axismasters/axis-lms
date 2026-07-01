@@ -63,7 +63,7 @@ export default function GrowthOverview() {
     { label: '총 발급 엠블럼',      value: stats.totalEmblemsIssued,             icon: <Trophy size={18} />, color: '#C8A15A' },
     { label: '이번 시즌 SP 합계',   value: stats.seasonSPTotal.toLocaleString(), icon: <Zap size={18} />,   color: '#10B981' },
     { label: '활성 라이벌 수',      value: stats.activeRivals,                   icon: <Star size={18} />,  color: '#EF4444' },
-    { label: '숨겨진 엠블럼',       value: stats.hiddenEmblems,                  icon: <Eye size={18} />,   color: '#8B5CF6' },
+    { label: '숨겨진 엠블럼',       value: stats.hiddenEmblems,                  icon: <Eye size={18} />,   color: '#081F4D' },
   ];
 
   return (
@@ -91,7 +91,7 @@ export default function GrowthOverview() {
         </div>
         <button onClick={() => setShowRecentLogs(!showRecentLogs)}
           className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium"
-          style={{ background: showRecentLogs ? '#EEF2FF' : 'oklch(0.97 0.004 250)', color: showRecentLogs ? '#4F46E5' : 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.9 0.006 250)' }}>
+          style={{ background: showRecentLogs ? '#E7EBF3' : 'oklch(0.97 0.004 250)', color: showRecentLogs ? '#4F46E5' : 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.9 0.006 250)' }}>
           <Clock size={14} /> 최근 SP 이력
         </button>
       </div>
@@ -124,7 +124,7 @@ export default function GrowthOverview() {
                         <span className="block truncate" title={log.reason}>{log.reason}</span>
                       </td>
                       <td className="py-1.5">
-                        <span className="px-1.5 py-0.5 rounded text-xs" style={{ background: '#EEF2FF', color: '#4338CA' }}>
+                        <span className="px-1.5 py-0.5 rounded text-xs" style={{ background: '#E7EBF3', color: '#081F4D' }}>
                           {SOURCE_TYPE_LABELS[log.sourceType]}
                         </span>
                       </td>
@@ -195,7 +195,7 @@ export default function GrowthOverview() {
                   </td>
                   <td className="px-4 py-2.5">
                     <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ background: achieved.length > 0 ? '#EEF2FF' : 'oklch(0.95 0.004 250)', color: achieved.length > 0 ? '#4F46E5' : 'oklch(0.6 0.015 250)' }}>
+                      style={{ background: achieved.length > 0 ? '#E7EBF3' : 'oklch(0.95 0.004 250)', color: achieved.length > 0 ? '#4F46E5' : 'oklch(0.6 0.015 250)' }}>
                       {achieved.length}개
                     </span>
                   </td>

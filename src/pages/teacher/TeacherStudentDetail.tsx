@@ -283,14 +283,14 @@ export default function TeacherStudentDetail() {
         {/* Phase 3D v3-r4-r1: 담당 학생 빠른 브리핑 — 규칙 기반 자동 요약(AI 호출 없음, 입력 없음) */}
         <section
           className="rounded-lg overflow-hidden"
-          style={{ border: '1px solid oklch(0.88 0.06 276)', background: 'white', boxShadow: '0 1px 3px oklch(0 0 0 / 0.06)' }}
+          style={{ border: '1px solid oklch(0.85 0.07 81)', background: 'white', boxShadow: '0 1px 3px oklch(0 0 0 / 0.06)' }}
         >
           <div
             className="flex items-center gap-2 px-4 py-2.5"
-            style={{ background: 'oklch(0.97 0.03 276)', borderBottom: '1px solid oklch(0.9 0.05 276)' }}
+            style={{ background: 'oklch(0.95 0.04 81)', borderBottom: '1px solid oklch(0.88 0.06 81)' }}
           >
-            <Sparkles size={15} style={{ color: 'oklch(0.5 0.2 276)' }} />
-            <span className="text-sm font-bold" style={{ color: 'oklch(0.4 0.18 276)' }}>담당 학생 빠른 브리핑</span>
+            <Sparkles size={15} style={{ color: 'oklch(0.55 0.11 81)' }} />
+            <span className="text-sm font-bold" style={{ color: 'oklch(0.4 0.09 81)' }}>담당 학생 빠른 브리핑</span>
           </div>
           <div className="p-4 space-y-3">
             <p className="text-sm leading-relaxed" style={{ color: 'oklch(0.3 0.02 250)' }}>
@@ -507,7 +507,7 @@ export default function TeacherStudentDetail() {
                       <tr key={rec.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                         <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{rec.date}</td>
                         <td className="px-3 py-2.5 whitespace-nowrap">
-                          <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.95 0.02 277)', color: 'oklch(0.45 0.2 277)' }}>
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.93 0.02 262)', color: 'oklch(0.254 0.090 262.09)' }}>
                             {rec.type}
                           </span>
                         </td>

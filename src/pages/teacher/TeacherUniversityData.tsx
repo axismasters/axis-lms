@@ -507,7 +507,7 @@ function DataStatusTab({ assignedStudentIds }: { assignedStudentIds: string[] })
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{student?.name ?? studentId}</span>
-                {gradeLevel && <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: '#EDE9FE', color: '#7C3AED' }}>{gradeLevel}</span>}
+                {gradeLevel && <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: '#F8F0DC', color: '#C8A15A' }}>{gradeLevel}</span>}
                 <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                   style={{ background: readiness.color + '18', color: readiness.color }}>
                   {readiness.label}
@@ -616,7 +616,7 @@ export default function TeacherUniversityData() {
     <TeacherLayout title="대학추천 데이터">
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
 
-        <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid #7C3AED', color: 'oklch(0.5 0.015 250)' }}>
+        <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid #C8A15A', color: 'oklch(0.5 0.015 250)' }}>
           선생님이 학생 내신·모의고사 성적을 입력합니다. 입력된 성적은 확정 성적으로 학생 대학추천 화면에 표시됩니다.
         </div>
 

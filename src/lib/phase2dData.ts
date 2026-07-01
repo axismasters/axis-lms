@@ -39,8 +39,10 @@ export const GRADE_TABS: GradeTab[] = [
     label: '학원평가',
     description: '단원평가, 인증평가 등 학원 내부 평가 결과',
     categoryIds: ['unit-eval', 'certification'],
-    color: 'oklch(0.511 0.262 276.966)',
-    accentColor: '#EEF2FF',
+    // [Phase 3D v3-r8] 구 인디고/퍼플 primary 토큰(oklch 276.966)을 그대로 재사용하던
+    // 값이었다 — primary가 Navy로 교체됨에 따라 이 탭도 Navy로 정리(ANALYSIS 단계와 의미 일치).
+    color: 'oklch(0.254 0.090 262.09)',
+    accentColor: '#E7EBF3',
   },
   {
     id: 'school-prep',
@@ -70,9 +72,10 @@ export const GRADE_TABS: GradeTab[] = [
     id: 'suneung',
     label: '수능실전',
     description: '학원 수능실전모의고사',
+    // [Phase 3D v3-r8] 하드코딩 보라색(#7C3AED) 제거 → 브랜드 Gold로 교체(RESULT 단계와 의미 일치).
     categoryIds: ['mock-suneung'],
-    color: '#7C3AED',
-    accentColor: '#EDE9FE',
+    color: 'oklch(0.730 0.101 81.09)',
+    accentColor: '#F8F0DC',
   },
 ];
 

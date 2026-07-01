@@ -154,7 +154,7 @@ export default function StudentDetail() {
       <AdminLayout title="학생 상세" breadcrumbs={[{ label: '학생관리', path: '/students' }, { label: '학생 상세' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>학생을 찾을 수 없습니다.</p>
-          <button onClick={() => navigate('/admin/students')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.45 0.2 277)' }}>← 학생 목록으로</button>
+          <button onClick={() => navigate('/admin/students')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.254 0.090 262.09)' }}>← 학생 목록으로</button>
         </div>
       </AdminLayout>
     );
@@ -165,7 +165,7 @@ export default function StudentDetail() {
       <AdminLayout title="학생 상세" breadcrumbs={[{ label: '학생관리', path: '/students' }, { label: '학생 상세' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>이 학생 정보에 접근할 권한이 없습니다.</p>
-          <button onClick={() => navigate('/admin/students')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.45 0.2 277)' }}>← 학생 목록으로</button>
+          <button onClick={() => navigate('/admin/students')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.254 0.090 262.09)' }}>← 학생 목록으로</button>
         </div>
       </AdminLayout>
     );
@@ -206,7 +206,7 @@ export default function StudentDetail() {
 
       <div className="axis-detail-tabs mt-5 mb-4" style={{ borderBottom: '1px solid oklch(0.9 0.008 250)' }}>
         {TABS.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)} className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors relative" style={{ color: tab === t.key ? 'oklch(0.45 0.2 277)' : 'oklch(0.5 0.015 250)' }}>
+          <button key={t.key} onClick={() => setTab(t.key)} className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors relative" style={{ color: tab === t.key ? 'oklch(0.254 0.090 262.09)' : 'oklch(0.5 0.015 250)' }}>
             {t.icon}{t.label}
             {tab === t.key && <span className="absolute left-2 right-2 -bottom-px h-0.5 rounded" style={{ background: '#081F4D' }} />}
           </button>
@@ -243,7 +243,7 @@ function SummaryCards({ student, showFinance, onJump }: { student: Student; show
   const us = UNIV_STATUS_STYLE[univ];
   const fin = getFinance(student, getClass);
 
-  const card = 'axis-card p-3.5 cursor-pointer hover:border-indigo-200 transition-colors';
+  const card = 'axis-card p-3.5 cursor-pointer hover:border-[#B8C2D9] transition-colors';
   const cardLabel = (icon: React.ReactNode, label: string) => (
     <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>{icon}{label}</div>
   );
@@ -576,7 +576,7 @@ function GuardianFamilyTab({ student, onOpenStudent }: { student: Student; onOpe
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-medium" style={{ color: 'oklch(0.22 0.02 250)' }}>{g.name}</span>
                   <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.005 250)', color: 'oklch(0.45 0.015 250)' }}>{g.relation}</span>
-                  {i === 0 && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.95 0.04 277)', color: 'oklch(0.45 0.2 277)' }}>대표</span>}
+                  {i === 0 && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.93 0.02 262)', color: 'oklch(0.254 0.090 262.09)' }}>대표</span>}
                 </div>
                 <div className="text-xs tabular-nums mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>{g.phone}</div>
               </div>
@@ -613,7 +613,7 @@ function GuardianFamilyTab({ student, onOpenStudent }: { student: Student; onOpe
             {siblings.map((sib) => (
               <button key={sib.id} onClick={() => onOpenStudent(sib.id)} className="w-full flex items-center justify-between p-2.5 rounded-md text-left transition-colors hover:bg-slate-50" style={{ border: '1px solid oklch(0.93 0.008 250)' }}>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'oklch(0.6 0.05 277)' }}>{sib.name.charAt(0)}</div>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'oklch(0.254 0.090 262.09)' }}>{sib.name.charAt(0)}</div>
                   <div>
                     <div className="text-sm font-medium" style={{ color: 'oklch(0.25 0.02 250)' }}>{sib.name}</div>
                     <div className="text-xs tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>{sib.phone}</div>
@@ -1155,7 +1155,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
               {[
                 { key: '계산 실수', label: '만약 계산 실수를 줄였다면', color: 'oklch(0.55 0.18 45)', bg: 'oklch(0.97 0.04 60)' },
                 { key: '개념 부족', label: '만약 이 개념을 확실히 익혔다면', color: 'oklch(0.45 0.12 250)', bg: 'oklch(0.97 0.03 250)' },
-                { key: '시간 부족', label: '만약 시간 배분을 조금 더 잘했다면', color: 'oklch(0.45 0.12 300)', bg: 'oklch(0.97 0.03 300)' },
+                { key: '시간 부족', label: '만약 시간 배분을 조금 더 잘했다면', color: 'oklch(0.55 0.11 81)', bg: 'oklch(0.97 0.03 81)' },
               ].map(({ key, label, color, bg }) => (
                 <div key={key} className="flex items-start gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: bg }}>
                   <span className="font-semibold flex-shrink-0" style={{ color }}>IF</span>
@@ -1878,7 +1878,7 @@ function ScoreSummary({ title, score, grade, sub }: { title: string; score: stri
   return (
     <div className="grid grid-cols-3 gap-2 mb-3">
       <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 시험</div><div className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'oklch(0.22 0.02 250)' }}>{title}</div>{sub && <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{sub}</div>}</div>
-      <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 점수</div><div className="text-lg font-bold mt-0.5 tabular-nums" style={{ color: 'oklch(0.45 0.2 277)' }}>{score}</div></div>
+      <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 점수</div><div className="text-lg font-bold mt-0.5 tabular-nums" style={{ color: 'oklch(0.254 0.090 262.09)' }}>{score}</div></div>
       <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 등급</div><div className="text-lg font-bold mt-0.5" style={{ color: 'oklch(0.22 0.02 250)' }}>{grade}</div></div>
     </div>
   );
@@ -2133,7 +2133,7 @@ function CounselingReadOnlyTab({ studentId }: { studentId: string }) {
                 <tr key={rec.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                   <td className="px-4 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{rec.date}</td>
                   <td className="px-4 py-2.5 whitespace-nowrap">
-                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.95 0.02 277)', color: 'oklch(0.45 0.2 277)' }}>{rec.type}</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.93 0.02 262)', color: 'oklch(0.254 0.090 262.09)' }}>{rec.type}</span>
                   </td>
                   <td className="px-4 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{rec.target}</td>
                   <td className="px-4 py-2.5 text-xs" style={{ color: 'oklch(0.3 0.02 250)', maxWidth: 360 }}>{rec.content}</td>
@@ -2294,7 +2294,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         {[
           { label: '누적 SP', value: profile.totalSP.toLocaleString(), icon: <Zap size={15} />, color: '#C8A15A' },
           { label: '이번 시즌 SP', value: profile.seasonSP.toLocaleString(), icon: <Star size={15} />, color: '#3B82F6' },
-          { label: '보유 엠블럼', value: `${achievedEmblems.length}개`, icon: <Award size={15} />, color: '#8B5CF6' },
+          { label: '보유 엠블럼', value: `${achievedEmblems.length}개`, icon: <Award size={15} />, color: '#081F4D' },
           { label: '라이벌 전적', value: `${profile.rivalWins}승 ${profile.rivalLosses}패`, icon: <Swords size={15} />, color: '#EF4444' },
         ].map((c, i) => (
           <div key={i} className="axis-card p-3">
@@ -2377,7 +2377,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
                     <span className="block truncate" title={log.reason}>{log.reason}</span>
                   </td>
                   <td className="py-1.5">
-                    <span className="px-1.5 py-0.5 rounded" style={{ background: '#EEF2FF', color: '#4338CA' }}>
+                    <span className="px-1.5 py-0.5 rounded" style={{ background: '#E7EBF3', color: '#081F4D' }}>
                       {SOURCE_TYPE_LABELS[log.sourceType]}
                     </span>
                   </td>
@@ -2460,7 +2460,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
       )}
 
       {/* IF 성장 힌트 placeholder */}
-      <div className="px-4 py-3 rounded-lg text-xs" style={{ background: '#EEF2FF', border: '1px solid #C7D2FE', color: '#4338CA' }}>
+      <div className="px-4 py-3 rounded-lg text-xs" style={{ background: '#E7EBF3', border: '1px solid #B8C2D9', color: '#081F4D' }}>
         <strong>📊 IF 성장 힌트</strong> — 시험 및 성적 관리 IF 분석 결과와 엠블럼 진행도 연동이 준비되어 있습니다.
         계산 실수 개선 → 꼼꼼한 검토자 / 계산 정확도 향상 엠블럼,
         개념 부족 보완 → 개념 정복자 / 개념 회복 엠블럼,

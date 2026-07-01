@@ -357,7 +357,7 @@ export default function ClassList() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => navigate(`/admin/classes/${cls.id}`)}
-                          className="p-1.5 rounded transition-colors hover:bg-indigo-50"
+                          className="p-1.5 rounded transition-colors hover:bg-[#E7EBF3]"
                           title="상세보기"
                         >
                           <Eye size={14} style={{ color: '#081F4D' }} />

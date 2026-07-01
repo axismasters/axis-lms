@@ -108,7 +108,7 @@ export default function StudentHome() {
             </div>
             <div className="flex items-center gap-2 mt-1">
               {gradeLevel && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#EDE9FE', color: '#7C3AED' }}>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#F8F0DC', color: '#C8A15A' }}>
                   {gradeLevel}
                 </span>
               )}
@@ -131,8 +131,8 @@ export default function StudentHome() {
                 { icon: BookOpen,      label: '내 반',      path: '/student/classes',          color: 'oklch(0.45 0.15 160)' },
                 { icon: CalendarCheck, label: '출결',       path: '/student/attendance',       color: 'oklch(0.55 0.15 80)' },
                 { icon: Trophy,        label: '진열장',     path: '/student/growth',           color: 'oklch(0.7 0.18 80)' },
-                { icon: Swords,        label: 'Rival',     path: '/student/rival',            color: '#7C3AED' },
-                { icon: GraduationCap, label: universityLabel, path: '/student/target-preview', color: '#7C3AED' },
+                { icon: Swords,        label: 'Rival',     path: '/student/rival',            color: '#081F4D' },
+                { icon: GraduationCap, label: universityLabel, path: '/student/target-preview', color: '#C8A15A' },
               ].map(({ icon: Icon, label, path, color }) => (
                 <Link key={`${path}-${label}`} href={path} style={{ display: 'block' }}>
                   <div className="axis-card p-3 flex flex-col items-center gap-1.5 cursor-pointer">
@@ -193,19 +193,19 @@ export default function StudentHome() {
                         )}
                       </section>
 
-            {/* 최근 공개 성적 */}
+            {/* 최근 공개 테스트 결과 — [Phase 3D v3-r8] "성적" → "테스트" 표현 통일 */}
             <section>
                         <div className="flex items-center justify-between mb-2 px-1">
                           <div className="flex items-center gap-2">
                             <BarChart2 size={15} style={{ color: '#081F4D' }} />
-                            <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 성적</span>
+                            <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 테스트</span>
                           </div>
                           <Link href="/student/grades">
                             <span className="text-xs cursor-pointer" style={{ color: '#081F4D' }}>전체 보기</span>
                           </Link>
                         </div>
                         {publishedResults.length === 0 ? (
-                          <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>공개된 성적이 없습니다</div>
+                          <div className="axis-card p-4 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>공개된 테스트 결과가 없습니다</div>
                         ) : (
                           <div className="space-y-2">
                             {publishedResults.map(r => {
@@ -245,8 +245,8 @@ export default function StudentHome() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: '#EDE9FE' }}>
-                    <Swords size={18} style={{ color: '#7C3AED' }} />
+                    style={{ background: '#E7EBF3' }}>
+                    <Swords size={18} style={{ color: '#081F4D' }} />
                   </div>
                   <div>
                     <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
@@ -308,8 +308,8 @@ export default function StudentHome() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: '#EDE9FE' }}>
-                  <GraduationCap size={18} style={{ color: '#7C3AED' }} />
+                  style={{ background: '#F8F0DC' }}>
+                  <GraduationCap size={18} style={{ color: '#C8A15A' }} />
                 </div>
                 <div>
                   <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
@@ -318,7 +318,7 @@ export default function StudentHome() {
                   <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
                     {gradeLevel === '고3'
                       ? '수능실전 결과 기반 준비 상태 확인'
-                      : '성적 기반 목표 방향 준비'}
+                      : '테스트 기반 목표 방향 준비'}
                   </div>
                 </div>
               </div>

@@ -1,6 +1,129 @@
 # MODIFIED_FILES_PHASE3D.md
 
+## v3-r8 변경분 (학생 테스트/학부모 포털 정책 정리 + AXIS 브랜드 UI 고도화)
+
+**베이스라인**: v3-r7-r1 (GitHub main 반영 완료, Build Check 통과 확인 상태).
+신규 파일 3개, 수정 파일 39개. 삭제 파일 없음.
+
+### 신규 파일
+
+| 파일 | 내용 |
+|---|---|
+| `src/components/brand/AxisMark.tsx` | AXIS 로고 아이콘 마크(SVG) — 브랜드보드 "LOGO MARK" 기준, 모노라인 "A" + 대각선 골드 슬래시. 사이드바/헤더 배지용. |
+| `src/components/brand/AxisWordmark.tsx` | AXIS 전체 워드마크(SVG) — 브랜드보드 "BRAND MARK" 히어로 기준, X 글자를 관통하는 대각선 골드 슬래시. 로그인 화면 히어로용. |
+| `src/lib/brandColors.ts` | AXIS 브랜드 공식 색상 상수(NAVY/GOLD/IVORY, HEX + 정밀 OKLCH 값). |
+
+### 1. 브랜드 마크 실제 구현 (사용자 요청 대응)
+
+기존에는 로그인 화면·사이드바 배지가 전부 `GraduationCap`/`BarChart2` 같은 lucide 범용
+아이콘을 임시로 쓰고 있었다 — 브랜드보드의 실제 "A + 대각선 골드 슬래시" 마크가 코드에
+전혀 구현되어 있지 않았다. `AxisMark`/`AxisWordmark` SVG 컴포넌트를 새로 만들어
+로그인 화면과 4개 포털(관리자/교사/학부모/학생) 레이아웃 헤더 배지에 전부 적용했다.
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/LoginPage.tsx` | 히어로의 `GraduationCap` 아이콘 + 텍스트 "AXIS"를 `AxisMark`(배지) + `AxisWordmark`(전체 워드마크, X 관통 골드 슬래시)로 교체. 배경색을 근사값 `oklch(0.975 0.01 80)`에서 브랜드보드 Ivory(#F7F4EE)의 정밀 변환값 `oklch(0.968 0.009 84.57)`로 수정. |
+| `src/components/AdminLayout.tsx` | 사이드바 상단 배지의 `GraduationCap` → `AxisMark`로 교체(Gold 배경 위 Navy 마크). |
+| `src/layouts/TeacherLayout.tsx` | 헤더 배지의 `GraduationCap` → `AxisMark`로 교체(Navy 배경 위 Ivory 마크 + Gold 슬래시), 미사용 `GraduationCap` import 정리(nav 아이콘용은 유지). |
+| `src/layouts/ParentLayout.tsx` | 헤더 배지의 `GraduationCap` → `AxisMark`로 교체, 미사용 import 제거. |
+| `src/layouts/StudentLayout.tsx` | 헤더 배지의 `BarChart2` → `AxisMark`로 교체(다른 3개 포털과 마크 통일), 미사용 import 제거. |
+
+### 2. 브랜드 색상 토큰 정리 (구 인디고/퍼플 primary 완전 교체)
+
+`--primary` CSS 변수 자체가 여전히 v3-r7-r1 이전의 구 Indigo-600(oklch 276.966, 퍼플·
+블루 계열)이었다 — 이전 라운드의 "57개 파일 Navy 전역 치환"은 컴포넌트에 하드코딩된
+개별 값들을 고친 것이었고, 정작 디자인 시스템의 뿌리인 `index.css`의 `--primary`/`--ring`/
+`--chart-1`/`--sidebar-primary`/`--sidebar-ring` 토큰 자체는 누락되어 있었다. 이번에
+근본 토큰을 브랜드보드 기준으로 교체하고, `--brand-navy`/`--brand-gold`/`--brand-ivory`
+변수를 신설해 향후 하드코딩 대신 참조할 수 있게 했다. HEX→OKLCH는 sRGB→Linear→
+OKLab→OKLCh 표준 공식으로 정밀 계산했다(근사값 사용 금지).
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/index.css` | `:root`에 `--brand-navy`/`--brand-gold`/`--brand-ivory` 신설. `--primary`/`--ring`/`--chart-1`/`--sidebar-primary`/`--sidebar-ring`을 구 인디고에서 Navy/Gold로 교체(sidebar-primary는 다크 사이드바 대비를 위해 Gold+Navy 텍스트 조합). `--chart-4`(구 마젠타 310) → Gold-bronze로 교체. `.axis-card-clickable` hover/focus 색상의 잔존 인디고(hue 277)도 정리. |
+
+### 3. 보라색(인디고/바이올렛) 전면 제거
+
+브랜드보드에 없는 보라색 계열이 앱 전역에 약 60곳 넘게 하드코딩되어 있었다(주로 구
+Tailwind indigo-600 계열과 그 파생 틴트). 문맥별로 다음 원칙으로 정리했다:
+- 대학추천/목표대학 관련 배지·아이콘(학년 배지, GraduationCap 아이콘 등) → **Gold**
+- Rival 관련 아이콘·통계(Swords, "Rival 승") → **Navy** (대학추천의 Gold와 시각적으로 구분)
+- 링크/활성상태/액션버튼 등 "구 primary" 역할을 하던 인디고 → **Navy**
+- 5단계 카테고리 색상(학원평가/내신대비/실제내신/전국모의/수능실전 탭) 중 구 인디고였던
+  "학원평가"와 하드코딩 바이올렛(#7C3AED)이었던 "수능실전"만 Navy/Gold로 교체 — 나머지
+  3개 탭(녹색/황색/빨강)은 보라색이 아니었으므로 임의 변경하지 않고 그대로 유지.
+- 등급(1~9등급) 배지, 엠블럼 등급(STONE~DIAMOND) 배지, 엠블럼 카테고리 배지, 출결
+  "조퇴" 상태, 형제자매 아바타 플레이스홀더, IF 분석 사유 색상 등 — 모두 개별 확인 후
+  Navy 또는 Gold로 교체.
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/lib/phase2dData.ts` | GRADE_TABS 5개 탭 중 "학원평가"(구 인디고 primary 재사용)·"수능실전"(하드코딩 #7C3AED) 색상을 Navy/Gold로 교체. 나머지 3개 탭은 유지. |
+| `src/layouts/StudentLayout.tsx` | 학년 배지 색상 Gold로 교체. |
+| `src/pages/parent/ParentGrowthReport.tsx` | GraduationCap 아이콘, "시간 부족" IF 사유 색상(#6366F1) Gold로 교체. |
+| `src/pages/parent/ParentTargetSummary.tsx` | GraduationCap 아이콘 2곳, 학년 배지, 카드 좌측 보더 Gold로 교체. |
+| `src/pages/parent/ParentHome.tsx` | 목표대학 카드 아이콘 배경 틴트 Gold로 교체. |
+| `src/pages/teacher/TeacherUniversityData.tsx` | 학년 배지, 카드 좌측 보더 Gold로 교체. |
+| `src/pages/teacher/TeacherStudentGrowth.tsx` | 학년 배지 Gold, "Rival 승" 통계 Navy로 교체. |
+| `src/pages/teacher/TeacherStudentDetail.tsx` | "담당 학생 빠른 브리핑" 카드 전체(보더/배경/아이콘/제목) 보라색 → Gold로 교체. |
+| `src/pages/teacher/TeacherMaterials.tsx` | 자료 유형 뱃지/선택 배경 hue 276(보라) → 262(Navy 계열)로 정합화(텍스트는 이미 Navy였음). |
+| `src/pages/teacher/TeacherExams.tsx` | "내 수업"(TEACHER_PRIVATE) 태그 색상 Navy로 교체. |
+| `src/pages/teacher/TeacherAttendance.tsx` | 출결 "조퇴" 상태 색상 Navy로 교체. |
+| `src/pages/student/StudentAttendance.tsx` / `ParentAttendance.tsx` | 동일하게 "조퇴" 상태 색상 Navy로 교체. |
+| `src/pages/student/StudentGrades.tsx` | IF 점수 추이 스파크라인 색상 Gold로 교체. |
+| `src/pages/student/StudentRival.tsx` | Rival 아이콘 색상 Navy로 교체. |
+| `src/pages/student/StudentGrowthShowcase.tsx` | 학년 배지·목표대학 아이콘 Gold, Rival 통계 Navy로 교체. |
+| `src/pages/student/StudentMyPage.tsx` | 학년 배지 Gold, Rival 퀵링크 Navy로 교체. 오타 수정: "성적 진열장" → "성장 진열장"(실제 기능명). |
+| `src/pages/student/StudentTargetPreview.tsx` | 아이콘·배지·트렌드 아이콘 전부 Gold로 교체(대학추천 테마 일관 적용). |
+| `src/pages/student/StudentHome.tsx` | 학년 배지·대학추천 아이콘 Gold, Rival 퀵링크/아이콘 Navy로 교체. |
+| `src/pages/StudentDetail.tsx` | 형제자매 아바타 플레이스홀더, IF 분석 "시간 부족" 사유 색상, "보유 엠블럼" 통계 아이콘 색상을 Navy/Gold로 교체. hover 보더 색상(인디고) Navy로 교체. |
+| `src/pages/StudentList.tsx` | 활성 카드 텍스트·"성적" 액션 버튼 색상 및 `hover:bg-indigo-50` 클래스를 Navy 계열로 교체. |
+| `src/pages/NotFound.tsx` / `EmployeeDetail.tsx` / `AttendanceStatus.tsx` | 링크/버튼 텍스트 색상(구 인디고 hue 277) Navy로 교체. |
+| `src/pages/settings/PermissionSettings.tsx` / `PasswordResetManagement.tsx` | 동일 인디고 계열 텍스트 색상 Navy로 교체. |
+| `src/pages/growth/EmblemManagement.tsx` | 숨김 아이콘, "IF연동" 배지 색상(인디고) Navy로 교체. |
+| `src/pages/growth/GrowthOverview.tsx` | "숨겨진 엠블럼" 통계 카드, "IF연동" 배지 색상 Navy로 교체. |
+| `src/pages/growth/RivalManagement.tsx` | "IF연동" 배지 배경색 Navy 계열로 교체. |
+| `src/lib/growthData.ts` | 엠블럼 등급 DIAMOND 색상(보라) → 짙은 Navy로 교체. CATEGORY_BADGE의 SKILL 카테고리(보라) → Navy로 교체. |
+| `src/components/StatusBadge.tsx` | GradeBadge 1등급 색상(`bg-indigo-50` 등) → Navy 계열 arbitrary 클래스로 교체. |
+| `src/components/ui/input.tsx` / `ui/textarea.tsx` | 포커스 링 색상(`focus:ring-indigo-200`) → Navy 계열로 교체(앱 전역 입력창에 영향). |
+| `src/components/ClassFormModal.tsx` / `src/pages/ClassDetail.tsx` | 활성 탭 밑줄 색상(`border-indigo-600`) → Navy로 교체. |
+| `src/pages/ClassList.tsx` | 관리 버튼 hover 배경(`hover:bg-indigo-50`) → Navy 톤으로 교체. |
+| `src/pages/StudentNew.tsx` | 파일 업로드 드롭존 hover 색상, 로딩 스피너 색상(인디고) → Navy로 교체. |
+
+### 4. 학생 화면 "성적" → "테스트" 표현 정리
+
+내비게이션 메뉴 라벨은 이전 라운드에 이미 "테스트"로 변경되어 있었으나, 화면 내부
+텍스트(카드 제목/빈 상태 문구/섹션 제목)에는 "성적"이 다수 남아있었다. 학원 자체
+평가(단원평가·내신대비모의고사)를 가리키는 문맥만 "테스트/결과"로 교체했고, 실제
+공식 성적 데이터를 가리키는 "실제내신 성적"/"전국연합모의고사 성적"(`StudentTargetPreview.tsx`)
+등은 의미가 달라 그대로 유지했다(학원이 자체 실시하는 시험이 아니라 실제 성적표
+데이터이므로 "테스트"로 바꾸면 오히려 부정확해진다).
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/student/StudentHome.tsx` | "최근 성적" → "최근 테스트", "공개된 성적이 없습니다" → "공개된 테스트 결과가 없습니다", "성적 기반 목표 방향 준비" → "테스트 기반 목표 방향 준비". |
+| `src/pages/student/StudentGrades.tsx` | "{탭} 성적 추이" → "{탭} 결과 추이", 빈 상태 문구 "{탭} 성적이 없습니다" → "{탭} 결과가 없습니다", "성적표 상세" → "테스트 결과 상세", 우측 요약 패널 "성적 추이" → "결과 추이". |
+| `src/pages/student/StudentGrowthShowcase.tsx` | 탭 라벨 "성적 기록" → "테스트 기록", "최근 성적 변화" → "최근 테스트 변화", "성적 탭"/"성적 화면" → "테스트 탭"/"테스트 화면", "전체 성적 보기" → "전체 테스트 보기". |
+
+### 5. 정책 검증 (변경 없음 — 검증만 수행)
+
+아래 항목은 전수 검색 결과 **이미 정책을 준수하고 있어 코드 변경이 필요 없었다**.
+자세한 검증 방법과 검색 범위는 `QA_PHASE3D.md` v3-r8 섹션 참조.
+
+- 금지 표현(합격률/합격가능성/합격보장/안정합격/불합격/수능실전주간루틴 등) — 실제
+  렌더링되는 문구 어디에도 없음(전부 정책 주석뿐).
+- 학생 화면 재무/수납/청구/미납/환불/영수증 노출 — 없음.
+- 학생 직접 성적 입력 UI — 이미 제거된 상태(주석으로 확인: "학생 직접 입력 버튼 제거").
+- 학부모 화면 Rival/Emblem/SP/Tier 직접 노출, 상담 기록 원문 노출 — 없음.
+- 학부모 화면 총 청구액/총 미납액 과시형 UI — 이미 v2에서 제거되어 상태 중심 표시("미납
+  있음"/"미납 없음")만 유지 중.
+- 보라색 외 과한 그라데이션/blob/orb 장식 — 없음(기존 그라데이션은 로그인 화면 모서리
+  Gold/Navy 은은한 대각선 포인트, 카드 hover 등 절제된 브랜드 톤 사용뿐).
+
+---
+
 ## v3-r3 변경분 (추가 개선)
+
 
 신규/삭제 파일 없음 — 전부 기존 파일 수정.
 

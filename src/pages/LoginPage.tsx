@@ -14,8 +14,10 @@
 //             검증 로직만 서버 호출로 교체하면 된다. 데모 비밀번호 안내 블록은 실 배포 전 제거할 것.
 
 import { useState, FormEvent } from 'react';
-import { GraduationCap, Lock, Phone, Info } from 'lucide-react';
+import { Lock, Phone, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { AxisMark } from '@/components/brand/AxisMark';
+import { AxisWordmark } from '@/components/brand/AxisWordmark';
 
 const NAVY = '#081F4D';
 const GOLD = '#C8A15A';
@@ -47,7 +49,7 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen w-full flex items-center justify-center px-4 relative overflow-hidden"
-      style={{ background: 'oklch(0.975 0.01 80)' }}
+      style={{ background: 'oklch(0.968 0.009 84.57)' }}
     >
       {/* [Phase 3D v3-r7-r1] Gold 사선 포인트 — 화면 전체를 다크로 만들지 않고, 우상단에
           은은한 대각선 골드 액센트만 배치해 프리미엄 톤을 낸다. */}
@@ -74,13 +76,13 @@ export default function LoginPage() {
         {/* 브랜드 워드마크 */}
         <div className="flex flex-col items-center mb-7">
           <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
+            className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
             style={{ background: NAVY, boxShadow: `0 8px 24px ${NAVY}33` }}
           >
-            <GraduationCap size={26} style={{ color: GOLD }} />
+            <AxisMark size={30} letterColor="#F7F4EE" slashColor={GOLD} />
           </div>
-          <div className="font-bold text-2xl tracking-[0.2em]" style={{ color: NAVY }}>AXIS</div>
-          <div className="text-xs mt-1 tracking-wide font-medium" style={{ color: GOLD }}>
+          <AxisWordmark height={40} letterColor={NAVY} accentColor={GOLD} />
+          <div className="text-xs mt-2 tracking-wide font-medium" style={{ color: GOLD }}>
             ANALYSIS · PRECISION · TARGET · RESULT
           </div>
         </div>

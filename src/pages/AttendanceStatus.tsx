@@ -303,7 +303,7 @@ export default function AttendanceStatusPage() {
               className="axis-card axis-card-clickable p-3 text-center transition-colors"
               style={active ? { borderColor: '#081F4D', boxShadow: '0 0 0 1px #081F4D' } : undefined}
             >
-              <div className="text-xs mb-1 truncate flex items-center justify-center gap-1" style={{ color: active ? 'oklch(0.45 0.2 277)' : 'oklch(0.6 0.015 250)' }}>
+              <div className="text-xs mb-1 truncate flex items-center justify-center gap-1" style={{ color: active ? 'oklch(0.254 0.090 262.09)' : 'oklch(0.6 0.015 250)' }}>
                 {card.label}
               </div>
               <div className="text-xl font-bold" style={{ color: card.color }}>{card.value}</div>
@@ -312,7 +312,7 @@ export default function AttendanceStatusPage() {
         })}
       </div>
       <div className="text-xs mb-4" style={{ color: 'oklch(0.5 0.015 250)' }}>
-        현재 필터: <b style={{ color: 'oklch(0.45 0.2 277)' }}>
+        현재 필터: <b style={{ color: 'oklch(0.254 0.090 262.09)' }}>
           {filterNotifyOnly ? '알림 발송 기록' : filterStatus === 'all' ? '전체 출결' : filterStatus}
         </b> · {visibleRows.length}건
       </div>

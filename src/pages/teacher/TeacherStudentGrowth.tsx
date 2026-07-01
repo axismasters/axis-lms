@@ -64,7 +64,7 @@ function GrowthCard({ studentId }: { studentId: string }) {
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{student.name}</span>
               {gradeLevel && (
-                <span className="text-xs px-1.5 py-0.5 rounded-full font-medium" style={{ background: '#EDE9FE', color: '#7C3AED' }}>
+                <span className="text-xs px-1.5 py-0.5 rounded-full font-medium" style={{ background: '#F8F0DC', color: '#C8A15A' }}>
                   {gradeLevel}
                 </span>
               )}
@@ -85,7 +85,7 @@ function GrowthCard({ studentId }: { studentId: string }) {
           {[
             { label: '학원 평균', value: avgPct !== null ? `${avgPct}%` : '-', color: avgPct !== null ? scoreColor(avgPct) : 'oklch(0.6 0.015 250)' },
             { label: 'IF 잠재력', value: ifPotential !== null ? `+${ifPotential}%p` : '-', color: '#081F4D' },
-            { label: 'Rival 승', value: profile ? `${profile.rivalWins}승` : '-', color: '#7C3AED' },
+            { label: 'Rival 승', value: profile ? `${profile.rivalWins}승` : '-', color: '#081F4D' },
             { label: '모의 등급', value: nationalMocks.length > 0 ? `${Math.min(...nationalMocks.map(m => m.grade))}등급` : '-', color: 'oklch(0.45 0.15 145)' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-lg p-2 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>

@@ -696,7 +696,7 @@ export default function ParentHome() {
               <Link href="/parent/target-summary" style={{ display: 'block' }}>
                 <div className="axis-card axis-card-clickable p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#EDE9FE' }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#F8F0DC' }}>
                       <span style={{ fontSize: 18 }}>🎓</span>
                     </div>
                     <div>

@@ -39,7 +39,7 @@ export function AttendanceBadge({ status }: { status: string }) {
 export function GradeBadge({ grade }: { grade: number }) {
   const colors = [
     '', // 0 unused
-    'bg-indigo-50 text-indigo-700 border border-indigo-200', // 1
+    'bg-[#E7EBF3] text-[#081F4D] border border-[#B8C2D9]', // 1 — [Phase 3D v3-r8] 구 indigo → Navy 브랜드색
     'bg-blue-50 text-blue-700 border border-blue-200', // 2
     'bg-sky-50 text-sky-700 border border-sky-200', // 3
     'bg-amber-50 text-amber-700 border border-amber-200', // 4

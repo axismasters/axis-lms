@@ -495,8 +495,8 @@ export default function PermissionSettings() {
               <button key={p} onClick={() => selectPosition(p)}
                 className="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors"
                 style={{
-                  color: selected === p ? 'oklch(0.45 0.2 277)' : 'oklch(0.55 0.015 250)',
-                  background: selected === p ? 'oklch(0.95 0.02 277)' : 'transparent',
+                  color: selected === p ? 'oklch(0.254 0.090 262.09)' : 'oklch(0.55 0.015 250)',
+                  background: selected === p ? 'oklch(0.93 0.02 262)' : 'transparent',
                 }}>
                 {POSITION_LABEL[p]}
               </button>

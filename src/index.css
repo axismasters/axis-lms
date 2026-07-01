@@ -55,8 +55,14 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.02 250);
 
-  /* Indigo-600 primary */
-  --primary: oklch(0.511 0.262 276.966);
+  /* [Phase 3D v3-r8] AXIS 브랜드보드 공식 색상 — 구 Indigo-600(oklch 276.966,
+     퍼플/블루 계열) 토큰을 정확한 Navy #081F4D로 교체했다. 값은 sRGB→OKLab→OKLCh
+     정밀 변환 결과이며 임의 조정하지 않는다. */
+  --brand-navy: oklch(0.254 0.090 262.09);
+  --brand-gold: oklch(0.730 0.101 81.09);
+  --brand-ivory: oklch(0.968 0.009 84.57);
+
+  --primary: var(--brand-navy);
   --primary-foreground: oklch(0.985 0 0);
 
   --secondary: oklch(0.96 0.005 250);
@@ -73,23 +79,24 @@
 
   --border: oklch(0.9 0.008 250);
   --input: oklch(0.9 0.008 250);
-  --ring: oklch(0.511 0.262 276.966);
+  --ring: var(--brand-navy);
 
-  --chart-1: oklch(0.511 0.262 276.966);
+  /* 차트 팔레트: 브랜드 외 임의 색상(보라/마젠타) 제거 — Navy/Gold 축을 중심으로 구성 */
+  --chart-1: var(--brand-navy);
   --chart-2: oklch(0.6 0.2 160);
   --chart-3: oklch(0.65 0.18 50);
-  --chart-4: oklch(0.55 0.22 310);
+  --chart-4: oklch(0.55 0.09 70);
   --chart-5: oklch(0.6 0.2 200);
 
-  /* Sidebar - Slate-900 dark */
+  /* Sidebar - Navy 다크 레일(예외적으로 다크 유지 허용 구간) */
   --sidebar: oklch(0.13 0.025 250);
   --sidebar-foreground: oklch(0.92 0.008 250);
-  --sidebar-primary: oklch(0.511 0.262 276.966);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: var(--brand-gold);
+  --sidebar-primary-foreground: var(--brand-navy);
   --sidebar-accent: oklch(0.2 0.025 250);
   --sidebar-accent-foreground: oklch(0.92 0.008 250);
   --sidebar-border: oklch(0.22 0.02 250);
-  --sidebar-ring: oklch(0.511 0.262 276.966);
+  --sidebar-ring: var(--brand-gold);
 }
 
 @layer base {
@@ -379,10 +386,10 @@
   }
   .axis-card-clickable:hover {
     box-shadow: 0 4px 14px oklch(0 0 0 / 0.08), 0 2px 6px oklch(0 0 0 / 0.04);
-    border-color: oklch(0.72 0.09 277);
+    border-color: var(--brand-navy);
   }
   .axis-card-clickable:focus-visible {
-    outline: 2px solid oklch(0.511 0.262 276.966);
+    outline: 2px solid var(--brand-navy);
     outline-offset: 2px;
   }
 

@@ -111,7 +111,7 @@ export default function StudentMyPage() {
               <div className="flex items-center gap-1.5 mt-0.5">
                 {gradeLevel && (
                   <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                    style={{ background: '#EDE9FE', color: '#7C3AED' }}>
+                    style={{ background: '#F8F0DC', color: '#C8A15A' }}>
                     {gradeLevel}
                   </span>
                 )}
@@ -189,7 +189,7 @@ export default function StudentMyPage() {
                   </div>
                 )}
                 <div className="text-xs mt-0.5" style={{ color: 'oklch(0.65 0.015 250)' }}>
-                  닉네임은 Rival, Emblem, 성적 진열장에서 사용됩니다. 닉네임은 2주에 한 번만 변경할 수 있습니다.
+                  닉네임은 Rival, Emblem, 성장 진열장에서 사용됩니다. 닉네임은 2주에 한 번만 변경할 수 있습니다.
                 </div>
                 {!nickGate.allowed && (
                   <div className="text-xs mt-1 font-medium" style={{ color: 'oklch(0.55 0.15 60)' }}>
@@ -306,7 +306,7 @@ export default function StudentMyPage() {
               { icon: BookOpen, label: '내 반 / 수업', path: '/student/classes', color: 'oklch(0.45 0.15 160)' },
               { icon: CalendarCheck, label: '출결 확인', path: '/student/attendance', color: 'oklch(0.55 0.15 80)' },
               { icon: Trophy, label: '성장 진열장', path: '/student/growth', color: '#081F4D' },
-              { icon: Swords, label: 'Rival', path: '/student/rival', color: '#7C3AED' },
+              { icon: Swords, label: 'Rival', path: '/student/rival', color: '#081F4D' },
             ].map(({ icon: Icon, label, path, color }) => (
               <Link key={path} href={path} style={{ display: 'block' }}>
                 <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer"

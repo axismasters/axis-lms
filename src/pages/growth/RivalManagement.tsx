@@ -155,7 +155,7 @@ export default function RivalManagement() {
                   </td>
                   <td className="px-4 py-2.5 text-center">
                     <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ background: challengersCount > 0 ? '#EEF2FF' : 'oklch(0.95 0.004 250)', color: challengersCount > 0 ? '#4F46E5' : 'oklch(0.6 0.015 250)' }}>
+                      style={{ background: challengersCount > 0 ? '#E7EBF3' : 'oklch(0.95 0.004 250)', color: challengersCount > 0 ? '#4F46E5' : 'oklch(0.6 0.015 250)' }}>
                       {challengersCount}명
                     </span>
                   </td>

@@ -358,7 +358,7 @@ export default function ClassDetail() {
               onClick={() => setActiveTab(tab.key)}
               className={cn(
                 'flex items-center gap-1.5 px-5 py-3 text-xs font-medium border-b-2 -mb-px transition-colors',
-                activeTab === tab.key ? 'border-indigo-600' : 'border-transparent hover:border-slate-200'
+                activeTab === tab.key ? 'border-[#081F4D]' : 'border-transparent hover:border-slate-200'
               )}
               style={{ color: activeTab === tab.key ? '#081F4D' : 'oklch(0.55 0.015 250)' }}
             >

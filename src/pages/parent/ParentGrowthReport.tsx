@@ -107,7 +107,7 @@ function TrendSparkline({ points }: { points: { label: string; pct: number }[] }
 
 /** IF 이유 3종 비율 — 가로 스택 막대 */
 function ReasonRatioStack({ ratios }: { ratios: { reason: string; pct: number }[] }) {
-  const colors: Record<string, string> = { '계산 실수': '#F59E0B', '개념 부족': '#EF4444', '시간 부족': '#6366F1' };
+  const colors: Record<string, string> = { '계산 실수': '#F59E0B', '개념 부족': '#EF4444', '시간 부족': '#C8A15A' };
   const total = ratios.reduce((s, r) => s + r.pct, 0);
   if (total === 0) return <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>아직 집계된 IF 회고가 없습니다.</p>;
   return (
@@ -538,7 +538,7 @@ export default function ParentGrowthReport() {
           <Link href="/parent/target-summary" style={{ display: 'block' }}>
             <div className="axis-card axis-card-clickable p-5">
               <div className="flex items-center gap-3 mb-2">
-                <GraduationCap size={20} style={{ color: '#7C3AED' }} />
+                <GraduationCap size={20} style={{ color: '#C8A15A' }} />
                 <span className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{universityLabel}</span>
               </div>
               <p className="text-sm" style={{ color: 'oklch(0.45 0.015 250)' }}>

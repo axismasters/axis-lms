@@ -69,8 +69,8 @@ export default function ParentTargetSummary() {
         {/* 헤더 */}
         <div className="axis-card p-5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#EDE9FE' }}>
-              <GraduationCap size={20} style={{ color: '#7C3AED' }} />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#F8F0DC' }}>
+              <GraduationCap size={20} style={{ color: '#C8A15A' }} />
             </div>
             <div>
               <div className="font-bold text-base" style={{ color: 'oklch(0.15 0.02 250)' }}>
@@ -85,7 +85,7 @@ export default function ParentTargetSummary() {
           </div>
           <div className="flex items-center gap-2">
             {gradeLevel && (
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#EDE9FE', color: '#7C3AED' }}>
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#F8F0DC', color: '#C8A15A' }}>
                 {gradeLevel}
               </span>
             )}
@@ -143,7 +143,7 @@ export default function ParentTargetSummary() {
 
         {/* 밴드 잠금 안내 */}
         <div className="rounded-xl p-4 text-center" style={{ background: 'oklch(0.95 0.04 250)' }}>
-          <GraduationCap size={24} className="mx-auto mb-2" style={{ color: '#7C3AED' }} />
+          <GraduationCap size={24} className="mx-auto mb-2" style={{ color: '#C8A15A' }} />
           <div className="font-semibold text-sm mb-1" style={{ color: 'oklch(0.35 0.015 250)' }}>
             {isGrade3 ? '대학추천 분석 준비 중' : '목표대학 추천 분석 준비 중'}
           </div>
@@ -157,7 +157,7 @@ export default function ParentTargetSummary() {
         {/* Phase 3D v3: "상담 리포트"라는 표현이 내부 상담 기록처럼 오해될 수 있어
             "선생님 안내 필요" 수준으로 조정 — 클릭해도 이동하지 않으므로 클릭 가능한
             카드처럼 보이는 화살표(ChevronRight)도 제거했다. */}
-        <div className="axis-card p-4" style={{ borderLeft: '3px solid #7C3AED' }}>
+        <div className="axis-card p-4" style={{ borderLeft: '3px solid #C8A15A' }}>
           <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
             자세한 안내는 선생님에게 문의하세요
           </div>

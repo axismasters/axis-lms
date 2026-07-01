@@ -1,5 +1,45 @@
 # APPLY_ORDER_PHASE3D.md
 
+## v3-r8 적용 안내
+
+이번 산출물은 v3-r3 라운드처럼 GitHub 웹 UI 업로드 100개 파일 제한에 걸리지
+않는다 — 사용자가 실제 사용하는 방식은 **GitHub Desktop**이며, GitHub Desktop은
+git 클라이언트라 파일 개수 제한이 없다. 따라서 이번엔 분할 없이 **단일 zip**
+(`axis-lms-v1_2-phase3d-student-test-parent-portal-brand-polish-v3-r8-github-upload.zip`,
+내부 루트 `axis-lms-main/`, 총 189개 파일)으로 제공한다.
+
+### 적용 순서
+
+1. zip을 로컬에 압축 해제한다.
+2. 기존 로컬 GitHub Desktop 저장소 폴더의 내용을 압축 해제한 `axis-lms-main/`
+   내용으로 **전체 교체**한다(신규 파일 3개 포함 — `src/components/brand/`
+   폴더가 새로 생기므로 폴더째 복사하면 된다).
+3. GitHub Desktop에서 변경 사항을 확인한다 — 이번 커밋에는 수정 파일 39개,
+   신규 파일 3개(`src/components/brand/AxisMark.tsx`,
+   `src/components/brand/AxisWordmark.tsx`, `src/lib/brandColors.ts`)가
+   포함되어야 한다. `docs/` 문서 4종(CHANGES/QA/MODIFIED_FILES/APPLY_ORDER)도
+   함께 변경된 것으로 표시된다.
+4. 커밋 메시지: "Phase 3D v3-r8 student test parent portal and AXIS brand
+   polish" (지시받은 GitHub Desktop Summary 그대로).
+5. Push 후 GitHub Actions Build Check(`npm run typecheck && npm run build`)
+   결과를 확인한다.
+6. **불변 파일 3종은 이번에도 손대지 않았다** — `src/lib/universityAnalysisAdapter.ts`
+   (MD5 `1eddaef5`), `src/App.tsx`(MD5 `387bbf48`), `src/lib/classData.ts`
+   (MD5 `126d9e5e`) 그대로 유지되므로 별도 확인 불필요.
+
+### 적용 후 수동 확인 권장 항목
+
+- 로그인 화면에서 `AxisWordmark`의 대각선 골드 슬래시가 "X" 글자와 시각적으로
+  잘 겹치는지 확인(브라우저 렌더링 없이 좌표를 추정한 값이라 미세 조정이
+  필요할 수 있음 — `QA_PHASE3D.md` v3-r8 "알려진 한계" 참조).
+- 4개 포털(관리자/교사/학부모/학생) 헤더 배지에 새 AXIS 마크가 정상적으로
+  보이는지 확인.
+- 상단 요약 카드/배지 등에서 이전에 보라색이었던 요소들이 Navy/Gold로 잘
+  바뀌었는지 육안 확인(특히 대학추천 관련 아이콘 = Gold, Rival 관련 아이콘 =
+  Navy로 구분되어야 정상).
+
+---
+
 ## v3-r3 추가 안내 — GitHub 웹 업로드용 3분할 (100개 파일 제한 대응)
 
 전체 프로젝트(179개 파일)를 GitHub 웹 UI의 "Add file → Upload files"로 한 번에

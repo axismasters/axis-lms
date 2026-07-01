@@ -8,6 +8,7 @@ import { Link, useLocation } from 'wouter';
 import { Home, BookOpen, Users, BarChart2, GraduationCap, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
+import { AxisMark } from '@/components/brand/AxisMark';
 
 const TEACHER_NAV = [
   { path: '/teacher',                  label: '홈',     icon: Home },
@@ -68,7 +69,7 @@ export default function TeacherLayout({ children, title }: TeacherLayoutProps) {
               className="flex items-center justify-center rounded-md"
               style={{ width: 28, height: 28, background: '#081F4D' }}
             >
-              <GraduationCap size={15} color="white" />
+              <AxisMark size={15} letterColor="#F7F4EE" slashColor="#C8A15A" />
             </div>
             <span className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
               {title ?? 'AXIS 강사'}

@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { PermissionKey, POSITION_LABEL, canAccessGrowth, canExportAcademyWideScores } from '@/lib/rbac';
+import { AxisMark } from '@/components/brand/AxisMark';
 
 interface NavItem {
   label: string;
@@ -188,7 +189,7 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
     <>
       <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'oklch(0.22 0.02 250)', minHeight: 56 }}>
         <div className="flex items-center justify-center rounded-md" style={{ width: 32, height: 32, background: '#C8A15A' }}>
-          <GraduationCap size={18} color="#081F4D" />
+          <AxisMark size={18} letterColor="#081F4D" slashColor="#081F4D" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-bold text-white text-sm tracking-wide">AXIS LMS</div>

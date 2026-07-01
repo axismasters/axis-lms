@@ -166,9 +166,9 @@ export default function EmblemManagement() {
                 <tr key={e.id} style={{ borderBottom: '1px solid oklch(0.95 0.004 250)', opacity: e.active ? 1 : 0.5 }}>
                   <td className="px-4 py-2.5 font-semibold" style={{ color: 'oklch(0.18 0.02 250)' }}>
                     {e.name}
-                    {e.hidden && <span className="ml-1.5 text-xs" style={{ color: '#8B5CF6' }}>🔒숨김</span>}
+                    {e.hidden && <span className="ml-1.5 text-xs" style={{ color: '#081F4D' }}>🔒숨김</span>}
                     {e.ifPlaceholderKey && (
-                      <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded" style={{ background: '#EEF2FF', color: '#4338CA' }}>IF연동</span>
+                      <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded" style={{ background: '#E7EBF3', color: '#081F4D' }}>IF연동</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">
@@ -195,11 +195,11 @@ export default function EmblemManagement() {
                         className="h-8 w-8"
                         aria-label={e.hidden ? '공개로 전환' : '숨김 처리'}
                       >
-                        {e.hidden ? <EyeOff size={15} style={{ color: '#8B5CF6' }} /> : <Eye size={15} style={{ color: 'oklch(0.55 0.015 250)' }} />}
+                        {e.hidden ? <EyeOff size={15} style={{ color: '#081F4D' }} /> : <Eye size={15} style={{ color: 'oklch(0.55 0.015 250)' }} />}
                       </Button>
                     ) : (
                       <span className="inline-flex items-center justify-center h-8 w-8" aria-hidden>
-                        {e.hidden ? <EyeOff size={15} style={{ color: '#8B5CF6' }} /> : <Eye size={15} style={{ color: 'oklch(0.8 0.01 250)' }} />}
+                        {e.hidden ? <EyeOff size={15} style={{ color: '#081F4D' }} /> : <Eye size={15} style={{ color: 'oklch(0.8 0.01 250)' }} />}
                       </span>
                     )}
                   </td>

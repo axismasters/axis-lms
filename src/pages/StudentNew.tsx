@@ -165,7 +165,7 @@ export default function StudentNew() {
               {/* 사진 업로드 */}
               <div className="flex-shrink-0">
                 <div
-                  className="w-24 h-24 rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-indigo-400 hover:bg-indigo-50"
+                  className="w-24 h-24 rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-[#081F4D] hover:bg-[#E7EBF3]"
                   style={{ borderColor: 'oklch(0.88 0.01 250)', background: 'oklch(0.97 0.003 250)' }}
                   onClick={() => fileInputRef.current?.click()}
                 >
@@ -317,7 +317,7 @@ export default function StudentNew() {
                         />
                         {guardian.checking && (
                           <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
-                            <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                            <div className="w-3.5 h-3.5 border-2 border-[#081F4D] border-t-transparent rounded-full animate-spin" />
                           </div>
                         )}
                       </div>

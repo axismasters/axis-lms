@@ -159,7 +159,7 @@ export default function TeacherExams() {
                       <div className="font-semibold text-sm flex items-center gap-1.5" style={{ color: 'oklch(0.2 0.02 250)' }}>
                         {exam.title}
                         {exam.scope === 'TEACHER_PRIVATE' && (
-                          <span className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: '#EDE9FE', color: '#7C3AED' }}>
+                          <span className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: '#E7EBF3', color: '#081F4D' }}>
                             <Lock size={9} /> 내 수업
                           </span>
                         )}
