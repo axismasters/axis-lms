@@ -142,7 +142,7 @@ export default function FinancePayments() {
     return (
       <AdminLayout breadcrumbs={[{ label: '재무관리' }, { label: '수납관리' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>재무관리 접근 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>재무관리 접근 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -201,7 +201,7 @@ export default function FinancePayments() {
     <AdminLayout breadcrumbs={[{ label: '재무관리' }, { label: '수납관리' }]}>
       <div className="mb-5">
         <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>수납관리</h1>
-        <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+        <p className="text-sm mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
           청구·수납은 수강(Enrollment) 단위로 관리됩니다. 한 학생이 여러 반을 수강하면 반별로 따로 표시됩니다.
         </p>
       </div>
@@ -212,12 +212,12 @@ export default function FinancePayments() {
       </div>
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="axis-card p-3 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>이번 달 수납 완료 건수</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>이번 달 수납 완료 건수</div>
           <div className="text-base font-bold" style={{ color: '#040D1E' }}>{summary.paidCount}건</div>
         </div>
         <div className="axis-card p-3 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>환불 요청액 (승인 대기)</div>
-          <div className="text-base font-bold" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(summary.refundRequested)}</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>환불 요청액 (승인 대기)</div>
+          <div className="text-base font-bold" style={{ color: 'oklch(0.35 0.13 60)' }}>{won(summary.refundRequested)}</div>
         </div>
       </div>
 
@@ -232,7 +232,7 @@ export default function FinancePayments() {
             style={{ borderColor: 'oklch(0.9 0.005 250)' }}
           />
           <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.65 0.01 250)' }} />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.49 0.01 250)' }} />
             <Input value={filterStudent} onChange={e => setFilterStudent(e.target.value)} placeholder="학생명 검색" className="h-9 w-36 pl-8 text-sm" />
           </div>
           <Select value={filterClass} onValueChange={setFilterClass}>
@@ -274,14 +274,14 @@ export default function FinancePayments() {
       {/* 수납 목록 */}
       <div className="axis-card overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>조회 조건에 해당하는 청구 내역이 없습니다.</div>
+          <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>조회 조건에 해당하는 청구 내역이 없습니다.</div>
         ) : (
           <div className="axis-table-scroll" style={{ maxHeight: 620 }}>
             <table className="w-full text-sm" style={{ minWidth: 1160 }}>
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
                   {['청구월', '학생명', '반명', '담당강사', '수강상태', '청구금액', '수납금액', '미납금액', '상태', '납부일', '영수증', '청구 안내', '관리'].map(h => (
-                    <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
+                    <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -300,17 +300,17 @@ export default function FinancePayments() {
                     <tr key={inv.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.015 250)' }}>{inv.billingMonth}</td>
                       <td className="px-3 py-2.5 text-xs font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{stu?.name ?? '-'}</td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{cls?.name ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>{cls?.name ?? '-'}</td>
                       {/* 로컬 helper getTeacherName 사용 — classData.ts export 불필요 */}
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{getTeacherName(cls) || '-'}</td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>{enr?.status ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{getTeacherName(cls) || '-'}</td>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.42 0.015 250)' }}>{enr?.status ?? '-'}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(inv.finalAmount)}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(paid)}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: remaining > 0 ? 'oklch(0.5 0.18 27)' : 'oklch(0.7 0.01 250)' }}>{won(remaining)}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: style.bg, color: style.text }}>{INVOICE_STATUS_LABEL[inv.status]}</span>
                       </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{lastPaidAt}</td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{lastPaidAt}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap">
                         {hasUnissuedReceipt && canReceipt ? (
                           <button onClick={() => handleIssueReceipt(inv.id)} className="flex items-center gap-1 hover:underline" style={{ color: '#040D1E' }}>
@@ -321,11 +321,11 @@ export default function FinancePayments() {
                             <Eye size={11} /> 보기
                           </button>
                         ) : (
-                          <span style={{ color: 'oklch(0.7 0.01 250)' }}>-</span>
+                          <span style={{ color: 'oklch(0.54 0.01 250)' }}>-</span>
                         )}
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <button onClick={() => handleInvoiceNotify(inv.id)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.55 0.18 145)' }}>
+                        <button onClick={() => handleInvoiceNotify(inv.id)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.42 0.18 145)' }}>
                           <Send size={11} /> 발송
                         </button>
                       </td>
@@ -336,7 +336,7 @@ export default function FinancePayments() {
                               <CreditCard size={11} /> 수납 등록
                             </button>
                           )}
-                          <button onClick={() => setMemoModal(inv)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                          <button onClick={() => setMemoModal(inv)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.35 0.015 250)' }}>
                             <StickyNote size={11} /> 메모
                           </button>
                         </div>
@@ -355,14 +355,14 @@ export default function FinancePayments() {
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle className="text-sm">수납 등록</DialogTitle></DialogHeader>
           <div className="py-2 space-y-3">
-            <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+            <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>
               잔여 미납액: <b>{paymentModal ? won(paymentModal.remaining) : ''}</b>
             </p>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">수납 금액</Label>
               <Input type="number" min={1} max={paymentModal?.remaining} value={payAmount} onChange={e => setPayAmount(e.target.value)} className="text-sm" />
               {paymentModal && Number(payAmount) > paymentModal.remaining && (
-                <p className="text-xs mt-1" style={{ color: 'oklch(0.5 0.18 27)' }}>수납금액은 남은 미납금액을 초과할 수 없습니다.</p>
+                <p className="text-xs mt-1" style={{ color: 'oklch(0.4 0.18 27)' }}>수납금액은 남은 미납금액을 초과할 수 없습니다.</p>
               )}
             </div>
             <div>
@@ -413,25 +413,25 @@ export default function FinancePayments() {
               return (
                 <div key={receipt.id} className="p-3 rounded-md" style={{ border: '1px solid oklch(0.92 0.005 250)' }}>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span style={{ color: 'oklch(0.5 0.015 250)' }}>영수증 번호</span>
+                    <span style={{ color: 'oklch(0.4 0.015 250)' }}>영수증 번호</span>
                     <span className="font-semibold tabular-nums" style={{ color: 'oklch(0.2 0.02 250)' }}>{receipt.receiptNumber}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span style={{ color: 'oklch(0.5 0.015 250)' }}>금액</span>
+                    <span style={{ color: 'oklch(0.4 0.015 250)' }}>금액</span>
                     <span className="font-semibold tabular-nums" style={{ color: '#040D1E' }}>{won(receipt.amount)}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span style={{ color: 'oklch(0.5 0.015 250)' }}>발급일</span>
+                    <span style={{ color: 'oklch(0.4 0.015 250)' }}>발급일</span>
                     <span className="tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{receipt.issuedAt.slice(0, 10)}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span style={{ color: 'oklch(0.5 0.015 250)' }}>발급자</span>
+                    <span style={{ color: 'oklch(0.4 0.015 250)' }}>발급자</span>
                     <span style={{ color: 'oklch(0.4 0.015 250)' }}>{receipt.issuedBy}</span>
                   </div>
                 </div>
               );
             })}
-            <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+            <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
               <Info size={11} /> PDF 출력은 다음 단계에서 제공됩니다.
             </p>
           </div>

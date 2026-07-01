@@ -155,3 +155,34 @@ export function computeBriefing(bundle: StudentSignalBundle, insight: ParentInsi
     suggestedQuestions: buildSuggestedQuestions(reasons, insight),
   };
 }
+
+// ─── [Phase 3D v3-r10] 교사 전용 성장 상담 요약 ────────────────────────────
+// ⚠ 이 함수는 TEACHER 화면(TeacherStudentDetail 등) 전용이다. Emblem/SP/Tier/Rival은
+// 학부모 화면에 절대 노출하지 않는 값이므로, computeBriefing()/ParentHome.tsx 등
+// 학부모가 소비하는 경로에는 이 함수를 절대 연결하지 않는다.
+// AI 호출 없이 결정적 템플릿으로만 문장을 만든다(studentBriefingEngine 원칙 그대로 준수).
+export interface TeacherGrowthConsultingInput {
+  tierLabel: string;
+  totalSP: number;
+  achievedEmblemCount: number;
+  recentEmblemName?: string;
+  rivalWins: number;
+  rivalLosses: number;
+  ifImprovementNote: string | null; // ifAnalysisEngine.buildCumulativeImprovementNote() 결과
+}
+
+export function buildTeacherGrowthConsultingNote(input: TeacherGrowthConsultingInput): string {
+  const parts: string[] = [];
+  parts.push(`현재 ${input.tierLabel} 티어 · 누적 SP ${input.totalSP.toLocaleString()}점 · 엠블럼 ${input.achievedEmblemCount}개.`);
+  if (input.recentEmblemName) {
+    parts.push(`최근 획득 엠블럼은 "${input.recentEmblemName}"입니다.`);
+  }
+  if (input.rivalWins + input.rivalLosses > 0) {
+    parts.push(`Rival 전적 ${input.rivalWins}승 ${input.rivalLosses}패로, 상담 시 학습 동기부여 소재로 활용할 수 있습니다.`);
+  }
+  if (input.ifImprovementNote) {
+    parts.push(input.ifImprovementNote);
+  }
+  return parts.join(' ');
+}
+

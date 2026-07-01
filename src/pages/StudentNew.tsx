@@ -148,7 +148,7 @@ export default function StudentNew() {
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.2 0.02 250)' }}>학생 등록</h1>
-          <p className="text-sm mt-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <p className="text-sm mt-1" style={{ color: 'oklch(0.42 0.015 250)' }}>
             새 학생의 기본 정보와 보호자 정보를 입력합니다.
           </p>
         </div>
@@ -173,15 +173,15 @@ export default function StudentNew() {
                     <img src={photo} alt="학생 사진" className="w-full h-full object-cover rounded-lg" />
                   ) : (
                     <>
-                      <Camera size={20} style={{ color: 'oklch(0.65 0.015 250)' }} />
-                      <span className="text-xs mt-1" style={{ color: 'oklch(0.6 0.015 250)' }}>사진 등록</span>
-                      <span className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>(선택)</span>
+                      <Camera size={20} style={{ color: 'oklch(0.49 0.015 250)' }} />
+                      <span className="text-xs mt-1" style={{ color: 'oklch(0.47 0.015 250)' }}>사진 등록</span>
+                      <span className="text-xs" style={{ color: 'oklch(0.54 0.01 250)' }}>(선택)</span>
                     </>
                   )}
                 </div>
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
                 {photo && (
-                  <button type="button" className="text-xs mt-1 w-full text-center" style={{ color: 'oklch(0.577 0.245 27.325)' }} onClick={() => setPhoto(null)}>
+                  <button type="button" className="text-xs mt-1 w-full text-center" style={{ color: 'oklch(0.447 0.245 27.325)' }} onClick={() => setPhoto(null)}>
                     사진 삭제
                   </button>
                 )}
@@ -226,7 +226,7 @@ export default function StudentNew() {
               <span className="font-semibold">Account Engine 자동 계정 생성</span>
               <span className="ml-1">— 학생 등록 완료 시 Account Engine에서 계정이 자동으로 생성됩니다.</span>
               <br />
-              <span style={{ color: 'oklch(0.45 0.12 250)' }}>로그인 방식: <strong>휴대폰번호 기반</strong> (별도 아이디/비밀번호 설정 불필요)</span>
+              <span style={{ color: 'oklch(0.35 0.12 250)' }}>로그인 방식: <strong>휴대폰번호 기반</strong> (별도 아이디/비밀번호 설정 불필요)</span>
             </div>
           </div>
 
@@ -236,7 +236,7 @@ export default function StudentNew() {
               <div className="flex items-center gap-2">
                 <Users size={16} style={{ color: '#040D1E' }} />
                 <h2 className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>보호자 정보</h2>
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'oklch(0.95 0.005 250)', color: 'oklch(0.55 0.015 250)' }}>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'oklch(0.95 0.005 250)', color: 'oklch(0.42 0.015 250)' }}>
                   선택 · 여러 명 등록 가능
                 </span>
               </div>
@@ -250,7 +250,7 @@ export default function StudentNew() {
               {guardians.map((guardian, index) => (
                 <div key={guardian.tempId} className="rounded-lg p-4" style={{ background: 'oklch(0.98 0.003 250)', border: '1px solid oklch(0.92 0.005 250)' }}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-medium" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                    <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>
                       보호자 {index + 1}
                     </span>
                     {guardians.length > 1 && (
@@ -259,7 +259,7 @@ export default function StudentNew() {
                         onClick={() => removeGuardian(guardian.tempId)}
                         className="p-1 rounded hover:bg-rose-50 transition-colors"
                       >
-                        <Trash2 size={13} style={{ color: 'oklch(0.577 0.245 27.325)' }} />
+                        <Trash2 size={13} style={{ color: 'oklch(0.447 0.245 27.325)' }} />
                       </button>
                     )}
                   </div>
@@ -267,7 +267,7 @@ export default function StudentNew() {
                   <div className="grid grid-cols-3 gap-3">
                     {/* 관계 */}
                     <div>
-                      <Label className="text-xs font-medium mb-1.5 block" style={{ color: 'oklch(0.45 0.015 250)' }}>관계</Label>
+                      <Label className="text-xs font-medium mb-1.5 block" style={{ color: 'oklch(0.35 0.015 250)' }}>관계</Label>
                       <Select
                         value={guardian.relation}
                         onValueChange={v => updateGuardian(guardian.tempId, 'relation', v)}
@@ -288,7 +288,7 @@ export default function StudentNew() {
 
                     {/* 보호자명 */}
                     <div>
-                      <Label className="text-xs font-medium mb-1.5 block" style={{ color: 'oklch(0.45 0.015 250)' }}>보호자명</Label>
+                      <Label className="text-xs font-medium mb-1.5 block" style={{ color: 'oklch(0.35 0.015 250)' }}>보호자명</Label>
                       <Input
                         value={guardian.name}
                         onChange={e => updateGuardian(guardian.tempId, 'name', e.target.value)}
@@ -302,7 +302,7 @@ export default function StudentNew() {
 
                     {/* 휴대폰번호 */}
                     <div>
-                      <Label className="text-xs font-medium mb-1.5 block" style={{ color: 'oklch(0.45 0.015 250)' }}>휴대폰번호</Label>
+                      <Label className="text-xs font-medium mb-1.5 block" style={{ color: 'oklch(0.35 0.015 250)' }}>휴대폰번호</Label>
                       <div className="relative">
                         <Input
                           value={guardian.phone}
@@ -335,7 +335,7 @@ export default function StudentNew() {
                         <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.35 0.15 250)' }}>
                           가족 자동 연결 감지
                         </div>
-                        <div className="text-xs" style={{ color: 'oklch(0.45 0.12 250)' }}>
+                        <div className="text-xs" style={{ color: 'oklch(0.35 0.12 250)' }}>
                           이 번호({guardian.phone})로 등록된 학생이 있습니다. 등록 완료 시 가족으로 자동 연결됩니다.
                         </div>
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -353,8 +353,8 @@ export default function StudentNew() {
                   {/* 번호 확인 완료 (매칭 없음) */}
                   {guardian.familyMatch === null && guardian.phone.length === 13 && !guardian.checking && (
                     <div className="mt-2 flex items-center gap-1.5">
-                      <CheckCircle2 size={12} style={{ color: 'oklch(0.5 0.15 160)' }} />
-                      <span className="text-xs" style={{ color: 'oklch(0.5 0.15 160)' }}>신규 보호자 번호입니다.</span>
+                      <CheckCircle2 size={12} style={{ color: 'oklch(0.4 0.15 160)' }} />
+                      <span className="text-xs" style={{ color: 'oklch(0.4 0.15 160)' }}>신규 보호자 번호입니다.</span>
                     </div>
                   )}
                 </div>
@@ -365,7 +365,7 @@ export default function StudentNew() {
           {/* 가족 연결 요약 */}
           {hasAnyFamilyMatch && (
             <div className="rounded-lg px-4 py-3 flex items-start gap-3" style={{ background: 'oklch(0.97 0.04 160)', border: '1px solid oklch(0.88 0.08 160)' }}>
-              <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0" style={{ color: 'oklch(0.5 0.15 160)' }} />
+              <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0" style={{ color: 'oklch(0.4 0.15 160)' }} />
               <div className="text-xs" style={{ color: 'oklch(0.35 0.12 160)' }}>
                 <span className="font-semibold">가족 자동 연결 예정</span>
                 <span className="ml-1">— 등록 완료 후 동일 보호자 번호를 가진 학생과 가족으로 자동 연결됩니다.</span>

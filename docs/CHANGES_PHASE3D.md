@@ -1,5 +1,401 @@
 # CHANGES_PHASE3D.md
 
+## v3-r10-r3 — buildfix: TeacherStudentDetail IF 레코드 타입 오류
+
+**버전**: v3-r10-r3 — v3-r10-r2 반려(빌드 실패) 재작업. 기능/UI 변경 없음, TypeScript
+타입 오류 1건만 안전하게 수정. r2에서 개선한 Rival CTA / 결과 추이 넓은 패널 / 학부모
+성장 리포트 PC 2컬럼 구조는 그대로 유지한다.
+
+### 수정 내용
+
+빌드 오류:
+```
+src/pages/teacher/TeacherStudentDetail.tsx(172,47):
+  Argument of type 'IfRecordLite[]' is not assignable to parameter of type 'StudentIfRecord[]'.
+```
+
+원인: `signalBundle.ifRecords`는 `StudentSignalBundle` 타입(→ `IfRecordLite[]`)으로 좁혀지는데,
+`getIfCumulativeSummary()`는 `StudentIfRecord[]`를 요구한다. `loadIfRecords()`의 원본 반환
+타입(`StudentIfRecord[]`)이 번들에 담기며 소실된 것이 문제.
+
+수정(`src/pages/teacher/TeacherStudentDetail.tsx`):
+- `const fullIfRecords = loadIfRecords(studentId);`를 별도 변수로 분리.
+- `signalBundle.ifRecords`에는 `fullIfRecords`를 할당(구조적으로 `IfRecordLite[]`에 대입
+  가능 — `StudentIfRecord`가 `IfRecordLite`의 상위 집합).
+- `getIfCumulativeSummary(signalBundle.ifRecords)` → `getIfCumulativeSummary(fullIfRecords)`로
+  변경(좁혀지지 않은 원본 타입 전달).
+
+다른 `getIfCumulativeSummary()` 호출부(ParentGrowthReport / StudentGrades / StudentGrowthShowcase)는
+모두 `loadIfRecords()` 결과를 직접(또는 `.filter()` 후) 전달하므로 타입 문제 없음 — 재검색으로
+확인 완료. 동일 오류의 다른 인스턴스 없음.
+
+---
+
+## v3-r10-r2 — Rival CTA · PC 대시보드 레이아웃 · 결과 추이 패널 · AXIS 성장 언어
+
+**버전**: v3-r10-r2 — v3-r10-r1 반려 재작업. 반려 핵심은 "기능은 있으나 PC 웹에서
+좌우로 치우치고, Rival CTA가 실제 화면에서 빠지고, 결과 추이가 좁은 카드/점 하나 형태"
+였다. 베이스라인 v3-r9-r4 소스에 r1 변경 + 이번 r2 보강을 얹었다. 브랜치(권장):
+`phase3d-v3-r10-r2-pc-dashboard`.
+
+### 1. Rival CTA 노출 버그 수정
+
+문제(반려): `RivalMatchupCard`의 "상세 매치업 보기" CTA가 `onDetail`이 있을 때만 렌더돼
+실제 `StudentRival` 화면에서 빠져 있었다.
+
+- `src/components/growth/RivalMatchupCard.tsx`: CTA를 `onDetail` 조건부에서 **항상 렌더**로
+  변경(01 승인 디자인의 네이비+골드 버튼).
+- `src/pages/student/StudentRival.tsx`: `onDetail`을 전달해 클릭 시 하단 상세 섹션으로
+  smooth scroll(`detailRef` + `scrollIntoView`). 하단 섹션 제목을 "상세 매치업 · 주차별
+  성장 기록"으로 정리(`scroll-mt-4`로 헤더 여백 확보).
+
+### 2. 결과 추이 — 좁은 카드 2개/점 하나 → 넓은 분석 패널
+
+문제(반려): `StudentGrades.tsx`의 결과 추이가 우측 좁은 카드 2개였고, 데이터 1회면 점
+하나만 뜨는 실패 구조였다.
+
+- 신규 컴포넌트 `ResultTrendPanel` + `SeriesTrend`(같은 파일 내):
+  - 우측 좁은 rail 구조 폐기 → 탭/시험목록 아래 **전체 폭 넓은 분석 패널**로 이동.
+  - 단원평가 / 내신 대비 모의고사를 한 패널 안에서 나란히 비교(내부 2컬럼).
+  - 차트 높이 확대(H 100→180), 가로 기준선(gridline) 추가.
+  - **데이터 1회일 때 점 하나만 띄우지 않고** (첫 기준점 / 최근 기록 요약 / 다음 테스트 후
+    변화 누적 안내) 3블록을 함께 표시.
+  - 2회 이상이면 첫 회차 대비 증감(▲/▼ %p) 요약 문구 추가.
+- 구 `ExamLineTrendChart`는 삭제하지 않고 미사용 상태로 남겨둠(회귀 위험 최소화,
+  `noUnusedLocals:false`).
+
+### 3. PC 레이아웃 전면 점검
+
+- **`ParentGrowthReport.tsx`**(반려에서 명시): `max-w-3xl mx-auto` 단일 컬럼 →
+  `lg:max-w-6xl`. 인사/요약을 2컬럼 히어로 밴드로, 테스트 탭·리포트 탭 본문을 각각
+  **PC 2컬럼 대시보드**(좌: 추이+과목별 보완도 / 우: IF 요약+최근 테스트, 리포트 탭은
+  좌: 주간·월간 통계 / 우: 상담 요약+선생님 코멘트)로 재구성.
+- **`StudentGrowthShowcase.tsx`**: 좌 2/3 + 우 1/3의 비대칭 구조를 → 성장 단계 Hero를
+  전체 폭 밴드로 올리고, 본문을 **균형 2컬럼**(좌: 엠블럼 갤러리 + 주간 학습 습관 /
+  우: IF 성장 요약 + 최근 성장 기록 + Rival 연결)으로 재배치. 한쪽만 길게 빠지지 않도록
+  카드 분배.
+- 점검 완료(이미 2~3컬럼 PC 레이아웃 유지 중이라 무변경): StudentHome, TeacherHome,
+  ParentHome(수납은 이미 "미납 유무" 배지만, 총액 과시 UI 없음), 관리자 성장관리 페이지
+  (AdminLayout 전체 폭 사용, 좁은 컨테이너 없음).
+
+### 4. Emblem / Tier / SP 언어 정리 (전투/게임 → AXIS 성장)
+
+- 교사 `TeacherStudentDetail` 성장 요약: "티어 / 누적 SP / Rival 전적(N승 M패)" →
+  "성장 단계 / 누적 성장 활동 / 또래 성장 비교(N회 참여)".
+- 관리자 `StudentDetail` 성장 카드: "누적 SP / 이번 시즌 SP / 라이벌 전적(N승 M패)" →
+  "누적 성장 활동 / 이번 시즌 활동 / 또래 성장 비교(N회 참여)". 전투 톤의 빨강
+  `Swords`(#EF4444) 아이콘 → 네이비 `TrendingUp`. "승률/연승/연패" 표기도 "성장 비교 N회
+  참여"로 교체.
+- Tier 6단계(Seed~Axis Master)·SP 성장 언어는 r1에서 정리 완료 상태 유지(게임 랭크
+  WOOD~DIAMOND 사용자 노출 0건 재확인).
+- 관리자 전용 CRUD(RivalManagement / RivalSeasonManagement)의 승/패 기록 관리 필드는
+  데이터 모델(승/패 카운트) 특성상 유지 — 학생/학부모 화면에는 전혀 노출되지 않음.
+
+---
+
+## §GPT(개발 총괄)에게 전달할 의견 — v3-r10-r2
+
+1. **승/패 데이터 모델을 "성장 참여 횟수" 모델로 점진 이관 검토.** 화면 표기는 이번에 전부
+   "또래 성장 비교 N회 참여"로 바꿨지만, 하부 데이터는 여전히 `rivalWins`/`rivalLosses`다.
+   철학상 "누구를 눌렀다"가 아니라 "얼마나 성장했나"가 중심이므로, 다음 phase에서
+   `growthCompareCount` + `myGrowthDelta` 중심 스키마로 옮기고 승/패는 관리자 통계로만
+   내리는 것을 권장한다.
+
+2. **결과 추이 패널의 단원평가/내신 구분은 카테고리 필터에 의존한다.** `unitEvalOnlyResults`
+   /`mockSchoolOnlyResults`가 비어 있는 학원(카테고리 미설정)에서는 두 칸 모두 빈 상태가
+   된다 — 카테고리 매핑이 없는 경우 "전체 결과" 단일 추이로 폴백하는 옵션을 다음에 검토.
+
+3. **ParentGrowthReport 2컬럼은 탭별로 좌우 높이가 달라질 수 있다.** `items-start`로 위쪽
+   정렬해 시각적 어긋남은 줄였지만, 테스트가 많은 학생은 우측(최근 테스트 목록)이 길어질
+   수 있다. 목록에 "더 보기" 접기를 넣으면 균형이 더 좋아진다.
+
+4. **주간 학습 습관·IF 개선% 는 여전히 결정적 데모 값이다**(r1 의견 2·3 유지). 실데이터
+   연동 시 `StudentGrowthShowcase`의 `weekly`/`ifSummary` 계산부만 교체하면 된다.
+
+---
+
+## v3-r10-r1 — 성장 동기부여 철학·UI 재구축 (Rival/Emblem/Tier/IF)
+
+**버전**: v3-r10-r1 — v3-r10 반려에 대한 재작업. 첨부 `axis-v3-r10-design-reference.zip`
+(이미지 5종 + 문서 3종) 기준. 베이스라인은 v3-r10이 아니라 v3-r9-r4 소스에 이번 변경을
+얹었다(v3-r10은 GitHub main 미반영이었으므로). 브랜치(권장): `phase3d-v3-r10-r1-growth-rebuild`.
+
+이번 작업의 핵심은 "예쁘게"가 아니라, AXIS LMS가 행정 LMS가 아니라 **학생 성장/동기부여/
+학부모 설득 시스템**이라는 정체성을 코드·데이터·화면에 박는 것이다.
+
+### 1. Tier — 게임 랭크 → AXIS 성장 단계 (전면 교체)
+
+문제(반려 사유): Tier가 WOOD/STONE/BRONZE/IRON/SILVER/GOLD/DIAMOND 게임 랭크로 남아 있었다.
+
+- `src/lib/growthData.ts` `StudentTier` 타입을 6단계 AXIS 성장 단계로 교체:
+  `SEED → FOUNDATION → FOCUS → STRATEGY → MASTERY → AXIS_MASTER`
+  (UNRANKED는 데이터 부족 시 fallback으로만 유지).
+- `TIER_LABELS`(한글: 씨앗/기초/집중/전략/숙련/축의 완성), `TIER_LABELS_EN`,
+  `TIER_TAGLINE`(단계별 철학 한 줄), `TIER_COLORS`를 신설/교체. **색상은 임의 생성이 아니라
+  `04-tier-system-board.png`의 DESIGN SYSTEM GUIDE hex 값을 그대로 사용**
+  (Seed #7AA9BD / Foundation #4C7DB8 / Focus #D18B2E / Strategy #2F7F86 / Mastery #0F1D33 /
+  Axis Master #888D2A).
+- `SP_TIER_THRESHOLDS` 6단계 기준으로 재정의, `calcTierFromSP` 갱신, `calcTierProgress()`
+  신설(다음 단계까지 진행률 % 계산 — 학생 화면 Hero의 "다음 단계까지 72%"에 사용).
+- 게임 랭크 아이콘 대신 성장 단계 심볼(새싹/기둥/조준/나침반/책/축의 별)을 그리는
+  `src/components/brand/AxisTierMedallion.tsx`(신규) 추가. **Mastery / Axis Master만 딥 네이비
+  + 골드 프리미엄 방패 프레임**, 하위 단계는 밝은 아이보리 + 단계색 라인아트.
+- Tier 철학(게임 랭크 아님, 학부모 직접 노출 금지)을 타입 정의 주석에 명시했다.
+
+### 2. Emblem — 이모지 → 프리미엄 업적 배지 + IF 연결 카탈로그
+
+문제(반려 사유): 엠블럼이 단일 🏅 이모지/기본 카드 수준이었다.
+
+- `Emblem` 인터페이스에 `family` / `level` / `iconKey` / `linkedIfAxis` / `teacherSummary` /
+  `parentSafeLabel` 필드 추가(카탈로그 3계층 표시를 한 데이터에서 파생).
+- `AXIS_v3-r10_emblem_catalog.md`의 10개 엠블럼을 그대로 데이터로 추가:
+  Calculation Precision / Concept Mastery / Time Control / Steady Improvement /
+  Comeback Growth / Weekly Consistency / High-Focus Session / Test Reflection Complete /
+  Growth Streak / Mentor Recommendation. **IF 3사유 직접 연결**(계산 실수→Calculation
+  Precision, 개념 부족→Concept Mastery, 시간 부족→Time Control)을 `linkedIfAxis`로 유지.
+- `src/components/brand/AxisEmblemBadge.tsx`(신규): 순수 SVG 프리미엄 배지 렌더러
+  (네이비 원판 + 골드 링 + 월계관 + 젬 토퍼 + 의미 아이콘 + 레벨별 프레임). 12종 의미
+  아이콘을 SVG path로 그린다. **미획득 상태는 "잠금 아이템"이 아니라 "다음 성장 목표"**로
+  옅은 아웃라인 처리. `03-emblem-system-board.png` 기준.
+- `EMBLEM_LEVEL_STYLE`(BASIC→GROWTH→FOCUS→SIGNATURE→MASTER) 신설 — 현질형 희귀도가 아니라
+  "성장 무게"만 표현(레벨이 올라갈수록 골드 프레임/광택 강화).
+- 이모지(🏅) 렌더 위치를 실제 배지로 교체: 학생 MyPage 대표 엠블럼, 교사 성장 요약 칩
+  (TeacherStudentGrowth / TeacherStudentDetail), 관리자 EmblemManagement 목록(배지 미리보기
+  + 패밀리/레벨 태그 추가).
+- `GrowthContext.onIfAnalysisResult` / `recordIfReflectionMock`을 신규 IF 카탈로그 엠블럼
+  (calc_precision_01 / concept_mastery_01 / time_control_01 / reflection_complete_01)으로도
+  진행도가 이어지도록 연결.
+
+### 3. Rival — 심심한 원형 카드 → 승인된 "나 vs Rival" 매치업 카드
+
+문제(반려 사유): Rival 화면이 심심한 모바일형 원형 카드였고, 승인된 매치업 카드 디자인이
+미반영이었다.
+
+- `src/lib/rivalMatchupEngine.ts`(신규): **규칙 기반(AI/fetch 전혀 없음)** 나 vs Rival 비교
+  데이터. `buildRivalMatchup()`(이번 주 성장률/상위%/양쪽 미니 추이/정확도·꾸준함·집중도
+  레인/이번 주 리드 여부/격려 문구), `scoreRivalCandidate()`(같은 학년·유사 평균·유사 성장률·
+  IF 약점 축 유사 기반 추천 점수).
+- `src/components/growth/RivalMatchupCard.tsx`(신규): `01-rival-matchup-card-approved.png`
+  구현. 좌(나·teal) / 중앙(월계관 VS 메달) / 우(Rival 평균·blue), 양쪽 미니 추이 그래프,
+  정확도/꾸준함/집중도 비교 레인, CTA "상세 매치업 보기"(네이비+골드 버튼).
+- `src/pages/student/StudentRival.tsx`(전면 재작성, 261줄): 원형 카드 폐기. 매치업 카드 +
+  유사 수준 비교 막대차트 + "나를 선택한 수"(익명) + Rival 성장 기록 테이블(익명·닉네임
+  전용) + 성장 제안. `02-rival-dashboard-screen.png` 레이아웃 반영, PC에서 다컬럼.
+- StudentHome/StudentLayout/StudentMyPage의 `Swords`(칼) 아이콘 → `TrendingUp`, StudentHome
+  Rival 카드의 "N승 M패·승률·🔥연승" 전적 표현을 "이번 주 나의 성장 매치업" 성장 중심
+  문구로 교체(철학: "누구를 눌렀다"가 아니라 "이번 주 나는 얼마나 성장했는가").
+
+### 4. 성장 진열장 — 모바일형 나열 → PC-first 프리미엄 갤러리
+
+문제(반려 사유): `max-w-lg` 모바일형 세로 나열, 진열장 느낌 약함.
+
+- `src/pages/student/StudentGrowthShowcase.tsx`(전면 재작성, 331줄): `max-w-6xl` PC-first
+  3존 레이아웃(`05-growth-showcase-screen.png` 기준).
+  - 성장 단계 Hero: `AxisTierMedallion` + 현재 단계/철학 + **다음 단계까지 진행률** +
+    다음 단계 미리보기.
+  - 성장 엠블럼 컬렉션: `AxisEmblemBadge` 갤러리(획득/다음 목표·진행 카운트).
+  - IF 기반 성장 요약(우측 레일): 계산 실수/개념 이해 부족/시간 부족 개선 흐름
+    (`getIfCumulativeSummary` 실데이터 연동, "개선됨" 태그).
+  - 최근 성장 기록 타임라인(SP 로그) + 주간 학습 습관 차트(teal 막대 + gold 라인).
+  - Rival 매치업으로 연결되는 카드.
+
+### 5. SP 표현 — 게임 코인 톤 완화
+
+- 학생 화면의 "⚡ N SP" / "누적 SP" 표현을 "누적 성장 활동" / "다음 단계까지 %"로 교체
+  (SP는 재화/코인이 아니라 성장 행동의 누적이라는 철학). 학부모 화면은 기존부터 SP/Tier
+  명칭 미노출(재확인).
+
+### 6. 학부모 화면
+
+- ParentHome/ParentGrowthReport 등은 이미 `useGrowth` 미참조로 Rival/Emblem/SP/Tier 노출
+  0건(v3-r10에서 확인, 이번에도 재확인). 이번 라운드 코드 변경 없음.
+
+---
+
+## §GPT(개발 총괄)에게 전달할 의견 — v3-r10-r1
+
+1. **Tier/SP 임계값은 현재 데모용 추정치다.** `SP_TIER_THRESHOLDS`(SEED 0 / FOUNDATION 300 /
+   FOCUS 800 / STRATEGY 1600 / MASTERY 2800 / AXIS_MASTER 4200)는 화면 진행률이 자연스럽게
+   보이도록 잡은 값이라, 실제 성장 활동당 SP 지급 규칙이 확정되면 함께 재보정이 필요하다.
+
+2. **매치업/유사수준/도전기록 일부는 결정적 데모 값이다.** `StudentRival`의 과목별 유사수준
+   비교·Rival 성장 기록 테이블, `StudentGrowthShowcase`의 주간 학습 습관 수치는 실데이터
+   연동 전 자리표시자다(규칙 기반·결정적). 실제 연동 시 `rivalMatchupEngine`의
+   `buildRivalMatchup`은 그대로 쓰고 입력 배열만 실데이터로 바꾸면 된다.
+
+3. **IF 기반 성장 요약의 "개선 %"는 현재 사유 비중의 역수 기반 결정적 표현이다.** 정확한
+   "4주 전 대비 개선%"를 내려면 시점별 IF 누적 스냅샷이 필요하다 — `studentIfRecord`에
+   주차 스냅샷을 남기는 구조를 다음 phase에서 검토 권장.
+
+4. **Rival 추천(scoreRivalCandidate)은 점수 계산까지만 구현했다.** 실제 매칭·저장·변경 주기
+   정책은 관리자 RivalManagement/RivalSeasonManagement와 연결이 필요하다. 함수는 순수
+   함수라 서버/배치 어느 쪽에서도 재사용 가능하다.
+
+5. **엠블럼 배지·티어 메달은 순수 SVG라 오프라인·인쇄·PDF 상담자료에도 그대로 쓸 수 있다.**
+   교사 상담 리포트/학부모 리포트 PDF에 배지를 넣고 싶으면 `AxisEmblemBadge`/
+   `AxisTierMedallion`을 그대로 재사용하면 된다(외부 이미지 의존 없음).
+
+6. **구 게임 랭크(WOOD~DIAMOND) 엠블럼 material 필드는 그대로 남겨뒀다.** `EmblemMaterial`은
+   Tier와 별개(엠블럼 등급 표시용)라 제거하지 않았다. 다만 학생 갤러리는 이제 material이
+   아니라 `level`(BASIC~MASTER) 기반으로 프레임을 결정한다 — 다음 정리 때 material을
+   level로 통합할지 결정 필요.
+
+---
+
+## v3-r10 — 성장 동기부여 흐름 정리 + 차트 색상 + 관리자 화면 대비 개선
+
+**버전**: v3-r10 — 정식 Phase 지시 문서(§1~§7) + 채팅 추가 지시(관리자 화면 대비) 기준.
+베이스라인 v3-r9-r4. 브랜치(권장): `phase3d-v3-r10-growth-motivation-flow`.
+
+### 1. 막대그래프 색상 정리
+
+문제: 데이터 막대(bar fill)가 딥 네이비 단색 위주였고, IF 사유 막대는 강한 red까지
+섞여 있어 Ivory/Warm White 배경에서 무겁고 시인성이 낮았다.
+
+- `src/lib/brandColors.ts`에 데이터 시각화 팔레트 신설: `CHART_BLUE`(muted blue) /
+  `CHART_TEAL`(soft teal) / `CHART_GOLD`(=AXIS Gold, 강조용) / `CHART_AMBER`(보완 필요
+  표현 — 강한 red 대체) / `IF_REASON_COLOR`(계산 실수=amber, 개념 부족=blue, 시간
+  부족=teal, 3사유 고정). 딥 네이비(`AXIS_NAVY`)는 축/라벨/기준선 용도로만 남기고
+  데이터 막대 기본색에서는 제외했다.
+- **`StudentGrades.tsx`**: IF "놓친 이유 비율" 막대(계산실수=red, 개념부족=navy,
+  시간부족=amber였던 3색 하드코딩)를 `IF_REASON_COLOR`로 통일. "누적 놓친 점수" 강조
+  숫자도 강한 red → `CHART_AMBER`로 낮춤.
+- **`StudentGrowthShowcase.tsx`**: SP 내역 막대(navy) → `CHART_GOLD`(SP=보상 의미와
+  일치), 테스트 기록 미니 막대(navy) → `CHART_BLUE`.
+- **`AssessmentDetail.tsx`**(관리자 시험 상세): 점수 분포 히스토그램/반별 평균 막대
+  (navy) → `CHART_BLUE`/`CHART_TEAL`. 문항별 정답률 막대는 정답률 50% 미만이면
+  `CHART_AMBER`(보완 필요), 그 외 `CHART_BLUE`로 조건부 처리.
+- **`FinanceStatistics.tsx`**(관리자 재무 통계): 월별 청구/반별 매출 막대(navy) →
+  `CHART_BLUE`, 수강유형별 매출 막대(navy/orange) → `CHART_BLUE`/`CHART_GOLD`.
+- 반대로 이미 초록/주황/빨강 3단계 신호등 색을 쓰던 `scoreColor()`류 함수(성적 등급
+  표시, 10개 파일)는 "네이비 단색" 문제에 해당하지 않아 손대지 않았다.
+
+### 2. IF 결과 → 성장 기록/보완 포인트 연동
+
+확인 결과 **IF → SP 지급 → 엠블럼 진행도** 백엔드 연결은 이미 v3-r9-r1에서 완료되어
+있었다(`StudentGrades.tsx`의 `onIfAnalysisResult(buildGrowthEvent(...))` +
+`addStudentSP(...)`). 이번 라운드에서 부족했던 부분은 그 결과를 학생이 **눈으로 보는
+화면**이 없었다는 점 — `StudentGrowthShowcase.tsx`의 "IF 채점 활용" 카드가 실데이터
+없이 고정 안내문만 보여주고 있었다.
+
+- `src/lib/ifAnalysisEngine.ts`에 `buildCumulativeImprovementNote(summary)` 신설 —
+  `getIfCumulativeSummary()`의 누적 사유 비율을 사람이 읽는 한 줄 "최근 개선 포인트"
+  문장으로 변환한다(외부 AI 호출 없음, 기존 `IMPROVEMENT_SUGGESTION` 템플릿 재사용).
+- `StudentGrowthShowcase.tsx`의 "IF 채점 활용" 카드를 **"최근 개선 포인트"** 카드로
+  교체 — 실제 누적 IF 데이터가 있으면 가장 비중이 큰 사유 + 제안 문장 + 누적 회복
+  점수를 보여주고, 없으면 기존 안내문을 그대로 유지(신규 학생 fallback).
+
+### 3. 학생 성장 진열장 정리
+
+`StudentGrowthShowcase.tsx`: 위 "최근 개선 포인트" 실데이터 연동 외에, 막대 색상을
+navy→gold/blue로 낮춰 전체적으로 "트로피 케이스"보다는 "학습 기록판" 톤에 가깝게
+조정했다. Emblem/SP/Tier 섹션 자체(탭 구성, 4칸 지표)는 이미 과도한 게임 UI가 아니라고
+판단해 구조는 유지했다(별도 판단 근거는 `QA_PHASE3D.md` v3-r10 섹션 참조).
+
+### 4. Rival 시스템 UI 정리
+
+`StudentRival.tsx`: 전투/게임 색채가 강했던 아이콘·문구를 학습 성장 비교 톤으로 낮췄다.
+- `Swords`(칼) 아이콘 2곳 → `Trophy`/`TrendingUp`으로 교체.
+- `Flame`(연승 강조) → `TrendingUp` + 문구를 "N연승/연패" → "N회 연속 상승/보완 필요"로.
+- 섹션 라벨 "내 Rival 전적" → "나의 학습 성장 비교".
+- 닉네임 전용 표시, 상대 식별정보 비노출, "나를 지정한 학생 수만 노출"(누가인지는
+  비노출) 원칙은 기존 그대로 — 위반 없음 재확인.
+- 관리자 `RivalManagement.tsx`(전체 연결 관계 조회, 학생에게 지정자 비노출 원칙 명시)는
+  구조 변경 없이 이번 라운드 관리자 화면 대비 개선(§7)만 적용했다.
+
+### 5. 교사 학생 상세 — 성장 상담 요약 신설
+
+`TeacherStudentDetail.tsx`(강사용 담당 학생 상세, "성장 탭"에 해당하는 화면)에 기존
+"담당 학생 빠른 브리핑" 카드 아래 **"성장 상담 요약"** 섹션을 신설했다.
+
+- 표시 항목: 티어 / 누적 SP / Rival 전적(승-패) 3칸 + 최근 획득 엠블럼 1개 + 규칙 기반
+  한 줄 코멘트(`buildTeacherGrowthConsultingNote`, 신설).
+- `src/lib/studentBriefingEngine.ts`에 `buildTeacherGrowthConsultingNote()` 신설 —
+  티어/SP/엠블럼/Rival/IF 개선 포인트를 조합한 교사 전용 상담 문장. **외부 AI API 호출
+  없음**(기존 `computeBriefing()`과 동일하게 결정적 템플릿 조합만 사용).
+- ⚠ 이 함수와 신설 섹션은 `TeacherStudentDetail.tsx`에서만 사용한다. 학부모 화면
+  (`ParentHome.tsx` 등)에는 연결하지 않았다 — Rival/Emblem/SP/Tier 학부모 노출 금지
+  원칙 유지.
+
+### 6. 학부모 화면 — 현행 검증(변경 없음)
+
+Phase 지시 §7 항목을 파일 단위로 재검증한 결과, **이미 전부 반영되어 있어 이번
+라운드에서 코드를 수정하지 않았다**:
+- `ParentHome.tsx`/`ParentGrowthReport.tsx`: `useGrowth()` 자체를 참조하지 않음 —
+  Rival/Emblem/SP/Tier 문자열 노출 0건(주석으로 명시적 금지 재확인만 존재).
+  성장 관련 내용은 전부 `parentInsightEngine.ts`의 객관 지표(테스트 변화/평균 위치/
+  출결/숙제/IF 놓친 점수/목표 대비 보완 과목)로만 간접 표현되고 있었다.
+- `ParentFinance.tsx`/`ParentHome.tsx` 수납 영역: 이미 v3-r2에서 "총액 요약 그리드"를
+  제거하고 "미납 있음/미납 없음" 배지만 노출하도록 정리되어 있었다(개별 청구서의
+  청구액/미납액은 실제 납부 안내에 필요한 최소 정보로 유지 — 총액 과시와는 구분).
+- 상담 기록 원문(`counselingData.ts`) import 0건 — 학부모 화면에서 원문 열람 불가 원칙
+  준수 확인.
+
+### 7. 관리자 화면 색상 대비(contrast) 개선 [채팅 추가 지시]
+
+문제: 관리자 사이드바/상단 탭/카드형 메뉴/버튼/필터/테이블의 회색 텍스트가 Ivory/White
+배경 대비 너무 흐려(oklch lightness 0.5~0.7대) 시인성이 낮았다.
+
+- **적용 범위**: `AdminLayout.tsx`(상단 헤더 — 밝은 배경 영역만, 좌측 다크 사이드바
+  레일은 이미 흰 텍스트/골드 강조로 충분한 대비를 가지고 있어 대상에서 제외)와,
+  학생관리/시험관리/성장관리/설정/재무관리/알림관리 등 관리자·강사 공용 화면 및
+  공용 폼 컴포넌트 **35개 파일**.
+- **방식**: `color:` 속성(텍스트 전용 — `background`/`border`는 건드리지 않음)의 회색
+  oklch 값 중 명도(L) 0.44~0.72 구간을 구간별로 0.10~0.16 낮췄다(예: 0.65→0.49,
+  0.6→0.47, 0.55→0.42, 0.5→0.40). 딥 네이비/Gold 강조색, 상태 배지(빨강/초록/주황),
+  버튼의 흰 텍스트(`color: 'white'`, 리터럴이라 패턴 미해당)는 대상에서 자동 제외됐다.
+  총 **717건** 조정.
+- 딥 네이비(`#040D1E`)는 여전히 "선택됨/강조" 상태 표시(필터 카드 active, 정렬 토글,
+  탭 active 배경 등)에만 쓰이고, 전체 UI를 네이비로 덮는 방향으로는 확장하지 않았다.
+- `AdminLayout.tsx` 상단 헤더: 햄버거 메뉴 아이콘·브레드크럼 비활성 세그먼트·알림
+  아이콘·날짜 텍스트 명도를 낮추고, 브레드크럼 비활성 항목 font-weight를 400→500으로
+  올려 "현재 위치"와의 위계를 더 뚜렷하게 했다.
+
+### 검증
+
+- 불변 파일 3종(`universityAnalysisAdapter.ts`/`App.tsx`/`classData.ts`) MD5 무변경
+  재확인(`1eddaef5`/`387bbf48`/`126d9e5e`).
+- `studentIfAnalysis.ts`/`studentIfRecord.ts` 직접 import 0건 재확인(전부
+  `ifAnalysisEngine.ts` 경유 — 단일 진입점 원칙 100% 유지).
+- IF 사유 3개(계산 실수/개념 부족/시간 부족) 고정 — 추가/변경 없음.
+- 금지 표현(합격률 등, 위험/문제 학생 등, `수능실전주간루틴`) 재검색 — 신규 코드에
+  전부 0건(기존 주석의 정책 재확인 문구만 존재).
+- Rival/Emblem/SP/Tier 학부모 화면 노출 0건 재확인.
+- 수정된 43개 파일 전체 TypeScript 구문 검사(`ts.transpileModule`, JSX 포함) 통과 —
+  구문 오류 0건. (오프라인 환경 특성상 `npm install` 기반 전체 타입체크는 GitHub
+  Actions가 최종 기준이며, 이번 라운드에 추가한 함수의 타입 정합성은 수동으로 각
+  호출부와 시그니처를 대조 확인했다.)
+
+### §GPT(개발 총괄)에게 전달할 의견
+
+지시받지 않았지만, 작업 중 발견해 다음 Phase에 참고하면 좋을 것 같아 남긴다(LMS
+헌법/불변 파일/영구 금지 항목 범위는 넘지 않는 제안이다):
+
+1. **`scoreColor()` 중복** — `StudentGrades`/`StudentMockExams`/`StudentWeeklyMocks`/
+   `ParentGrades`/`ParentMockExams`/`ParentWeeklyMocks`/`ParentHome`/
+   `ParentGrowthReport`/`TeacherStudentGrowth` 9개 파일에 거의 동일한 초록/주황/빨강
+   3단계 함수가 각각 복붙되어 있다. `brandColors.ts`에 `SCORE_TIER_COLOR` 같은 상수로
+   통합하면 색상 기준이 한 곳에서만 관리되고, 이번처럼 "톤 조정" 지시가 와도 파일 하나만
+   고치면 된다.
+2. **시맨틱 텍스트 토큰 부재** — 이번 관리자 대비 개선은 각 파일에 흩어진 oklch 리터럴을
+   직접 찾아 값만 낮추는 방식으로 처리했다. `index.css`에 `--text-primary`/
+   `--text-secondary`/`--text-muted` 같은 시맨틱 토큰을 만들고 화면들이 그 토큰을
+   참조하도록 다음 Phase에서 리팩터링하면, 앞으로 "대비를 더/덜 조정해달라" 같은 지시가
+   와도 토큰 값만 바꾸면 전체에 반영된다(지금은 파일별 리터럴이라 매번 이런 대규모
+   교체가 필요함).
+3. **포커스(focus) 상태** — 관리자 화면 입력창/버튼 다수가 Tailwind 기본
+   `focus:ring-2`(기본 파란 계열)에 의존하고 있어, 브랜드 Navy/Gold 톤과 약간 이질적일
+   수 있다. "선택/hover/focus 상태" 개선을 더 철저히 하려면 포커스 링 색상도 브랜드
+   토큰으로 통일하는 별도 라운드가 필요해 보인다.
+4. **학부모 화면 "오래 머무르고 눌러보게"** — 이번 라운드에서 확인해보니 학부모 화면은
+   이미 헌법(Rival/Emblem/SP/Tier 비노출, 총액 과시 금지)을 잘 지키고 있어 코드를 손대지
+   않았다. `docs/PARENT_PAGE_ENGAGEMENT_IDEAS.md`에 이미 정리된 백로그가 있는 것으로
+   보이니, "오래 머무르는 화면" 같은 UX 요구는 그 문서의 구체 항목을 다음 Phase
+   지시에 골라 담아주면 바로 작업하겠다(이번엔 임의로 새 기능을 추가하지 않았다).
+
+
+---
+
 ## v3-r9-r4 — 로그인 히어로 이미지 중앙정렬 개선 + 사이드바 네이비 최신화
 
 **버전**: v3-r9-r4 — 정식 Phase 지시 문서 없이 채팅에서 바로 이미지와 지시를

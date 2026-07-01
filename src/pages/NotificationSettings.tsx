@@ -108,7 +108,7 @@ export default function NotificationSettingsPage() {
                 <button
                   onClick={handleReset}
                   className="px-4 py-2 rounded-xl border text-sm"
-                  style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.45 0.02 250)' }}
+                  style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.35 0.02 250)' }}
                 >취소</button>
               )}
               <button
@@ -126,7 +126,7 @@ export default function NotificationSettingsPage() {
         </div>
 
         {!canManage && (
-          <div className="rounded-xl p-3 text-sm" style={{ background: 'oklch(0.97 0.02 250)', color: 'oklch(0.45 0.05 250)', border: '1px solid oklch(0.9 0.03 250)' }}>
+          <div className="rounded-xl p-3 text-sm" style={{ background: 'oklch(0.97 0.02 250)', color: 'oklch(0.35 0.05 250)', border: '1px solid oklch(0.9 0.03 250)' }}>
             현재 계정은 알림설정을 조회만 할 수 있습니다. 변경은 최고관리자/원장만 가능합니다.
           </div>
         )}
@@ -134,13 +134,13 @@ export default function NotificationSettingsPage() {
         {/* 요약 카드 */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { label: '자동발송 ON', value: autoOnCount, color: 'oklch(0.45 0.18 145)' },
-            { label: '보호자 발송 ON', value: guardianOnCount, color: 'oklch(0.5 0.15 85)' },
-            { label: '학생 발송 ON', value: studentOnCount, color: 'oklch(0.5 0.12 200)' },
-            { label: 'SMS fallback ON', value: smsOnCount, color: 'oklch(0.5 0.1 25)' },
+            { label: '자동발송 ON', value: autoOnCount, color: 'oklch(0.35 0.18 145)' },
+            { label: '보호자 발송 ON', value: guardianOnCount, color: 'oklch(0.4 0.15 85)' },
+            { label: '학생 발송 ON', value: studentOnCount, color: 'oklch(0.4 0.12 200)' },
+            { label: 'SMS fallback ON', value: smsOnCount, color: 'oklch(0.4 0.1 25)' },
           ].map((card) => (
             <div key={card.label} className="rounded-xl p-4 bg-white shadow-sm border" style={{ borderColor: 'oklch(0.93 0.01 250)' }}>
-              <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{card.label}</p>
+              <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{card.label}</p>
               <p className="text-2xl font-bold mt-1" style={{ color: card.color }}>{card.value}</p>
             </div>
           ))}
@@ -153,7 +153,7 @@ export default function NotificationSettingsPage() {
               <thead>
                 <tr style={{ background: 'oklch(0.97 0.005 250)' }}>
                   {['이벤트명', '관련기능', '활성화', '자동발송', '기본채널', '학생', '보호자', '직원', 'SMS fallback'].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{h}</th>
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -254,7 +254,7 @@ export default function NotificationSettingsPage() {
         </div>
 
         {/* 정책 안내 */}
-        <div className="rounded-xl p-4 text-xs" style={{ background: 'oklch(0.97 0.01 250)', border: '1px solid oklch(0.92 0.02 250)', color: 'oklch(0.45 0.02 250)', lineHeight: 1.8 }}>
+        <div className="rounded-xl p-4 text-xs" style={{ background: 'oklch(0.97 0.01 250)', border: '1px solid oklch(0.92 0.02 250)', color: 'oklch(0.35 0.02 250)', lineHeight: 1.8 }}>
           <p className="font-semibold mb-1" style={{ color: 'oklch(0.3 0.03 250)' }}>알림설정 정책 안내</p>
           <p>• 기본 알림 채널은 카카오 알림톡입니다. SMS/LMS는 예외 상황에서 사용합니다.</p>
           <p>• 이번 단계에서는 실제 API 연동 없이 mock 발송으로 처리됩니다.</p>

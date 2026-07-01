@@ -1,5 +1,176 @@
 # APPLY_ORDER_PHASE3D.md
 
+## v3-r10-r3 적용 안내
+
+단일 zip(`axis-lms-v1_2-phase3d-growth-motivation-rival-emblem-v3-r10-r3-github-upload.zip`,
+내부 루트 `axis-lms-main/`)으로 제공. r1+r2+r3 변경이 함께 담겨 있어 GitHub main(v3-r9-r4)
+기준으로 이 zip 하나면 된다.
+
+1. 압축 해제 후 로컬 저장소 전체 교체(이번 r3는 `TeacherStudentDetail.tsx` 1개만 추가 변경).
+2. GitHub Desktop 변경 확인.
+3. 커밋 메시지: `Phase 3D v3-r10-r3: Fix TeacherStudentDetail IF record type build error`
+4. Push 후 GitHub Actions Build Check 통과 확인.
+5. 불변 파일 3종 MD5 무변경.
+
+### 적용 후 확인
+- GitHub Actions 빌드 통과(이번 라운드의 핵심 목적).
+- 교사 학생 상세 → 성장 상담 요약이 이전과 동일하게 표시되는지(기능 변화 없음).
+- r2 개선분(Rival CTA / 결과 추이 넓은 패널 / 학부모 성장 리포트 PC 2컬럼) 유지 확인.
+
+---
+
+## v3-r10-r2 적용 안내
+
+단일 zip(`axis-lms-v1_2-phase3d-growth-motivation-rival-emblem-v3-r10-r2-github-upload.zip`,
+내부 루트 `axis-lms-main/`)으로 제공한다.
+
+### 적용 순서
+
+1. zip 압축 해제 후 로컬 저장소 폴더 내용을 전체 교체(수정 7개 파일, 신규/삭제 없음).
+   - r1까지 반영된 소스 위에 r2가 얹혀 있으므로, GitHub main이 v3-r9-r4 기준이라면 이 zip
+     하나로 r1+r2 변경이 함께 올라간다.
+2. GitHub Desktop 변경 확인 — `MODIFIED_FILES_PHASE3D.md` v3-r10-r2 + v3-r10-r1 섹션 대조.
+3. 커밋 메시지(GitHub Desktop Summary): 지시서 §7 그대로 사용.
+4. Push 후 GitHub Actions Build Check 통과 확인(필수 — 오프라인이라 로컬 `npm run build`
+   불가, 대체 검증은 `QA_PHASE3D.md` v3-r10-r2 섹션 참조).
+5. 불변 파일 3종 MD5 무변경.
+
+### GitHub Desktop Summary (지시서 §7)
+
+```
+Phase 3D v3-r10-r2: Fix Rival CTA, PC dashboard layout, trend panels, and AXIS growth language
+```
+
+### 적용 후 수동 확인 권장
+
+- **Rival 화면**: "상세 매치업 보기" 버튼이 매치업 카드 하단에 실제로 보이는지, 클릭 시
+  하단 "상세 매치업 · 주차별 성장 기록" 섹션으로 스크롤되는지.
+- **학생 테스트(결과 추이)**: 우측 좁은 카드/점 하나가 아니라, 탭 아래 전체 폭 "결과 추이
+  분석" 패널에 단원평가·내신대비가 나란히 보이는지. 결과가 1회뿐인 계정에서 점 하나가
+  아니라 (첫 기준점/최근 기록/다음 테스트 안내)가 뜨는지.
+- **학부모 성장 리포트**: PC에서 좁은 단일 컬럼이 아니라 넓은 2컬럼 대시보드로 펼쳐지는지.
+  Rival/Emblem/SP/Tier 명칭 미노출, 상담 원문 미노출, 수납은 "미납 없음" 수준만.
+- **학생 성장 진열장**: Hero 전체 폭 + 좌우 균형 2컬럼(한쪽만 길게 비지 않는지).
+- **교사/관리자 학생 상세**: "승/패/전적/승률" 대신 성장 참여 언어로 보이는지, 빨강 칼
+  아이콘이 사라졌는지.
+- **PC 전반**: 학생/학부모/교사/관리자 홈에서 콘텐츠가 좁게 몰리지 않고 카드 끝선·gap이
+  정렬돼 보이는지.
+
+---
+
+## v3-r10-r1 적용 안내
+
+단일 zip(`axis-lms-v1_2-phase3d-growth-motivation-rival-emblem-v3-r10-r1-github-upload.zip`,
+내부 루트 `axis-lms-main/`)으로 제공한다.
+
+### 적용 순서
+
+1. zip 압축 해제 후 로컬 저장소 폴더 내용을 전체 교체한다(신규 4 + 수정 11 = 15개 파일).
+   - 신규 파일이 있으므로 GitHub Desktop에서 4개 파일이 "추가"로 잡히는지 확인:
+     `src/lib/rivalMatchupEngine.ts`, `src/components/brand/AxisEmblemBadge.tsx`,
+     `src/components/brand/AxisTierMedallion.tsx`, `src/components/growth/RivalMatchupCard.tsx`.
+2. GitHub Desktop 변경 사항 확인 — `MODIFIED_FILES_PHASE3D.md` v3-r10-r1 섹션 목록과 대조.
+3. 커밋 메시지(GitHub Desktop Summary): 지시서 §7의 Summary/Description을 그대로 사용
+   (아래 재수록).
+4. Push 후 GitHub Actions Build Check 통과 확인(필수 — 오프라인이라 로컬 `npm run build`
+   불가, 대체 검증은 `QA_PHASE3D.md` v3-r10-r1 섹션 참조).
+5. 불변 파일 3종 MD5 무변경.
+
+### GitHub Desktop Summary (지시서 §7)
+
+```
+Summary:
+Phase 3D v3-r10-r1: Rebuild core growth motivation philosophy and UI
+
+Description:
+- Rebuilt IF grading philosophy as rule-based growth simulation
+- Connected IF results to improvement points, emblems, and growth records
+- Reworked Rival into approved me-vs-Rival learning matchup card
+- Added VS medallion, dual growth comparison, and comparison lanes
+- Rebuilt Emblem system as premium academic achievement records
+- Added IF-linked emblem families for calculation, concept, and time improvement
+- Reframed Tier/SP as AXIS growth stages rather than game ranks
+- Upgraded student growth showcase into PC-first premium gallery
+- Preserved parent-facing indirect expression rules
+- Preserved student finance exposure prohibition
+- Verified build and forbidden-expression checks
+```
+
+### 적용 후 수동 확인 권장 (지시서 §7 검색 항목 + 화면 확인)
+
+- **학생 Rival 화면**: "나 vs Rival" 매치업 카드가 즉시 보이는지(좌 나·teal / 중앙 VS
+  메달 / 우 Rival 평균·blue), 정확도/꾸준함/집중도 레인·CTA 표시. 닉네임 없는 계정은
+  설정 안내가 뜨는지. 실명/반/연락처 비노출.
+- **학생 성장 진열장**: PC에서 3존(좌 Hero+갤러리+기록+습관 / 우 IF 요약)으로 넓게 펼쳐
+  지는지, 엠블럼이 프리미엄 배지로 보이는지, 미획득이 "다음 성장 목표"로 보이는지.
+- **Tier 표시**: 학생 홈/마이페이지/진열장·관리자 진열장에서 게임 랭크(WOOD/GOLD 등)가
+  아니라 AXIS 성장 단계(씨앗/기초/집중/전략/숙련/축의 완성)로 뜨는지. Mastery/Axis Master만
+  프리미엄 방패인지.
+- **엠블럼 배지**: 학생 MyPage·교사 성장 요약·관리자 EmblemManagement에서 🏅 이모지가
+  아니라 SVG 배지로 보이는지.
+- **교사 학생 상세**: 성장 상담 요약에 배지·단계가 상담용으로 보이는지. **학부모 계정으로는
+  Rival/Emblem/SP/Tier 명칭이 어디에도 안 보이는지**(정책 위반 직결).
+- **학부모 홈/성장 리포트**: 이번 라운드 코드 미변경 → 회귀 없음 확인 목적 육안 재확인.
+
+---
+
+## v3-r10 적용 안내
+
+단일 zip(`axis-lms-v1_2-phase3d-growth-motivation-rival-emblem-v3-r10-github-upload.zip`,
+내부 루트 `axis-lms-main/`)으로 제공한다.
+
+### 적용 순서
+
+1. zip 압축 해제 후 로컬 저장소 폴더 내용을 전체 교체한다(수정 파일 43개 — 신규/삭제
+   파일 없음, 전부 기존 파일 in-place 수정).
+2. GitHub Desktop에서 변경 사항 확인 — `MODIFIED_FILES_PHASE3D.md` v3-r10 섹션의 파일
+   목록과 diff 개수가 대략 일치하는지 확인.
+3. 커밋 메시지(GitHub Desktop Summary): 아래 "GitHub Desktop Summary" 그대로 사용.
+4. Push 후 GitHub Actions Build Check 통과 확인(필수 조건 — 오프라인 환경이라 로컬
+   `npm run build`는 이번에도 불가, 대체 검증은 `QA_PHASE3D.md` v3-r10 섹션 참조).
+5. **불변 파일 3종(`universityAnalysisAdapter.ts`/`App.tsx`/`classData.ts`)은 이번에도
+   손대지 않았다** — MD5 무변경.
+
+### GitHub Desktop Summary
+
+```
+Summary:
+Phase 3D v3-r10: Refine growth motivation flow and chart colors
+
+Description:
+- Improved bar chart colors to avoid overly deep navy data bars
+- Preserved AXIS deep navy as brand/structure color
+- Connected IF results to emblem and growth record flow
+- Cleaned up student growth showcase UI
+- Refined Rival UI toward learning-growth motivation
+- Added teacher-facing growth summary structure
+- Hid Rival/Emblem/SP/Tier terms from parent-facing screens
+- Kept IF Analysis inside test result detail only
+- Removed excessive game-like UI direction
+- Improved admin screen text contrast (sidebar/tabs/menus/buttons/tables)
+- Verified build with GitHub Actions-compatible output
+```
+
+### 적용 후 수동 확인 권장 항목 (Phase 지시 §8 기준)
+
+- 로그인 화면 — 이번 라운드 미접촉(회귀 없음 확인용으로만 육안 확인).
+- 학생 테스트 상세 → IF 채점 블록 — 사유 막대 색이 red/navy가 아니라 amber/blue/teal로
+  보이는지, 사유 3개(계산 실수/개념 부족/시간 부족) 그대로인지.
+- 학생 성장 진열장 → "최근 개선 포인트" 카드 — IF 회고를 1회 이상 완료한 학생 계정으로
+  로그인해 실제 문구가 뜨는지, 완료 이력이 없는 계정은 기존 안내문이 뜨는지 둘 다 확인.
+- Rival 영역(학생) — 칼/불꽃 아이콘이 트로피/화살표 아이콘으로 바뀌었는지, 실명/상대
+  식별정보 비노출 그대로인지.
+- 교사 학생 상세 성장 탭 — "성장 상담 요약" 섹션이 브리핑 카드 아래 새로 보이는지,
+  학부모 계정으로는 동일 정보가 어디에도 안 보이는지(중요 — 정책 위반 여부 직결).
+- 학부모 홈/성장 리포트 — 이번 라운드 코드 미변경이므로 회귀 없음 확인 목적으로만
+  육안 재확인(Rival/Emblem/SP/Tier 여전히 비노출인지).
+- 막대그래프 색상 적용 화면 — 시험 상세(관리자) 점수 분포, 재무통계(관리자) 3개 차트.
+- **관리자 화면 대비** — 학생관리/시험관리/성장관리/설정/재무관리/알림관리 목록·상세
+  화면에서 회색 텍스트가 이전보다 뚜렷하게 보이는지, 사이드바 선택 메뉴/활성 탭 표시가
+  여전히 잘 보이는지(사이드바 자체는 이번에 손대지 않음).
+
+---
+
 ## v3-r9-r4 적용 안내
 
 단일 zip(`axis-lms-v1_2-phase3d-if-analysis-engine-detail-flow-v3-r9-r4-github-upload.zip`,

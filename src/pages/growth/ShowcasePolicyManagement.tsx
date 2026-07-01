@@ -60,7 +60,7 @@ export default function ShowcasePolicyManagement() {
       <AdminLayout title="성적 진열장 정책 관리"
         breadcrumbs={[{ label: '성장관리', path: '/admin/growth/overview' }, { label: '진열장 정책' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>
             접근 권한이 없습니다. 최고관리자·원장 계정만 접근할 수 있습니다.
           </p>
         </div>
@@ -94,7 +94,7 @@ export default function ShowcasePolicyManagement() {
               <div className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
                 성적 진열장 노출 정책
               </div>
-              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
                 학생·학부모 진열장 화면에서 보여줄 항목을 제어합니다.
                 현재 {enabledCount}/{POLICY_ITEMS.length}개 항목 활성화.
               </div>
@@ -112,12 +112,12 @@ export default function ShowcasePolicyManagement() {
                   <span className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{label}</span>
                   {risk && (
                     <span className="text-xs px-1.5 py-0.5 rounded font-medium"
-                      style={{ background: 'oklch(0.93 0.06 27)', color: 'oklch(0.45 0.2 27)' }}>
+                      style={{ background: 'oklch(0.93 0.06 27)', color: 'oklch(0.35 0.2 27)' }}>
                       {risk}
                     </span>
                   )}
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: 'oklch(0.6 0.015 250)' }}>{desc}</div>
+                <div className="text-xs mt-0.5" style={{ color: 'oklch(0.47 0.015 250)' }}>{desc}</div>
               </div>
               <button type="button" onClick={() => toggle(key)}
                 className="flex-shrink-0 flex items-center gap-1"
@@ -135,7 +135,7 @@ export default function ShowcasePolicyManagement() {
         <div className="flex justify-end gap-2">
           <button type="button" onClick={() => setPolicy(DEFAULT_POLICY)}
             className="px-4 py-2 rounded-xl text-sm font-semibold"
-            style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.5 0.015 250)' }}>
+            style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.4 0.015 250)' }}>
             기본값 복원
           </button>
           <button type="button" onClick={handleSave}
@@ -145,7 +145,7 @@ export default function ShowcasePolicyManagement() {
           </button>
         </div>
 
-        <div className="axis-card px-4 py-3 text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+        <div className="axis-card px-4 py-3 text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>
           ※ mock 저장입니다. 실제 운영 시 DB 정책 연동 필요.
           성적 진열장은 학생·학부모에게만 노출되며, 관리자 화면의 성장현황과 분리됩니다.
         </div>

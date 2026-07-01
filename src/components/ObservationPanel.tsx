@@ -44,7 +44,7 @@ export default function ObservationPanel({
         style={{ background: 'oklch(0.97 0.04 60)', borderBottom: '1px solid oklch(0.9 0.06 60)' }}
       >
         <div className="flex items-center gap-2">
-          <Eye size={15} style={{ color: 'oklch(0.5 0.14 60)' }} />
+          <Eye size={15} style={{ color: 'oklch(0.4 0.14 60)' }} />
           <span className="text-sm font-bold" style={{ color: 'oklch(0.4 0.12 60)' }}>
             {title}
           </span>
@@ -56,7 +56,7 @@ export default function ObservationPanel({
           </span>
         </div>
         {scopeNote && (
-          <span className="text-xs" style={{ color: 'oklch(0.55 0.06 60)' }}>
+          <span className="text-xs" style={{ color: 'oklch(0.42 0.06 60)' }}>
             {scopeNote}
           </span>
         )}
@@ -65,10 +65,10 @@ export default function ObservationPanel({
       {/* 목록 */}
       {shown.length === 0 ? (
         <div className="px-4 py-6 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>
             지금은 특별히 확인이 필요한 학생이 없습니다.
           </p>
-          <p className="text-xs mt-1" style={{ color: 'oklch(0.65 0.01 250)' }}>
+          <p className="text-xs mt-1" style={{ color: 'oklch(0.49 0.01 250)' }}>
             테스트·출결·IF 흐름에서 신호가 감지되면 여기에 표시됩니다.
           </p>
         </div>
@@ -97,7 +97,7 @@ export default function ObservationPanel({
                         <span
                           key={i}
                           className="text-xs px-1.5 py-0.5 rounded"
-                          style={{ background: 'oklch(0.96 0.004 250)', color: 'oklch(0.45 0.015 250)' }}
+                          style={{ background: 'oklch(0.96 0.004 250)', color: 'oklch(0.35 0.015 250)' }}
                           title={r.detail}
                         >
                           {r.detail}
@@ -105,7 +105,7 @@ export default function ObservationPanel({
                       ))}
                     </div>
                     {/* 최근 변화 */}
-                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                    <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>
                       최근 변화 · {o.recentChange}
                     </div>
                   </div>
@@ -129,7 +129,7 @@ export default function ObservationPanel({
       {hiddenCount > 0 && (
         <div
           className="px-4 py-2 text-xs text-center"
-          style={{ color: 'oklch(0.55 0.015 250)', borderTop: '1px solid oklch(0.93 0.006 250)' }}
+          style={{ color: 'oklch(0.42 0.015 250)', borderTop: '1px solid oklch(0.93 0.006 250)' }}
         >
           외 {hiddenCount}명 더 · 목록에서 전체 확인
         </div>

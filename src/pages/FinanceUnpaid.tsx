@@ -68,7 +68,7 @@ export default function FinanceUnpaid() {
     return (
       <AdminLayout breadcrumbs={[{ label: '재무관리' }, { label: '미납관리' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>재무관리 접근 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>재무관리 접근 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -102,7 +102,7 @@ export default function FinanceUnpaid() {
     <AdminLayout breadcrumbs={[{ label: '재무관리' }, { label: '미납관리' }]}>
       <div className="mb-5">
         <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>미납관리</h1>
-        <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+        <p className="text-sm mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
           미납·부분납 청구를 한눈에 조회합니다. 수강 상태가 퇴원/종료인 경우도 표시됩니다.
         </p>
       </div>
@@ -110,31 +110,31 @@ export default function FinanceUnpaid() {
       {/* 요약 카드 */}
       <div className="grid grid-cols-5 gap-3 mb-4">
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>총 미납액</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(summary.totalUnpaid)}</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>총 미납액</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.4 0.18 27)' }}>{won(summary.totalUnpaid)}</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>미납 학생 수</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.45 0.13 60)' }}>{summary.studentCount}명</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>미납 학생 수</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.35 0.13 60)' }}>{summary.studentCount}명</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>미납 건수</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.45 0.13 60)' }}>{summary.count}건</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>미납 건수</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.35 0.13 60)' }}>{summary.count}건</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>7일 이상 미납</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.5 0.18 27)' }}>{summary.over7}건</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>7일 이상 미납</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.4 0.18 27)' }}>{summary.over7}건</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>30일 이상 미납</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.45 0.2 20)' }}>{summary.over30}건</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>30일 이상 미납</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.35 0.2 20)' }}>{summary.over30}건</div>
         </div>
       </div>
 
       {/* 미납 목록 */}
       <div className="axis-card overflow-hidden">
         {unpaidList.length === 0 ? (
-          <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>미납 내역이 없습니다.</div>
+          <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>미납 내역이 없습니다.</div>
         ) : (
           <div className="axis-table-scroll" style={{ maxHeight: 620 }}>
             <table className="w-full text-sm" style={{ minWidth: 1280 }}>
@@ -145,7 +145,7 @@ export default function FinanceUnpaid() {
                     '수강상태',  // Stability v1 추가 — 퇴원/종료 학생의 미납을 즉시 식별하기 위함
                     '청구월', '청구금액', '수납금액', '미납금액', '납부기한', '미납일수', '알림상태', '관리',
                   ].map(h => (
-                    <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
+                    <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -161,29 +161,29 @@ export default function FinanceUnpaid() {
                   return (
                     <tr key={inv.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                       <td className="px-3 py-2.5 text-xs font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{stu?.name ?? '-'}</td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{stu?.guardians[0]?.phone ?? '-'}</td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{cls?.name ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{stu?.guardians[0]?.phone ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>{cls?.name ?? '-'}</td>
                       {/* 수강상태 — Stability v1: 퇴원/종료인 경우 주황색 경고 뱃지로 표시 */}
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         {enrStatus ? (
                           <span
                             className="text-xs font-semibold px-2 py-0.5 rounded-full"
                             style={isInactiveEnr
-                              ? { background: 'oklch(0.96 0.08 27)', color: 'oklch(0.5 0.18 27)' }
+                              ? { background: 'oklch(0.96 0.08 27)', color: 'oklch(0.4 0.18 27)' }
                               : { background: 'oklch(0.94 0.08 160)', color: 'oklch(0.3 0.13 160)' }
                             }
                           >
                             {enrStatus}
                           </span>
                         ) : (
-                          <span className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>-</span>
+                          <span className="text-xs" style={{ color: 'oklch(0.54 0.01 250)' }}>-</span>
                         )}
                       </td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.015 250)' }}>{inv.billingMonth}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(inv.finalAmount)}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(paid)}</td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap font-semibold" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(remaining)}</td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{inv.dueDate}</td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap font-semibold" style={{ color: 'oklch(0.4 0.18 27)' }}>{won(remaining)}</td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{inv.dueDate}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style={{
                           background: overdue >= 30 ? 'oklch(0.94 0.1 20)' : overdue >= 7 ? 'oklch(0.96 0.08 27)' : 'oklch(0.96 0.06 60)',

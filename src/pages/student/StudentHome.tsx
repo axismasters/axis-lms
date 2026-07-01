@@ -15,7 +15,7 @@ import { Link } from 'wouter';
 import {
   Trophy, Zap, Award, BarChart2, BookOpen, CalendarCheck,
   ClipboardList, CalendarClock, CheckCircle2, ChevronRight,
-  GraduationCap, Swords, User, TrendingUp,
+  GraduationCap, User, TrendingUp,
 } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -116,8 +116,8 @@ export default function StudentHome() {
                 style={{ background: tierColor + '18', color: tierColor, border: `1px solid ${tierColor}44` }}>
                 {tierLabel}
               </span>
-              <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.1 80)' }}>
-                ⚡ {profile?.totalSP.toLocaleString() ?? 0} SP
+              <span className="text-xs font-medium" style={{ color: 'oklch(0.5 0.06 80)' }}>
+                누적 성장 {profile?.totalSP.toLocaleString() ?? 0}
               </span>
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function StudentHome() {
                 { icon: BookOpen,      label: '내 반',      path: '/student/classes',          color: 'oklch(0.45 0.15 160)' },
                 { icon: CalendarCheck, label: '출결',       path: '/student/attendance',       color: 'oklch(0.55 0.15 80)' },
                 { icon: Trophy,        label: '진열장',     path: '/student/growth',           color: 'oklch(0.7 0.18 80)' },
-                { icon: Swords,        label: 'Rival',     path: '/student/rival',            color: '#040D1E' },
+                { icon: TrendingUp,    label: 'Rival',     path: '/student/rival',            color: '#0B1B33' },
                 { icon: GraduationCap, label: universityLabel, path: '/student/target-preview', color: '#C8A15A' },
               ].map(({ icon: Icon, label, path, color }) => (
                 <Link key={`${path}-${label}`} href={path} style={{ display: 'block' }}>
@@ -246,16 +246,14 @@ export default function StudentHome() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                     style={{ background: '#E7EBF3' }}>
-                    <Swords size={18} style={{ color: '#040D1E' }} />
+                    <TrendingUp size={18} style={{ color: '#0B1B33' }} />
                   </div>
                   <div>
                     <div className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
-                      Rival 전적 @{storedProfile.nickname}
+                      나의 성장 비교 @{storedProfile.nickname}
                     </div>
                     <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                      {rivalInfo.relation.wins}승 {rivalInfo.relation.losses}패 ·
-                      승률 {rivalInfo.relation.winRate.toFixed(1)}%
-                      {rivalInfo.relation.streak > 0 ? ` 🔥 ${rivalInfo.relation.streak}연승` : ''}
+                      이번 주 나의 성장 매치업을 확인해보세요
                     </div>
                   </div>
                 </div>
@@ -265,11 +263,11 @@ export default function StudentHome() {
           </Link>
         ) : !hasNickname ? (
           <Link href="/student/my" style={{ display: 'block' }}>
-            <div className="axis-card p-4 cursor-pointer" style={{ borderLeft: '3px solid #040D1E' }}>
+            <div className="axis-card p-4 cursor-pointer" style={{ borderLeft: '3px solid #0B1B33' }}>
               <div className="flex items-center gap-2">
-                <Swords size={15} style={{ color: '#040D1E' }} />
+                <TrendingUp size={15} style={{ color: '#0B1B33' }} />
                 <div className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>
-                  닉네임을 설정하면 <strong>Rival</strong> 기능을 사용할 수 있습니다
+                  닉네임을 설정하면 <strong>Rival</strong> 성장 비교를 사용할 수 있습니다
                 </div>
               </div>
               <div className="text-xs mt-1" style={{ color: 'oklch(0.6 0.015 250)' }}>

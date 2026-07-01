@@ -186,7 +186,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
           {activeTab === 'basic' && (
             <div className="space-y-4">
               <div>
-                <Label className="text-xs font-medium mb-1.5 block">반 이름 <span style={{ color: 'oklch(0.577 0.245 27.325)' }}>*</span></Label>
+                <Label className="text-xs font-medium mb-1.5 block">반 이름 <span style={{ color: 'oklch(0.447 0.245 27.325)' }}>*</span></Label>
                 <Input
                   value={form.name}
                   onChange={e => set('name', e.target.value)}
@@ -197,7 +197,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs font-medium mb-1.5 block">과목 <span style={{ color: 'oklch(0.577 0.245 27.325)' }}>*</span></Label>
+                  <Label className="text-xs font-medium mb-1.5 block">과목 <span style={{ color: 'oklch(0.447 0.245 27.325)' }}>*</span></Label>
                   <Select value={form.subject} onValueChange={v => set('subject', v)}>
                     <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent>{SUBJECT_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
@@ -214,7 +214,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs font-medium mb-1.5 block">담당 강사 <span style={{ color: 'oklch(0.577 0.245 27.325)' }}>*</span></Label>
+                  <Label className="text-xs font-medium mb-1.5 block">담당 강사 <span style={{ color: 'oklch(0.447 0.245 27.325)' }}>*</span></Label>
                   <Select value={form.teacher} onValueChange={v => set('teacher', v)}>
                     <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="선택" /></SelectTrigger>
                     <SelectContent>{TEACHERS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
@@ -231,11 +231,11 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs font-medium mb-1.5 block">개강일 <span style={{ color: 'oklch(0.577 0.245 27.325)' }}>*</span></Label>
+                  <Label className="text-xs font-medium mb-1.5 block">개강일 <span style={{ color: 'oklch(0.447 0.245 27.325)' }}>*</span></Label>
                   <Input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} className="h-9 text-sm" />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium mb-1.5 block">종강일 <span className="text-xs font-normal" style={{ color: 'oklch(0.6 0.01 250)' }}>(선택)</span></Label>
+                  <Label className="text-xs font-medium mb-1.5 block">종강일 <span className="text-xs font-normal" style={{ color: 'oklch(0.47 0.01 250)' }}>(선택)</span></Label>
                   <Input type="date" value={form.endDate} onChange={e => set('endDate', e.target.value)} className="h-9 text-sm" />
                 </div>
               </div>
@@ -249,7 +249,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
               </div>
 
               <div>
-                <Label className="text-xs font-medium mb-1.5 block">반 설명 <span className="text-xs font-normal" style={{ color: 'oklch(0.6 0.01 250)' }}>(선택)</span></Label>
+                <Label className="text-xs font-medium mb-1.5 block">반 설명 <span className="text-xs font-normal" style={{ color: 'oklch(0.47 0.01 250)' }}>(선택)</span></Label>
                 <Textarea
                   value={form.description}
                   onChange={e => set('description', e.target.value)}
@@ -266,7 +266,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <div className="text-xs font-semibold" style={{ color: 'oklch(0.3 0.015 250)' }}>수업 시간표</div>
-                  <div className="text-xs mt-0.5" style={{ color: 'oklch(0.6 0.015 250)' }}>요일과 시작·종료 시간을 설정하세요. 복수 추가 가능합니다.</div>
+                  <div className="text-xs mt-0.5" style={{ color: 'oklch(0.47 0.015 250)' }}>요일과 시작·종료 시간을 설정하세요. 복수 추가 가능합니다.</div>
                 </div>
                 <Button variant="outline" size="sm" onClick={addTimeSlot} className="h-7 text-xs gap-1">
                   <Plus size={11} /> 시간 추가
@@ -276,7 +276,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
               {form.timeSlots.length === 0 ? (
                 <div className="text-center py-10 rounded-lg" style={{ background: 'oklch(0.985 0.003 250)', border: '2px dashed oklch(0.88 0.005 250)' }}>
                   <Clock size={24} style={{ color: 'oklch(0.75 0.01 250)', margin: '0 auto 8px' }} />
-                  <p className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>시간표를 추가해주세요.</p>
+                  <p className="text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>시간표를 추가해주세요.</p>
                   <Button variant="outline" size="sm" onClick={addTimeSlot} className="mt-3 h-7 text-xs gap-1">
                     <Plus size={11} /> 시간 추가
                   </Button>
@@ -285,7 +285,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
                 <div className="space-y-2">
                   {sortedSlots.map((ts, idx) => (
                     <div key={ts.id} className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'oklch(0.985 0.003 250)', border: '1px solid oklch(0.92 0.005 250)' }}>
-                      <span className="text-xs font-medium w-4 text-center" style={{ color: 'oklch(0.6 0.015 250)' }}>{idx + 1}</span>
+                      <span className="text-xs font-medium w-4 text-center" style={{ color: 'oklch(0.47 0.015 250)' }}>{idx + 1}</span>
 
                       {/* 요일 */}
                       <Select value={ts.day} onValueChange={v => updateTimeSlot(ts.id, 'day', v)}>
@@ -303,7 +303,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
                         </SelectContent>
                       </Select>
 
-                      <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>~</span>
+                      <span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>~</span>
 
                       {/* 종료 시간 */}
                       <Select value={ts.endTime} onValueChange={v => updateTimeSlot(ts.id, 'endTime', v)}>
@@ -314,7 +314,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
                       </Select>
 
                       {/* 수업 시간 계산 */}
-                      <span className="text-xs flex-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                      <span className="text-xs flex-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
                         {(() => {
                           const [sh, sm] = ts.startTime.split(':').map(Number);
                           const [eh, em] = ts.endTime.split(':').map(Number);
@@ -324,13 +324,13 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
                       </span>
 
                       <button onClick={() => removeTimeSlot(ts.id)} className="p-1.5 rounded hover:bg-rose-50 transition-colors flex-shrink-0">
-                        <Trash2 size={12} style={{ color: 'oklch(0.577 0.245 27.325)' }} />
+                        <Trash2 size={12} style={{ color: 'oklch(0.447 0.245 27.325)' }} />
                       </button>
                     </div>
                   ))}
 
                   {hasConflict(form.timeSlots) && (
-                    <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs" style={{ background: 'oklch(0.97 0.06 27)', color: 'oklch(0.45 0.15 27)', border: '1px solid oklch(0.88 0.1 27)' }}>
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs" style={{ background: 'oklch(0.97 0.06 27)', color: 'oklch(0.35 0.15 27)', border: '1px solid oklch(0.88 0.1 27)' }}>
                       <Info size={12} />
                       같은 요일에 시간이 겹치는 슬롯이 있습니다. 저장 전에 수정해주세요.
                     </div>
@@ -361,7 +361,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
               <div>
                 <div className="text-xs font-semibold mb-3" style={{ color: 'oklch(0.3 0.015 250)' }}>정원 설정</div>
                 <div>
-                  <Label className="text-xs font-medium mb-1.5 block">최대 정원 <span style={{ color: 'oklch(0.577 0.245 27.325)' }}>*</span></Label>
+                  <Label className="text-xs font-medium mb-1.5 block">최대 정원 <span style={{ color: 'oklch(0.447 0.245 27.325)' }}>*</span></Label>
                   <div className="flex items-center gap-3">
                     <Input
                       type="number"
@@ -371,7 +371,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
                       onChange={e => set('capacity', Number(e.target.value))}
                       className="h-9 text-sm w-28"
                     />
-                    <span className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>명</span>
+                    <span className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>명</span>
                   </div>
 
                   {/* 정원 시각화 */}
@@ -385,12 +385,12 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
                       />
                     ))}
                     {form.capacity > 30 && (
-                      <span className="text-xs self-center" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                      <span className="text-xs self-center" style={{ color: 'oklch(0.47 0.015 250)' }}>
                         +{form.capacity - 30}명
                       </span>
                     )}
                   </div>
-                  <div className="text-xs mt-1.5" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                  <div className="text-xs mt-1.5" style={{ color: 'oklch(0.47 0.015 250)' }}>
                     총 {form.capacity}명 정원
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
               <div>
                 <div className="text-xs font-semibold mb-3" style={{ color: 'oklch(0.3 0.015 250)' }}>수강료</div>
                 <div>
-                  <Label className="text-xs font-medium mb-1.5 block">월 수강료 <span className="text-xs font-normal" style={{ color: 'oklch(0.6 0.01 250)' }}>(선택)</span></Label>
+                  <Label className="text-xs font-medium mb-1.5 block">월 수강료 <span className="text-xs font-normal" style={{ color: 'oklch(0.47 0.01 250)' }}>(선택)</span></Label>
                   <div className="flex items-center gap-3">
                     <Input
                       type="number"
@@ -411,7 +411,7 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
                       className="h-9 text-sm w-40"
                       placeholder="0"
                     />
-                    <span className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>원</span>
+                    <span className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>원</span>
                     {form.fee > 0 && (
                       <span className="text-sm font-semibold" style={{ color: '#040D1E' }}>
                         {form.fee.toLocaleString()}원
@@ -426,13 +426,13 @@ export default function ClassFormModal({ open, editId, onClose }: Props) {
                 <div className="p-3 rounded-lg" style={{ background: 'oklch(0.97 0.04 250)', border: '1px solid oklch(0.9 0.06 250)' }}>
                   <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.4 0.12 250)' }}>정원 요약</div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div style={{ color: 'oklch(0.5 0.015 250)' }}>최대 정원</div>
+                    <div style={{ color: 'oklch(0.4 0.015 250)' }}>최대 정원</div>
                     <div className="font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>{form.capacity}명</div>
                     {form.fee > 0 && (
                       <>
-                        <div style={{ color: 'oklch(0.5 0.015 250)' }}>월 수강료</div>
+                        <div style={{ color: 'oklch(0.4 0.015 250)' }}>월 수강료</div>
                         <div className="font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>{form.fee.toLocaleString()}원</div>
-                        <div style={{ color: 'oklch(0.5 0.015 250)' }}>정원 마감 시 월 매출</div>
+                        <div style={{ color: 'oklch(0.4 0.015 250)' }}>정원 마감 시 월 매출</div>
                         <div className="font-semibold" style={{ color: '#040D1E' }}>
                           {(form.capacity * form.fee).toLocaleString()}원
                         </div>

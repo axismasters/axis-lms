@@ -175,7 +175,7 @@ export default function AttendanceStatusPage() {
     return (
       <AdminLayout breadcrumbs={[{ label: '출결관리' }, { label: '출결현황' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>출결현황 조회 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>출결현황 조회 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -191,7 +191,7 @@ export default function AttendanceStatusPage() {
     { key: '결석', label: '결석', value: summary.counts['결석'], color: STATUS_CONFIG['결석'].text },
     { key: '보강출석', label: '보강출석', value: summary.counts['보강출석'], color: STATUS_CONFIG['보강출석'].text },
     { key: '공결', label: '공결', value: summary.counts['공결'], color: STATUS_CONFIG['공결'].text },
-    { key: 'notify', label: '알림 발송 건수', value: summary.notifySent, color: 'oklch(0.5 0.15 160)' },
+    { key: 'notify', label: '알림 발송 건수', value: summary.notifySent, color: 'oklch(0.4 0.15 160)' },
   ];
 
   return (
@@ -200,7 +200,7 @@ export default function AttendanceStatusPage() {
       <div className="flex items-start justify-between mb-5">
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>출결현황</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
             출결 이력 조회 화면입니다. 상태 변경은 출결체크에서 처리합니다.
           </p>
         </div>
@@ -246,7 +246,7 @@ export default function AttendanceStatusPage() {
           </div>
 
           {/* 기간 직접 입력 */}
-          <div className="flex items-center gap-1.5 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
+          <div className="flex items-center gap-1.5 text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>
             <input
               type="date"
               value={fromDate}
@@ -266,7 +266,7 @@ export default function AttendanceStatusPage() {
 
           {/* 학생 검색 */}
           <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.65 0.01 250)' }} />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.49 0.01 250)' }} />
             <Input
               value={studentSearch}
               onChange={e => setStudentSearch(e.target.value)}
@@ -311,7 +311,7 @@ export default function AttendanceStatusPage() {
           );
         })}
       </div>
-      <div className="text-xs mb-4" style={{ color: 'oklch(0.5 0.015 250)' }}>
+      <div className="text-xs mb-4" style={{ color: 'oklch(0.4 0.015 250)' }}>
         현재 필터: <b style={{ color: 'oklch(0.1605 0.0394 259.41)' }}>
           {filterNotifyOnly ? '알림 발송 기록' : filterStatus === 'all' ? '전체 출결' : filterStatus}
         </b> · {visibleRows.length}건
@@ -320,7 +320,7 @@ export default function AttendanceStatusPage() {
       {/* 출결 이력 목록 */}
       <div className="axis-card overflow-hidden">
         {visibleRows.length === 0 ? (
-          <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>
             <ListChecks size={28} style={{ color: 'oklch(0.82 0.01 250)', margin: '0 auto 10px' }} />
             조회 조건에 해당하는 출결 이력이 없습니다.
           </div>
@@ -330,7 +330,7 @@ export default function AttendanceStatusPage() {
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
                   {['날짜', '요일', '반명', '반유형', '수업시간', '학생명', '휴대폰번호', '보호자 연락처', '출결상태', '결석사유', '알림상태', '처리자', '처리일시', '관리'].map(h => (
-                    <th key={h} className="px-3 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
+                    <th key={h} className="px-3 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -343,36 +343,36 @@ export default function AttendanceStatusPage() {
                       <td className="px-3 py-2.5 whitespace-nowrap text-xs tabular-nums" style={{ color: 'oklch(0.25 0.02 250)' }}>
                         {row.date}{isToday && <span className="ml-1 text-xs px-1 py-0.5 rounded" style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.38 0.18 250)' }}>오늘</span>}
                       </td>
-                      <td className="px-3 py-2.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{row.dayLabel}</td>
+                      <td className="px-3 py-2.5 text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{row.dayLabel}</td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.3 0.015 250)' }}>{row.className}</td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{row.classType}</td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{row.classTime}</td>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{row.classType}</td>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{row.classTime}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <button onClick={() => navigate(`/admin/students/${row.studentId}?tab=attendance`)} className="text-xs font-medium hover:underline" style={{ color: '#040D1E' }}>
                           {row.studentName}
                         </button>
                       </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{row.studentPhone}</td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{row.guardianPhone}</td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{row.studentPhone}</td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{row.guardianPhone}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: cfg.bg, color: cfg.text, border: `1px solid ${cfg.border}` }}>
                           {row.status}
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 text-xs max-w-[160px] truncate" style={{ color: 'oklch(0.45 0.015 250)' }} title={row.reason || undefined}>
+                      <td className="px-3 py-2.5 text-xs max-w-[160px] truncate" style={{ color: 'oklch(0.35 0.015 250)' }} title={row.reason || undefined}>
                         {row.reason || '-'}
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         {row.notificationLabel === '발송됨' ? (
-                          <span className="inline-flex items-center gap-1 text-xs" style={{ color: 'oklch(0.5 0.15 160)' }}><Send size={10} /> 발송됨</span>
+                          <span className="inline-flex items-center gap-1 text-xs" style={{ color: 'oklch(0.4 0.15 160)' }}><Send size={10} /> 발송됨</span>
                         ) : row.notificationLabel === '미발송' ? (
-                          <span className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>미발송</span>
+                          <span className="text-xs" style={{ color: 'oklch(0.49 0.01 250)' }}>미발송</span>
                         ) : (
                           <span className="text-xs" style={{ color: 'oklch(0.82 0.005 250)' }}>해당없음</span>
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{row.processedBy}</td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{row.processedBy}</td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.47 0.015 250)' }}>
                         {row.processedAt ? `${row.processedAt.slice(0, 10)} ${row.processedAt.slice(11, 16)}` : '-'}
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">

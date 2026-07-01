@@ -171,7 +171,7 @@ export default function ClassList() {
       <div className="flex items-start justify-between mb-5">
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>반 목록</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
             전체 {stats.total}개 · 운영중 {stats.active}개 · 수강생 {stats.totalEnrolled}명
           </p>
         </div>
@@ -188,14 +188,14 @@ export default function ClassList() {
       <div className="grid grid-cols-4 gap-3 mb-5">
         {[
           { label: '전체 반', value: stats.total, sub: `운영중 ${stats.active}개`, color: '#040D1E' },
-          { label: '총 수강생', value: stats.totalEnrolled, sub: `정원 ${stats.totalCapacity}명`, color: 'oklch(0.5 0.15 160)' },
-          { label: '정원 마감', value: stats.full, sub: '운영중 기준', color: 'oklch(0.577 0.245 27.325)' },
-          { label: '평균 충원율', value: `${stats.totalCapacity > 0 ? Math.round((stats.totalEnrolled / stats.totalCapacity) * 100) : 0}%`, sub: '운영중 반 기준', color: 'oklch(0.6 0.15 60)' },
+          { label: '총 수강생', value: stats.totalEnrolled, sub: `정원 ${stats.totalCapacity}명`, color: 'oklch(0.4 0.15 160)' },
+          { label: '정원 마감', value: stats.full, sub: '운영중 기준', color: 'oklch(0.447 0.245 27.325)' },
+          { label: '평균 충원율', value: `${stats.totalCapacity > 0 ? Math.round((stats.totalEnrolled / stats.totalCapacity) * 100) : 0}%`, sub: '운영중 반 기준', color: 'oklch(0.47 0.15 60)' },
         ].map((s, i) => (
           <div key={i} className="axis-card p-4">
-            <div className="text-xs font-medium mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>{s.label}</div>
+            <div className="text-xs font-medium mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>{s.label}</div>
             <div className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</div>
-            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.65 0.01 250)' }}>{s.sub}</div>
+            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.49 0.01 250)' }}>{s.sub}</div>
           </div>
         ))}
       </div>
@@ -204,7 +204,7 @@ export default function ClassList() {
       <div className="axis-card p-4 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-48">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.65 0.01 250)' }} />
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.49 0.01 250)' }} />
             <Input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -242,7 +242,7 @@ export default function ClassList() {
               <SelectItem value="종강">종강</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-xs ml-auto" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          <span className="text-xs ml-auto" style={{ color: 'oklch(0.47 0.015 250)' }}>
             검색 결과 {filtered.length}개
           </span>
         </div>
@@ -253,7 +253,7 @@ export default function ClassList() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <BookOpen size={32} style={{ color: 'oklch(0.8 0.01 250)' }} />
-            <p className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>조건에 맞는 반이 없습니다.</p>
+            <p className="text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>조건에 맞는 반이 없습니다.</p>
             <Button variant="outline" size="sm" onClick={() => setFormModal({ open: true })}>반 개설하기</Button>
           </div>
         ) : (
@@ -262,7 +262,7 @@ export default function ClassList() {
             <thead>
               <tr style={{ borderBottom: '1px solid oklch(0.92 0.005 250)', background: 'oklch(0.985 0.003 250)' }}>
                 {['반 이름', '과목 / 수준', '담당 강사', '시간표', '정원 현황', '강의실', '상태', '관리'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -284,7 +284,7 @@ export default function ClassList() {
                     <td className="px-4 py-3">
                       <div className="font-semibold" style={{ color: 'oklch(0.15 0.02 250)' }}>{cls.name}</div>
                       {cls.description && (
-                        <div className="text-xs mt-0.5 line-clamp-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                        <div className="text-xs mt-0.5 line-clamp-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
                           {cls.description}
                         </div>
                       )}
@@ -300,7 +300,7 @@ export default function ClassList() {
                         }}>
                           {cls.subject}
                         </span>
-                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.003 250)', color: 'oklch(0.5 0.015 250)' }}>
+                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.003 250)', color: 'oklch(0.4 0.015 250)' }}>
                           {cls.level}
                         </span>
                       </div>
@@ -319,7 +319,7 @@ export default function ClassList() {
                     {/* 시간표 */}
                     <td className="px-4 py-3">
                       <div className="flex items-start gap-1.5">
-                        <Clock size={12} className="mt-0.5 flex-shrink-0" style={{ color: 'oklch(0.6 0.015 250)' }} />
+                        <Clock size={12} className="mt-0.5 flex-shrink-0" style={{ color: 'oklch(0.47 0.015 250)' }} />
                         <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)', lineHeight: 1.5 }}>
                           {formatSchedule(cls.timeSlots)}
                         </span>
@@ -330,8 +330,8 @@ export default function ClassList() {
                     <td className="px-4 py-3 min-w-28">
                       {isFull && (
                         <div className="flex items-center gap-1 mb-1">
-                          <AlertCircle size={10} style={{ color: 'oklch(0.577 0.245 27.325)' }} />
-                          <span className="text-xs font-medium" style={{ color: 'oklch(0.577 0.245 27.325)' }}>정원 마감</span>
+                          <AlertCircle size={10} style={{ color: 'oklch(0.447 0.245 27.325)' }} />
+                          <span className="text-xs font-medium" style={{ color: 'oklch(0.447 0.245 27.325)' }}>정원 마감</span>
                         </div>
                       )}
                       <CapacityBar enrolled={enrolledNow} capacity={cls.capacity} />
@@ -339,7 +339,7 @@ export default function ClassList() {
 
                     {/* 강의실 */}
                     <td className="px-4 py-3">
-                      <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{cls.room || '-'}</span>
+                      <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>{cls.room || '-'}</span>
                     </td>
 
                     {/* 상태 */}
@@ -367,7 +367,7 @@ export default function ClassList() {
                           className="p-1.5 rounded transition-colors hover:bg-slate-100"
                           title="수정"
                         >
-                          <Edit2 size={14} style={{ color: 'oklch(0.55 0.015 250)' }} />
+                          <Edit2 size={14} style={{ color: 'oklch(0.42 0.015 250)' }} />
                         </button>
                         <button
                           onClick={() => setDeleteTarget(cls)}
@@ -375,7 +375,7 @@ export default function ClassList() {
                           className="p-1.5 rounded transition-colors hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                           title={enrolledNow > 0 ? '현재 수강생이 있는 반은 삭제할 수 없습니다. 먼저 수강 종료 또는 퇴원 처리를 해주세요.' : '삭제'}
                         >
-                          <Trash2 size={14} style={{ color: 'oklch(0.577 0.245 27.325)' }} />
+                          <Trash2 size={14} style={{ color: 'oklch(0.447 0.245 27.325)' }} />
                         </button>
                       </div>
                     </td>

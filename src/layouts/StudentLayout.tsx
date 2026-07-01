@@ -16,7 +16,7 @@
 // ⚠ Phase 3A-1 금지: 수납/재무 관련 탭 추가 금지
 
 import { Link, useLocation } from 'wouter';
-import { Home, ClipboardList, Trophy, Swords, User, LogOut } from 'lucide-react';
+import { Home, ClipboardList, Trophy, TrendingUp, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
@@ -44,7 +44,7 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
     { path: '/student',        label: '홈',    icon: Home },
     { path: '/student/grades', label: '테스트', icon: ClipboardList },
     { path: '/student/growth', label: '진열장', icon: Trophy },
-    { path: '/student/rival',  label: 'Rival', icon: Swords },
+    { path: '/student/rival',  label: 'Rival', icon: TrendingUp },
     { path: '/student/my',     label: '마이',   icon: User },
   ];
 

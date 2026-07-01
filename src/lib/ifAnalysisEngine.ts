@@ -101,6 +101,20 @@ export function buildImprovementPoint(result: IfAnalysisQuestionResult): IfEngin
   };
 }
 
+// ─── [Phase 3D v3-r10] 누적 IF 요약 → "최근 개선 포인트" 한 줄 ──────────────
+// 목적: IF 결과가 학생의 성장 기록(성장 진열장)에 "보완 포인트"로 자연스럽게 이어지도록
+// getIfCumulativeSummary(studentIfRecord.ts)의 누적 사유 비율을 사람이 읽는 한 줄로
+// 변환한다. 외부 AI 호출 없이 IMPROVEMENT_SUGGESTION 템플릿만 재사용하는 결정적 함수다.
+// 화면 컴포넌트(StudentGrowthShowcase 등)는 이 함수 하나만 호출하면 되고, 판단 로직을
+// 컴포넌트 안에 직접 넣지 않아도 된다.
+export function buildCumulativeImprovementNote(summary: IfCumulativeSummary): string | null {
+  if (summary.totalRecordsAnalyzed === 0) return null;
+  const top = summary.reasonRatios.find((r) => r.count > 0);
+  if (!top) return null;
+  const base = `최근 IF 회고 기준 "${top.reason}"으로 놓친 문제 비중이 가장 큽니다(${top.pct}%). `;
+  return base + IMPROVEMENT_SUGGESTION[top.reason];
+}
+
 // ─── 성장 엔진 연결용 이벤트 ──────────────────────────────────────────
 export interface IfEngineGrowthEvent {
   studentId: string;

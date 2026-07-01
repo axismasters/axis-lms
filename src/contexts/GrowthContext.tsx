@@ -417,17 +417,21 @@ export function GrowthProvider({ children }: { children: ReactNode }) {
     const { studentId, ifFlags } = params;
 
     // 개선 방향: 오류가 없을 때 관련 엠블럼 진행도 증가
+    // (기존 엠블럼 + [v3-r10-r1] IF 3사유 직접 연결 카탈로그 엠블럼)
     if (!ifFlags.calculationError) {
       updateEmblemProgress(studentId, 'emb-011', 1); // 꼼꼼한 검토자
       updateEmblemProgress(studentId, 'emb-024', 1); // 계산 정확도 향상
+      updateEmblemProgress(studentId, 'calc_precision_01', 1); // Calculation Precision
     }
     if (!ifFlags.conceptLack) {
       updateEmblemProgress(studentId, 'emb-007', 1); // 개념 정복자
       updateEmblemProgress(studentId, 'emb-025', 1); // 개념 회복
+      updateEmblemProgress(studentId, 'concept_mastery_01', 1); // Concept Mastery
     }
     if (!ifFlags.timeShortage) {
       updateEmblemProgress(studentId, 'emb-010', 1); // 시간 마스터
       updateEmblemProgress(studentId, 'emb-026', 1); // 시간관리 달인
+      updateEmblemProgress(studentId, 'time_control_01', 1); // Time Control
     }
   }, [updateEmblemProgress]);
 
@@ -439,11 +443,13 @@ export function GrowthProvider({ children }: { children: ReactNode }) {
     if (!improved) return;
     // IF 개선 기록 → 관련 엠블럼 진행도 업데이트 (mock)
     const keyMap: Record<string, string[]> = {
-      calculationError: ['emb-011', 'emb-024'],
-      conceptLack:      ['emb-007', 'emb-025'],
-      timeShortage:     ['emb-010', 'emb-026'],
+      calculationError: ['emb-011', 'emb-024', 'calc_precision_01'],
+      conceptLack:      ['emb-007', 'emb-025', 'concept_mastery_01'],
+      timeShortage:     ['emb-010', 'emb-026', 'time_control_01'],
       carelessMistake:  ['emb-011'],
     };
+    // 테스트 회고 자체를 완료했으므로 복습 완료 엠블럼도 진행
+    updateEmblemProgress(studentId, 'reflection_complete_01', 1);
     const targets = keyMap[ifKey] ?? [];
     targets.forEach(emblemId => updateEmblemProgress(studentId, emblemId, 1));
   }, [updateEmblemProgress]);

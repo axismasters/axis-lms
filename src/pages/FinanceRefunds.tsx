@@ -96,7 +96,7 @@ export default function FinanceRefunds() {
     return (
       <AdminLayout breadcrumbs={[{ label: '재무관리' }, { label: '환불관리' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>재무관리 접근 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>재무관리 접근 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -176,7 +176,7 @@ export default function FinanceRefunds() {
       <div className="flex items-start justify-between mb-5">
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>환불관리</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
             행정이 요청을 등록하고, 원장/최고관리자가 승인 또는 반려합니다.
             퇴원 후 {WITHDRAWAL_REFUND_WINDOW_DAYS}일 이내 건에 한해 일할 환불 요청이 가능합니다.
           </p>
@@ -191,19 +191,19 @@ export default function FinanceRefunds() {
       {/* 요약 카드 */}
       <div className="grid grid-cols-4 gap-3 mb-4">
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>환불 요청 건수</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>환불 요청 건수</div>
           <div className="text-lg font-bold" style={{ color: '#040D1E' }}>{summary.requestCount}건</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>승인 대기 금액</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(summary.pendingAmount)}</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>승인 대기 금액</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.35 0.13 60)' }}>{won(summary.pendingAmount)}</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>승인 완료 금액</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>승인 완료 금액</div>
           <div className="text-lg font-bold" style={{ color: 'oklch(0.38 0.18 250)' }}>{won(summary.approvedAmount)}</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>환불 완료 금액</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>환불 완료 금액</div>
           <div className="text-lg font-bold" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(summary.completedAmount)}</div>
         </div>
       </div>
@@ -211,14 +211,14 @@ export default function FinanceRefunds() {
       {/* 환불 목록 */}
       <div className="axis-card overflow-hidden">
         {sorted.length === 0 ? (
-          <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>환불 요청 내역이 없습니다.</div>
+          <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>환불 요청 내역이 없습니다.</div>
         ) : (
           <div className="axis-table-scroll" style={{ maxHeight: 620 }}>
             <table className="w-full text-sm" style={{ minWidth: 1320 }}>
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
                   {['요청일', '청구월', '학생명', '반명', '수강상태', '요청금액', '승인금액', '상태', '요청자', '승인자', '사유', '관리'].map(h => (
-                    <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
+                    <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -234,28 +234,28 @@ export default function FinanceRefunds() {
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.015 250)' }}>{r.requestedAt.slice(0, 10)}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.38 0.18 250)' }}>{inv?.billingMonth ?? '-'}</td>
                       <td className="px-3 py-2.5 text-xs font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{stu?.name ?? '-'}</td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{cls?.name ?? '-'}</td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>{enr?.status ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>{cls?.name ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.42 0.015 250)' }}>{enr?.status ?? '-'}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(r.requestedAmount)}</td>
                       <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{r.approvedAmount !== undefined ? won(r.approvedAmount) : '-'}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: style.bg, color: style.text }}>{REFUND_STATUS_LABEL[r.status]}</span>
                       </td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{r.requestedBy}</td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{r.approvedBy ?? '-'}</td>
-                      <td className="px-3 py-2.5 text-xs max-w-[180px] truncate" style={{ color: 'oklch(0.45 0.015 250)' }} title={r.reason}>{r.reason}</td>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{r.requestedBy}</td>
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{r.approvedBy ?? '-'}</td>
+                      <td className="px-3 py-2.5 text-xs max-w-[180px] truncate" style={{ color: 'oklch(0.35 0.015 250)' }} title={r.reason}>{r.reason}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         {canApprove && r.status === 'REQUESTED' && (
                           <div className="flex items-center gap-2">
                             <button onClick={() => openApprove(r)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.38 0.18 250)' }}><CheckCircle2 size={11} /> 승인</button>
-                            <button onClick={() => handleReject(r)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.5 0.18 27)' }}><XCircle size={11} /> 반려</button>
+                            <button onClick={() => handleReject(r)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.4 0.18 27)' }}><XCircle size={11} /> 반려</button>
                           </div>
                         )}
                         {canApprove && r.status === 'APPROVED' && (
                           <button onClick={() => handleComplete(r)} className="flex items-center gap-1 text-xs hover:underline" style={{ color: 'oklch(0.3 0.13 160)' }}><CheckCircle2 size={11} /> 환불 완료 처리</button>
                         )}
                         {!canApprove && (r.status === 'REQUESTED' || r.status === 'APPROVED') && (
-                          <span className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>승인 대기 중</span>
+                          <span className="text-xs" style={{ color: 'oklch(0.54 0.01 250)' }}>승인 대기 중</span>
                         )}
                       </td>
                     </tr>
@@ -289,7 +289,7 @@ export default function FinanceRefunds() {
                 </SelectContent>
               </Select>
               {invoices.filter(inv => inv.status !== 'CANCELED' && getRefundable(inv.id) > 0).length === 0 && (
-                <p className="text-xs mt-1" style={{ color: 'oklch(0.6 0.015 250)' }}>환불 가능한 청구서가 없습니다.</p>
+                <p className="text-xs mt-1" style={{ color: 'oklch(0.47 0.015 250)' }}>환불 가능한 청구서가 없습니다.</p>
               )}
 
               {/* ★ 20일 이내 — 일할 제안액 자동 채움 배너 */}
@@ -301,7 +301,7 @@ export default function FinanceRefunds() {
               )}
               {/* ★ 20일 초과 — 환불 요청 차단 배너 (buildfix: 직접 입력 우회 불가) */}
               {withdrawalSuggestion && withdrawalSuggestion.overWindow && (
-                <div className="flex items-start gap-1.5 mt-1.5 p-2 rounded text-xs" style={{ background: 'oklch(0.96 0.08 27)', color: 'oklch(0.5 0.18 27)' }}>
+                <div className="flex items-start gap-1.5 mt-1.5 p-2 rounded text-xs" style={{ background: 'oklch(0.96 0.08 27)', color: 'oklch(0.4 0.18 27)' }}>
                   <AlertTriangle size={11} className="mt-0.5 flex-shrink-0" />
                   퇴원일({withdrawalSuggestion.endDate})로부터 {WITHDRAWAL_REFUND_WINDOW_DAYS}일이 초과되었습니다.
                   AXIS 재무 원칙에 따라 일할 환불 요청이 불가합니다.
@@ -323,7 +323,7 @@ export default function FinanceRefunds() {
                     className="text-sm"
                   />
                   {reqInvoiceId && Number(reqAmount) > getRefundable(reqInvoiceId) && (
-                    <p className="text-xs mt-1" style={{ color: 'oklch(0.5 0.18 27)' }}>환불요청액은 환불 가능 금액({won(getRefundable(reqInvoiceId))})을 초과할 수 없습니다.</p>
+                    <p className="text-xs mt-1" style={{ color: 'oklch(0.4 0.18 27)' }}>환불요청액은 환불 가능 금액({won(getRefundable(reqInvoiceId))})을 초과할 수 없습니다.</p>
                   )}
                 </div>
                 <div>
@@ -354,7 +354,7 @@ export default function FinanceRefunds() {
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle className="text-sm">환불 승인</DialogTitle></DialogHeader>
           <div className="py-2 space-y-3">
-            <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+            <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>
               요청 금액: {approveModal ? won(approveModal.requestedAmount) : ''} · 환불 가능 금액: {approveModal ? won(getRefundable(approveModal.invoiceId)) : ''}
             </p>
             <div>
@@ -368,7 +368,7 @@ export default function FinanceRefunds() {
                 className="text-sm"
               />
               {approveModal && Number(approveAmount) > Math.min(approveModal.requestedAmount, getRefundable(approveModal.invoiceId)) && (
-                <p className="text-xs mt-1" style={{ color: 'oklch(0.5 0.18 27)' }}>승인금액은 요청액과 환불 가능 금액을 초과할 수 없습니다.</p>
+                <p className="text-xs mt-1" style={{ color: 'oklch(0.4 0.18 27)' }}>승인금액은 요청액과 환불 가능 금액을 초과할 수 없습니다.</p>
               )}
             </div>
             <div className="flex items-start gap-2 p-2.5 rounded text-xs" style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.38 0.18 250)' }}>

@@ -16,7 +16,7 @@ import {
   ChevronLeft, Phone, User, CreditCard, CalendarCheck, BookOpen, BarChart2,
   Users, KeyRound, UserCog, Power, Plus, Minus, StopCircle, ArrowRightLeft, Receipt, Target, FileText,
   Bell, CheckCircle2, XCircle, AlertTriangle, Info, Link2, StickyNote, X,
-  Trophy, Zap, Star, Swords, Award, MessageSquare,
+  Trophy, Zap, Star, TrendingUp, Award, MessageSquare,
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { StatusBadge, GradeBadge, formatDate } from '@/components/StatusBadge';
@@ -68,6 +68,7 @@ import {
   TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
   CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
 } from '@/lib/growthData';
+import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
 
 // ════════════════════════════════════════════════════════════
 // 공통 작은 컴포넌트
@@ -78,7 +79,7 @@ function Area({ title, desc, action, children }: { title: string; desc?: string;
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>{title}</h3>
-          {desc && <p className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{desc}</p>}
+          {desc && <p className="text-xs mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>{desc}</p>}
         </div>
         {action}
       </div>
@@ -90,7 +91,7 @@ function Area({ title, desc, action, children }: { title: string; desc?: string;
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="py-2" style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
-      <div className="text-xs mb-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{label}</div>
+      <div className="text-xs mb-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>{label}</div>
       <div className="text-sm" style={{ color: 'oklch(0.22 0.02 250)' }}>{children}</div>
     </div>
   );
@@ -108,7 +109,7 @@ function StatPill({ label, value, tone }: { label: string; value: number; tone: 
   return (
     <div className="rounded-lg px-3 py-2.5 text-center" style={{ background: tone }}>
       <div className="text-lg font-bold tabular-nums" style={{ color: 'oklch(0.25 0.03 250)' }}>{value}</div>
-      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.45 0.02 250)' }}>{label}</div>
+      <div className="text-xs mt-0.5" style={{ color: 'oklch(0.35 0.02 250)' }}>{label}</div>
     </div>
   );
 }
@@ -153,7 +154,7 @@ export default function StudentDetail() {
     return (
       <AdminLayout title="학생 상세" breadcrumbs={[{ label: '학생관리', path: '/students' }, { label: '학생 상세' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>학생을 찾을 수 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>학생을 찾을 수 없습니다.</p>
           <button onClick={() => navigate('/admin/students')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.1605 0.0394 259.41)' }}>← 학생 목록으로</button>
         </div>
       </AdminLayout>
@@ -164,7 +165,7 @@ export default function StudentDetail() {
     return (
       <AdminLayout title="학생 상세" breadcrumbs={[{ label: '학생관리', path: '/students' }, { label: '학생 상세' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>이 학생 정보에 접근할 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>이 학생 정보에 접근할 권한이 없습니다.</p>
           <button onClick={() => navigate('/admin/students')} className="mt-3 text-sm font-medium" style={{ color: 'oklch(0.1605 0.0394 259.41)' }}>← 학생 목록으로</button>
         </div>
       </AdminLayout>
@@ -187,7 +188,7 @@ export default function StudentDetail() {
 
   return (
     <AdminLayout title={student.name} breadcrumbs={[{ label: '학생관리', path: '/students' }, { label: '학생 목록', path: '/students' }, { label: student.name }]}>
-      <button onClick={() => navigate('/admin/students')} className="inline-flex items-center gap-1 text-xs mb-3 hover:underline" style={{ color: 'oklch(0.5 0.015 250)' }}>
+      <button onClick={() => navigate('/admin/students')} className="inline-flex items-center gap-1 text-xs mb-3 hover:underline" style={{ color: 'oklch(0.4 0.015 250)' }}>
         <ChevronLeft size={13} /> 학생 목록
       </button>
 
@@ -198,7 +199,7 @@ export default function StudentDetail() {
             <h1 className="text-lg font-bold" style={{ color: 'oklch(0.2 0.02 250)' }}>{student.name}</h1>
             <StatusBadge status={student.status} />
           </div>
-          <div className="flex items-center gap-1 text-xs mt-0.5 tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}><Phone size={11} /> {student.phone}</div>
+          <div className="flex items-center gap-1 text-xs mt-0.5 tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}><Phone size={11} /> {student.phone}</div>
         </div>
       </div>
 
@@ -245,7 +246,7 @@ function SummaryCards({ student, showFinance, onJump }: { student: Student; show
 
   const card = 'axis-card p-3.5 cursor-pointer hover:border-[#B8C2D9] transition-colors';
   const cardLabel = (icon: React.ReactNode, label: string) => (
-    <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>{icon}{label}</div>
+    <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)' }}>{icon}{label}</div>
   );
 
   return (
@@ -253,10 +254,10 @@ function SummaryCards({ student, showFinance, onJump }: { student: Student; show
       <div className={card} onClick={() => onJump('basic')}>
         {cardLabel(<User size={13} />, '학생정보')}
         <div className="text-sm font-bold" style={{ color: 'oklch(0.2 0.02 250)' }}>{student.name}</div>
-        <div className="text-xs tabular-nums mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>{student.phone}</div>
+        <div className="text-xs tabular-nums mt-0.5" style={{ color: 'oklch(0.4 0.015 250)' }}>{student.phone}</div>
         <div className="flex items-center gap-2 mt-1.5">
           <StatusBadge status={student.status} />
-          <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>수강 {active.length}반</span>
+          <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>수강 {active.length}반</span>
         </div>
       </div>
 
@@ -265,10 +266,10 @@ function SummaryCards({ student, showFinance, onJump }: { student: Student; show
         {firstView ? (
           <>
             <div className="text-sm font-semibold truncate" style={{ color: 'oklch(0.2 0.02 250)' }}>{firstView.name}</div>
-            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>{firstView.teacher} 강사</div>
-            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>{firstView.days} {firstView.time}</div>
+            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.4 0.015 250)' }}>{firstView.teacher} 강사</div>
+            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.4 0.015 250)' }}>{firstView.days} {firstView.time}</div>
           </>
-        ) : <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>수강 반 없음</div>}
+        ) : <div className="text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>수강 반 없음</div>}
       </div>
 
       <div className={card} onClick={() => onJump('attendance')}>
@@ -277,7 +278,7 @@ function SummaryCards({ student, showFinance, onJump }: { student: Student; show
           {([['출석', monthCounts.출석, 'oklch(0.4 0.12 160)'], ['결석', monthCounts.결석, 'oklch(0.5 0.2 27)'], ['지각', monthCounts.지각, 'oklch(0.5 0.13 60)'], ['조퇴', monthCounts.조퇴, 'oklch(0.5 0.13 30)']] as const).map(([l, v, c]) => (
             <div key={l} className="text-center">
               <div className="text-base font-bold tabular-nums" style={{ color: c }}>{v}</div>
-              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{l}</div>
+              <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{l}</div>
             </div>
           ))}
         </div>
@@ -289,13 +290,13 @@ function SummaryCards({ student, showFinance, onJump }: { student: Student; show
           <>
             <div className="text-sm font-semibold truncate" style={{ color: 'oklch(0.2 0.02 250)' }}>{mock.examName}</div>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>총점 {mock.totalScore ?? '-'}</span>
-              {mock.korean && <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>국{mock.korean.grade}</span>}
-              {mock.math && <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>수{mock.math.grade}</span>}
-              {mock.english && <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>영{mock.english.grade}</span>}
+              <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>총점 {mock.totalScore ?? '-'}</span>
+              {mock.korean && <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>국{mock.korean.grade}</span>}
+              {mock.math && <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>수{mock.math.grade}</span>}
+              {mock.english && <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>영{mock.english.grade}</span>}
             </div>
           </>
-        ) : <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>성적 데이터 없음</div>}
+        ) : <div className="text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>성적 데이터 없음</div>}
       </div>
 
       {showFinance && (
@@ -305,14 +306,14 @@ function SummaryCards({ student, showFinance, onJump }: { student: Student; show
             <span className="text-sm font-semibold" style={{ color: fin.status === '미납' ? 'oklch(0.5 0.2 27)' : 'oklch(0.2 0.02 250)' }}>{fin.status}</span>
             {fin.hasUnpaid && <span className="text-xs px-1.5 py-0.5 rounded bg-rose-50 text-rose-600">미납 {formatWon(fin.unpaid)}</span>}
           </div>
-          <div className="text-xs mt-1" style={{ color: 'oklch(0.5 0.015 250)' }}>{fin.refundRequested ? `환불 ${fin.refundApproveStatus}` : '환불 없음'}</div>
+          <div className="text-xs mt-1" style={{ color: 'oklch(0.4 0.015 250)' }}>{fin.refundRequested ? `환불 ${fin.refundApproveStatus}` : '환불 없음'}</div>
         </div>
       )}
 
       <div className={card} onClick={() => onJump('grades')}>
         {cardLabel(<Target size={13} />, '대학추천 데이터')}
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: us.bg, color: us.text, border: `1px solid ${us.border}` }}>{univ}</span>
-        <div className="text-xs mt-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>입력 상태만 판단 (추천 미계산)</div>
+        <div className="text-xs mt-1.5" style={{ color: 'oklch(0.42 0.015 250)' }}>입력 상태만 판단 (추천 미계산)</div>
       </div>
     </div>
   );
@@ -393,7 +394,7 @@ function BasicInfoTab({ student }: { student: Student }) {
           <Field label="재원 상태"><StatusBadge status={student.status} /></Field>
           <Field label="등록일">{formatDate(student.registeredAt)}</Field>
           <Field label="퇴원일">{student.withdrawnAt ? formatDate(student.withdrawnAt) : '-'}</Field>
-          <p className="text-xs mt-2" style={{ color: 'oklch(0.6 0.015 250)' }}>※ 생년월일·학습목표·학생메모 단독 필드는 수집하지 않습니다.</p>
+          <p className="text-xs mt-2" style={{ color: 'oklch(0.47 0.015 250)' }}>※ 생년월일·학습목표·학생메모 단독 필드는 수집하지 않습니다.</p>
         </Area>
 
         <div>
@@ -407,7 +408,7 @@ function BasicInfoTab({ student }: { student: Student }) {
                 <KeyRound size={13} /> 비밀번호 초기화
               </button>
             ) : (
-              <p className="mt-3 text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 비밀번호 초기화 권한이 없습니다.</p>
+              <p className="mt-3 text-xs flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}><Info size={11} /> 비밀번호 초기화 권한이 없습니다.</p>
             )}
             {allowResetNickname && (
               <button onClick={() => setNicknameResetConfirmOpen(true)} className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>
@@ -417,22 +418,22 @@ function BasicInfoTab({ student }: { student: Student }) {
           </Area>
 
           <Area title="관리 정보">
-            <div className="text-xs mb-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>재원 상태 변경{!canEdit && <span className="ml-1" style={{ color: 'oklch(0.6 0.015 250)' }}>(student.update 권한 필요)</span>}</div>
+            <div className="text-xs mb-1.5" style={{ color: 'oklch(0.42 0.015 250)' }}>재원 상태 변경{!canEdit && <span className="ml-1" style={{ color: 'oklch(0.47 0.015 250)' }}>(student.update 권한 필요)</span>}</div>
             <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-              <span className="inline-flex items-center gap-1 mr-1"><Power size={13} style={{ color: 'oklch(0.5 0.015 250)' }} /></span>
+              <span className="inline-flex items-center gap-1 mr-1"><Power size={13} style={{ color: 'oklch(0.4 0.015 250)' }} /></span>
               {statusBtn('재원', 'oklch(0.5 0.13 160)')}
               {statusBtn('휴원', 'oklch(0.55 0.13 80)')}
               {statusBtn('퇴원', 'oklch(0.5 0.02 250)')}
             </div>
             {canWithdraw ? (
               <div className="pt-3" style={{ borderTop: '1px solid oklch(0.95 0.006 250)' }}>
-                <button onClick={withdraw} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors hover:bg-rose-50" style={{ borderColor: 'oklch(0.88 0.08 27)', color: 'oklch(0.5 0.2 27)' }}>
+                <button onClick={withdraw} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors hover:bg-rose-50" style={{ borderColor: 'oklch(0.88 0.08 27)', color: 'oklch(0.4 0.2 27)' }}>
                   <Power size={13} /> 퇴원/비활성 처리
                 </button>
-                <p className="text-xs mt-1.5" style={{ color: 'oklch(0.6 0.015 250)' }}>실제 DB 삭제가 아닌 비활성(퇴원) 처리입니다. 데이터는 보존됩니다.</p>
+                <p className="text-xs mt-1.5" style={{ color: 'oklch(0.47 0.015 250)' }}>실제 DB 삭제가 아닌 비활성(퇴원) 처리입니다. 데이터는 보존됩니다.</p>
               </div>
             ) : (
-              <p className="text-xs pt-3 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)', borderTop: '1px solid oklch(0.95 0.006 250)' }}><Info size={11} /> 퇴원/비활성 처리 권한(student.withdraw)이 없습니다.</p>
+              <p className="text-xs pt-3 flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)', borderTop: '1px solid oklch(0.95 0.006 250)' }}><Info size={11} /> 퇴원/비활성 처리 권한(student.withdraw)이 없습니다.</p>
             )}
           </Area>
         </div>
@@ -443,20 +444,20 @@ function BasicInfoTab({ student }: { student: Student }) {
         <Area
           title="운영메모 로그"
           desc="최고관리자·원장·행정 내부 기록입니다. 학생·학부모 화면에는 절대 노출되지 않습니다."
-          action={<span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded" style={{ background: 'oklch(0.96 0.02 250)', color: 'oklch(0.45 0.1 250)' }}><StickyNote size={11} /> 내부 전용</span>}
+          action={<span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded" style={{ background: 'oklch(0.96 0.02 250)', color: 'oklch(0.35 0.1 250)' }}><StickyNote size={11} /> 내부 전용</span>}
         >
           <div className="flex gap-2 mb-3">
             <input value={memoText} onChange={(e) => setMemoText(e.target.value)} placeholder="운영메모를 입력하세요 (예: 학습 태도, 결제 협의, 반 이동 사유 등)" className="flex-1 text-sm px-3 py-2 rounded-md border" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
             <button onClick={addMemo} className="inline-flex items-center gap-1 px-3 py-2 rounded-md text-sm text-white" style={{ background: '#040D1E' }}><Plus size={14} /> 기록</button>
           </div>
           {student.operationMemos.length === 0 ? (
-            <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>기록된 운영메모가 없습니다.</p>
+            <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>기록된 운영메모가 없습니다.</p>
           ) : (
             <div className="space-y-2">
               {[...student.operationMemos].reverse().map((m) => (
                 <div key={m.id} className="p-2.5 rounded-md" style={{ background: 'oklch(0.98 0.004 247)', border: '1px solid oklch(0.95 0.006 250)' }}>
                   <div className="text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>{m.content}</div>
-                  <div className="text-xs mt-1" style={{ color: 'oklch(0.55 0.015 250)' }}>{formatDate(m.date)} · {m.author}</div>
+                  <div className="text-xs mt-1" style={{ color: 'oklch(0.42 0.015 250)' }}>{formatDate(m.date)} · {m.author}</div>
                 </div>
               ))}
             </div>
@@ -470,13 +471,13 @@ function BasicInfoTab({ student }: { student: Student }) {
           <div className="bg-white rounded-lg w-full max-w-sm modal-enter" onClick={(e) => e.stopPropagation()} style={{ boxShadow: '0 20px 50px oklch(0 0 0 / 0.25)' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
               <h3 className="text-sm font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>비밀번호 초기화</h3>
-              <button onClick={() => setResetConfirmOpen(false)}><X size={16} style={{ color: 'oklch(0.5 0.015 250)' }} /></button>
+              <button onClick={() => setResetConfirmOpen(false)}><X size={16} style={{ color: 'oklch(0.4 0.015 250)' }} /></button>
             </div>
             <div className="p-4">
               <p className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>
                 <b>{student.name}</b> 학생 계정의 비밀번호를 초기화합니다. 새 임시 비밀번호 안내가 등록된 휴대폰번호로 발송됩니다.
               </p>
-              <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 이 계정 1건만 초기화됩니다. 일괄·전체 초기화는 제공되지 않습니다.</p>
+              <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}><Info size={11} /> 이 계정 1건만 초기화됩니다. 일괄·전체 초기화는 제공되지 않습니다.</p>
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setResetConfirmOpen(false)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
@@ -492,13 +493,13 @@ function BasicInfoTab({ student }: { student: Student }) {
           <div className="bg-white rounded-lg w-full max-w-sm modal-enter" onClick={(e) => e.stopPropagation()} style={{ boxShadow: '0 20px 50px oklch(0 0 0 / 0.25)' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
               <h3 className="text-sm font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>닉네임 초기화</h3>
-              <button onClick={() => setNicknameResetConfirmOpen(false)}><X size={16} style={{ color: 'oklch(0.5 0.015 250)' }} /></button>
+              <button onClick={() => setNicknameResetConfirmOpen(false)}><X size={16} style={{ color: 'oklch(0.4 0.015 250)' }} /></button>
             </div>
             <div className="p-4">
               <p className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>
                 <b>{student.name}</b> 학생의 닉네임을 초기화합니다.
               </p>
-              <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 현재 닉네임이 비워지고 14일 변경 제한도 함께 해제되어, 학생이 즉시 새 닉네임을 설정할 수 있습니다.</p>
+              <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}><Info size={11} /> 현재 닉네임이 비워지고 14일 변경 제한도 함께 해제되어, 학생이 즉시 새 닉네임을 설정할 수 있습니다.</p>
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setNicknameResetConfirmOpen(false)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
@@ -559,7 +560,7 @@ function GuardianFamilyTab({ student, onOpenStudent }: { student: Student; onOpe
           ) : undefined}
         >
           {!canEdit && (
-            <p className="text-xs mb-2 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 읽기 전용입니다. 보호자 추가는 student.update 권한이 필요합니다.</p>
+            <p className="text-xs mb-2 flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}><Info size={11} /> 읽기 전용입니다. 보호자 추가는 student.update 권한이 필요합니다.</p>
           )}
           {adding && canEdit && (
             <div className="grid grid-cols-3 gap-2 mb-3 p-2.5 rounded-md" style={{ background: 'oklch(0.98 0.004 247)' }}>
@@ -569,16 +570,16 @@ function GuardianFamilyTab({ student, onOpenStudent }: { student: Student; onOpe
               <button onClick={addGuardian} className="col-span-3 text-xs py-1.5 rounded text-white" style={{ background: '#040D1E' }}>저장</button>
             </div>
           )}
-          {student.guardians.length === 0 && <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>등록된 보호자가 없습니다.</p>}
+          {student.guardians.length === 0 && <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>등록된 보호자가 없습니다.</p>}
           {student.guardians.map((g, i) => (
             <div key={g.id} className="flex items-center justify-between py-2.5" style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-medium" style={{ color: 'oklch(0.22 0.02 250)' }}>{g.name}</span>
-                  <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.005 250)', color: 'oklch(0.45 0.015 250)' }}>{g.relation}</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.005 250)', color: 'oklch(0.35 0.015 250)' }}>{g.relation}</span>
                   {i === 0 && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.93 0.02 262)', color: 'oklch(0.1605 0.0394 259.41)' }}>대표</span>}
                 </div>
-                <div className="text-xs tabular-nums mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>{g.phone}</div>
+                <div className="text-xs tabular-nums mt-0.5" style={{ color: 'oklch(0.4 0.015 250)' }}>{g.phone}</div>
               </div>
             </div>
           ))}
@@ -586,13 +587,13 @@ function GuardianFamilyTab({ student, onOpenStudent }: { student: Student; onOpe
 
         <Area title="알림 기준" desc="알림은 대표 보호자에게 기본 발송됩니다.">
           {!canEdit && student.guardians.length > 0 && (
-            <p className="text-xs mb-2 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 읽기 전용입니다. 알림 수신 상태 변경은 student.update 권한이 필요합니다.</p>
+            <p className="text-xs mb-2 flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}><Info size={11} /> 읽기 전용입니다. 알림 수신 상태 변경은 student.update 권한이 필요합니다.</p>
           )}
           {student.guardians.map((g, i) => {
             const on = !optedOut.has(g.id);
             return (
               <div key={g.id} className="flex items-center justify-between py-2">
-                <span className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>{g.name} <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>({g.relation}{i === 0 ? ' · 대표' : ''})</span></span>
+                <span className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>{g.name} <span className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>({g.relation}{i === 0 ? ' · 대표' : ''})</span></span>
                 {canEdit ? (
                   <button onClick={() => toggleNotify(g.id)} className={cn('inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full', on ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500')}><Bell size={11} /> {on ? '수신' : '미수신'}</button>
                 ) : (
@@ -606,17 +607,17 @@ function GuardianFamilyTab({ student, onOpenStudent }: { student: Student; onOpe
 
       <Area title="가족 연결" desc="동일 보호자 휴대폰번호가 발견되면 Family Engine이 자동으로 연결합니다.">
         {siblings.length === 0 ? (
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>연결된 형제자매가 없습니다.</p>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>연결된 형제자매가 없습니다.</p>
         ) : (
           <div className="space-y-2">
-            <div className="flex items-center gap-1.5 text-xs mb-1" style={{ color: 'oklch(0.5 0.015 250)' }}><Link2 size={12} /> 연결된 형제자매 {siblings.length}명</div>
+            <div className="flex items-center gap-1.5 text-xs mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}><Link2 size={12} /> 연결된 형제자매 {siblings.length}명</div>
             {siblings.map((sib) => (
               <button key={sib.id} onClick={() => onOpenStudent(sib.id)} className="w-full flex items-center justify-between p-2.5 rounded-md text-left transition-colors hover:bg-slate-50" style={{ border: '1px solid oklch(0.93 0.008 250)' }}>
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'oklch(0.1605 0.0394 259.41)' }}>{sib.name.charAt(0)}</div>
                   <div>
                     <div className="text-sm font-medium" style={{ color: 'oklch(0.25 0.02 250)' }}>{sib.name}</div>
-                    <div className="text-xs tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>{sib.phone}</div>
+                    <div className="text-xs tabular-nums" style={{ color: 'oklch(0.42 0.015 250)' }}>{sib.phone}</div>
                   </div>
                 </div>
                 <StatusBadge status={sib.status} />
@@ -625,7 +626,7 @@ function GuardianFamilyTab({ student, onOpenStudent }: { student: Student; onOpe
           </div>
         )}
         {hiddenSiblingCount > 0 && (
-          <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 권한 밖 가족 정보는 표시되지 않습니다.</p>
+          <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}><Info size={11} /> 권한 밖 가족 정보는 표시되지 않습니다.</p>
         )}
       </Area>
     </div>
@@ -696,13 +697,13 @@ function EnrollmentTab({ student }: { student: Student }) {
         ) : undefined}
       >
         {active.length === 0 ? (
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>수강 중인 반이 없습니다.</p>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>수강 중인 반이 없습니다.</p>
         ) : (
           <div className="axis-table-scroll" style={{ maxHeight: 420 }}>
             <table className="w-full text-sm" style={{ minWidth: 900 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
-                  {['반명', '반유형', '담당강사', '수업요일', '수업시간', '수강 시작일', '수강료', '관리'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}
+                  {['반명', '반유형', '담당강사', '수업요일', '수업시간', '수강 시작일', '수강료', '관리'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -712,21 +713,21 @@ function EnrollmentTab({ student }: { student: Student }) {
                   return (
                     <tr key={e.id} style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
                       <td className="px-2.5 py-2 font-medium whitespace-nowrap" style={{ color: 'oklch(0.22 0.02 250)' }}>{v.name}</td>
-                      <td className="px-2.5 py-2 whitespace-nowrap"><span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.005 250)', color: 'oklch(0.45 0.015 250)' }}>{v.category}</span></td>
+                      <td className="px-2.5 py-2 whitespace-nowrap"><span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.005 250)', color: 'oklch(0.35 0.015 250)' }}>{v.category}</span></td>
                       <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{v.teacher}</td>
                       <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{v.days}</td>
                       <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{v.time}</td>
-                      <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>{formatDate(e.startDate)}</td>
-                      <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>{e.tuitionAmount ? `${e.tuitionAmount.toLocaleString()}원` : '-'}</td>
+                      <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{formatDate(e.startDate)}</td>
+                      <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{e.tuitionAmount ? `${e.tuitionAmount.toLocaleString()}원` : '-'}</td>
                       <td className="px-2.5 py-2">
                         <div className="flex items-center gap-1">
                           {canManageEnrollment && (
                             <>
-                              <button onClick={() => openEnd(e.id, v.name, '종료')} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-rose-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.5 0.12 27)' }}>수강 종료</button>
-                              <button onClick={() => openEnd(e.id, v.name, '퇴원')} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-rose-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.5 0.12 27)' }}>퇴원 처리</button>
+                              <button onClick={() => openEnd(e.id, v.name, '종료')} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-rose-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.12 27)' }}>수강 종료</button>
+                              <button onClick={() => openEnd(e.id, v.name, '퇴원')} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-rose-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.12 27)' }}>퇴원 처리</button>
                             </>
                           )}
-                          <button onClick={() => openMemo(e.id, v.name, e.memo)} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.45 0.015 250)' }}>
+                          <button onClick={() => openMemo(e.id, v.name, e.memo)} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.35 0.015 250)' }}>
                             <StickyNote size={11} /> 메모{e.memo ? '' : ' 추가'}
                           </button>
                         </div>
@@ -742,7 +743,7 @@ function EnrollmentTab({ student }: { student: Student }) {
 
       <Area title="과거 수강이력">
         {past.length === 0 ? (
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>과거 수강이력이 없습니다.</p>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>과거 수강이력이 없습니다.</p>
         ) : past.map((e) => {
           const klass = getClass(e.classId);
           const v = resolveClassView({ id: e.classId, name: '', subject: '', teacher: '', schedule: '', startDate: e.startDate, status: '수강완료' }, klass);
@@ -750,10 +751,10 @@ function EnrollmentTab({ student }: { student: Student }) {
             <div key={e.id} className="py-2" style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
               <div className="flex items-center justify-between">
                 <div className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>{v.name}</div>
-                <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.005 250)', color: 'oklch(0.45 0.015 250)' }}>{e.status}</span>
+                <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.96 0.005 250)', color: 'oklch(0.35 0.015 250)' }}>{e.status}</span>
               </div>
-              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{v.teacher} · {formatDate(e.startDate)} ~ {e.endDate ? formatDate(e.endDate) : '-'}</div>
-              {e.memo && <div className="text-xs mt-0.5" style={{ color: 'oklch(0.5 0.05 27)' }}>메모: {e.memo}</div>}
+              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>{v.teacher} · {formatDate(e.startDate)} ~ {e.endDate ? formatDate(e.endDate) : '-'}</div>
+              {e.memo && <div className="text-xs mt-0.5" style={{ color: 'oklch(0.4 0.05 27)' }}>메모: {e.memo}</div>}
             </div>
           );
         })}
@@ -768,18 +769,18 @@ function EnrollmentTab({ student }: { student: Student }) {
           <div className="bg-white rounded-lg w-full max-w-md modal-enter" onClick={(e) => e.stopPropagation()} style={{ boxShadow: '0 20px 50px oklch(0 0 0 / 0.25)' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
               <h3 className="text-sm font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>수강 {endModal.mode} — {endModal.className}</h3>
-              <button onClick={() => setEndModal(null)}><X size={16} style={{ color: 'oklch(0.5 0.015 250)' }} /></button>
+              <button onClick={() => setEndModal(null)}><X size={16} style={{ color: 'oklch(0.4 0.015 250)' }} /></button>
             </div>
             <div className="p-4 space-y-3">
               <label className="block">
-                <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{endModal.mode}일<span style={{ color: 'oklch(0.55 0.2 27)' }}> *</span></span>
+                <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>{endModal.mode}일<span style={{ color: 'oklch(0.42 0.2 27)' }}> *</span></span>
                 <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1 w-full text-sm px-2.5 py-2 rounded-md border tabular-nums" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
               </label>
               <label className="block">
-                <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{endModal.mode} 사유 (선택)</span>
+                <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>{endModal.mode} 사유 (선택)</span>
                 <textarea value={endMemo} onChange={(e) => setEndMemo(e.target.value)} rows={3} placeholder={endModal.mode === '종료' ? '예: 반 변경, 상위반 이동 등' : '예: 개인 사정으로 수강 중단'} className="mt-1 w-full text-sm px-2.5 py-2 rounded-md border resize-none" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
               </label>
-              <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 저장 시 해당 수강은 {endModal.mode} 처리되고 {endModal.mode}일이 기록됩니다(삭제되지 않고 이력으로 보관됩니다).</p>
+              <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}><Info size={11} /> 저장 시 해당 수강은 {endModal.mode} 처리되고 {endModal.mode}일이 기록됩니다(삭제되지 않고 이력으로 보관됩니다).</p>
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setEndModal(null)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
@@ -795,7 +796,7 @@ function EnrollmentTab({ student }: { student: Student }) {
           <div className="bg-white rounded-lg w-full max-w-md modal-enter" onClick={(e) => e.stopPropagation()} style={{ boxShadow: '0 20px 50px oklch(0 0 0 / 0.25)' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
               <h3 className="text-sm font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>수강 메모 — {memoModal.className}</h3>
-              <button onClick={() => setMemoModal(null)}><X size={16} style={{ color: 'oklch(0.5 0.015 250)' }} /></button>
+              <button onClick={() => setMemoModal(null)}><X size={16} style={{ color: 'oklch(0.4 0.015 250)' }} /></button>
             </div>
             <div className="p-4 space-y-3">
               <textarea
@@ -807,7 +808,7 @@ function EnrollmentTab({ student }: { student: Student }) {
                 className="w-full text-sm px-2.5 py-2 rounded-md border resize-none disabled:bg-slate-50"
                 style={{ borderColor: 'oklch(0.9 0.008 250)' }}
               />
-              {!canEdit && <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 읽기 전용입니다. 메모 수정은 student.update 권한이 필요합니다.</p>}
+              {!canEdit && <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}><Info size={11} /> 읽기 전용입니다. 메모 수정은 student.update 권한이 필요합니다.</p>}
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setMemoModal(null)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>닫기</button>
@@ -857,13 +858,13 @@ function AttendanceTab({ student }: { student: Student }) {
 
       <Area title="출결 상세 목록">
         {records.length === 0 ? (
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>출결 기록이 없습니다.</p>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>출결 기록이 없습니다.</p>
         ) : (
           <div className="axis-table-scroll" style={{ maxHeight: 420 }}>
             <table className="w-full text-sm" style={{ minWidth: 720 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
-                  {['날짜', '수강반', '출결 상태', '사유', '입력자', '알림 발송'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}
+                  {['날짜', '수강반', '출결 상태', '사유', '입력자', '알림 발송'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -872,9 +873,9 @@ function AttendanceTab({ student }: { student: Student }) {
                     <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.35 0.015 250)' }}>{r.date}</td>
                     <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{r.className}</td>
                     <td className="px-2.5 py-2"><AttStatusPill status={r.status} /></td>
-                    <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{r.reason || '-'}</td>
-                    <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{r.createdBy}</td>
-                    <td className="px-2.5 py-2">{r.notified ? <span className="text-xs text-emerald-600 inline-flex items-center gap-1"><CheckCircle2 size={12} /> 발송</span> : <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>-</span>}</td>
+                    <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>{r.reason || '-'}</td>
+                    <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>{r.createdBy}</td>
+                    <td className="px-2.5 py-2">{r.notified ? <span className="text-xs text-emerald-600 inline-flex items-center gap-1"><CheckCircle2 size={12} /> 발송</span> : <span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>-</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -885,15 +886,15 @@ function AttendanceTab({ student }: { student: Student }) {
 
       <Area title="알림 이력" desc="결석·조퇴 시 대표 보호자에게 자동 발송됩니다.">
         {notifyRecords.length === 0 ? (
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>발송 대상 알림이 없습니다.</p>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>발송 대상 알림이 없습니다.</p>
         ) : notifyRecords.map((r) => (
           <div key={r.id} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
             <div className="flex items-center gap-2">
               <AttStatusPill status={r.status} />
               <span className="text-xs tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{r.date} · {r.className}</span>
             </div>
-            <div className="text-xs text-right" style={{ color: 'oklch(0.5 0.015 250)' }}>
-              {r.notified ? <span className="inline-flex items-center gap-1 text-emerald-600"><Bell size={11} /> {primaryGuardian?.name ?? '대표 보호자'} · {r.notifyChannel} {r.notifyTime}</span> : <span className="inline-flex items-center gap-1" style={{ color: 'oklch(0.55 0.12 60)' }}><AlertTriangle size={11} /> 미발송</span>}
+            <div className="text-xs text-right" style={{ color: 'oklch(0.4 0.015 250)' }}>
+              {r.notified ? <span className="inline-flex items-center gap-1 text-emerald-600"><Bell size={11} /> {primaryGuardian?.name ?? '대표 보호자'} · {r.notifyChannel} {r.notifyTime}</span> : <span className="inline-flex items-center gap-1" style={{ color: 'oklch(0.42 0.12 60)' }}><AlertTriangle size={11} /> 미발송</span>}
             </div>
           </div>
         ))}
@@ -915,7 +916,7 @@ function MonthCalendar({ ym, records }: { ym: string; records: { date: string; s
 
   return (
     <div>
-      <div className="grid grid-cols-7 gap-1 mb-1">{['일', '월', '화', '수', '목', '금', '토'].map((w) => <div key={w} className="text-center text-xs py-1" style={{ color: 'oklch(0.55 0.015 250)' }}>{w}</div>)}</div>
+      <div className="grid grid-cols-7 gap-1 mb-1">{['일', '월', '화', '수', '목', '금', '토'].map((w) => <div key={w} className="text-center text-xs py-1" style={{ color: 'oklch(0.42 0.015 250)' }}>{w}</div>)}</div>
       <div className="grid grid-cols-7 gap-1">
         {cells.map((d, i) => {
           const st = d ? byDay[d] : undefined;
@@ -1108,7 +1109,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
       </div>
 
       {/* 성적 반영 기준 안내 */}
-      <div className="flex items-start gap-2 px-3 py-2 rounded-md mb-3 text-xs" style={{ background: 'oklch(0.97 0.01 250)', color: 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.92 0.01 250)' }}>
+      <div className="flex items-start gap-2 px-3 py-2 rounded-md mb-3 text-xs" style={{ background: 'oklch(0.97 0.01 250)', color: 'oklch(0.4 0.015 250)', border: '1px solid oklch(0.92 0.01 250)' }}>
         <Info size={11} className="flex-shrink-0 mt-0.5" />
         <span>
           <b>학원 전체 시험</b>은 성적 공개 후 표시됩니다. &nbsp;
@@ -1127,7 +1128,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
       ) : gradeType === '기타평가' ? (
         currentEvalResults.length > 0
           ? <AssessmentResultList title="기타평가 (단원평가·인증평가·입학테스트)" results={currentEvalResults} note="대학추천 계산에는 사용되지 않습니다." />
-          : <div className="px-3 py-8 text-center text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>채점이 반영된 기타평가 결과가 없습니다.</div>
+          : <div className="px-3 py-8 text-center text-xs" style={{ color: 'oklch(0.47 0.01 250)' }}>채점이 반영된 기타평가 결과가 없습니다.</div>
       ) : (
         <MockScores title={gradeType} scores={mockFiltered} />
       )}
@@ -1150,26 +1151,26 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
       <Area title="성적 상세 보기" desc="문항 단위 분석은 시험관리 엔진(채점)과 연동됩니다.">
         <div className="grid md:grid-cols-2 gap-3">
           <div>
-            <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.45 0.015 250)' }}>IF 만약 분석</div>
+            <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.35 0.015 250)' }}>IF 만약 분석</div>
             <div className="space-y-2">
               {[
-                { key: '계산 실수', label: '만약 계산 실수를 줄였다면', color: 'oklch(0.55 0.18 45)', bg: 'oklch(0.97 0.04 60)' },
-                { key: '개념 부족', label: '만약 이 개념을 확실히 익혔다면', color: 'oklch(0.45 0.12 250)', bg: 'oklch(0.97 0.03 250)' },
-                { key: '시간 부족', label: '만약 시간 배분을 조금 더 잘했다면', color: 'oklch(0.55 0.11 81)', bg: 'oklch(0.97 0.03 81)' },
+                { key: '계산 실수', label: '만약 계산 실수를 줄였다면', color: 'oklch(0.42 0.18 45)', bg: 'oklch(0.97 0.04 60)' },
+                { key: '개념 부족', label: '만약 이 개념을 확실히 익혔다면', color: 'oklch(0.35 0.12 250)', bg: 'oklch(0.97 0.03 250)' },
+                { key: '시간 부족', label: '만약 시간 배분을 조금 더 잘했다면', color: 'oklch(0.42 0.11 81)', bg: 'oklch(0.97 0.03 81)' },
               ].map(({ key, label, color, bg }) => (
                 <div key={key} className="flex items-start gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: bg }}>
                   <span className="font-semibold flex-shrink-0" style={{ color }}>IF</span>
                   <span style={{ color: 'oklch(0.35 0.015 250)' }}>{label}</span>
-                  <span className="ml-auto text-xs italic" style={{ color: 'oklch(0.65 0.01 250)' }}>준비 중</span>
+                  <span className="ml-auto text-xs italic" style={{ color: 'oklch(0.49 0.01 250)' }}>준비 중</span>
                 </div>
               ))}
             </div>
-            <div className="text-xs mt-3 font-semibold mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>취약 단원</div>
-            <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>문항별 정오표·취약 단원은 채점 데이터 연동 시 표시됩니다.</p>
+            <div className="text-xs mt-3 font-semibold mb-1" style={{ color: 'oklch(0.35 0.015 250)' }}>취약 단원</div>
+            <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>문항별 정오표·취약 단원은 채점 데이터 연동 시 표시됩니다.</p>
           </div>
           <div>
-            <div className="text-xs font-semibold mb-1.5 flex items-center gap-1" style={{ color: 'oklch(0.45 0.015 250)' }}><Target size={12} /> IF 분석 / 엠블럼</div>
-            <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>IF 분석 결과와 엠블럼 획득 조건은 시험관리 엔진의 결과분석과 연동됩니다.</p>
+            <div className="text-xs font-semibold mb-1.5 flex items-center gap-1" style={{ color: 'oklch(0.35 0.015 250)' }}><Target size={12} /> IF 분석 / 엠블럼</div>
+            <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>IF 분석 결과와 엠블럼 획득 조건은 시험관리 엔진의 결과분석과 연동됩니다.</p>
           </div>
         </div>
       </Area>
@@ -1179,7 +1180,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {([['내신 입력', checklist.hasInternal], ['모의고사 입력', checklist.hasMock], ['수학 입력', checklist.hasMath], ['탐구 입력', checklist.hasInquiry]] as const).map(([label, ok]) => (
             <div key={label} className="flex items-center gap-2 p-2.5 rounded-md" style={{ border: '1px solid oklch(0.93 0.008 250)' }}>
-              {ok ? <CheckCircle2 size={15} style={{ color: 'oklch(0.5 0.13 160)' }} /> : <XCircle size={15} style={{ color: 'oklch(0.7 0.02 250)' }} />}
+              {ok ? <CheckCircle2 size={15} style={{ color: 'oklch(0.4 0.13 160)' }} /> : <XCircle size={15} style={{ color: 'oklch(0.54 0.02 250)' }} />}
               <span className="text-xs" style={{ color: ok ? 'oklch(0.3 0.02 250)' : 'oklch(0.6 0.015 250)' }}>{label}</span>
             </div>
           ))}
@@ -1188,7 +1189,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
         {/* Assessment Engine 기반 수능실전모의 준비 상태 — University Recommendation Readiness Foundation v1 */}
         <div className="mt-4 pt-4 border-t" style={{ borderColor: 'oklch(0.93 0.008 250)' }}>
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-xs font-semibold" style={{ color: 'oklch(0.45 0.015 250)' }}>
+            <span className="text-xs font-semibold" style={{ color: 'oklch(0.35 0.015 250)' }}>
               수능실전모의 데이터 준비 상태 (Assessment Engine)
             </span>
             <span
@@ -1197,8 +1198,8 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                 readiness.status === '충분'
                   ? { background: 'oklch(0.94 0.08 160)', color: 'oklch(0.35 0.12 160)' }
                   : readiness.status === '준비 중'
-                  ? { background: 'oklch(0.97 0.06 80)', color: 'oklch(0.45 0.12 80)' }
-                  : { background: 'oklch(0.96 0.005 250)', color: 'oklch(0.5 0.015 250)' }
+                  ? { background: 'oklch(0.97 0.06 80)', color: 'oklch(0.35 0.12 80)' }
+                  : { background: 'oklch(0.96 0.005 250)', color: 'oklch(0.4 0.015 250)' }
               }
             >
               {readiness.status}
@@ -1217,21 +1218,21 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                 style={{ border: '1px solid oklch(0.93 0.008 250)' }}
               >
                 {ok
-                  ? <CheckCircle2 size={13} style={{ color: 'oklch(0.5 0.13 160)' }} />
-                  : <XCircle size={13} style={{ color: 'oklch(0.7 0.02 250)' }} />
+                  ? <CheckCircle2 size={13} style={{ color: 'oklch(0.4 0.13 160)' }} />
+                  : <XCircle size={13} style={{ color: 'oklch(0.54 0.02 250)' }} />
                 }
                 <span className="text-xs flex-1" style={{ color: ok ? 'oklch(0.3 0.02 250)' : 'oklch(0.6 0.015 250)' }}>
                   {label}
                 </span>
                 {ok && (
-                  <span className="text-xs tabular-nums ml-auto" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                  <span className="text-xs tabular-nums ml-auto" style={{ color: 'oklch(0.4 0.015 250)' }}>
                     {okText}
                   </span>
                 )}
               </div>
             ))}
           </div>
-          <p className="text-xs mt-2" style={{ color: 'oklch(0.65 0.01 250)' }}>
+          <p className="text-xs mt-2" style={{ color: 'oklch(0.49 0.01 250)' }}>
             실제 대학명·추천 순위 같은 확정 결과는 표시되지 않으며, 추천 적합도 중심의 참고 지표만 제공됩니다.
           </p>
         </div>
@@ -1242,7 +1243,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
         title="상담 리포트 미리보기"
         desc="상담 전 성적·실전모의 데이터 준비 상태 요약 — 읽기 전용"
         action={
-          <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded" style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.45 0.15 250)' }}>
+          <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded" style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.35 0.15 250)' }}>
             <FileText size={11} /> 미리보기
           </span>
         }
@@ -1252,7 +1253,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
           <div className="flex items-start justify-between gap-2">
             <div>
               <div className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{student.name}</div>
-              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>대학추천 상담 준비 상태 요약</div>
+              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>대학추천 상담 준비 상태 요약</div>
             </div>
             <span
               className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0"
@@ -1265,7 +1266,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
 
         {/* ② 기본 성적 데이터 */}
         <div className="mb-4">
-          <div className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+          <div className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
             <BookOpen size={11} />
             기본 성적 데이터
           </div>
@@ -1283,8 +1284,8 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                 }}
               >
                 {ok
-                  ? <CheckCircle2 size={13} style={{ color: 'oklch(0.5 0.13 160)', flexShrink: 0 }} />
-                  : <XCircle     size={13} style={{ color: 'oklch(0.7 0.02 250)', flexShrink: 0 }} />
+                  ? <CheckCircle2 size={13} style={{ color: 'oklch(0.4 0.13 160)', flexShrink: 0 }} />
+                  : <XCircle     size={13} style={{ color: 'oklch(0.54 0.02 250)', flexShrink: 0 }} />
                 }
                 <span className="text-xs flex-1" style={{ color: 'oklch(0.35 0.02 250)' }}>{label}</span>
                 <span className="text-xs font-medium" style={{ color: ok ? 'oklch(0.35 0.12 160)' : 'oklch(0.6 0.015 250)' }}>
@@ -1297,7 +1298,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
 
         {/* ③ 수능실전모의 데이터 */}
         <div className="mb-4">
-          <div className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+          <div className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
             <BarChart2 size={11} />
             수능실전모의 데이터 (Assessment Engine)
           </div>
@@ -1313,8 +1314,8 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                 style={{ background: ok ? 'oklch(0.97 0.03 160)' : 'oklch(0.97 0.005 250)' }}
               >
                 {ok
-                  ? <CheckCircle2 size={13} style={{ color: 'oklch(0.5 0.13 160)', flexShrink: 0 }} />
-                  : <XCircle     size={13} style={{ color: 'oklch(0.7 0.02 250)', flexShrink: 0 }} />
+                  ? <CheckCircle2 size={13} style={{ color: 'oklch(0.4 0.13 160)', flexShrink: 0 }} />
+                  : <XCircle     size={13} style={{ color: 'oklch(0.54 0.02 250)', flexShrink: 0 }} />
                 }
                 <span className="text-xs flex-1" style={{ color: 'oklch(0.35 0.02 250)' }}>{label}</span>
                 <span className="text-xs font-medium tabular-nums" style={{ color: ok ? 'oklch(0.35 0.12 160)' : 'oklch(0.55 0.015 250)' }}>
@@ -1327,7 +1328,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
 
         {/* ⑤ 어댑터 입력 구성 상태 — University Analysis Adapter Input Bridge v1 */}
         <div className="mb-4">
-          <div className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+          <div className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
             <Target size={11} />
             분석 입력 구성 상태
           </div>
@@ -1336,15 +1337,15 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
             style={{ border: '1px solid oklch(0.92 0.01 250)', background: 'oklch(0.985 0.004 250)' }}
           >
             <div className="flex items-center justify-between mb-2.5">
-              <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>어댑터 입력 상태</span>
+              <span className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>어댑터 입력 상태</span>
               <span
                 className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
                 style={
                   analysisInput.readiness.adapterStatus === 'ready'
                     ? { background: 'oklch(0.94 0.08 160)', color: 'oklch(0.35 0.12 160)' }
                     : analysisInput.readiness.adapterStatus === 'partial'
-                    ? { background: 'oklch(0.97 0.06 80)', color: 'oklch(0.45 0.12 80)' }
-                    : { background: 'oklch(0.96 0.005 250)', color: 'oklch(0.5 0.015 250)' }
+                    ? { background: 'oklch(0.97 0.06 80)', color: 'oklch(0.35 0.12 80)' }
+                    : { background: 'oklch(0.96 0.005 250)', color: 'oklch(0.4 0.015 250)' }
                 }
               >
                 {analysisInput.readiness.adapterStatus === 'ready'
@@ -1369,7 +1370,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                   }}
                 >
                   {ok
-                    ? <CheckCircle2 size={11} style={{ color: 'oklch(0.5 0.13 160)', flexShrink: 0 }} />
+                    ? <CheckCircle2 size={11} style={{ color: 'oklch(0.4 0.13 160)', flexShrink: 0 }} />
                     : <XCircle     size={11} style={{ color: 'oklch(0.75 0.02 250)', flexShrink: 0 }} />
                   }
                   <span style={{ color: ok ? 'oklch(0.35 0.02 250)' : 'oklch(0.6 0.012 250)' }}>{label}</span>
@@ -1377,21 +1378,21 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
               ))}
             </div>
             {analysisInput.readiness.suneungRounds > 0 && (
-              <div className="mt-2 text-xs tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>
+              <div className="mt-2 text-xs tabular-nums" style={{ color: 'oklch(0.42 0.015 250)' }}>
                 수능실전모의 {analysisInput.readiness.suneungRounds}회 · 모의 카테고리 {analysisInput.mockSummaries.length}종
               </div>
             )}
             {analysisQuality.warnings.length > 0 && (
               <ul className="mt-2 space-y-0.5">
                 {analysisQuality.warnings.map((w) => (
-                  <li key={w} className="flex items-start gap-1.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                  <li key={w} className="flex items-start gap-1.5 text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>
                     <span className="flex-shrink-0">·</span>
                     <span>{w}</span>
                   </li>
                 ))}
               </ul>
             )}
-            <div className="mt-2 flex items-center gap-1.5 text-xs" style={{ color: 'oklch(0.6 0.012 250)' }}>
+            <div className="mt-2 flex items-center gap-1.5 text-xs" style={{ color: 'oklch(0.47 0.012 250)' }}>
               <span>게이트:</span>
               <span style={{
                 color: handoffGate.status === 'ready'
@@ -1407,7 +1408,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                   : '데이터 입력 필요'}
               </span>
             </div>
-            <p className="text-xs mt-1" style={{ color: 'oklch(0.7 0.01 250)' }}>
+            <p className="text-xs mt-1" style={{ color: 'oklch(0.54 0.01 250)' }}>
               입력 조립 결과 — 실제 추천 계산은 포함되지 않습니다.
             </p>
           </div>
@@ -1419,14 +1420,14 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
           style={{ background: 'oklch(0.97 0.04 250)', border: '1px solid oklch(0.93 0.008 250)' }}
         >
           <Info size={13} style={{ color: '#040D1E', flexShrink: 0, marginTop: 1 }} />
-          <p className="text-xs" style={{ color: 'oklch(0.45 0.015 250)' }}>
+          <p className="text-xs" style={{ color: 'oklch(0.35 0.015 250)' }}>
             실제 대학명·추천 순위 같은 확정 결과는 다음 단계에서 계산되며, 지금은 추천 적합도 중심의 입력 조립 단계입니다.
           </p>
         </div>
 
         {/* ⑥ Phase 5.1 Draft Preview — University Analysis Draft Preview UI Wiring v1 */}
         <div className="mt-4 pt-4 border-t" style={{ borderColor: 'oklch(0.93 0.008 250)' }}>
-          <div className="text-xs font-semibold mb-2.5 flex items-center gap-1.5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+          <div className="text-xs font-semibold mb-2.5 flex items-center gap-1.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
             <FileText size={11} />
             Phase 5.1 Draft 검증 미리보기
           </div>
@@ -1434,9 +1435,9 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
           {/* ⑤ 학년 선택 — GradeLevel Input UI Wiring v1 */}
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-1.5">
-              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>학년 선택 (선택)</div>
+              <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>학년 선택 (선택)</div>
               {draftGradeLevel === null && derivedGradeLevel !== null && (
-                <span className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>
+                <span className="text-xs" style={{ color: 'oklch(0.49 0.01 250)' }}>
                   (예: 고{derivedGradeLevel} 자동파생)
                 </span>
               )}
@@ -1461,7 +1462,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
 
           {/* 계열 선택 */}
           <div className="mb-3">
-            <div className="text-xs mb-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>계열 선택 (선택)</div>
+            <div className="text-xs mb-1.5" style={{ color: 'oklch(0.42 0.015 250)' }}>계열 선택 (선택)</div>
             <div className="flex gap-1.5">
               {(['인문', '자연', '통합'] as Phase51Track[]).map((t) => (
                 <button
@@ -1482,15 +1483,15 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
 
           {/* Validation 결과 */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>Draft 검증 상태</span>
+            <span className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>Draft 검증 상태</span>
             <span
               className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
               style={
                 draftBundle.validation.status === 'ready'
                   ? { background: 'oklch(0.94 0.08 160)', color: 'oklch(0.35 0.12 160)' }
                   : draftBundle.validation.status === 'needs-data'
-                  ? { background: 'oklch(0.97 0.06 80)', color: 'oklch(0.45 0.12 80)' }
-                  : { background: 'oklch(0.96 0.005 250)', color: 'oklch(0.5 0.015 250)' }
+                  ? { background: 'oklch(0.97 0.06 80)', color: 'oklch(0.35 0.12 80)' }
+                  : { background: 'oklch(0.96 0.005 250)', color: 'oklch(0.4 0.015 250)' }
               }
             >
               {draftBundle.validation.status === 'ready'
@@ -1505,7 +1506,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
           {draftBundle.validation.messages.length > 0 && (
             <ul className="mb-2 space-y-0.5">
               {draftBundle.validation.messages.map((msg) => (
-                <li key={msg} className="flex items-start gap-1.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                <li key={msg} className="flex items-start gap-1.5 text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>
                   <span className="flex-shrink-0">·</span>
                   <span>{msg}</span>
                 </li>
@@ -1518,7 +1519,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                 <span
                   key={field}
                   className="px-2 py-0.5 rounded-full text-xs font-medium"
-                  style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.5 0.015 250)' }}
+                  style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.4 0.015 250)' }}
                 >
                   {field}
                 </span>
@@ -1532,7 +1533,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
               <Target size={11} />
               목표 대학 입력
             </div>
-            <p className="text-xs mb-2 leading-relaxed" style={{ color: 'oklch(0.6 0.01 250)' }}>
+            <p className="text-xs mb-2 leading-relaxed" style={{ color: 'oklch(0.47 0.01 250)' }}>
               추천 결과가 아닌, 직접 지정하는 분석 대상 대학/학과입니다.
             </p>
 
@@ -1624,14 +1625,14 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                     </span>
                     <span className="flex-1 min-w-0 truncate">
                       {u.univName}
-                      <span style={{ color: 'oklch(0.55 0.015 250)' }}> · </span>
+                      <span style={{ color: 'oklch(0.42 0.015 250)' }}> · </span>
                       {u.deptName}
                     </span>
                     <button
                       onClick={() => setDraftTargetUniversities((prev) => prev.filter((_, i) => i !== idx))}
                       className="flex-shrink-0 p-0.5 rounded transition-colors"
                       title="삭제"
-                      style={{ color: 'oklch(0.65 0.01 250)' }}
+                      style={{ color: 'oklch(0.49 0.01 250)' }}
                     >
                       <X size={10} />
                     </button>
@@ -1641,14 +1642,14 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
             ) : (
               <div
                 className="text-xs px-2.5 py-1.5 rounded-md mb-1.5"
-                style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.65 0.01 250)' }}
+                style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.49 0.01 250)' }}
               >
                 아직 입력된 목표 대학이 없습니다.
               </div>
             )}
 
             {draftTargetUniversities.length > 0 && (
-              <p className="text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>
+              <p className="text-xs" style={{ color: 'oklch(0.47 0.01 250)' }}>
                 payload preview의 <code style={{ fontFamily: 'monospace', fontSize: '10px' }}>targetUniversities</code>에 반영됩니다.
               </p>
             )}
@@ -1660,7 +1661,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
               <Zap size={11} />
               IF 개선 시나리오
             </div>
-            <p className="text-xs mb-2 leading-relaxed" style={{ color: 'oklch(0.6 0.01 250)' }}>
+            <p className="text-xs mb-2 leading-relaxed" style={{ color: 'oklch(0.47 0.01 250)' }}>
               확정 결과 계산이 아닌, 수학 점수 향상 시 추천 변화를 가정하는 입력값입니다.
             </p>
 
@@ -1674,7 +1675,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                 ] as const
               ).map(({ key, label, placeholder }) => (
                 <div key={key}>
-                  <div className="text-xs mb-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{label}</div>
+                  <div className="text-xs mb-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>{label}</div>
                   <input
                     type="number"
                     placeholder={placeholder}
@@ -1697,7 +1698,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
             {/* 입력값 반영 안내 + 초기화 */}
             {draftScenario ? (
               <div className="flex items-center justify-between">
-                <p className="text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>
+                <p className="text-xs" style={{ color: 'oklch(0.47 0.01 250)' }}>
                   payload preview의{' '}
                   <code style={{ fontFamily: 'monospace', fontSize: '10px' }}>improvementScenario</code>
                   에 반영됩니다.
@@ -1709,7 +1710,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                   className="text-xs px-2 py-0.5 rounded-md border transition-colors"
                   style={{
                     borderColor: 'oklch(0.88 0.008 250)',
-                    color: 'oklch(0.55 0.015 250)',
+                    color: 'oklch(0.42 0.015 250)',
                     background: 'white',
                   }}
                 >
@@ -1724,7 +1725,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
           </div>
 
           <details className="mb-2">
-            <summary className="cursor-pointer text-xs font-medium" style={{ color: 'oklch(0.45 0.015 250)' }}>
+            <summary className="cursor-pointer text-xs font-medium" style={{ color: 'oklch(0.35 0.015 250)' }}>
               AnalyzeRequest draft payload 보기
             </summary>
             <pre
@@ -1758,14 +1759,14 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
 
             {/* ready 아닐 때 안내 */}
             {draftBundle.validation.status !== 'ready' && (
-              <p className="text-xs mt-1.5" style={{ color: 'oklch(0.65 0.01 250)' }}>
+              <p className="text-xs mt-1.5" style={{ color: 'oklch(0.49 0.01 250)' }}>
                 Draft 검증 상태가 'ready'일 때 호출 가능합니다.
               </p>
             )}
 
             {/* pending */}
             {apiStatus === 'pending' && (
-              <p className="text-xs mt-2" style={{ color: 'oklch(0.55 0.015 250)' }}>
+              <p className="text-xs mt-2" style={{ color: 'oklch(0.42 0.015 250)' }}>
                 Phase 5.1 분석 응답 대기 중...
               </p>
             )}
@@ -1774,7 +1775,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
             {apiStatus === 'error' && apiError && (
               <div
                 className="mt-2 px-3 py-2 rounded-md text-xs"
-                style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.45 0.15 25)' }}
+                style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.35 0.15 25)' }}
               >
                 {apiError}
               </div>
@@ -1785,32 +1786,32 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
               <div className="mt-2 space-y-2">
                 {/* reportSummary */}
                 <div className="px-3 py-2 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
-                  <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>보고서 요약</div>
+                  <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.35 0.015 250)' }}>보고서 요약</div>
                   <p className="text-xs" style={{ color: 'oklch(0.35 0.015 250)' }}>{apiResponse.reportSummary}</p>
                 </div>
 
                 {/* counselingComment */}
                 <div className="px-3 py-2 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
-                  <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>상담 코멘트</div>
+                  <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.35 0.015 250)' }}>상담 코멘트</div>
                   <p className="text-xs" style={{ color: 'oklch(0.35 0.015 250)' }}>{apiResponse.counselingComment}</p>
                 </div>
 
                 {/* dataConfidence / targetGap 수 / subjectWeakness 수 */}
                 <div className="grid grid-cols-3 gap-2">
                   <div className="px-2 py-1.5 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
-                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>신뢰도</div>
+                    <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>신뢰도</div>
                     <div className="text-xs font-semibold mt-0.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
                       {Math.round(apiResponse.dataConfidence * 100)}%
                     </div>
                   </div>
                   <div className="px-2 py-1.5 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
-                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>목표 갭</div>
+                    <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>목표 갭</div>
                     <div className="text-xs font-semibold mt-0.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
                       {apiResponse.targetGap.length}건
                     </div>
                   </div>
                   <div className="px-2 py-1.5 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
-                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>취약 과목</div>
+                    <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>취약 과목</div>
                     <div className="text-xs font-semibold mt-0.5" style={{ color: 'oklch(0.35 0.015 250)' }}>
                       {apiResponse.subjectWeakness.length}개
                     </div>
@@ -1819,13 +1820,13 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
 
                 {/* recommendationBand.summary */}
                 <div className="px-3 py-2 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
-                  <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>추천 밴드 요약</div>
+                  <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.35 0.015 250)' }}>추천 밴드 요약</div>
                   <p className="text-xs" style={{ color: 'oklch(0.35 0.015 250)' }}>{apiResponse.recommendationBand.summary}</p>
                 </div>
 
                 {/* recommendationBand.items — 밴드별 추천 대학/학과 목록 (읽기 전용) */}
                 <div className="px-3 py-2 rounded-md" style={{ background: 'oklch(0.96 0.008 250)' }}>
-                  <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.45 0.015 250)' }}>추천 대학/학과</div>
+                  <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.35 0.015 250)' }}>추천 대학/학과</div>
                   {(apiResponse.recommendationBand.items ?? []).length > 0 ? (
                     (['reach', 'target', 'safety'] as const).map((band) => {
                       const bandLabel = { reach: '소신', target: '적정', safety: '안정' }[band];
@@ -1846,11 +1847,11 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                                 className="flex items-start gap-1.5 text-xs"
                                 style={{ color: 'oklch(0.35 0.015 250)' }}
                               >
-                                <span className="flex-shrink-0 mt-px" style={{ color: 'oklch(0.65 0.01 250)' }}>·</span>
+                                <span className="flex-shrink-0 mt-px" style={{ color: 'oklch(0.49 0.01 250)' }}>·</span>
                                 <span>
                                   {item.univName} — {item.deptName}
                                   {item.admissionType && (
-                                    <span style={{ color: 'oklch(0.55 0.015 250)' }}> ({item.admissionType})</span>
+                                    <span style={{ color: 'oklch(0.42 0.015 250)' }}> ({item.admissionType})</span>
                                   )}
                                 </span>
                               </li>
@@ -1860,7 +1861,7 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
                       );
                     })
                   ) : (
-                    <p className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>
+                    <p className="text-xs" style={{ color: 'oklch(0.49 0.01 250)' }}>
                       표시할 추천 목록이 없습니다.
                     </p>
                   )}
@@ -1877,9 +1878,9 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
 function ScoreSummary({ title, score, grade, sub }: { title: string; score: string; grade: string; sub?: string }) {
   return (
     <div className="grid grid-cols-3 gap-2 mb-3">
-      <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 시험</div><div className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'oklch(0.22 0.02 250)' }}>{title}</div>{sub && <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{sub}</div>}</div>
-      <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 점수</div><div className="text-lg font-bold mt-0.5 tabular-nums" style={{ color: 'oklch(0.1605 0.0394 259.41)' }}>{score}</div></div>
-      <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 등급</div><div className="text-lg font-bold mt-0.5" style={{ color: 'oklch(0.22 0.02 250)' }}>{grade}</div></div>
+      <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>최근 시험</div><div className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'oklch(0.22 0.02 250)' }}>{title}</div>{sub && <div className="text-xs mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>{sub}</div>}</div>
+      <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>최근 점수</div><div className="text-lg font-bold mt-0.5 tabular-nums" style={{ color: 'oklch(0.1605 0.0394 259.41)' }}>{score}</div></div>
+      <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>최근 등급</div><div className="text-lg font-bold mt-0.5" style={{ color: 'oklch(0.22 0.02 250)' }}>{grade}</div></div>
     </div>
   );
 }
@@ -1889,13 +1890,13 @@ function InternalScores({ scores }: { scores: InternalScore[] }) {
   return (
     <Area title="내신성적">
       {scores.length === 0 ? (
-        <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>입력된 내신성적이 없습니다.</p>
+        <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>입력된 내신성적이 없습니다.</p>
       ) : (
         <>
           {latest && <ScoreSummary title={`${latest.year} ${latest.semester} ${latest.examType}`} score={`${latest.rawScore}점`} grade={`${latest.grade}등급`} sub={latest.subject} />}
           <div className="axis-table-scroll" style={{ maxHeight: 420 }}>
             <table className="w-full text-sm" style={{ minWidth: 620 }}>
-              <thead><tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>{['학년도', '학기', '시험', '과목', '원점수', '등급', '비고'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}</tr></thead>
+              <thead><tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>{['학년도', '학기', '시험', '과목', '원점수', '등급', '비고'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}</tr></thead>
               <tbody>
                 {scores.map((s) => (
                   <tr key={s.id} style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
@@ -1905,7 +1906,7 @@ function InternalScores({ scores }: { scores: InternalScore[] }) {
                     <td className="px-2.5 py-2 whitespace-nowrap font-medium" style={{ color: 'oklch(0.25 0.02 250)' }}>{s.subject}</td>
                     <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.3 0.02 250)' }}>{s.rawScore}</td>
                     <td className="px-2.5 py-2"><GradeBadge grade={s.grade} /></td>
-                    <td className="px-2.5 py-2 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{s.note || '-'}</td>
+                    <td className="px-2.5 py-2 text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{s.note || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1926,7 +1927,7 @@ function MockScores({ title, scores }: { title: string; scores: MockExamScore[] 
   return (
     <Area title={title}>
       {scores.length === 0 ? (
-        <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>입력된 성적이 없습니다.</p>
+        <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>입력된 성적이 없습니다.</p>
       ) : (
         <>
           {latest && <ScoreSummary title={latest.examName} score={`${latest.totalScore ?? '-'}점`} grade={`평균 ${avgGrade(latest)}등급`} sub={latest.grade} />}
@@ -1935,15 +1936,15 @@ function MockScores({ title, scores }: { title: string; scores: MockExamScore[] 
               <div key={e.id} className="p-3 rounded-md" style={{ border: '1px solid oklch(0.93 0.008 250)' }}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-semibold" style={{ color: 'oklch(0.22 0.02 250)' }}>{e.examName}</div>
-                  <div className="text-xs tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>{formatDate(e.examDate)} · {e.grade}</div>
+                  <div className="text-xs tabular-nums" style={{ color: 'oklch(0.42 0.015 250)' }}>{formatDate(e.examDate)} · {e.grade}</div>
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   {([['국어', e.korean], ['수학', e.math], ['영어', e.english], [e.inquiry1?.subject ?? '탐구1', e.inquiry1], [e.inquiry2?.subject ?? '탐구2', e.inquiry2]] as const).map(([label, sub], i) =>
                     sub ? (
                       <div key={i} className="flex items-center gap-1.5 px-2 py-1 rounded" style={{ background: 'oklch(0.98 0.004 247)' }}>
-                        <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{label}</span>
+                        <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>{label}</span>
                         <GradeBadge grade={sub.grade} />
-                        <span className="text-xs tabular-nums" style={{ color: 'oklch(0.45 0.015 250)' }}>{sub.score}점 · {sub.percentile}%</span>
+                        <span className="text-xs tabular-nums" style={{ color: 'oklch(0.35 0.015 250)' }}>{sub.score}점 · {sub.percentile}%</span>
                       </div>
                     ) : null
                   )}
@@ -1968,7 +1969,7 @@ function AssessmentResultList({ title, results, note }: { title: string; results
           <div key={r.examId} className="flex items-center justify-between px-3 py-2 rounded-md" style={{ border: '1px solid oklch(0.93 0.008 250)' }}>
             <div>
               <div className="text-sm font-medium" style={{ color: 'oklch(0.22 0.02 250)' }}>{r.title}</div>
-              <div className="text-xs tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>{categoryLabel(r.categoryId)} · {formatDate(r.examDate)}</div>
+              <div className="text-xs tabular-nums" style={{ color: 'oklch(0.42 0.015 250)' }}>{categoryLabel(r.categoryId)} · {formatDate(r.examDate)}</div>
             </div>
             <div className="text-sm font-semibold tabular-nums" style={{ color: '#040D1E' }}>{r.earnedScore} / {r.totalPoints}점</div>
           </div>
@@ -1989,20 +1990,20 @@ function FinanceTab({ student }: { student: Student }) {
   return (
     <div>
       <ReadOnlyHint>수납 등록·환불 요청·정산 처리는 <b>재무관리 엔진</b>에서 진행합니다. 이 화면은 조회 전용입니다.</ReadOnlyHint>
-      <div className="flex items-center gap-2 px-3 py-2 rounded-md mb-3 text-xs" style={{ background: 'oklch(0.97 0.06 80)', color: 'oklch(0.45 0.12 80)', border: '1px solid oklch(0.88 0.1 80)' }}>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-md mb-3 text-xs" style={{ background: 'oklch(0.97 0.06 80)', color: 'oklch(0.35 0.12 80)', border: '1px solid oklch(0.88 0.1 80)' }}>
         <AlertTriangle size={13} /> 아래 금액은 <b>더미 데이터</b>입니다. 실제 청구·일할·정산·납부 이력은 <b>재무관리 엔진</b> 연동 후 등록일/퇴원일 기준으로 처리됩니다.
       </div>
 
       <Area title="이번 달 청구 요약" desc={`${f.month}`}>
         {f.status === '청구없음' ? (
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>이번 달 청구 내역이 없습니다.</p>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>이번 달 청구 내역이 없습니다.</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-            <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>청구 월</div><div className="text-sm font-semibold mt-1" style={{ color: 'oklch(0.25 0.02 250)' }}>{f.month}</div></div>
-            <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>총 청구액</div><div className="text-sm font-bold mt-1 tabular-nums" style={{ color: 'oklch(0.22 0.02 250)' }}>{formatWon(f.total)}</div></div>
-            <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>납부액</div><div className="text-sm font-bold mt-1 tabular-nums" style={{ color: 'oklch(0.4 0.12 160)' }}>{formatWon(f.paid)}</div></div>
-            <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>미납액</div><div className="text-sm font-bold mt-1 tabular-nums" style={{ color: f.unpaid > 0 ? 'oklch(0.5 0.2 27)' : 'oklch(0.5 0.015 250)' }}>{formatWon(f.unpaid)}</div></div>
-            <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>납부 상태</div><div className="text-sm font-bold mt-1" style={{ color: payStatusColor }}>{f.status}</div></div>
+            <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>청구 월</div><div className="text-sm font-semibold mt-1" style={{ color: 'oklch(0.25 0.02 250)' }}>{f.month}</div></div>
+            <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>총 청구액</div><div className="text-sm font-bold mt-1 tabular-nums" style={{ color: 'oklch(0.22 0.02 250)' }}>{formatWon(f.total)}</div></div>
+            <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>납부액</div><div className="text-sm font-bold mt-1 tabular-nums" style={{ color: 'oklch(0.4 0.12 160)' }}>{formatWon(f.paid)}</div></div>
+            <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>미납액</div><div className="text-sm font-bold mt-1 tabular-nums" style={{ color: f.unpaid > 0 ? 'oklch(0.5 0.2 27)' : 'oklch(0.5 0.015 250)' }}>{formatWon(f.unpaid)}</div></div>
+            <div className="rounded-lg p-3" style={{ background: 'oklch(0.98 0.004 247)' }}><div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>납부 상태</div><div className="text-sm font-bold mt-1" style={{ color: payStatusColor }}>{f.status}</div></div>
           </div>
         )}
       </Area>
@@ -2011,14 +2012,14 @@ function FinanceTab({ student }: { student: Student }) {
         <Area title="수강별 청구 내역" desc="수강료·반유형은 반관리(ClassContext) 실제 반 데이터. 일할 계산은 재무관리 엔진에서 등록일/퇴원일 기준으로 처리.">
           <div className="axis-table-scroll" style={{ maxHeight: 420 }}>
             <table className="w-full text-sm" style={{ minWidth: 680 }}>
-              <thead><tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>{['수강반', '반유형', '월 수강료', '일할', '청구액', '납부 상태'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}</tr></thead>
+              <thead><tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>{['수강반', '반유형', '월 수강료', '일할', '청구액', '납부 상태'].map((h) => <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>)}</tr></thead>
               <tbody>
                 {f.classBills.map((b, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
                     <td className="px-2.5 py-2 font-medium whitespace-nowrap" style={{ color: 'oklch(0.25 0.02 250)' }}>{b.className}</td>
-                    <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{b.classCategory}</td>
+                    <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>{b.classCategory}</td>
                     <td className="px-2.5 py-2 whitespace-nowrap tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{formatWon(b.monthlyFee)}</td>
-                    <td className="px-2.5 py-2 whitespace-nowrap text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>재무엔진</td>
+                    <td className="px-2.5 py-2 whitespace-nowrap text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>재무엔진</td>
                     <td className="px-2.5 py-2 whitespace-nowrap tabular-nums font-medium" style={{ color: 'oklch(0.22 0.02 250)' }}>{formatWon(b.amount)}</td>
                     <td className="px-2.5 py-2"><span className={cn('text-xs px-2 py-0.5 rounded-full', b.status === '미납' ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-700')}>{b.status}</span></td>
                   </tr>
@@ -2032,12 +2033,12 @@ function FinanceTab({ student }: { student: Student }) {
       <div className="grid lg:grid-cols-2 gap-3">
         <Area title="납부 이력">
           {f.payments.length === 0 ? (
-            <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>납부 이력이 없습니다.</p>
+            <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>납부 이력이 없습니다.</p>
           ) : f.payments.map((p, i) => (
             <div key={i} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
               <div>
                 <div className="text-sm tabular-nums" style={{ color: 'oklch(0.3 0.02 250)' }}>{formatWon(p.amount)}</div>
-                <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{p.date} · {p.method} · {p.handler}</div>
+                <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{p.date} · {p.method} · {p.handler}</div>
               </div>
               {p.receiptIssued && <span className="text-xs inline-flex items-center gap-1 text-emerald-600"><Receipt size={12} /> 영수증</span>}
             </div>
@@ -2054,7 +2055,7 @@ function FinanceTab({ student }: { student: Student }) {
 
       <Area title="영수증">
         {f.receipts.length === 0 ? (
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>발급된 영수증이 없습니다.</p>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>발급된 영수증이 없습니다.</p>
         ) : f.receipts.map((r) => (
           <div key={r.id} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid oklch(0.96 0.006 250)' }}>
             <div className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>{r.month} · <span className="tabular-nums">{formatWon(r.amount)}</span></div>
@@ -2111,10 +2112,10 @@ function CounselingReadOnlyTab({ studentId }: { studentId: string }) {
       <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
         <MessageSquare size={14} style={{ color: '#040D1E' }} />
         <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>상담 기록 ({records.length}건)</span>
-        <span className="text-xs ml-auto" style={{ color: 'oklch(0.6 0.015 250)' }}>조회 전용 — 작성은 선생님 화면에서</span>
+        <span className="text-xs ml-auto" style={{ color: 'oklch(0.47 0.015 250)' }}>조회 전용 — 작성은 선생님 화면에서</span>
       </div>
       {records.length === 0 ? (
-        <div className="p-10 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+        <div className="p-10 text-center text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>
           등록된 상담 기록이 없습니다.
         </div>
       ) : (
@@ -2124,7 +2125,7 @@ function CounselingReadOnlyTab({ studentId }: { studentId: string }) {
               <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
                 {['상담일', '유형', '대상', '내용', '작성자', '작성일'].map((h) => (
                   <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
-                    style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
+                    style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -2135,15 +2136,15 @@ function CounselingReadOnlyTab({ studentId }: { studentId: string }) {
                   <td className="px-4 py-2.5 whitespace-nowrap">
                     <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.93 0.02 262)', color: 'oklch(0.1605 0.0394 259.41)' }}>{rec.type}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{rec.target}</td>
+                  <td className="px-4 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{rec.target}</td>
                   <td className="px-4 py-2.5 text-xs" style={{ color: 'oklch(0.3 0.02 250)', maxWidth: 360 }}>{rec.content}</td>
-                  <td className="px-4 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                  <td className="px-4 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.42 0.015 250)' }}>
                     {rec.authorName}
-                    <span className="ml-1 text-[10px] px-1 py-0.5 rounded" style={{ background: 'oklch(0.95 0.005 250)', color: 'oklch(0.6 0.015 250)' }}>
+                    <span className="ml-1 text-[10px] px-1 py-0.5 rounded" style={{ background: 'oklch(0.95 0.005 250)', color: 'oklch(0.47 0.015 250)' }}>
                       {rec.activeMode === 'TEACHER_MODE' ? '강사모드' : '관리자모드'}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                  <td className="px-4 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.47 0.015 250)' }}>
                     {rec.createdAt.slice(0, 10)}
                   </td>
                 </tr>
@@ -2230,10 +2231,10 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
     return (
       <div className="axis-card p-12 text-center">
         <Trophy size={36} style={{ color: 'oklch(0.85 0.01 250)', display: 'block', margin: '0 auto 12px' }} />
-        <p className="text-sm font-medium mb-1" style={{ color: 'oklch(0.45 0.015 250)' }}>
+        <p className="text-sm font-medium mb-1" style={{ color: 'oklch(0.35 0.015 250)' }}>
           {studentName} 학생의 성장 프로필이 아직 없습니다.
         </p>
-        <p className="text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>
+        <p className="text-xs" style={{ color: 'oklch(0.49 0.015 250)' }}>
           첫 시험 응시 또는 관리자 수동 등록 후 생성됩니다.
         </p>
       </div>
@@ -2249,9 +2250,10 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
             <div className="text-xs font-bold tracking-widest mb-1" style={{ color: '#C8A15A' }}>AXIS 진열장</div>
             <div className="text-xl font-bold text-white mb-2">{profile.nickname}</div>
             <div className="flex items-center gap-2">
+              <AxisTierMedallion tier={tier} size={34} />
               <span className="inline-block px-3 py-1 rounded-full text-xs font-bold"
-                style={{ background: TIER_COLORS[tier] + '30', color: TIER_COLORS[tier], border: `1px solid ${TIER_COLORS[tier]}60` }}>
-                ⚡ {TIER_LABELS[tier]}
+                style={{ background: TIER_COLORS[tier] + '30', color: '#E4C979', border: `1px solid ${TIER_COLORS[tier]}60` }}>
+                {TIER_LABELS[tier]}
               </span>
               {/* 관리자 수동 지급 버튼 */}
               {canGrant && (
@@ -2289,16 +2291,16 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         </div>
       </div>
 
-      {/* SP / 전적 / 엠블럼 카드 */}
+      {/* 성장 활동 / 성장 비교 / 엠블럼 카드 */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: '누적 SP', value: profile.totalSP.toLocaleString(), icon: <Zap size={15} />, color: '#C8A15A' },
-          { label: '이번 시즌 SP', value: profile.seasonSP.toLocaleString(), icon: <Star size={15} />, color: '#3B82F6' },
+          { label: '누적 성장 활동', value: profile.totalSP.toLocaleString(), icon: <Zap size={15} />, color: '#C8A15A' },
+          { label: '이번 시즌 활동', value: profile.seasonSP.toLocaleString(), icon: <Star size={15} />, color: '#3B82F6' },
           { label: '보유 엠블럼', value: `${achievedEmblems.length}개`, icon: <Award size={15} />, color: '#040D1E' },
-          { label: '라이벌 전적', value: `${profile.rivalWins}승 ${profile.rivalLosses}패`, icon: <Swords size={15} />, color: '#EF4444' },
+          { label: '또래 성장 비교', value: `${profile.rivalWins + profile.rivalLosses}회 참여`, icon: <TrendingUp size={15} />, color: '#0B1B33' },
         ].map((c, i) => (
           <div key={i} className="axis-card p-3">
-            <div className="flex items-center gap-1.5 mb-1.5" style={{ color: c.color }}>{c.icon}<span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{c.label}</span></div>
+            <div className="flex items-center gap-1.5 mb-1.5" style={{ color: c.color }}>{c.icon}<span className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{c.label}</span></div>
             <div className="text-lg font-bold" style={{ color: c.color }}>{c.value}</div>
           </div>
         ))}
@@ -2308,15 +2310,15 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
       <div className="grid grid-cols-2 gap-3">
         <div className="axis-card p-4">
           <div className="flex items-center gap-1.5 mb-3">
-            <Swords size={14} style={{ color: '#EF4444' }} />
+            <TrendingUp size={14} style={{ color: '#0B1B33' }} />
             <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>현재 라이벌</span>
-            {relation && <span className="text-xs ml-auto" style={{ color: 'oklch(0.55 0.015 250)' }}>승률 {relation.winRate}%{relation.streak > 0 ? ` / ${relation.streak}연승` : relation.streak < 0 ? ` / ${Math.abs(relation.streak)}연패` : ''}</span>}
+            {relation && <span className="text-xs ml-auto" style={{ color: 'oklch(0.42 0.015 250)' }}>성장 비교 {relation.wins + relation.losses}회 참여</span>}
           </div>
           {rivalStudentName && currentRivalProfile ? (
             <div>
               <div className="text-base font-bold mb-1" style={{ color: 'oklch(0.18 0.02 250)' }}>{rivalStudentName}</div>
               <div className="text-xs font-semibold mb-1" style={{ color: TIER_COLORS[currentRivalProfile.tier as StudentTier] }}>{TIER_LABELS[currentRivalProfile.tier as StudentTier]}</div>
-              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>SP {currentRivalProfile.totalSP.toLocaleString()} · 엠블럼 {growth.getAchievedEmblems(currentRivalProfile.studentId).length}개</div>
+              <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>SP {currentRivalProfile.totalSP.toLocaleString()} · 엠블럼 {growth.getAchievedEmblems(currentRivalProfile.studentId).length}개</div>
               {/* [Phase 3D v3-r7] 라이벌 운영(승/패/종료)을 이 카드에서 바로 처리 —
                   별도 관리자 "라이벌관리" 메뉴로 이동하지 않아도 된다. */}
               {canManageRival && relation && (
@@ -2333,13 +2335,13 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
                   </button>
                   <button onClick={() => setConfirmEndRival(true)}
                     className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded text-xs cursor-pointer transition-all duration-150 hover:bg-slate-100 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
-                    style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.87 0.006 250)', outlineColor: 'oklch(0.6 0.015 250)' }}>
+                    style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.4 0.015 250)', border: '1px solid oklch(0.87 0.006 250)', outlineColor: 'oklch(0.6 0.015 250)' }}>
                     <StopCircle size={10} />종료
                   </button>
                 </div>
               )}
             </div>
-          ) : <p className="text-sm" style={{ color: 'oklch(0.65 0.015 250)' }}>라이벌 없음</p>}
+          ) : <p className="text-sm" style={{ color: 'oklch(0.49 0.015 250)' }}>라이벌 없음</p>}
         </div>
         <div className="axis-card p-4">
           <div className="flex items-center gap-1.5 mb-3">
@@ -2347,7 +2349,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
             <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>나를 지정한 학생</span>
           </div>
           <div className="text-2xl font-bold mb-1" style={{ color: '#4F46E5' }}>{challengersCount}명</div>
-          <p className="text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>※ 누구인지는 학생에게 공개되지 않습니다</p>
+          <p className="text-xs" style={{ color: 'oklch(0.49 0.015 250)' }}>※ 누구인지는 학생에게 공개되지 않습니다</p>
         </div>
       </div>
 
@@ -2358,7 +2360,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
           <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>SP 최근 이력</span>
         </div>
         {recentSPLogs.length === 0 ? (
-          <p className="text-sm text-center py-3" style={{ color: 'oklch(0.65 0.015 250)' }}>SP 이력 없음</p>
+          <p className="text-sm text-center py-3" style={{ color: 'oklch(0.49 0.015 250)' }}>SP 이력 없음</p>
         ) : (
           <table className="w-full text-xs border-collapse">
             <thead>
@@ -2371,7 +2373,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
             <tbody>
               {recentSPLogs.map(log => (
                 <tr key={log.id} style={{ borderBottom: '1px solid oklch(0.96 0.004 250)' }}>
-                  <td className="py-1.5" style={{ color: 'oklch(0.5 0.015 250)' }}>{log.createdAt}</td>
+                  <td className="py-1.5" style={{ color: 'oklch(0.4 0.015 250)' }}>{log.createdAt}</td>
                   <td className="py-1.5 font-bold" style={{ color: '#059669' }}>+{log.amount}</td>
                   <td className="py-1.5 max-w-40" style={{ color: 'oklch(0.4 0.015 250)' }}>
                     <span className="block truncate" title={log.reason}>{log.reason}</span>
@@ -2381,7 +2383,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
                       {SOURCE_TYPE_LABELS[log.sourceType]}
                     </span>
                   </td>
-                  <td className="py-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{log.createdBy}</td>
+                  <td className="py-1.5" style={{ color: 'oklch(0.42 0.015 250)' }}>{log.createdBy}</td>
                 </tr>
               ))}
             </tbody>
@@ -2396,10 +2398,10 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
             <Award size={14} style={{ color: '#C8A15A' }} />
             <span className="text-sm font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>최근 획득 엠블럼</span>
           </div>
-          <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>전체 {achievedEmblems.length}개</span>
+          <span className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>전체 {achievedEmblems.length}개</span>
         </div>
         {recentEmblems.length === 0 ? (
-          <p className="text-sm text-center py-4" style={{ color: 'oklch(0.65 0.015 250)' }}>획득한 엠블럼이 없습니다.</p>
+          <p className="text-sm text-center py-4" style={{ color: 'oklch(0.49 0.015 250)' }}>획득한 엠블럼이 없습니다.</p>
         ) : (
           <div className="flex flex-col gap-2">
             {recentEmblems.map(se => {
@@ -2414,9 +2416,9 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate" style={{ color: 'oklch(0.18 0.02 250)' }}>{emb.name}</div>
-                    <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{CATEGORY_LABELS[emb.category]} · {MATERIAL_LABELS[emb.material]}</div>
+                    <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{CATEGORY_LABELS[emb.category]} · {MATERIAL_LABELS[emb.material]}</div>
                   </div>
-                  <div className="text-xs flex-shrink-0" style={{ color: 'oklch(0.6 0.015 250)' }}>{se.acquiredAt}</div>
+                  <div className="text-xs flex-shrink-0" style={{ color: 'oklch(0.47 0.015 250)' }}>{se.acquiredAt}</div>
                 </div>
               );
             })}
@@ -2446,7 +2448,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>{emb.name}</span>
-                      <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{se.progressCount}/{emb.requiredCount}</span>
+                      <span className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{se.progressCount}/{emb.requiredCount}</span>
                     </div>
                     <div className="w-full rounded-full h-1.5" style={{ background: 'oklch(0.9 0.01 80)' }}>
                       <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: '#F59E0B' }} />
@@ -2473,7 +2475,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
           <div className="bg-white rounded-xl shadow-2xl w-80 p-6">
             <h3 className="font-bold text-base mb-1" style={{ color: 'oklch(0.15 0.02 250)' }}>SP 수동 지급</h3>
-            <p className="text-xs mb-4" style={{ color: 'oklch(0.55 0.015 250)' }}>대상: <strong>{studentName}</strong></p>
+            <p className="text-xs mb-4" style={{ color: 'oklch(0.42 0.015 250)' }}>대상: <strong>{studentName}</strong></p>
             <div className="flex flex-col gap-3">
               <div>
                 <label className="block text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>SP 금액 *</label>
@@ -2488,7 +2490,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
             </div>
             <p className="text-xs mt-2" style={{ color: '#EF4444' }}>※ SP 지급 이력은 삭제되지 않습니다.</p>
             <div className="flex gap-2 justify-end mt-4">
-              <button onClick={() => setSpModal(false)} className="px-4 py-1.5 text-sm rounded-md border" style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.5 0.015 250)' }}>취소</button>
+              <button onClick={() => setSpModal(false)} className="px-4 py-1.5 text-sm rounded-md border" style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.4 0.015 250)' }}>취소</button>
               <button onClick={handleSpSubmit} className="px-4 py-1.5 text-sm rounded-md font-semibold" style={{ background: '#059669', color: '#fff' }}>지급</button>
             </div>
           </div>
@@ -2500,7 +2502,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
           <div className="bg-white rounded-xl shadow-2xl w-96 p-6">
             <h3 className="font-bold text-base mb-1" style={{ color: 'oklch(0.15 0.02 250)' }}>엠블럼 수동 지급</h3>
-            <p className="text-xs mb-4" style={{ color: 'oklch(0.55 0.015 250)' }}>대상: <strong>{studentName}</strong></p>
+            <p className="text-xs mb-4" style={{ color: 'oklch(0.42 0.015 250)' }}>대상: <strong>{studentName}</strong></p>
             <select value={emblemId} onChange={e => setEmblemId(e.target.value)}
               className="w-full border rounded-md px-3 py-2 text-sm mb-3" style={{ borderColor: 'oklch(0.87 0.006 250)' }}>
               <option value="">— 엠블럼 선택 —</option>
@@ -2509,7 +2511,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               ))}
             </select>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setEmbModal(false)} className="px-4 py-1.5 text-sm rounded-md border" style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.5 0.015 250)' }}>취소</button>
+              <button onClick={() => setEmbModal(false)} className="px-4 py-1.5 text-sm rounded-md border" style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.4 0.015 250)' }}>취소</button>
               <button onClick={handleEmblemSubmit} className="px-4 py-1.5 text-sm rounded-md font-semibold" style={{ background: '#040D1E', color: '#C8A15A' }}>지급</button>
             </div>
           </div>
@@ -2521,13 +2523,13 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
           <div className="bg-white rounded-xl shadow-2xl p-6 w-80">
             <h3 className="font-bold text-base mb-2" style={{ color: 'oklch(0.15 0.02 250)' }}>라이벌 관계 종료</h3>
-            <p className="text-sm mb-5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+            <p className="text-sm mb-5" style={{ color: 'oklch(0.35 0.015 250)' }}>
               {studentName} 학생의 라이벌 관계를 종료합니다. 기록은 유지되며 삭제되지 않습니다.
             </p>
             <div className="flex gap-2 justify-end">
               <button onClick={() => setConfirmEndRival(false)}
                 className="px-4 py-1.5 text-sm rounded-md border transition-colors hover:bg-slate-50 active:scale-95"
-                style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.5 0.015 250)' }}>취소</button>
+                style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.4 0.015 250)' }}>취소</button>
               <button onClick={handleRivalEnd}
                 className="px-4 py-1.5 text-sm rounded-md font-semibold transition-colors hover:brightness-90 active:scale-95"
                 style={{ background: '#EF4444', color: '#fff' }}>종료 확인</button>

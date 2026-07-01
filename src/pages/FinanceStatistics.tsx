@@ -16,6 +16,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { useClasses } from '@/contexts/ClassContext';
 import { canManageFinance, getClassEnrollmentType, calculateMonthlyFinanceStats } from '@/lib/financeData';
+// [Phase 3D v3-r10] 막대그래프 색상 정리 — 딥 네이비 단색 대신 muted blue/gold 사용
+import { CHART_BLUE, CHART_GOLD } from '@/lib/brandColors';
 
 function won(n: number) { return `${n.toLocaleString()}원`; }
 
@@ -26,7 +28,7 @@ export default function FinanceStatistics() {
     return (
       <AdminLayout breadcrumbs={[{ label: '재무관리' }, { label: '통계' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>재무관리 접근 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>재무관리 접근 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -76,7 +78,7 @@ function FinanceStatisticsContent() {
     <AdminLayout breadcrumbs={[{ label: '재무관리' }, { label: '통계' }]}>
       <div className="mb-5">
         <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>통계</h1>
-        <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+        <p className="text-sm mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
           월별·반별·수강 유형별 매출을 간단히 요약합니다. 모든 금액은 실제 청구/수납/환불 데이터에서 계산됩니다.
         </p>
       </div>
@@ -85,14 +87,14 @@ function FinanceStatisticsContent() {
       <div className="axis-card p-5 mb-4">
         <h2 className="text-sm font-semibold mb-3" style={{ color: 'oklch(0.3 0.015 250)' }}>월별 청구 · 수납 · 미납 · 환불</h2>
         {monthlyStats.length === 0 ? (
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>표시할 데이터가 없습니다.</p>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>표시할 데이터가 없습니다.</p>
         ) : (
           <div className="axis-table-scroll" style={{ maxHeight: 480 }}>
           <table className="w-full text-sm" style={{ minWidth: 600 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
                 {['청구월', '청구액', '수납액', '미납액', '환불액', '청구 비교'].map(h => (
-                  <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>
+                  <th key={h} className="text-left font-semibold px-2.5 py-2 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)', fontSize: 12, background: 'white', boxShadow: 'inset 0 -1px 0 oklch(0.93 0.008 250)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -102,11 +104,11 @@ function FinanceStatisticsContent() {
                   <td className="px-2.5 py-2 text-xs tabular-nums font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{m.month}</td>
                   <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(m.totalBilled)}</td>
                   <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(m.totalPaid)}</td>
-                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(m.totalUnpaid)}</td>
-                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(m.totalRefunded)}</td>
+                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.18 27)' }}>{won(m.totalUnpaid)}</td>
+                  <td className="px-2.5 py-2 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.35 0.13 60)' }}>{won(m.totalRefunded)}</td>
                   <td className="px-2.5 py-2" style={{ minWidth: 140 }}>
                     <div className="h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${(m.totalBilled / maxBilled) * 100}%`, background: '#040D1E' }} />
+                      <div className="h-full rounded-full" style={{ width: `${(m.totalBilled / maxBilled) * 100}%`, background: CHART_BLUE }} />
                     </div>
                   </td>
                 </tr>
@@ -122,14 +124,14 @@ function FinanceStatisticsContent() {
         <div className="axis-card p-5">
           <h2 className="text-sm font-semibold mb-3" style={{ color: 'oklch(0.3 0.015 250)' }}>반별 매출 (수납 기준)</h2>
           {classStats.length === 0 ? (
-            <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>표시할 데이터가 없습니다.</p>
+            <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>표시할 데이터가 없습니다.</p>
           ) : (
             <div className="space-y-2">
               {classStats.map(c => (
                 <div key={c.classId} className="flex items-center gap-2 text-xs">
                   <span className="w-28 flex-shrink-0 truncate" style={{ color: 'oklch(0.4 0.015 250)' }}>{c.name}</span>
                   <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                    <div className="h-full rounded-full" style={{ width: `${(c.revenue / maxClassRevenue) * 100}%`, background: '#040D1E' }} />
+                    <div className="h-full rounded-full" style={{ width: `${(c.revenue / maxClassRevenue) * 100}%`, background: CHART_BLUE }} />
                   </div>
                   <span className="w-20 text-right tabular-nums flex-shrink-0" style={{ color: 'oklch(0.3 0.015 250)' }}>{won(c.revenue)}</span>
                 </div>
@@ -149,12 +151,12 @@ function FinanceStatisticsContent() {
                   <span className="tabular-nums font-semibold" style={{ color: 'oklch(0.3 0.015 250)' }}>{won(typeStats[type])}</span>
                 </div>
                 <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                  <div className="h-full rounded-full" style={{ width: `${(typeStats[type] / typeTotal) * 100}%`, background: type === '정규반' ? '#040D1E' : 'oklch(0.6 0.15 60)' }} />
+                  <div className="h-full rounded-full" style={{ width: `${(typeStats[type] / typeTotal) * 100}%`, background: type === '정규반' ? CHART_BLUE : CHART_GOLD }} />
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-xs mt-3" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          <p className="text-xs mt-3" style={{ color: 'oklch(0.47 0.015 250)' }}>
             반유형(정규반/특강반) 구분은 Class 데이터 구조를 변경하지 않고 Finance 도메인 안에서만 분류합니다.
           </p>
         </div>

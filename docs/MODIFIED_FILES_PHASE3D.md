@@ -1,5 +1,162 @@
 # MODIFIED_FILES_PHASE3D.md
 
+## v3-r10-r3 변경분 (buildfix)
+
+**베이스라인**: v3-r9-r4 + r1 + r2. 수정 파일 1개. 불변 파일 3종 미접촉.
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/teacher/TeacherStudentDetail.tsx` | `fullIfRecords` 변수 분리(`loadIfRecords` 원본 타입 유지), `getIfCumulativeSummary(fullIfRecords)` 호출로 변경. IfRecordLite[]→StudentIfRecord[] 타입 오류 해소. 기능/UI 변경 없음. |
+
+### 불변 파일 재확인
+```
+1eddaef5cf427e00666be685ea16f32f  universityAnalysisAdapter.ts  (무변경)
+387bbf48a3d87ff63ce10d6dbc8bf33c  App.tsx                       (무변경)
+126d9e5e314de186bf1df0a63b3abf82  classData.ts                  (무변경)
+```
+
+---
+
+## v3-r10-r2 변경분 (Rival CTA · PC 대시보드 · 결과 추이 패널 · 성장 언어)
+
+**베이스라인**: v3-r9-r4 + r1. 신규 파일 0개, 수정 파일 7개. 불변 파일 3종 미접촉.
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/components/growth/RivalMatchupCard.tsx` | "상세 매치업 보기" CTA를 `onDetail` 조건부 → 항상 렌더로 변경. |
+| `src/pages/student/StudentRival.tsx` | `useRef` + `detailRef` 추가, CTA `onDetail`로 하단 상세 섹션 smooth scroll. 하단 섹션 제목 정리. |
+| `src/pages/student/StudentGrades.tsx` | `ResultTrendPanel`+`SeriesTrend` 신규(파일 내). 우측 좁은 추이 카드 2개 구조 → 전체 폭 넓은 분석 패널로 교체. 데이터 1회 시 기준점/요약/안내 3블록. 구 `ExamLineTrendChart`는 미사용으로 잔존. |
+| `src/pages/parent/ParentGrowthReport.tsx` | `max-w-3xl` → `lg:max-w-6xl`. 히어로 2컬럼 밴드, 테스트 탭·리포트 탭 본문 2컬럼 대시보드화. |
+| `src/pages/student/StudentGrowthShowcase.tsx` | 비대칭 2/3+1/3 → Hero 전체 폭 + 균형 2컬럼 본문(좌 갤러리+주간습관 / 우 IF요약+최근기록+Rival). |
+| `src/pages/teacher/TeacherStudentDetail.tsx` | 성장 요약 라벨 "티어/누적SP/Rival전적(승·패)" → "성장 단계/누적 성장 활동/또래 성장 비교(N회 참여)". |
+| `src/pages/StudentDetail.tsx` (관리자) | 성장 카드/라이벌 카드 승·패·승률·연승 표기 → 성장 참여 언어, 빨강 Swords → 네이비 TrendingUp. |
+
+### 불변 파일 재확인
+```
+1eddaef5cf427e00666be685ea16f32f  src/lib/universityAnalysisAdapter.ts  (변경 없음)
+387bbf48a3d87ff63ce10d6dbc8bf33c  src/App.tsx                           (변경 없음)
+126d9e5e314de186bf1df0a63b3abf82  src/lib/classData.ts                  (변경 없음)
+```
+
+---
+
+## v3-r10-r1 변경분 (성장 동기부여 철학·UI 재구축)
+
+**베이스라인**: v3-r9-r4. 신규 파일 4개 + 수정 파일 11개 = 총 15개 파일.
+불변 파일 3종(`universityAnalysisAdapter.ts` / `App.tsx` / `classData.ts`)은 이번에도 미접촉.
+
+### 신규 파일 (4)
+
+| 파일 | 줄수 | 내용 |
+|---|---|---|
+| `src/lib/rivalMatchupEngine.ts` | 146 | 규칙 기반(AI 없음) 나 vs Rival 비교 데이터 + Rival 추천 점수. `buildRivalMatchup()`, `scoreRivalCandidate()`. |
+| `src/components/brand/AxisEmblemBadge.tsx` | 208 | 프리미엄 SVG 업적 배지(네이비+골드 원형 메달, 월계관/젬/의미아이콘/레벨 프레임). 12종 아이콘. 이모지 금지. |
+| `src/components/brand/AxisTierMedallion.tsx` | 116 | AXIS 성장 단계 방패 메달 SVG. Mastery/Axis Master만 프리미엄 프레임. |
+| `src/components/growth/RivalMatchupCard.tsx` | 178 | 승인된 "나 vs Rival" 매치업 카드(01 이미지 구현). |
+
+### 수정 파일 (11)
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/lib/growthData.ts` | `StudentTier` 6단계 AXIS 성장 단계로 교체. `TIER_LABELS(_EN)`/`TIER_TAGLINE`/`TIER_COLORS`(이미지 hex)/`TIER_ORDER`/`TIER_IS_PREMIUM_FRAME`/`SP_TIER_THRESHOLDS` 재정의, `calcTierProgress()` 신설. `Emblem`에 family/level/iconKey/linkedIfAxis/teacherSummary/parentSafeLabel 추가. `EmblemFamily`/`EmblemLevel`/`EmblemIconKey`/`IfAxisKey` 타입, `EMBLEM_FAMILY_LABELS`/`EMBLEM_LEVEL_STYLE` 신설. 10개 카탈로그 엠블럼 + 관련 학생 엠블럼 목데이터 추가. MOCK_GROWTH_PROFILES tier를 AXIS 단계로 갱신. |
+| `src/contexts/GrowthContext.tsx` | `onIfAnalysisResult`/`recordIfReflectionMock`을 신규 IF 카탈로그 엠블럼(calc/concept/time/reflection)으로도 진행되도록 연결. |
+| `src/pages/student/StudentRival.tsx` | **전면 재작성**(261줄). 원형 카드 폐기 → 매치업 카드 + 유사수준 비교 + 나를 선택한 수(익명) + Rival 성장 기록(익명) + 성장 제안. |
+| `src/pages/student/StudentGrowthShowcase.tsx` | **전면 재작성**(331줄). PC-first 3존 갤러리(Hero+엠블럼 갤러리+IF 요약+성장 기록+주간 습관). |
+| `src/pages/student/StudentHome.tsx` | Rival 카드 전적→성장 매치업 문구, Swords→TrendingUp, "⚡ SP"→"누적 성장". |
+| `src/pages/student/StudentMyPage.tsx` | 이모지 엠블럼→`AxisEmblemBadge`, 티어 아바타→`AxisTierMedallion`, "누적 SP/현재 티어"→"누적 성장 활동/현재 성장 단계", Swords→TrendingUp. |
+| `src/layouts/StudentLayout.tsx` | Rival 네비 아이콘 Swords→TrendingUp. |
+| `src/pages/teacher/TeacherStudentGrowth.tsx` | 최근 엠블럼 칩 이모지→`AxisEmblemBadge`. |
+| `src/pages/teacher/TeacherStudentDetail.tsx` | 성장 요약 엠블럼 칩 이모지→`AxisEmblemBadge`. |
+| `src/pages/StudentDetail.tsx` (관리자) | 진열장 헤더 "⚡ 티어"→`AxisTierMedallion` + 단계 라벨. |
+| `src/pages/growth/EmblemManagement.tsx` (관리자) | 엠블럼 목록에 배지 미리보기 + 패밀리/레벨 태그 추가. |
+
+### 불변 파일 재확인
+
+```
+1eddaef5cf427e00666be685ea16f32f  src/lib/universityAnalysisAdapter.ts  (변경 없음)
+387bbf48a3d87ff63ce10d6dbc8bf33c  src/App.tsx                           (변경 없음)
+126d9e5e314de186bf1df0a63b3abf82  src/lib/classData.ts                  (변경 없음)
+```
+
+---
+
+## v3-r10 변경분 (성장 동기부여 흐름 + 차트 색상 + 관리자 화면 대비)
+
+**베이스라인**: v3-r9-r4. 수정 파일 43개(신규 파일 없음, 전부 기존 파일 수정).
+불변 파일 3종은 이번에도 미접촉.
+
+### 신규 함수/상수 (기존 파일에 추가, 파일 자체는 이미 존재)
+
+| 파일 | 추가 내용 |
+|---|---|
+| `src/lib/brandColors.ts` | `CHART_BLUE`/`CHART_TEAL`/`CHART_GOLD`/`CHART_AMBER`/`CHART_AXIS_LINE`/`IF_REASON_COLOR` 상수 신설(막대그래프 팔레트). |
+| `src/lib/ifAnalysisEngine.ts` | `buildCumulativeImprovementNote(summary)` 신설 — 누적 IF 결과 → "최근 개선 포인트" 한 줄. |
+| `src/lib/studentBriefingEngine.ts` | `buildTeacherGrowthConsultingNote(input)` + `TeacherGrowthConsultingInput` 인터페이스 신설 — 교사 전용 성장 상담 요약 문장(AI 호출 없음). |
+
+### 기능/데이터 흐름 변경
+
+| 파일 | 수정 내용 |
+|---|---|
+| `src/pages/student/StudentGrades.tsx` | IF 사유별 막대·강조 숫자 색상을 `IF_REASON_COLOR`/`CHART_AMBER`로 교체(계산실수 red, 개념부족 navy 제거). |
+| `src/pages/student/StudentGrowthShowcase.tsx` | SP/테스트 미니 막대 navy→gold/blue. "IF 채점 활용" 정적 카드를 "최근 개선 포인트" 실데이터 카드로 교체(`buildCumulativeImprovementNote` 연동). |
+| `src/pages/student/StudentRival.tsx` | `Swords`/`Flame` 아이콘 → `Trophy`/`TrendingUp`, "내 Rival 전적"→"나의 학습 성장 비교", 연승/연패 문구 완화. |
+| `src/pages/teacher/TeacherStudentDetail.tsx` | `useGrowth()` 훅 추가, "성장 상담 요약" 섹션 신설(티어/SP/Rival/최근 엠블럼 + `buildTeacherGrowthConsultingNote` 코멘트). 학부모 화면에는 미연결. |
+| `src/pages/AssessmentDetail.tsx` | 점수 분포/반별 평균/문항 정답률 막대 navy→blue/teal/amber(조건부). |
+| `src/pages/FinanceStatistics.tsx` | 월별 청구/반별 매출/수강유형별 매출 막대 navy→blue/gold. |
+
+### 관리자 화면 대비(contrast) 개선 — `color:` 텍스트 명도 보정만, 로직 변경 없음
+
+`src/components/AdminLayout.tsx`(상단 헤더 영역만 — 좌측 다크 사이드바 레일 미포함)
+및 아래 34개 파일: `color:` 속성의 회색 `oklch(...)` 값 중 L 0.44~0.72 구간을 구간별로
+0.10~0.16 낮췄다(예: 0.65→0.49, 0.6→0.47, 0.55→0.42, 0.5→0.40). `background`/`border`,
+상태 배지(빨강/초록/주황 등 저채도 아닌 색), `color: 'white'` 리터럴은 대상에서
+자동 제외. **총 717건.**
+
+```
+src/pages/StudentList.tsx                          22건
+src/pages/StudentDetail.tsx                        198건
+src/pages/StudentNew.tsx                            16건
+src/pages/ClassList.tsx                             18건
+src/pages/ClassDetail.tsx                           34건
+src/pages/EmployeeList.tsx                          14건
+src/pages/EmployeeDetail.tsx                        12건
+src/pages/AssessmentList.tsx                        17건
+src/pages/AssessmentDetail.tsx                      38건 (+막대색상 별도 3건)
+src/pages/AttendanceCheck.tsx                       16건
+src/pages/AttendanceStatus.tsx                      18건
+src/pages/FinancePayments.tsx                       22건
+src/pages/FinanceRefunds.tsx                        21건
+src/pages/FinanceSettlements.tsx                    18건
+src/pages/FinanceStatistics.tsx                      8건 (+막대색상 별도 3건)
+src/pages/FinanceUnpaid.tsx                         20건
+src/pages/NotificationHistory.tsx                   40건
+src/pages/NotificationTemplates.tsx                 23건
+src/pages/NotificationSettings.tsx                   9건
+src/pages/ScoreExportPage.tsx                        2건
+src/pages/admin/UniversityReportManagement.tsx       8건
+src/pages/growth/GrowthOverview.tsx                  7건
+src/pages/growth/EmblemManagement.tsx                6건
+src/pages/growth/RivalManagement.tsx                10건
+src/pages/growth/RivalSeasonManagement.tsx          17건
+src/pages/growth/ShowcasePolicyManagement.tsx        6건
+src/pages/settings/AcademyInfoManagement.tsx         3건
+src/pages/settings/PasswordResetManagement.tsx      14건
+src/pages/settings/PermissionSettings.tsx           22건
+src/components/ObservationPanel.tsx                  7건
+src/components/ScoreExportPanel.tsx                 14건
+src/components/AssessmentFormModal.tsx               9건
+src/components/ClassFormModal.tsx                   22건
+src/components/EmployeeFormModal.tsx                 4건
+src/components/EnrollmentFormModal.tsx               2건
+src/components/StatusBadge.tsx                       0건 (대상 패턴 없음, 파일 자체 미수정)
+```
+
+`src/components/AdminLayout.tsx` 상단 헤더: 햄버거 아이콘/브레드크럼 비활성/알림
+아이콘/날짜 텍스트 명도 하향 + 브레드크럼 비활성 항목 font-weight 400→500(수동 편집,
+자동 스크립트 미적용 — 사이드바 다크 영역과 섞여 있어 자동화 시 오적용 위험 때문).
+
+---
+
 ## v3-r9-r4 변경분 (로그인 히어로 이미지 중앙정렬 개선판 교체 + 사이드바 네이비 최신화)
 
 **베이스라인**: v3-r9-r3(승인 대기 없이 이어서 진행 — 사용자가 채팅으로 직접

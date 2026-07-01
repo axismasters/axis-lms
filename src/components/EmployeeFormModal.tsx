@@ -74,7 +74,7 @@ export default function EmployeeFormModal({ onClose, onSaved }: Props) {
           <h3 className="text-sm font-semibold flex items-center gap-1.5" style={{ color: 'oklch(0.2 0.02 250)' }}>
             <UserPlus size={15} /> 직원 등록
           </h3>
-          <button onClick={onClose}><X size={16} style={{ color: 'oklch(0.5 0.015 250)' }} /></button>
+          <button onClick={onClose}><X size={16} style={{ color: 'oklch(0.4 0.015 250)' }} /></button>
         </div>
 
         {/* 안내 */}
@@ -93,7 +93,7 @@ export default function EmployeeFormModal({ onClose, onSaved }: Props) {
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>휴대폰번호 * <span className="font-normal" style={{ color: 'oklch(0.55 0.015 250)' }}>(계정 ID)</span></span>
+            <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>휴대폰번호 * <span className="font-normal" style={{ color: 'oklch(0.42 0.015 250)' }}>(계정 ID)</span></span>
             <input className={inputCls} style={inputStyle} placeholder="010-0000-0000" value={form.phone} onChange={(e) => set('phone', e.target.value)} />
           </label>
 
@@ -105,7 +105,7 @@ export default function EmployeeFormModal({ onClose, onSaved }: Props) {
                 <option key={p} value={p}>{POSITION_LABEL[p]}</option>
               ))}
             </select>
-            <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+            <span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>
               권한은 직급 기본값으로 설정됩니다. 시스템설정 &gt; 권한설정에서 조정할 수 있습니다.
             </span>
           </label>
@@ -123,7 +123,7 @@ export default function EmployeeFormModal({ onClose, onSaved }: Props) {
           </label>
 
           {error && (
-            <p className="text-xs px-2 py-1.5 rounded" style={{ background: 'oklch(0.96 0.06 25)', color: 'oklch(0.45 0.2 25)' }}>{error}</p>
+            <p className="text-xs px-2 py-1.5 rounded" style={{ background: 'oklch(0.96 0.06 25)', color: 'oklch(0.35 0.2 25)' }}>{error}</p>
           )}
         </div>
 

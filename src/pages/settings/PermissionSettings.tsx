@@ -188,11 +188,11 @@ function CopyModal({
           <p className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>
             <b>{POSITION_LABEL[sourcePosition]}</b> 직급의 현재 권한 설정을 다른 직급에 복사합니다.
           </p>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-md text-xs" style={{ background: 'oklch(0.97 0.05 80)', color: 'oklch(0.45 0.1 80)' }}>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md text-xs" style={{ background: 'oklch(0.97 0.05 80)', color: 'oklch(0.35 0.1 80)' }}>
             <AlertTriangle size={12} /> 대상 직급의 기존 권한이 복사한 권한으로 대체됩니다.
           </div>
           <label className="flex flex-col gap-1">
-            <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>복사 대상 직급</span>
+            <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>복사 대상 직급</span>
             <select className="text-sm px-2.5 py-2 rounded-md bg-white" style={{ border: '1px solid oklch(0.9 0.008 250)', color: 'oklch(0.3 0.02 250)' }}
               value={target} onChange={(e) => setTarget(e.target.value as Position)}>
               <option value="">직급 선택</option>
@@ -234,7 +234,7 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
         </div>
         <div className="overflow-y-auto flex-1 p-4">
           {sorted.length === 0 ? (
-            <p className="text-sm text-center py-8" style={{ color: 'oklch(0.55 0.015 250)' }}>변경 이력이 없습니다.</p>
+            <p className="text-sm text-center py-8" style={{ color: 'oklch(0.42 0.015 250)' }}>변경 이력이 없습니다.</p>
           ) : (
             <div className="space-y-2">
               {sorted.map((log) => (
@@ -242,9 +242,9 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold" style={{ color: 'oklch(0.35 0.02 250)' }}>
                       {POSITION_LABEL[log.targetPosition]}
-                      {log.sourcePosition && <span className="ml-1 font-normal" style={{ color: 'oklch(0.55 0.015 250)' }}>← {POSITION_LABEL[log.sourcePosition]} 복사</span>}
+                      {log.sourcePosition && <span className="ml-1 font-normal" style={{ color: 'oklch(0.42 0.015 250)' }}>← {POSITION_LABEL[log.sourcePosition]} 복사</span>}
                     </span>
-                    <span className="text-xs tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                    <span className="text-xs tabular-nums" style={{ color: 'oklch(0.42 0.015 250)' }}>
                       {new Date(log.changedAt).toLocaleString('ko-KR')} · {log.changedBy}
                     </span>
                   </div>
@@ -262,15 +262,15 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
                     <div className="flex flex-wrap gap-1 mt-1">
                       {log.removedKeys.map((k) => (
                         <span key={k} className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded font-mono"
-                          style={{ background: 'oklch(0.96 0.06 25)', color: 'oklch(0.45 0.2 25)' }}>
+                          style={{ background: 'oklch(0.96 0.06 25)', color: 'oklch(0.35 0.2 25)' }}>
                           - {k}
                         </span>
                       ))}
                     </div>
                   )}
-                  {log.note && <p className="text-xs mt-1" style={{ color: 'oklch(0.5 0.015 250)' }}>{log.note}</p>}
+                  {log.note && <p className="text-xs mt-1" style={{ color: 'oklch(0.4 0.015 250)' }}>{log.note}</p>}
                   {log.addedKeys.length === 0 && log.removedKeys.length === 0 && (
-                    <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>변경 없음 (검토 기록)</p>
+                    <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>변경 없음 (검토 기록)</p>
                   )}
                 </div>
               ))}
@@ -278,7 +278,7 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
           )}
         </div>
         <div className="px-4 py-3 flex-shrink-0" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
-          <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
             <Info size={11} /> 권한 변경 이력은 삭제되지 않습니다 (append-only).
           </p>
         </div>
@@ -414,7 +414,7 @@ export default function PermissionSettings() {
     return (
       <AdminLayout title="권한설정" breadcrumbs={[{ label: '시스템설정', path: '/settings' }, { label: '권한설정' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>권한설정 조회 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>권한설정 조회 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -430,26 +430,26 @@ export default function PermissionSettings() {
           <h1 className="text-lg font-bold flex items-center gap-2" style={{ color: 'oklch(0.2 0.02 250)' }}>
             <ShieldCheck size={18} /> 직급별 권한설정
           </h1>
-          <p className="text-xs mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>
+          <p className="text-xs mt-0.5" style={{ color: 'oklch(0.4 0.015 250)' }}>
             직급(권한그룹)별 기능 접근 권한 매트릭스입니다. 직급과 권한은 분리되어 관리됩니다.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={() => setShowHistory(true)}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium border hover:bg-slate-50"
-            style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.45 0.02 250)' }}>
+            style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.35 0.02 250)' }}>
             <History size={13} /> 변경 이력
           </button>
           {canEdit && !isLocked(selected) && (
             <>
               <button onClick={() => setShowCopy(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium border hover:bg-slate-50"
-                style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.45 0.02 250)' }}>
+                style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.35 0.02 250)' }}>
                 <Copy size={13} /> 권한 복사
               </button>
               <button onClick={() => setShowRestore(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium border hover:bg-slate-50"
-                style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.45 0.02 250)' }}>
+                style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.35 0.02 250)' }}>
                 <RotateCcw size={13} /> 기본값 복원
               </button>
               <button onClick={save}
@@ -472,7 +472,7 @@ export default function PermissionSettings() {
       <div className="grid lg:grid-cols-[200px_1fr] gap-3">
         {/* 좌측: 직급 목록 */}
         <div className="axis-card p-2 lg:sticky lg:top-4 self-start">
-          <div className="px-2 py-1.5 text-xs font-semibold" style={{ color: 'oklch(0.45 0.02 250)' }}>직급 선택</div>
+          <div className="px-2 py-1.5 text-xs font-semibold" style={{ color: 'oklch(0.35 0.02 250)' }}>직급 선택</div>
           {POSITIONS.map((p) => (
             <button
               key={p}
@@ -490,7 +490,7 @@ export default function PermissionSettings() {
             </button>
           ))}
           <div className="mt-2 pt-2 px-2" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
-            <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>포털용(조회 전용)</div>
+            <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>포털용(조회 전용)</div>
             {PORTAL_ONLY_POSITIONS.map((p) => (
               <button key={p} onClick={() => selectPosition(p)}
                 className="w-full text-left px-2.5 py-2 text-xs rounded-md transition-colors"
@@ -513,7 +513,7 @@ export default function PermissionSettings() {
               {POSITION_LABEL[selected]} 권한
             </span>
             {isLocked(selected) && (
-              <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.94 0.01 250)', color: 'oklch(0.5 0.015 250)' }}>
+              <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'oklch(0.94 0.01 250)', color: 'oklch(0.4 0.015 250)' }}>
                 {selected === 'SUPER_ADMIN' ? '고정 (편집 불가)' : '포털용 (편집 불가)'}
               </span>
             )}
@@ -529,10 +529,10 @@ export default function PermissionSettings() {
               <thead>
                 <tr style={{ background: 'oklch(0.97 0.006 250)' }}>
                   <th className="text-left font-semibold px-4 py-2.5"
-                    style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, minWidth: 180, background: 'oklch(0.97 0.006 250)', boxShadow: 'inset 0 -1px 0 oklch(0.9 0.008 250)' }}>기능</th>
+                    style={{ color: 'oklch(0.35 0.015 250)', fontSize: 12, minWidth: 180, background: 'oklch(0.97 0.006 250)', boxShadow: 'inset 0 -1px 0 oklch(0.9 0.008 250)' }}>기능</th>
                   {COL_LABELS.map((l) => (
                     <th key={l} className="text-center font-semibold px-3 py-2.5 whitespace-nowrap"
-                      style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'oklch(0.97 0.006 250)', boxShadow: 'inset 0 -1px 0 oklch(0.9 0.008 250)' }}>{l}</th>
+                      style={{ color: 'oklch(0.35 0.015 250)', fontSize: 12, background: 'oklch(0.97 0.006 250)', boxShadow: 'inset 0 -1px 0 oklch(0.9 0.008 250)' }}>{l}</th>
                   ))}
                 </tr>
               </thead>
@@ -585,10 +585,10 @@ export default function PermissionSettings() {
       </div>
 
       <div className="mt-3 space-y-1">
-        <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+        <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
           <Lock size={11} /> 최고관리자(SUPER_ADMIN) 권한은 고정되어 편집할 수 없습니다. 학생/보호자는 포털용 권한만 적용되며 현재 단계에서는 편집할 수 없습니다.
         </p>
-        <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+        <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
           <Info size={11} /> 저장 버튼 클릭 시 변경 이력이 자동 기록됩니다 (삭제 불가).
         </p>
       </div>
@@ -618,7 +618,7 @@ export default function PermissionSettings() {
               <p className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>
                 <b>{POSITION_LABEL[selected]}</b> 직급의 권한을 시스템 기본값으로 복원합니다.
               </p>
-              <div className="flex items-center gap-2 mt-2 px-3 py-2 rounded-md text-xs" style={{ background: 'oklch(0.97 0.05 80)', color: 'oklch(0.45 0.1 80)' }}>
+              <div className="flex items-center gap-2 mt-2 px-3 py-2 rounded-md text-xs" style={{ background: 'oklch(0.97 0.05 80)', color: 'oklch(0.35 0.1 80)' }}>
                 <AlertTriangle size={12} /> 현재 설정이 기본값으로 대체됩니다.
               </div>
             </div>

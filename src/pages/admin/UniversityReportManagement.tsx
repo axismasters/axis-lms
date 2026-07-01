@@ -36,10 +36,10 @@ export default function UniversityReportManagement() {
       <div className="max-w-3xl space-y-4">
 
         {/* 안내 배너 */}
-        <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.5 0.015 250)' }}>
+        <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.4 0.015 250)' }}>
           이 화면은 관리자·원장 전용 상세 리포트 화면입니다.
           학생용 프리뷰(목표 변화 방향)와 분리되어 있으며, 상담 참고 리포트 및 PDF 준비에 사용됩니다.
-          <strong className="block mt-1" style={{ color: 'oklch(0.45 0.2 27)' }}>
+          <strong className="block mt-1" style={{ color: 'oklch(0.35 0.2 27)' }}>
             ⚠ 이 화면에서는 확정 결과를 단정하는 표현 대신, 추천 적합도·보완 필요도 중심의 참고 지표만 사용합니다.
           </strong>
         </div>
@@ -118,7 +118,7 @@ export default function UniversityReportManagement() {
                   <div className="font-bold text-base" style={{ color: 'oklch(0.15 0.02 250)' }}>
                     {selectedStudent.name} — {universityLabel} 관리자 리포트
                   </div>
-                  <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                  <div className="text-xs mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
                     {gradeLevel ?? '학년 미확인'} · 관리자 전용 상세 화면
                   </div>
                 </div>
@@ -126,7 +126,7 @@ export default function UniversityReportManagement() {
 
               {/* 성적 데이터 현황 */}
               <div className="space-y-3">
-                <div className="text-xs font-semibold px-1" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                <div className="text-xs font-semibold px-1" style={{ color: 'oklch(0.4 0.015 250)' }}>
                   데이터 현황
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -135,7 +135,7 @@ export default function UniversityReportManagement() {
                     { label: '내신 기록', value: `${selectedStudent.internalScores.length}건`, ok: selectedStudent.internalScores.length > 0 },
                   ].map(({ label, value, ok }) => (
                     <div key={label} className="rounded-lg p-3" style={{ background: ok ? 'oklch(0.92 0.08 145)' : 'oklch(0.95 0.004 250)' }}>
-                      <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{label}</div>
+                      <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{label}</div>
                       <div className="font-bold text-sm" style={{ color: ok ? 'oklch(0.3 0.15 145)' : 'oklch(0.55 0.015 250)' }}>{value}</div>
                     </div>
                   ))}
@@ -144,13 +144,13 @@ export default function UniversityReportManagement() {
                 {/* 성적 목록 */}
                 {selectedStudent.mockExamScores.length > 0 && (
                   <div>
-                    <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.5 0.015 250)' }}>모의고사 성적</div>
+                    <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.4 0.015 250)' }}>모의고사 성적</div>
                     {selectedStudent.mockExamScores.map(score => (
                       <div key={score.id} className="axis-card p-3 mb-2">
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{score.examName}</div>
-                            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
                               {score.examDate} · {score.grade}
                             </div>
                           </div>
@@ -161,7 +161,7 @@ export default function UniversityReportManagement() {
                               </div>
                             )}
                             {score.korean && (
-                              <div className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                              <div className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>
                                 국어 {score.korean.grade}등급
                               </div>
                             )}

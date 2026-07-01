@@ -312,7 +312,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
                   <Info size={11} /> 여기서 만드는 시험은 항상 관리자 공통 시험입니다. 선생님 개인 시험지는 강사 화면에서 별도로 생성합니다.
                 </p>
                 {form.scope === 'GRADE_COMMON' && (
@@ -328,7 +328,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
               </div>
             )}
             {isTeacherMode && (
-              <p className="text-xs px-3 py-2 rounded-lg flex items-center gap-1.5" style={{ background: 'oklch(0.96 0.02 250)', color: 'oklch(0.45 0.015 250)' }}>
+              <p className="text-xs px-3 py-2 rounded-lg flex items-center gap-1.5" style={{ background: 'oklch(0.96 0.02 250)', color: 'oklch(0.35 0.015 250)' }}>
                 <Info size={12} /> 내가 만드는 시험은 내 수업용 개인 시험지입니다. 다른 선생님에게는 보이지 않습니다.
               </p>
             )}
@@ -341,7 +341,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
                   {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} ({c.subject})</SelectItem>)}
                 </SelectContent>
               </Select>
-              <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+              <p className="text-xs mt-1.5 flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
                 <Info size={11} /> {isTeacherMode
                   ? '반을 선택하면 그 반 수강생만, 담당 학생 전체를 선택하면 내 담당 학생 전체가 응시 대상이 됩니다.'
                   : '반을 선택하면 그 반 수강생만, 학원 전체를 선택하면 재원 중인 전체 학생이 응시 대상이 됩니다.'}
@@ -354,7 +354,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
           <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
             {/* Phase 3D: 기본 템플릿 — 문항 추가를 여러 번 누르지 않아도 기본 구성이 한 번에 생성됨 */}
             <div className="flex items-center gap-1.5 flex-wrap mb-1">
-              <span className="text-xs flex items-center gap-1 mr-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+              <span className="text-xs flex items-center gap-1 mr-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
                 <Sparkles size={11} /> 빠른 구성:
               </span>
               <Button variant="outline" size="sm" onClick={() => requestApplyTemplate('suneung', '수능형 템플릿(30문항)')} className="h-7 text-xs">
@@ -366,7 +366,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
             </div>
 
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
+              <p className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>
                 총 {questions.length}문항 · 만점 {totalScore}점
               </p>
               {/* 왼쪽 "-"(마지막 문항 삭제) / 오른쪽 "+"(문항 추가) 스테퍼 */}
@@ -388,7 +388,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
             </div>
             {questions.map((q) => (
               <div key={q.id} className="flex items-center gap-2 p-2.5 rounded-md" style={{ border: '1px solid oklch(0.93 0.008 250)' }}>
-                <span className="text-xs font-semibold w-8 text-center flex-shrink-0" style={{ color: 'oklch(0.5 0.015 250)' }}>{q.no}번</span>
+                <span className="text-xs font-semibold w-8 text-center flex-shrink-0" style={{ color: 'oklch(0.4 0.015 250)' }}>{q.no}번</span>
                 <Select value={q.type} onValueChange={(v) => updateQuestion(q.id, { type: v as QuestionType, correctAnswer: isAutoGraded(v as QuestionType) ? q.correctAnswer : undefined })}>
                   <SelectTrigger className="h-8 w-24 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -411,7 +411,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
                   className="h-8 w-16 text-xs"
                   placeholder="배점"
                 />
-                <span className="text-xs flex-shrink-0" style={{ color: 'oklch(0.6 0.015 250)' }}>점</span>
+                <span className="text-xs flex-shrink-0" style={{ color: 'oklch(0.47 0.015 250)' }}>점</span>
                 {isAutoGraded(q.type) ? (
                   <Input
                     value={q.correctAnswer ?? ''}
@@ -420,7 +420,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
                     className="h-8 flex-1 text-xs"
                   />
                 ) : (
-                  <span className="flex-1 text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>채점현황 탭에서 수동 채점</span>
+                  <span className="flex-1 text-xs" style={{ color: 'oklch(0.49 0.01 250)' }}>채점현황 탭에서 수동 채점</span>
                 )}
                 <Button
                   type="button" variant="ghost" size="icon"
@@ -429,7 +429,7 @@ export default function AssessmentFormModal({ open, onClose, createdBy, mode = '
                   className="h-8 w-8 flex-shrink-0"
                   aria-label={`${q.no}번 문항 삭제`}
                 >
-                  <Trash2 size={14} style={{ color: 'oklch(0.55 0.015 250)' }} />
+                  <Trash2 size={14} style={{ color: 'oklch(0.42 0.015 250)' }} />
                 </Button>
               </div>
             ))}

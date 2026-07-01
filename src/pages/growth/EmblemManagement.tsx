@@ -12,7 +12,9 @@ import { canManageEmblems, canAccessGrowth } from '@/lib/rbac';
 import {
   Emblem, EmblemCategory, EmblemMaterial,
   CATEGORY_LABELS, MATERIAL_LABELS, MATERIAL_BADGE, CATEGORY_BADGE,
+  EMBLEM_FAMILY_LABELS,
 } from '@/lib/growthData';
+import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useDraggableModal } from '@/hooks/useDraggableModal';
@@ -57,7 +59,7 @@ export default function EmblemManagement() {
       <AdminLayout title="엠블럼관리" breadcrumbs={[{ label: '성장관리', path: '/growth/overview' }, { label: '엠블럼관리' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm font-medium mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>접근 권한이 없습니다.</p>
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>
             성장관리 메뉴는 최고관리자·원장·행정 계정만 접근할 수 있습니다.
           </p>
         </div>
@@ -101,7 +103,7 @@ export default function EmblemManagement() {
             <Trophy size={18} style={{ color: '#C8A15A' }} />
             <h1 className="text-lg font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>엠블럼관리</h1>
           </div>
-          <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>
             엠블럼 정책을 설정합니다. 삭제 없이 비활성 처리로만 관리됩니다.
             {!canManage && <span className="ml-2" style={{ color: '#EF4444' }}>현재 계정은 조회만 가능합니다.</span>}
           </p>
@@ -157,7 +159,7 @@ export default function EmblemManagement() {
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-10 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>엠블럼이 없습니다.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-10 text-center text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>엠블럼이 없습니다.</td></tr>
             )}
             {filtered.map(e => {
               const catBadge = CATEGORY_BADGE[e.category];
@@ -165,11 +167,21 @@ export default function EmblemManagement() {
               return (
                 <tr key={e.id} style={{ borderBottom: '1px solid oklch(0.95 0.004 250)', opacity: e.active ? 1 : 0.5 }}>
                   <td className="px-4 py-2.5 font-semibold" style={{ color: 'oklch(0.18 0.02 250)' }}>
-                    {e.name}
-                    {e.hidden && <span className="ml-1.5 text-xs" style={{ color: '#040D1E' }}>🔒숨김</span>}
-                    {e.ifPlaceholderKey && (
-                      <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded" style={{ background: '#E7EBF3', color: '#040D1E' }}>IF연동</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {e.family && <AxisEmblemBadge iconKey={e.iconKey} level={e.level} size={28} />}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {e.name}
+                        {e.family && (
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#F1EEE4', color: '#8A6D2E' }}>
+                            {EMBLEM_FAMILY_LABELS[e.family]}{e.level ? ` · ${e.level}` : ''}
+                          </span>
+                        )}
+                        {e.hidden && <span className="text-xs" style={{ color: '#040D1E' }}>🔒숨김</span>}
+                        {e.ifPlaceholderKey && (
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#E7EBF3', color: '#040D1E' }}>IF연동</span>
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td className="px-4 py-2.5">
                     <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold"
@@ -186,7 +198,7 @@ export default function EmblemManagement() {
                   <td className="px-4 py-2.5 text-xs max-w-48" style={{ color: 'oklch(0.35 0.015 250)' }}>
                     <span className="block truncate" title={e.conditionText}>{e.conditionText}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-center text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{e.requiredCount}회</td>
+                  <td className="px-4 py-2.5 text-center text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>{e.requiredCount}회</td>
                   <td className="px-4 py-2.5 text-center">
                     {canManage ? (
                       <Button
@@ -195,7 +207,7 @@ export default function EmblemManagement() {
                         className="h-8 w-8"
                         aria-label={e.hidden ? '공개로 전환' : '숨김 처리'}
                       >
-                        {e.hidden ? <EyeOff size={15} style={{ color: '#040D1E' }} /> : <Eye size={15} style={{ color: 'oklch(0.55 0.015 250)' }} />}
+                        {e.hidden ? <EyeOff size={15} style={{ color: '#040D1E' }} /> : <Eye size={15} style={{ color: 'oklch(0.42 0.015 250)' }} />}
                       </Button>
                     ) : (
                       <span className="inline-flex items-center justify-center h-8 w-8" aria-hidden>
@@ -253,7 +265,7 @@ export default function EmblemManagement() {
                 {editTarget ? '엠블럼 수정' : '엠블럼 추가'}
               </h2>
               <Button variant="ghost" size="icon" onClick={() => setShowModal(false)} className="h-8 w-8" aria-label="닫기">
-                <X size={17} style={{ color: 'oklch(0.5 0.015 250)' }} />
+                <X size={17} style={{ color: 'oklch(0.4 0.015 250)' }} />
               </Button>
             </div>
             <div className="p-5 flex flex-col gap-4 overflow-y-auto min-h-0">

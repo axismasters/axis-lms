@@ -78,11 +78,11 @@ function ManualSendModal({ open, onClose, currentUserName }: ManualSendModalProp
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'oklch(0.92 0.01 250)' }}>
           <h3 className="text-base font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>수동 발송</h3>
-          <button onClick={onClose} className="text-sm px-3 py-1 rounded-lg hover:bg-gray-100" style={{ color: 'oklch(0.5 0.015 250)' }}>✕</button>
+          <button onClick={onClose} className="text-sm px-3 py-1 rounded-lg hover:bg-gray-100" style={{ color: 'oklch(0.4 0.015 250)' }}>✕</button>
         </div>
         <div className="p-6 flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>수신자 유형</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>수신자 유형</label>
             <div className="flex gap-2">
               {(['STUDENT', 'GUARDIAN', 'STAFF'] as RecipientType[]).map((t) => (
                 <button
@@ -102,7 +102,7 @@ function ManualSendModal({ open, onClose, currentUserName }: ManualSendModalProp
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>수신자명 *</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>수신자명 *</label>
               <input
                 className="w-full border rounded-lg px-3 py-2 text-sm"
                 style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.2 0.02 250)' }}
@@ -112,7 +112,7 @@ function ManualSendModal({ open, onClose, currentUserName }: ManualSendModalProp
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>연락처 *</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>연락처 *</label>
               <input
                 className="w-full border rounded-lg px-3 py-2 text-sm"
                 style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.2 0.02 250)' }}
@@ -123,7 +123,7 @@ function ManualSendModal({ open, onClose, currentUserName }: ManualSendModalProp
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>발송 채널</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>발송 채널</label>
             <div className="flex gap-2">
               {(['KAKAO', 'SMS', 'LMS'] as NotificationChannel[]).map((c) => (
                 <button
@@ -142,7 +142,7 @@ function ManualSendModal({ open, onClose, currentUserName }: ManualSendModalProp
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>제목 *</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>제목 *</label>
             <input
               className="w-full border rounded-lg px-3 py-2 text-sm"
               style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.2 0.02 250)' }}
@@ -152,7 +152,7 @@ function ManualSendModal({ open, onClose, currentUserName }: ManualSendModalProp
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>내용 *</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>내용 *</label>
             <textarea
               className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
               style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.2 0.02 250)' }}
@@ -163,7 +163,7 @@ function ManualSendModal({ open, onClose, currentUserName }: ManualSendModalProp
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>메모 (선택)</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>메모 (선택)</label>
             <input
               className="w-full border rounded-lg px-3 py-2 text-sm"
               style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.2 0.02 250)' }}
@@ -221,43 +221,43 @@ function DetailModal({ message, onClose, onResend, onMemoSave }: DetailModalProp
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'oklch(0.92 0.01 250)' }}>
           <h3 className="text-base font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>발송 상세</h3>
-          <button onClick={onClose} className="text-sm px-3 py-1 rounded-lg hover:bg-gray-100" style={{ color: 'oklch(0.5 0.015 250)' }}>✕</button>
+          <button onClick={onClose} className="text-sm px-3 py-1 rounded-lg hover:bg-gray-100" style={{ color: 'oklch(0.4 0.015 250)' }}>✕</button>
         </div>
         <div className="p-6 flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div><span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>알림유형</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{NOTIFICATION_TYPE_LABEL[message.type]}</p></div>
-            <div><span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>채널</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{NOTIFICATION_CHANNEL_LABEL[message.channel]}</p></div>
-            <div><span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>수신자</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.recipientName} ({RECIPIENT_TYPE_LABEL[message.recipientType]})</p></div>
-            <div><span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>연락처</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.recipientPhone}</p></div>
+            <div><span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>알림유형</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{NOTIFICATION_TYPE_LABEL[message.type]}</p></div>
+            <div><span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>채널</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{NOTIFICATION_CHANNEL_LABEL[message.channel]}</p></div>
+            <div><span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>수신자</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.recipientName} ({RECIPIENT_TYPE_LABEL[message.recipientType]})</p></div>
+            <div><span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>연락처</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.recipientPhone}</p></div>
             {message.studentName && (
-              <div><span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>학생명</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.studentName}</p></div>
+              <div><span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>학생명</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.studentName}</p></div>
             )}
             <div>
-              <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>상태</span>
+              <span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>상태</span>
               <p className="font-semibold mt-0.5" style={{ color: statusColor[message.status] }}>{NOTIFICATION_STATUS_LABEL[message.status]}</p>
             </div>
-            <div><span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>처리자</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.requestedBy}</p></div>
-            <div><span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>생성일시</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.createdAt.slice(0, 16).replace('T', ' ')}</p></div>
+            <div><span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>처리자</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.requestedBy}</p></div>
+            <div><span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>생성일시</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.createdAt.slice(0, 16).replace('T', ' ')}</p></div>
             {message.sentAt && (
-              <div><span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>발송일시</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.sentAt.slice(0, 16).replace('T', ' ')}</p></div>
+              <div><span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>발송일시</span><p className="font-medium mt-0.5" style={{ color: 'oklch(0.2 0.02 250)' }}>{message.sentAt.slice(0, 16).replace('T', ' ')}</p></div>
             )}
           </div>
           <div>
-            <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>제목</span>
+            <span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>제목</span>
             <p className="text-sm font-medium mt-0.5 p-3 rounded-lg" style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.2 0.02 250)' }}>{message.title}</p>
           </div>
           <div>
-            <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>내용</span>
+            <span className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>내용</span>
             <pre className="text-sm mt-0.5 p-3 rounded-lg whitespace-pre-wrap" style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.2 0.02 250)', fontFamily: 'inherit' }}>{message.content}</pre>
           </div>
           {message.failedReason && (
             <div className="p-3 rounded-lg" style={{ background: 'oklch(0.97 0.03 25)' }}>
-              <span className="text-xs font-medium" style={{ color: 'oklch(0.5 0.2 25)' }}>실패 사유</span>
+              <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.2 25)' }}>실패 사유</span>
               <p className="text-sm mt-0.5" style={{ color: 'oklch(0.4 0.15 25)' }}>{message.failedReason}</p>
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>메모</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>메모</label>
             <div className="flex gap-2">
               <input
                 className="flex-1 border rounded-lg px-3 py-2 text-sm"
@@ -401,14 +401,14 @@ export default function NotificationHistory() {
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
           {[
             { label: '오늘 발송', value: todayMsgs.length, color: 'oklch(0.25 0.05 250)' },
-            { label: '성공', value: todayStatus.SENT, color: 'oklch(0.45 0.18 145)' },
-            { label: '실패', value: todayStatus.FAILED, color: 'oklch(0.5 0.22 25)' },
-            { label: '대기', value: todayStatus.READY, color: 'oklch(0.5 0.1 250)' },
-            { label: '카카오', value: todayChannel.KAKAO, color: 'oklch(0.65 0.18 85)' },
-            { label: 'SMS/LMS', value: todayChannel.SMS + todayChannel.LMS, color: 'oklch(0.55 0.15 200)' },
+            { label: '성공', value: todayStatus.SENT, color: 'oklch(0.35 0.18 145)' },
+            { label: '실패', value: todayStatus.FAILED, color: 'oklch(0.4 0.22 25)' },
+            { label: '대기', value: todayStatus.READY, color: 'oklch(0.4 0.1 250)' },
+            { label: '카카오', value: todayChannel.KAKAO, color: 'oklch(0.49 0.18 85)' },
+            { label: 'SMS/LMS', value: todayChannel.SMS + todayChannel.LMS, color: 'oklch(0.42 0.15 200)' },
           ].map((card) => (
             <div key={card.label} className="rounded-xl p-4 bg-white shadow-sm border" style={{ borderColor: 'oklch(0.93 0.01 250)' }}>
-              <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{card.label}</p>
+              <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{card.label}</p>
               <p className="text-2xl font-bold mt-1" style={{ color: card.color }}>{card.value}</p>
             </div>
           ))}
@@ -417,22 +417,22 @@ export default function NotificationHistory() {
         {/* 필터 */}
         <div className="bg-white rounded-xl border p-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6" style={{ borderColor: 'oklch(0.93 0.01 250)' }}>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>기간 (시작)</label>
+            <label className="block text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>기간 (시작)</label>
             <input type="date" className="w-full border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>기간 (종료)</label>
+            <label className="block text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>기간 (종료)</label>
             <input type="date" className="w-full border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>알림유형</label>
+            <label className="block text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>알림유형</label>
             <select className="w-full border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} value={filterType} onChange={(e) => setFilterType(e.target.value as NotificationType | '')}>
               <option value="">전체</option>
               {notifTypes.map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>채널</label>
+            <label className="block text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>채널</label>
             <select className="w-full border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} value={filterChannel} onChange={(e) => setFilterChannel(e.target.value as NotificationChannel | '')}>
               <option value="">전체</option>
               <option value="KAKAO">카카오</option>
@@ -441,7 +441,7 @@ export default function NotificationHistory() {
             </select>
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>상태</label>
+            <label className="block text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>상태</label>
             <select className="w-full border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as NotificationStatus | '')}>
               <option value="">전체</option>
               <option value="READY">대기</option>
@@ -451,7 +451,7 @@ export default function NotificationHistory() {
             </select>
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>수신자 / 학생</label>
+            <label className="block text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>수신자 / 학생</label>
             <div className="flex gap-1">
               <input className="w-1/2 border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} placeholder="수신자" value={filterRecipient} onChange={(e) => setFilterRecipient(e.target.value)} />
               <input className="w-1/2 border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} placeholder="학생" value={filterStudent} onChange={(e) => setFilterStudent(e.target.value)} />
@@ -469,26 +469,26 @@ export default function NotificationHistory() {
               <thead>
                 <tr style={{ background: 'oklch(0.97 0.005 250)' }}>
                   {['발송일시', '알림유형', '채널', '수신자', '학생명', '제목', '상태', '처리자', '관리'].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', background: 'oklch(0.97 0.005 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
+                    <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)', background: 'oklch(0.97 0.005 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="text-center py-12 text-sm" style={{ color: 'oklch(0.6 0.01 250)' }}>발송이력이 없습니다.</td>
+                    <td colSpan={9} className="text-center py-12 text-sm" style={{ color: 'oklch(0.47 0.01 250)' }}>발송이력이 없습니다.</td>
                   </tr>
                 ) : (
                   filtered.map((msg, idx) => (
                     <tr key={msg.id} className="border-t" style={{ borderColor: 'oklch(0.95 0.005 250)', background: idx % 2 === 0 ? 'white' : 'oklch(0.99 0.002 250)' }}>
-                      <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.01 250)' }}>{(msg.sentAt ?? msg.createdAt).slice(0, 16).replace('T', ' ')}</td>
+                      <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.01 250)' }}>{(msg.sentAt ?? msg.createdAt).slice(0, 16).replace('T', ' ')}</td>
                       <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.3 0.02 250)' }}>{NOTIFICATION_TYPE_LABEL[msg.type]}</td>
-                      <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.45 0.02 250)' }}>{NOTIFICATION_CHANNEL_LABEL[msg.channel]}</td>
+                      <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.35 0.02 250)' }}>{NOTIFICATION_CHANNEL_LABEL[msg.channel]}</td>
                       <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.3 0.02 250)' }}>{msg.recipientName}</td>
                       <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.02 250)' }}>{msg.studentName ?? '-'}</td>
                       <td className="px-4 py-3 text-xs max-w-[180px] truncate" style={{ color: 'oklch(0.3 0.02 250)' }}>{msg.title}</td>
                       <td className="px-4 py-3 whitespace-nowrap">{statusBadge(msg.status)}</td>
-                      <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.01 250)' }}>{msg.requestedBy}</td>
+                      <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.01 250)' }}>{msg.requestedBy}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <button
@@ -500,7 +500,7 @@ export default function NotificationHistory() {
                             <button
                               onClick={() => handleResend(msg.id)}
                               className="px-2 py-1 rounded-md text-xs font-medium"
-                              style={{ background: 'oklch(0.93 0.07 25)', color: 'oklch(0.45 0.2 25)' }}
+                              style={{ background: 'oklch(0.93 0.07 25)', color: 'oklch(0.35 0.2 25)' }}
                             >재발송</button>
                           )}
                         </div>

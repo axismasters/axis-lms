@@ -1,5 +1,276 @@
 # QA_PHASE3D.md
 
+## v3-r10-r3 검수 결과 (buildfix)
+
+**버전**: v3-r10-r3 — 빌드 오류 1건 수정. 기능/UI 무변경.
+
+### 수정 검증
+
+보고된 오류 지점(`TeacherStudentDetail.tsx(172,47)`)의 인자를 좁혀진 `signalBundle.ifRecords`
+(`IfRecordLite[]`)에서 원본 타입 변수 `fullIfRecords`(`StudentIfRecord[]`)로 변경.
+
+- `StudentIfRecord`는 `IfRecordLite`의 3개 필드(examDate/missedPoints/isComplete)를 모두 포함하는
+  상위 집합 → `signalBundle.ifRecords = fullIfRecords` 대입은 타입 안전.
+- `getIfCumulativeSummary(fullIfRecords)`는 요구 타입(`StudentIfRecord[]`)과 정확히 일치.
+- 다른 `getIfCumulativeSummary` 호출부 3곳(ParentGrowthReport/StudentGrades/StudentGrowthShowcase)은
+  `loadIfRecords()`를 직접/`.filter()` 후 전달 → 타입 문제 없음(동일 오류 다른 인스턴스 0건).
+
+구문 검사(`ts.transpileModule`): 통과.
+
+> ⚠ 실제 `npm run build`(전체 타입 검사)는 오프라인 컨테이너에 `node_modules`가 없어 이곳에서
+> 실행하지 못했다. 위 타입 분석은 인터페이스 정의를 직접 대조해 수동 확인한 것이며, 최종
+> 통과 여부는 GitHub Actions Build Check로 확정해야 한다. 보고된 오류의 원인(좁혀진 타입 전달)은
+> 지시대로 정확히 제거했다.
+
+### 불변 파일 / 정책
+```
+universityAnalysisAdapter.ts / App.tsx / classData.ts  MD5 무변경
+IF 단일 진입점 유지, 금지 표현 0, 학생 재무 0, 학부모 Rival/Emblem/SP/Tier 0, AI 호출 신규 0
+```
+
+---
+
+## v3-r10-r2 검수 결과
+
+**버전**: v3-r10-r2 — v3-r10-r1 반려 재작업(PC 레이아웃/CTA/추이/언어). 베이스라인 v3-r9-r4.
+
+### 검증 명령 실행 결과
+
+오프라인(`npm install` 403)이라 `tsc` 전체 실행 불가 — GitHub Actions가 최종 기준.
+대체 검증으로 TypeScript 컴파일러 API(`ts.transpileModule`, JSX)로 이번 수정 7개 파일
+구문 검사.
+
+```
+$ node ts_syntax_check.js   (7개 파일)
+OK syntax: 7 files
+```
+
+레이아웃 재구성 파일(ParentGrowthReport, StudentGrowthShowcase, StudentGrades)은 JSX
+태그 균형을 추가 검사했다.
+
+```
+$ ParentGrowthReport div 균형: opening(non-self) 119 = closing 119 (+ self-closing 2)  → 균형
+```
+
+### 불변 파일 / 단일 진입점
+
+```
+1eddaef5cf427e00666be685ea16f32f  universityAnalysisAdapter.ts  (무변경)
+387bbf48a3d87ff63ce10d6dbc8bf33c  App.tsx                       (무변경)
+126d9e5e314de186bf1df0a63b3abf82  classData.ts                  (무변경)
+
+studentIfAnalysis/studentIfRecord 직접 import(ifAnalysisEngine 제외): 0건
+```
+
+### 정책 검증 결과 (지시서 §5)
+
+| 항목 | 결과 |
+|---|---|
+| 학생 화면 재무/수납/청구/미납/환불/영수증 | 0건(추이/진열장/Rival 재검색) |
+| 학부모 화면 Rival/Emblem/SP/Tier 직접 노출 | 0건(parent/*.tsx 원문 검색 0) |
+| IF 별도 메뉴 | 없음(테스트 상세 내부 유지) |
+| IF 이유 3개 외 추가 | 없음 |
+| 금지 표현(합격률/합격 가능성/합격 보장/안정 합격/불합격) | 0건 |
+| 외부 AI API 신규 | 0건 |
+| 게임 랭크(WOOD~DIAMOND) 사용자 노출 | 0건 |
+| 전투/게임 언어(승/패/전적/승률/연승) 학생·학부모 노출 | 0건(교사/관리자 표기도 성장 언어로 교체) |
+| 보라/그라데이션 blob/orb 남발 | 없음 |
+| AXIS 마크 이미지 임의 SVG 대체 | 없음(AxisMark 미접촉) |
+
+### 검수 기준 충족 (지시서 §4·§5)
+
+- Rival CTA 실제 화면 노출 + 클릭 시 상세 스크롤: **충족**.
+- 결과 추이 넓은 분석 패널 + 단원/내신 한 화면 비교 + 1회 데이터 처리: **충족**.
+- PC에서 좁게 몰리지 않음(ParentGrowthReport lg:max-w-6xl 2~3컬럼, 진열장 균형 2컬럼):
+  **충족**.
+- 성장 진열장 좌우 균형 배치: **충족**.
+- Tier AXIS 성장 단계 / SP 성장 언어 / 학부모 명칭 미노출: **충족**.
+- 학부모 화면 헌법(총액 과시 제거, 상담 원문 미노출, 미납 유무만): **충족**(기존 유지).
+
+### 남은 리스크 / 다음 라운드
+
+- 타입 검사(strict)는 GitHub Actions로 최종 확인. 특히 StudentGrades에 추가한
+  `ResultTrendPanel`/`SeriesTrend`, StudentRival의 `useRef` 분기.
+- PC 레이아웃의 최종 시각 정렬(카드 끝선/baseline)은 실제 브라우저 렌더에서 확인 권장 —
+  오프라인 컨테이너에 렌더러가 없어 픽셀 확인 불가(구조/균형은 코드상 검증 완료).
+- 결과 추이 단원/내신 카테고리 매핑이 없는 학원 폴백은 `CHANGES` v3-r10-r2 "§GPT 의견"
+  2번 참조.
+
+---
+
+## v3-r10-r1 검수 결과
+
+**버전**: v3-r10-r1 — v3-r10 반려 재작업. 첨부 디자인 참조(이미지 5 + 문서 3) 기준.
+베이스라인 v3-r9-r4.
+
+### 검증 명령 실행 결과
+
+오프라인 환경(`npm install` registry 403)이라 `tsc -p tsconfig.app.json --noEmit` 전체 실행은
+불가 — GitHub Actions가 최종 기준이다. 대체 검증으로 TypeScript 컴파일러 API
+(`ts.transpileModule`, JSX 파서 포함)로 신규/수정 15개 파일 전체 구문 검사를 수행했다.
+
+```
+$ node ts_syntax_check.js   (ts.transpileModule 기반, 15개 파일)
+OK syntax: 15 files
+```
+
+신규 컴포넌트 3종(AxisEmblemBadge / AxisTierMedallion / RivalMatchupCard)의 SVG 출력은
+별도로 (a) path `d` 속성 30건 전수 토큰 검사, (b) 컴포넌트 로직을 그대로 옮긴 독립 SVG
+11종(엠블럼 5 + 티어 6)의 XML well-formed 검사로 확인했다.
+
+```
+$ path-data 검사: AxisEmblemBadge 19 path, AxisTierMedallion 11 path → 0 suspicious
+$ SVG XML well-formed: 11/11 ok
+```
+
+> ※ 실제 픽셀 렌더(배지가 "프리미엄"으로 보이는지)의 최종 육안 확인은 사용자 브라우저에서
+> 필요하다 — 오프라인 컨테이너에 SVG 래스터라이저(rsvg/cairosvg)가 없어 PNG 미리보기를
+> 생성하지 못했다. XML/geometry 상으로는 모든 요소가 viewBox 안에 있고 구조가 온전하다.
+
+### 불변 파일 / 단일 진입점 재검증
+
+```
+$ md5sum src/lib/universityAnalysisAdapter.ts src/App.tsx src/lib/classData.ts
+1eddaef5cf427e00666be685ea16f32f  ...universityAnalysisAdapter.ts   (변경 없음)
+387bbf48a3d87ff63ce10d6dbc8bf33c  ...App.tsx                        (변경 없음)
+126d9e5e314de186bf1df0a63b3abf82  ...classData.ts                   (변경 없음)
+
+$ grep studentIfAnalysis|studentIfRecord 직접 import (ifAnalysisEngine 제외)
+0건 — 단일 진입점 100% 유지
+```
+
+### 정책 검증 결과 (지시서 §5 금지/검수 기준)
+
+| 항목 | 결과 |
+|---|---|
+| IF 별도 메뉴 생성 | 없음(테스트 상세 내부 그대로) |
+| IF 이유 3개 외 추가 | 없음(계산 실수/개념 부족/시간 부족 유지) |
+| 학생 성적 직접 입력 | 없음(전부 읽기 전용 표시) |
+| 학생 화면 재무/수납 노출 | 0건(Rival/진열장 신규 화면 포함 재검색) |
+| 학부모 화면 Rival/Emblem/SP/Tier 직접 노출 | 0건(parent/*.tsx useGrowth·tier 참조 0) |
+| 외부 AI API 호출 추가(신규 4파일 포함) | 0건(fetch/openai/anthropic/gemini 0) |
+| 단순 이모지 엠블럼 잔존 | 0건(🏅 등 성장 페이지 전수 0 — 전부 SVG 배지 교체) |
+| 심심한 원형 그래프 Rival 카드 유지 | 폐기됨(매치업 카드로 교체) |
+| 모바일형 max-w-lg만으로 PC 구성 | 아님(진열장 max-w-6xl 3존, Rival lg 다컬럼) |
+| Tier 게임 랭크 표현 | 없음(6단계 AXIS 성장 단계로 교체, WOOD~DIAMOND 랭크 문자열 사용처 0) |
+| 전투/몬스터/아이템샵 UI | 없음("전투 아니라" 철학 주석 1건만) |
+| 보라색/그라데이션 blob/orb 남발 | 없음(브랜드 팔레트 네이비/골드/teal/blue/amber만) |
+| 전체 네이비 과다 | 아님(막대·배경은 밝은 톤, 네이비는 배지 프레임/VS 메달/CTA에 한정) |
+| 금지 표현(합격률/합격 가능성/합격 보장/안정 합격/불합격) | 신규 코드 0건 |
+| 실명/반/연락처 Rival 노출 | 0건(닉네임/평균/익명만) |
+
+### 검수 기준 충족 여부 (지시서 §5 하단)
+
+- Rival 화면 "나 vs Rival" 구도 즉시 노출: **충족**(RivalMatchupCard 최상단).
+- 엠블럼 프리미엄 학습 업적 배지: **충족**(AxisEmblemBadge — 네이비+골드 메달).
+- Tier AXIS 성장 단계로 표현: **충족**(AxisTierMedallion + 6단계 라벨/색상/철학).
+- 성장 진열장 오래 머무르게: **충족**(PC-first 3존, Hero/갤러리/IF/기록/습관/Rival 연결).
+- 교사 화면 상담용 요약: **충족**(TeacherStudentDetail 성장 요약에 배지/단계/코멘트).
+- 학부모 화면 전문 성장 리포트 + 4개 명칭 미노출: **충족**(코드 미변경, 재확인 0건).
+
+### 남은 리스크 / 다음 라운드
+
+- **타입 검사**(strict 기준)는 GitHub Actions로만 최종 확인 가능. 특히 growthData.ts의
+  `StudentTier` 유니온 변경이 전 파일 `[tier]` 동적 lookup으로만 소비되는지 재확인했으나
+  (구 랭크 하드코딩 0건), Actions 결과로 교차 검증 권장.
+- 데모용 결정적 값(주간 습관 수치, 과목별 유사수준, 도전 기록, IF 개선%)은 실데이터 연동
+  전 자리표시자 — `CHANGES_PHASE3D.md` v3-r10-r1 "§GPT에게 전달할 의견" 2·3번 참조.
+- 배지 프리미엄 톤의 최종 육안 확인은 브라우저에서 필요(위 렌더 주석 참조).
+
+---
+
+## v3-r10 검수 결과
+
+**버전**: v3-r10 — 정식 Phase 지시(§1~§7) + 채팅 추가 지시(관리자 화면 대비) 반영.
+베이스라인 v3-r9-r4.
+
+### 검증 명령 실행 결과
+
+오프라인 환경(`npm install` registry 403)이라 `tsc -p tsconfig.app.json --noEmit`
+전체 실행은 이번에도 불가 — GitHub Actions가 최종 기준이다. 대체 검증으로 TypeScript
+컴파일러 API(`ts.transpileModule`, JSX 파서 포함)를 이용해 수정된 43개 파일 전체의
+**구문(syntax) 검사**를 수행했다(타입 검사는 아니며, 괄호/태그 불균형·잘못된 JSX 등
+구문 오류만 잡아낸다 — 과거 라운드의 "Python 괄호 균형 검사"보다 정밀하다).
+
+```
+$ node ts_syntax_check.js   (ts.transpileModule 기반, 43개 파일)
+OK: no syntax errors detected in 43 modified files.
+```
+
+신규로 추가한 함수(`buildCumulativeImprovementNote`, `buildTeacherGrowthConsultingNote`)
+는 타입 검사가 안 되는 한계를 보완하기 위해, 모든 호출부의 인자 타입을 함수 시그니처와
+수동으로 대조 확인했다(`IfCumulativeSummary`/`TeacherGrowthConsultingInput` 필드 일치
+확인 완료).
+
+### 불변 파일 / 단일 진입점 재검증
+
+```
+$ md5sum src/lib/universityAnalysisAdapter.ts src/App.tsx src/lib/classData.ts
+1eddaef5cf427e00666be685ea16f32f  src/lib/universityAnalysisAdapter.ts   (변경 없음)
+387bbf48a3d87ff63ce10d6dbc8bf33c  src/App.tsx                            (변경 없음)
+126d9e5e314de186bf1df0a63b3abf82  src/lib/classData.ts                   (변경 없음)
+
+$ grep -rn "from '@/lib/studentIfAnalysis'\|from '@/lib/studentIfRecord'" src \
+    --include="*.tsx" --include="*.ts" | grep -v "src/lib/ifAnalysisEngine.ts"
+(결과 없음 — ifAnalysisEngine.ts 단일 진입점 100% 유지)
+```
+
+### 정책 검증 결과
+
+| 항목 | 결과 |
+|---|---|
+| IF 이유 3개(계산 실수/개념 부족/시간 부족) 고정 | 변경 없음(3개 그대로) |
+| IF 별도 메뉴화 여부 | 아님(테스트 상세 내부 그대로) |
+| 학생 성적 직접 입력 기능 추가 여부 | 없음 |
+| 외부 AI API 호출 여부(신규 함수 2개 포함) | 없음(전부 템플릿 문자열 조합) |
+| 실제 AXIS 마크/워드마크 임의 SVG 회귀 여부 | 없음(미접촉) |
+| 전체 UI 네이비 도배 여부 | 아님(막대그래프에서 오히려 네이비 비중을 줄임) |
+| 막대그래프 딥 네이비 단색 잔존 여부 | 0건(전수 재검색 완료 — 하단 스크립트 결과 참조) |
+| 보라색/그라데이션/blob/orb 신규 사용 여부 | 없음 |
+| 과도한 게임 UI 신규 추가 여부 | 없음(오히려 Rival 아이콘/문구 완화) |
+| Rival/Emblem/SP/Tier 학부모 화면 노출 여부 | 0건(기존부터 0건, 재검증 완료) |
+| 학부모 화면 상담 기록 원문 노출 여부 | 0건(`counselingData` import 없음) |
+| 학부모 화면 총액 과시형 UI 여부 | 아님(기존부터 "미납 있음/없음" 배지만 — 재검증 완료) |
+| 금지 표현(합격률/합격 가능성/합격 보장/안정 합격/불합격) | 신규 코드 0건 |
+| 위험/문제 학생/경고 대상 표현 | 신규 코드 0건 |
+| `수능실전주간루틴` 내부 개념명 화면 노출 | 0건 |
+| 선생님 수동 입력 기능 추가 여부 | 없음(전부 읽기 전용 표시) |
+| 판단/계산 로직의 화면 컴포넌트 직접 삽입 여부 | 없음(`buildCumulativeImprovementNote`/`buildTeacherGrowthConsultingNote` 전부 `lib/` 엔진 파일에 위치) |
+
+### 막대그래프 네이비 잔존 전수 재검색
+
+```
+$ python3 -c "... width/height % 스타일과 #040D1E/#040E1F 동시 매칭 검색 ..." (전체 src)
+(결과 없음)
+```
+
+### 관리자 화면 대비 개선 — 정량 근거
+
+```
+대비 보정 방식: color: 'oklch(L C H)' 중 L(명도) 구간별 하향
+  0.62 ≤ L < 0.72  →  L - 0.16   (예: 0.65 → 0.49, 0.70 → 0.54)
+  0.52 ≤ L < 0.62  →  L - 0.13   (예: 0.55 → 0.42, 0.60 → 0.47)
+  0.44 ≤ L < 0.52  →  L - 0.10   (예: 0.45 → 0.35, 0.50 → 0.40)
+대상: color: 전용(배경/보더/상태배지/흰색 리터럴 제외), 34개 파일 + 706건
+     + AdminLayout.tsx 상단 헤더 수동 보정 11건 = 총 717건
+```
+
+동일 스크립트를 사이드바(다크 배경) 영역에는 적용하지 않았다 — 다크 배경 위 밝은
+회색 텍스트를 이 스크립트대로 "낮췄다면" 오히려 대비가 나빠지므로, 라이트 배경
+전용으로 대상 파일을 미리 선별했다(레이아웃 컴포넌트 중 `AdminLayout.tsx`만 헤더/
+사이드바가 한 파일에 공존해 자동화 대신 수동 편집으로 분리 처리).
+
+### 남은 리스크 / 다음 라운드 확인 권장
+
+- 타입 검사(구문 검사가 아닌 `strict: true` 기준 타입 오류)는 GitHub Actions
+  결과로만 최종 확인 가능 — 특히 `TeacherStudentDetail.tsx`에 새로 추가한
+  `growthConsultingNote` 조건부 분기.
+- 관리자 대비 보정은 텍스트 색상값만 조정했고, 포커스 링 색상·outline 스타일은
+  이번 범위에 포함하지 않았다(`CHANGES_PHASE3D.md` v3-r10 "§GPT에게 전달할 의견"
+  3번 참조).
+
+---
+
 ## v3-r9-r4 검수 결과
 
 **버전**: v3-r9-r4 — 정식 반려 사이클이 아니라, 사용자가 채팅에서 직접 이미지와

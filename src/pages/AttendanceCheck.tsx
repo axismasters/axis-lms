@@ -243,7 +243,7 @@ export default function AttendanceCheck() {
     return (
       <AdminLayout breadcrumbs={[{ label: '출결관리' }, { label: '출결체크' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>출결체크 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>출결체크 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -255,7 +255,7 @@ export default function AttendanceCheck() {
       <div className="flex items-start justify-between mb-5">
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>출결체크</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
             {canViewAll ? `전체 운영반 ${availableClasses.length}개` : `담당 반 ${availableClasses.length}개`} · 전체 자동 출석 후 예외 학생만 수정
           </p>
         </div>
@@ -326,11 +326,11 @@ export default function AttendanceCheck() {
           <p className="text-sm font-semibold mb-1" style={{ color: 'oklch(0.3 0.015 250)' }}>
             {formatDate(selectedDate)} 출결이 아직 시작되지 않았습니다.
           </p>
-          <p className="text-xs mb-5" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          <p className="text-xs mb-5" style={{ color: 'oklch(0.47 0.015 250)' }}>
             '출결 시작' 버튼을 누르면 수강생 {enrolledStudents.length}명이 전체 출석으로 초기화됩니다.
           </p>
           {enrolledStudents.length === 0 ? (
-            <p className="text-xs" style={{ color: 'oklch(0.577 0.245 27.325)' }}>현재 활성 수강생이 없는 반입니다. 수강등록을 먼저 진행해주세요.</p>
+            <p className="text-xs" style={{ color: 'oklch(0.447 0.245 27.325)' }}>현재 활성 수강생이 없는 반입니다. 수강등록을 먼저 진행해주세요.</p>
           ) : (
             <Button onClick={handleInitSession} className="gap-2" style={{ background: '#040D1E' }}>
               <CheckCircle2 size={15} />
@@ -391,7 +391,7 @@ export default function AttendanceCheck() {
 
             {/* 알림 안내 */}
             {!currentSession.isLocked && (
-              <div className="flex items-start gap-2 mt-3 pt-3 border-t text-xs" style={{ borderColor: 'oklch(0.93 0.005 250)', color: 'oklch(0.55 0.015 250)' }}>
+              <div className="flex items-start gap-2 mt-3 pt-3 border-t text-xs" style={{ borderColor: 'oklch(0.93 0.005 250)', color: 'oklch(0.42 0.015 250)' }}>
                 <Info size={12} className="mt-0.5 flex-shrink-0" />
                 <span>체크 완료 시 결석·조퇴 학생에게 카카오 알림톡이 자동 발송됩니다. 지각·보강출석·공결은 알림이 발송되지 않습니다.</span>
               </div>
@@ -405,7 +405,7 @@ export default function AttendanceCheck() {
               <thead>
                 <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
                   {['#', '학생명', '보호자 연락처', '출결 상태', '사유', '알림', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -420,7 +420,7 @@ export default function AttendanceCheck() {
                   return (
                     <tr key={stu.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                       {/* 번호 */}
-                      <td className="px-4 py-3 text-xs" style={{ color: 'oklch(0.65 0.01 250)', width: 40 }}>{idx + 1}</td>
+                      <td className="px-4 py-3 text-xs" style={{ color: 'oklch(0.49 0.01 250)', width: 40 }}>{idx + 1}</td>
 
                       {/* 학생명 */}
                       <td className="px-4 py-3" style={{ width: 140 }}>
@@ -431,13 +431,13 @@ export default function AttendanceCheck() {
                           </div>
                           <div>
                             <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{stu.name}</div>
-                            <div className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>{stu.phone}</div>
+                            <div className="text-xs" style={{ color: 'oklch(0.49 0.01 250)' }}>{stu.phone}</div>
                           </div>
                         </div>
                       </td>
 
                       {/* 보호자 연락처 */}
-                      <td className="px-4 py-3 text-xs tabular-nums" style={{ width: 130, color: 'oklch(0.5 0.015 250)' }}>
+                      <td className="px-4 py-3 text-xs tabular-nums" style={{ width: 130, color: 'oklch(0.4 0.015 250)' }}>
                         {stu.guardians[0]?.phone ?? '-'}
                       </td>
 
@@ -454,7 +454,7 @@ export default function AttendanceCheck() {
                       <td className="px-4 py-3" style={{ minWidth: 140 }}>
                         {rec.reason ? (
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs" style={{ color: 'oklch(0.45 0.015 250)' }}>{rec.reason}</span>
+                            <span className="text-xs" style={{ color: 'oklch(0.35 0.015 250)' }}>{rec.reason}</span>
                             {!locked && (
                               <button
                                 onClick={() => {
@@ -493,14 +493,14 @@ export default function AttendanceCheck() {
                       <td className="px-4 py-3" style={{ width: 140 }}>
                         {isNotifyTarget ? (
                           rec.notified ? (
-                            <div className="flex items-center gap-1.5 text-xs" style={{ color: 'oklch(0.5 0.15 160)' }}>
+                            <div className="flex items-center gap-1.5 text-xs" style={{ color: 'oklch(0.4 0.15 160)' }}>
                               <Send size={11} />
                               <span>{rec.notifyChannel}</span>
-                              {rec.notifyTime && <span className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>{rec.notifyTime}</span>}
+                              {rec.notifyTime && <span className="text-xs" style={{ color: 'oklch(0.49 0.01 250)' }}>{rec.notifyTime}</span>}
                             </div>
                           ) : (
                             <div className="flex items-center gap-1.5">
-                              <span className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>미발송</span>
+                              <span className="text-xs" style={{ color: 'oklch(0.49 0.01 250)' }}>미발송</span>
                               {currentSession.isLocked && (
                                 <button
                                   onClick={() => handleResendNotify(currentSession.id, stu.id, stu.name)}
@@ -521,7 +521,7 @@ export default function AttendanceCheck() {
                       <td className="px-4 py-3" style={{ width: 40 }}>
                         {rec.note && (
                           <div title={rec.note} className="cursor-help">
-                            <MessageSquare size={13} style={{ color: 'oklch(0.65 0.01 250)' }} />
+                            <MessageSquare size={13} style={{ color: 'oklch(0.49 0.01 250)' }} />
                           </div>
                         )}
                       </td>
@@ -533,7 +533,7 @@ export default function AttendanceCheck() {
             </div>
 
             {enrolledStudents.length === 0 && (
-              <div className="text-center py-10 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+              <div className="text-center py-10 text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>
                 현재 활성 수강생이 없는 반입니다. 수강등록을 먼저 진행해주세요.
               </div>
             )}
@@ -552,7 +552,7 @@ export default function AttendanceCheck() {
           <div className="py-2 space-y-3">
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">
-                사유 {reasonModal?.status === '결석' ? <span style={{ color: 'oklch(0.577 0.245 27.325)' }}>(필수)</span> : '(선택)'}
+                사유 {reasonModal?.status === '결석' ? <span style={{ color: 'oklch(0.447 0.245 27.325)' }}>(필수)</span> : '(선택)'}
               </Label>
               <Textarea
                 value={reasonInput}

@@ -18,6 +18,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { useGrowth } from '@/contexts/GrowthContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
+import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
 import { getSchoolRecordsForStudent, getNationalMocksForStudent } from '@/lib/phase2dData';
 import { estimateIfPotentialFromAveragePct } from '@/lib/ifAnalysisEngine';
@@ -99,17 +100,15 @@ function GrowthCard({ studentId }: { studentId: string }) {
 
         {/* 최근 엠블럼 */}
         {recentEmblems.length > 0 && (
-          <div className="flex items-center gap-1.5 mt-2">
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>최근 엠블럼:</span>
-            {recentEmblems.map(({ e, def }) => {
-              const badge = MATERIAL_BADGE[def!.material];
-              return (
-                <span key={e.id} className="text-xs px-1.5 py-0.5 rounded font-medium"
-                  style={{ background: badge.bg, color: 'oklch(0.3 0.02 250)', border: `1px solid ${badge.border}` }}>
-                  🏅 {def!.name}
-                </span>
-              );
-            })}
+            {recentEmblems.map(({ e, def }) => (
+              <span key={e.id} className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium"
+                style={{ background: 'oklch(0.98 0.006 90)', color: 'oklch(0.3 0.02 250)', border: '1px solid oklch(0.9 0.01 90)' }}>
+                <AxisEmblemBadge iconKey={def!.iconKey} level={def!.level} size={20} />
+                {def!.name}
+              </span>
+            ))}
           </div>
         )}
 

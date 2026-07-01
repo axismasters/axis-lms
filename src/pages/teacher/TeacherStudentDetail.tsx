@@ -30,7 +30,12 @@ import { computeSubjectGaps } from '@/lib/observationSignals';
 import type { StudentSignalBundle } from '@/lib/observationSignals';
 import { isGradedSubmission } from '@/lib/assessmentData';
 import { computeParentInsight } from '@/lib/parentInsightEngine';
-import { computeBriefing } from '@/lib/studentBriefingEngine';
+import { computeBriefing, buildTeacherGrowthConsultingNote } from '@/lib/studentBriefingEngine';
+// [Phase 3D v3-r10] 교사 학생 상세 성장 탭: IF/엠블럼/Rival을 상담용 요약으로 노출.
+import { useGrowth } from '@/contexts/GrowthContext';
+import { TIER_LABELS, MATERIAL_BADGE } from '@/lib/growthData';
+import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
+import { getIfCumulativeSummary, buildCumulativeImprovementNote } from '@/lib/ifAnalysisEngine';
 
 export default function TeacherStudentDetail() {
   const { studentId } = useParams<{ studentId: string }>();
@@ -40,6 +45,7 @@ export default function TeacherStudentDetail() {
   const { sessions } = useAttendance();
   const { getForStudent } = useHomework();
   const { getStatus } = useHomeworkStatus();
+  const { getProfile, getStudentEmblems, getRecentEmblems, emblems } = useGrowth();
 
   // Phase 3D v2: 상담 기록 관련 상태 — Rules of Hooks 준수를 위해 아래 조기 return보다
   // 반드시 앞에 선언해야 한다(이 컴포넌트는 studentId 유효성에 따라 조기 return이 있다).
@@ -145,17 +151,41 @@ export default function TeacherStudentDetail() {
     briefingResults,
     (examId) => exams.find((e) => e.id === examId)?.subject
   );
+  // [v3-r10-r3 buildfix] loadIfRecords()는 StudentIfRecord[]를 반환한다. signalBundle에 넣으면
+  // StudentSignalBundle 타입 때문에 IfRecordLite[]로 좁혀져 getIfCumulativeSummary(StudentIfRecord[])
+  // 호출 시 타입 불일치가 난다. 따라서 원본 타입을 유지하는 별도 변수를 둔다.
+  const fullIfRecords = loadIfRecords(studentId);
   const signalBundle: StudentSignalBundle = {
     studentId,
     studentName: student.name,
     results: briefingResults,
-    ifRecords: loadIfRecords(studentId),
+    ifRecords: fullIfRecords,
     attendanceRecords: briefingAttendance,
     homeworkItems: briefingHomework,
     subjectGaps: briefingSubjectGaps,
   };
   const parentInsight = computeParentInsight(signalBundle);
   const briefing = computeBriefing(signalBundle, parentInsight);
+
+  // [Phase 3D v3-r10] 성장 상담 요약 — IF/엠블럼/Rival을 교사 전용 상담용 문구로 조합.
+  // ⚠ 이 블록의 값(growthNote 등)은 학부모 화면으로 절대 전달하지 않는다.
+  const growthProfile = getProfile(studentId);
+  const achievedEmblems = getStudentEmblems(studentId).filter((e) => e.achieved);
+  const recentEmblem = getRecentEmblems(studentId, 1)[0];
+  const recentEmblemDef = recentEmblem ? emblems.find((e) => e.id === recentEmblem.emblemId) : undefined;
+  const ifCumulative = getIfCumulativeSummary(fullIfRecords);
+  const ifImprovementNote = buildCumulativeImprovementNote(ifCumulative);
+  const growthConsultingNote = growthProfile
+    ? buildTeacherGrowthConsultingNote({
+        tierLabel: TIER_LABELS[growthProfile.tier],
+        totalSP: growthProfile.totalSP,
+        achievedEmblemCount: achievedEmblems.length,
+        recentEmblemName: recentEmblemDef?.name,
+        rivalWins: growthProfile.rivalWins,
+        rivalLosses: growthProfile.rivalLosses,
+        ifImprovementNote,
+      })
+    : null;
 
   // Phase 3D v3-r1: 학부모 공개 코멘트 — 상담 기록 원문과 별개로, 학부모에게 보여줄
   // 문장을 선생님이 직접 다시 써서 저장한다.
@@ -319,6 +349,52 @@ export default function TeacherStudentDetail() {
             )}
           </div>
         </section>
+
+        {/* [Phase 3D v3-r10] 성장 상담 요약 — IF/엠블럼/Rival을 상담용으로 확인.
+            ⚠ 학부모 화면에는 이 섹션과 동일한 구성을 절대 노출하지 않는다(Rival/Emblem/SP/Tier
+            직접 노출 금지 원칙 — PARENT_PAGE_CONSTITUTION.md §5). */}
+        {growthProfile && (
+          <section
+            className="rounded-lg overflow-hidden"
+            style={{ border: '1px solid oklch(0.88 0.01 250)', background: 'white', boxShadow: '0 1px 3px oklch(0 0 0 / 0.06)' }}
+          >
+            <div
+              className="flex items-center gap-2 px-4 py-2.5"
+              style={{ background: 'oklch(0.97 0.004 247)', borderBottom: '1px solid oklch(0.92 0.008 250)' }}
+            >
+              <span className="text-sm font-bold" style={{ color: 'oklch(0.25 0.02 250)' }}>성장 상담 요약</span>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: '성장 단계', value: TIER_LABELS[growthProfile.tier] },
+                  { label: '누적 성장 활동', value: growthProfile.totalSP.toLocaleString() },
+                  { label: '또래 성장 비교', value: `${growthProfile.rivalWins + growthProfile.rivalLosses}회 참여` },
+                ].map(({ label, value }) => (
+                  <div key={label} className="rounded-lg p-2.5 text-center" style={{ background: 'oklch(0.97 0.004 247)' }}>
+                    <div className="font-bold text-sm tabular-nums" style={{ color: 'oklch(0.25 0.02 250)' }}>{value}</div>
+                    <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+              {achievedEmblems.length > 0 && recentEmblemDef && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>보유 엠블럼 {achievedEmblems.length}개 · 최근:</span>
+                  <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium"
+                    style={{ background: 'oklch(0.98 0.006 90)', color: 'oklch(0.3 0.02 250)', border: '1px solid oklch(0.9 0.01 90)' }}>
+                    <AxisEmblemBadge iconKey={recentEmblemDef.iconKey} level={recentEmblemDef.level} size={20} />
+                    {recentEmblemDef.name}
+                  </span>
+                </div>
+              )}
+              {growthConsultingNote && (
+                <p className="text-xs leading-relaxed" style={{ color: 'oklch(0.4 0.02 250)' }}>
+                  {growthConsultingNote}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* 담당 수업 */}
         <section>

@@ -36,6 +36,9 @@ import {
 } from '@/lib/ifAnalysisEngine';
 import type { IfReason, IfQuestionEntry } from '@/lib/ifAnalysisEngine';
 import { Button } from '@/components/ui/button';
+// [Phase 3D v3-r10] 막대그래프 색상: 딥 네이비 단색 + 강한 red 조합을 brandColors.ts의
+// IF_REASON_COLOR(amber/blue/teal)로 통일한다. 임의 색상 생성 금지 — 반드시 이 상수 경유.
+import { IF_REASON_COLOR, CHART_AMBER } from '@/lib/brandColors';
 
 // ─── 성적 색상 ────────────────────────────────────────────────────────
 function scoreColor(pct: number) {
@@ -203,6 +206,130 @@ function ExamLineTrendChart({ title, results, color }: { title: string; results:
     </div>
   );
 }
+
+// ─── [Phase 3D v3-r10-r2] 넓은 결과 추이 분석 패널 ───────────────────────
+// 기존: 우측 좁은 카드 2개(단원평가/내신대비)에 데이터 1회면 점 하나만 뜨는 실패 구조.
+// 변경: PC 전체 폭을 쓰는 넓은 분석 패널 1개에서 단원평가·내신대비를 한 화면에서 비교.
+//   - 데이터 2회 이상: 두 계열을 같은 축 위에 겹쳐 그린 넓은 선그래프 + 회차 목록.
+//   - 데이터 1회뿐: 점 하나만 띄우지 않고 (첫 기준점 / 최근 기록 요약 / 다음 테스트 안내)를
+//     함께 보여준다.
+function SeriesTrend({ label, results, color }: { label: string; results: StudentExamResult[]; color: string }) {
+  const sorted = [...results].sort((a, b) => a.examDate.localeCompare(b.examDate));
+  const pcts = sorted.map(r => r.totalPoints > 0 ? Math.round((r.earnedScore / r.totalPoints) * 100) : 0);
+  const latest = pcts.length > 0 ? pcts[pcts.length - 1] : null;
+  const first = pcts.length > 0 ? pcts[0] : null;
+  const delta = pcts.length >= 2 && latest !== null && first !== null ? latest - first : null;
+
+  const H = 180, padTop = 26, padBottom = 34, padX = 32;
+  const POINT_GAP = 72;
+  const W = Math.max(360, padX * 2 + Math.max(1, sorted.length - 1) * POINT_GAP);
+  const minPct = pcts.length > 0 ? Math.max(0, Math.min(...pcts) - 10) : 0;
+  const maxPct = pcts.length > 0 ? Math.min(100, Math.max(...pcts) + 10) : 100;
+  const range = maxPct - minPct || 10;
+  const xs = sorted.length > 1
+    ? pcts.map((_, i) => padX + (i / (pcts.length - 1)) * (W - 2 * padX))
+    : [W / 2];
+  const ys = pcts.map(p => H - padBottom - ((p - minPct) / range) * (H - padTop - padBottom));
+
+  return (
+    <div className="axis-card p-4 flex flex-col h-full">
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center gap-1.5">
+          <TrendingUp size={14} style={{ color }} />
+          <span className="text-sm font-semibold" style={{ color: 'oklch(0.28 0.02 250)' }}>{label}</span>
+        </div>
+        {sorted.length > 0 && (
+          <span className="text-xs px-2 py-0.5 rounded-full tabular-nums" style={{ background: 'oklch(0.96 0.004 250)', color: 'oklch(0.5 0.015 250)' }}>총 {sorted.length}회</span>
+        )}
+      </div>
+
+      {sorted.length === 0 && (
+        <div className="flex-1 flex flex-col items-center justify-center py-10 text-center">
+          <div className="text-sm" style={{ color: 'oklch(0.55 0.015 250)' }}>아직 공개된 {label} 결과가 없습니다.</div>
+          <div className="text-xs mt-1" style={{ color: 'oklch(0.7 0.01 250)' }}>결과가 공개되면 이곳에 추이가 쌓입니다.</div>
+        </div>
+      )}
+
+      {sorted.length === 1 && (
+        // 데이터 1회 — 점 하나만 띄우지 않고 기준점/요약/안내를 함께 제공
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 py-2">
+          <div className="rounded-lg p-4 flex flex-col justify-center" style={{ background: color + '12' }}>
+            <div className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>첫 기준점</div>
+            <div className="text-3xl font-black tabular-nums mt-1" style={{ color }}>{latest}%</div>
+            <div className="text-xs mt-1" style={{ color: 'oklch(0.55 0.015 250)' }}>{sorted[0].examDate}</div>
+          </div>
+          <div className="rounded-lg p-4 flex flex-col justify-center" style={{ background: 'oklch(0.97 0.004 250)' }}>
+            <div className="text-xs mb-1" style={{ color: 'oklch(0.5 0.015 250)' }}>최근 기록</div>
+            <div className="text-sm font-semibold truncate" style={{ color: 'oklch(0.3 0.02 250)' }}>{sorted[0].title}</div>
+            <div className="text-xs mt-1 tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>{sorted[0].earnedScore} / {sorted[0].totalPoints}점</div>
+          </div>
+          <div className="rounded-lg p-4 flex flex-col justify-center" style={{ background: 'oklch(0.97 0.004 250)' }}>
+            <div className="text-xs mb-1" style={{ color: 'oklch(0.5 0.015 250)' }}>다음 테스트 후</div>
+            <div className="text-sm" style={{ color: 'oklch(0.4 0.02 250)' }}>다음 {label} 결과가 공개되면 이 기준점과 비교한 <strong style={{ color }}>변화 추이</strong>가 누적됩니다.</div>
+          </div>
+        </div>
+      )}
+
+      {sorted.length >= 2 && (
+        <>
+          <div className="overflow-x-auto flex-1">
+            <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ minWidth: W }}>
+              {[0, 0.5, 1].map((t, i) => {
+                const y = padTop + t * (H - padTop - padBottom);
+                return <line key={i} x1={padX} y1={y} x2={W - padX} y2={y} stroke="oklch(0.93 0.006 250)" strokeWidth="1" />;
+              })}
+              <polygon
+                points={`${xs[0]},${H - padBottom} ${xs.map((x, i) => `${x},${ys[i]}`).join(' ')} ${xs[xs.length - 1]},${H - padBottom}`}
+                fill={color} fillOpacity="0.08" />
+              <polyline points={xs.map((x, i) => `${x},${ys[i]}`).join(' ')}
+                fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              {xs.map((x, i) => (
+                <g key={sorted[i].examId}>
+                  <circle cx={x} cy={ys[i]} r={5} fill="white" stroke={color} strokeWidth="2" />
+                  <title>{`${sorted[i].examDate} · ${sorted[i].title} · ${pcts[i]}%`}</title>
+                  <text x={x} y={H - padBottom + 16} fontSize={10} textAnchor="middle" fill="oklch(0.6 0.015 250)">{sorted[i].examDate.slice(5)}</text>
+                  <text x={x} y={ys[i] - 11} fontSize={11} textAnchor="middle" fontWeight="700" fill={color}>{pcts[i]}%</text>
+                </g>
+              ))}
+            </svg>
+          </div>
+          {delta !== null && (
+            <div className="text-xs mt-1 px-1" style={{ color: delta > 0 ? 'oklch(0.45 0.15 145)' : delta < 0 ? 'oklch(0.55 0.2 27)' : 'oklch(0.5 0.015 250)' }}>
+              첫 회차 대비 {delta > 0 ? `▲ +${delta}%p 상승` : delta < 0 ? `▼ ${delta}%p` : '변화 없음'}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function ResultTrendPanel({ unitResults, mockResults }: { unitResults: StudentExamResult[]; mockResults: StudentExamResult[] }) {
+  const UNIT = '#040D1E';
+  const MOCK = 'oklch(0.45 0.15 160)';
+  const totalCount = unitResults.length + mockResults.length;
+  return (
+    <div className="axis-card p-5">
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={16} style={{ color: '#040D1E' }} />
+          <span className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>결과 추이 분석</span>
+        </div>
+        <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>단원평가와 내신 대비 모의고사를 한 화면에서 비교합니다.</span>
+      </div>
+      <p className="text-xs mb-4" style={{ color: 'oklch(0.6 0.015 250)' }}>
+        {totalCount === 0
+          ? '테스트 결과가 공개되면 회차별 변화가 이곳에 쌓입니다.'
+          : '회차가 쌓일수록 점수 변화 흐름을 더 정확하게 볼 수 있습니다.'}
+      </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+        <SeriesTrend label="단원평가" results={unitResults} color={UNIT} />
+        <SeriesTrend label="내신 대비 모의고사" results={mockResults} color={MOCK} />
+      </div>
+    </div>
+  );
+}
+
 
 // ─── 내 점수 vs 평균 막대 그래프 ────────────────────────────────────
 function ScoreVsAvgBar({ result }: { result: StudentExamResult }) {
@@ -406,7 +533,7 @@ function CumulativeGrowthSection({
               <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
                 누적 놓친 점수 ({ifRecords.length}회 분석 기준)
               </div>
-              <div className="font-black text-base tabular-nums" style={{ color: 'oklch(0.55 0.2 27)' }}>
+              <div className="font-black text-base tabular-nums" style={{ color: CHART_AMBER }}>
                 {cumulativeMissed[cumulativeMissed.length - 1]}점
               </div>
             </div>
@@ -422,7 +549,7 @@ function CumulativeGrowthSection({
                 {reasonSummary.ratios.map(({ reason, pct }) => pct > 0 && (
                   <div key={reason} style={{
                     width: `${pct}%`,
-                    background: reason === '계산 실수' ? 'oklch(0.55 0.2 27)' : reason === '개념 부족' ? '#040D1E' : 'oklch(0.55 0.15 80)',
+                    background: IF_REASON_COLOR[reason],
                   }} />
                 ))}
               </div>
@@ -430,7 +557,7 @@ function CumulativeGrowthSection({
                 {reasonSummary.ratios.map(({ reason, pct, count }) => (
                   <div key={reason} className="flex items-center gap-1 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
                     <span className="inline-block w-2 h-2 rounded-full" style={{
-                      background: reason === '계산 실수' ? 'oklch(0.55 0.2 27)' : reason === '개념 부족' ? '#040D1E' : 'oklch(0.55 0.15 80)',
+                      background: IF_REASON_COLOR[reason],
                     }} />
                     {reason} {pct}%({count})
                   </div>
@@ -896,10 +1023,10 @@ export default function StudentGrades() {
           단원평가와 내신대비 모의고사 결과를 확인하세요. 카드를 탭하면 테스트 결과 상세와 IF 채점을 볼 수 있습니다.
         </div>
 
-        {/* [Phase 3D v3-r7-r1] PC 최적화: 데스크톱에서는 좌측(메인: 탭+시험목록)과
-            우측(요약: 결과 추이 선그래프 2개) 2컬럼으로 재구성한다. */}
-        <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-5">
-          <div className="space-y-3 lg:col-span-2">
+        {/* [Phase 3D v3-r10-r2] PC 레이아웃: 좁은 우측 추이 카드 2개 구조를 폐기하고,
+            메인 콘텐츠(탭+시험목록)는 전체 폭을 쓰고, 결과 추이는 그 아래 넓은 분석
+            패널(ResultTrendPanel)로 배치한다. */}
+        <div className="space-y-3">
 
         {/* 탭 */}
         <div className="flex gap-2">
@@ -932,21 +1059,14 @@ export default function StudentGrades() {
         {/* 탭 콘텐츠 */}
         <TestTabContent results={tabResults} tab={activeTab} studentId={myStudentId} />
 
+        {/* 결과 추이 분석 — 전체 폭 넓은 패널 */}
+        <ResultTrendPanel unitResults={unitEvalOnlyResults} mockResults={mockSchoolOnlyResults} />
+
         {/* 대학추천 안내 */}
         <div className="axis-card px-4 py-3 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
           💡 실제내신 · 전국연합모의고사 · 수능실전 성적은 홈의 <strong>대학추천</strong> 카드에서 확인하세요.
         </div>
 
-          </div>
-
-          {/* 우측 요약 패널: 결과 추이 선그래프 — [Phase 3D v3-r8] "성적"→"결과/테스트" 표현 정리 */}
-          <div className="lg:col-span-1">
-            <div className="text-xs font-semibold px-1 mb-2" style={{ color: 'oklch(0.45 0.015 250)' }}>결과 추이</div>
-            <div className="space-y-3">
-              <ExamLineTrendChart title="단원평가" results={unitEvalOnlyResults} color="#040D1E" />
-              <ExamLineTrendChart title="내신 대비 모의고사" results={mockSchoolOnlyResults} color="oklch(0.45 0.15 160)" />
-            </div>
-          </div>
         </div>
 
       </div>

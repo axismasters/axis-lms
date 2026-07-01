@@ -319,7 +319,7 @@ export default function ParentGrowthReport() {
 
   return (
     <ParentLayout title="자녀 성장 리포트">
-      <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-2xl lg:max-w-6xl mx-auto px-4 py-5 space-y-4">
 
         {/* 자녀 선택 */}
         {myStudentIds.length > 1 && (
@@ -340,41 +340,43 @@ export default function ParentGrowthReport() {
           </div>
         )}
 
-        {/* 인사 + 이번 달 변화 요약 */}
+        {/* 인사 + 이번 달 변화 요약 — PC에서 2컬럼 히어로 밴드 */}
         <div className="axis-card p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-bold text-white" style={{ background: '#040D1E' }}>
-              {student?.name.charAt(0) ?? '?'}
-            </div>
-            <div>
-              <div className="font-bold text-base" style={{ color: 'oklch(0.15 0.02 250)' }}>{student?.name ?? '자녀'} 성장 리포트</div>
-              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                {scoreTrend === null ? '아직 비교할 테스트 기록이 부족합니다.' :
-                  scoreTrend > 0 ? `최근 테스트 점수가 ${scoreTrend}%p 올랐습니다` :
-                  scoreTrend < 0 ? `최근 테스트 점수가 ${Math.abs(scoreTrend)}%p 내렸습니다` : '최근 테스트 점수가 비슷하게 유지되고 있습니다'}
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-5 items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold text-white flex-shrink-0" style={{ background: '#040D1E' }}>
+                {student?.name.charAt(0) ?? '?'}
+              </div>
+              <div>
+                <div className="font-bold text-lg" style={{ color: 'oklch(0.15 0.02 250)' }}>{student?.name ?? '자녀'} 성장 리포트</div>
+                <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                  {scoreTrend === null ? '아직 비교할 테스트 기록이 부족합니다.' :
+                    scoreTrend > 0 ? `최근 테스트 점수가 ${scoreTrend}%p 올랐습니다` :
+                    scoreTrend < 0 ? `최근 테스트 점수가 ${Math.abs(scoreTrend)}%p 내렸습니다` : '최근 테스트 점수가 비슷하게 유지되고 있습니다'}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
-              <div className="font-black text-base tabular-nums" style={{ color: '#040D1E' }}>{allPublishedResults.length}건</div>
-              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>테스트 기록</div>
-            </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
-              <div className="font-black text-base tabular-nums" style={{ color: 'oklch(0.45 0.15 145)' }}>{monthlyAvgPct !== null ? `${monthlyAvgPct}%` : '-'}</div>
-              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 한 달 평균</div>
-            </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
-              <div className="font-black text-base tabular-nums" style={{ color: subjectStats[0] ? scoreColor(subjectStats[0].avgPct) : 'oklch(0.6 0.015 250)' }}>
-                {subjectStats[0]?.subject ?? '-'}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
+                <div className="font-black text-lg tabular-nums" style={{ color: '#040D1E' }}>{allPublishedResults.length}건</div>
+                <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>테스트 기록</div>
               </div>
-              <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>보완 필요 과목</div>
+              <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
+                <div className="font-black text-lg tabular-nums" style={{ color: 'oklch(0.45 0.15 145)' }}>{monthlyAvgPct !== null ? `${monthlyAvgPct}%` : '-'}</div>
+                <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>최근 한 달 평균</div>
+              </div>
+              <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
+                <div className="font-black text-lg tabular-nums" style={{ color: subjectStats[0] ? scoreColor(subjectStats[0].avgPct) : 'oklch(0.6 0.015 250)' }}>
+                  {subjectStats[0]?.subject ?? '-'}
+                </div>
+                <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>보완 필요 과목</div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* 탭 */}
-        <div className="grid grid-cols-4 gap-1 p-1 rounded-lg" style={{ background: 'oklch(0.93 0.006 250)' }}>
+        <div className="grid grid-cols-4 gap-1 p-1 rounded-lg lg:max-w-2xl" style={{ background: 'oklch(0.93 0.006 250)' }}>
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className="py-2 rounded-md text-center text-xs font-medium transition-colors flex items-center justify-center gap-1"
@@ -403,7 +405,9 @@ export default function ParentGrowthReport() {
 
         {/* ── 테스트 탭 ── */}
         {tab === 'test' && (
-          <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            {/* 좌측: 추이 + 과목별 보완 필요도 */}
+            <div className="space-y-4">
             {trendPoints.length > 0 && (
               <div className="axis-card p-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -442,7 +446,10 @@ export default function ParentGrowthReport() {
                 </div>
               </div>
             )}
+            </div>
 
+            {/* 우측: IF 요약 + 최근 테스트 상세 */}
+            <div className="space-y-4">
             {ifSummary.totalRecordsAnalyzed > 0 && (
               <div className="axis-card p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -485,7 +492,8 @@ export default function ParentGrowthReport() {
                 </div>
               )}
             </div>
-          </>
+            </div>
+          </div>
         )}
 
         {/* ── 출결 탭 ── */}
@@ -553,7 +561,8 @@ export default function ParentGrowthReport() {
 
         {/* ── 리포트 탭 ── */}
         {tab === 'report' && (
-          <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            <div className="space-y-4">
             <div className="axis-card p-4">
               <div className="text-xs font-semibold mb-3" style={{ color: 'oklch(0.45 0.015 250)' }}>주간 학습 리포트 (최근 7일 · 전주 대비)</div>
               <div className="grid grid-cols-2 gap-2">
@@ -601,7 +610,9 @@ export default function ParentGrowthReport() {
                 </div>
               </div>
             </div>
+            </div>
 
+            <div className="space-y-4">
             <div className="axis-card p-4" style={{ borderLeft: '3px solid #040D1E' }}>
               <div className="flex items-center gap-2 mb-2">
                 <ClipboardList size={15} style={{ color: '#040D1E' }} />
@@ -641,7 +652,8 @@ export default function ParentGrowthReport() {
                 </div>
               )}
             </div>
-          </>
+            </div>
+          </div>
         )}
 
       </div>

@@ -25,6 +25,8 @@ import {
   CheckCircle2, AlertTriangle, Info, RefreshCw, Pencil, UserX, UserCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+// [Phase 3D v3-r10] 막대그래프 색상 정리 — 딥 네이비 단색 대신 muted blue/teal/amber 사용
+import { CHART_BLUE, CHART_TEAL, CHART_AMBER } from '@/lib/brandColors';
 
 type TabKey = 'basic' | 'submissions' | 'grading' | 'analysis';
 
@@ -51,7 +53,7 @@ export default function AssessmentDetail() {
     return (
       <AdminLayout title="시험 상세" breadcrumbs={[{ label: '시험 및 성적 관리', path: '/scores' }, { label: '시험 상세' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>시험 및 성적 관리 조회 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>시험 및 성적 관리 조회 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -61,7 +63,7 @@ export default function AssessmentDetail() {
     return (
       <AdminLayout title="시험 상세" breadcrumbs={[{ label: '시험 및 성적 관리', path: '/scores' }, { label: '시험 상세' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>시험을 찾을 수 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>시험을 찾을 수 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -72,7 +74,7 @@ export default function AssessmentDetail() {
     return (
       <AdminLayout title="시험 상세" breadcrumbs={[{ label: '시험 및 성적 관리', path: '/scores' }, { label: '시험 상세' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>이 시험에 접근할 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>이 시험에 접근할 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -86,10 +88,10 @@ export default function AssessmentDetail() {
     return (
       <AdminLayout title="시험 상세" breadcrumbs={[{ label: '시험 및 성적 관리', path: '/scores' }, { label: '시험 상세' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm font-medium" style={{ color: 'oklch(0.5 0.015 250)' }}>
+          <p className="text-sm font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>
             선생님 개인 시험지입니다.
           </p>
-          <p className="text-xs mt-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          <p className="text-xs mt-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
             시험 및 성적 관리는 학원 전체·학년·과정 공통 시험만 다룹니다. 선생님 개인 시험지는
             해당 선생님 화면에서만 관리됩니다.
           </p>
@@ -140,11 +142,11 @@ export default function AssessmentDetail() {
       {/* 헤더 */}
       <div className="flex items-start justify-between mb-4">
         <div>
-          <button onClick={() => navigate('/admin/scores')} className="flex items-center gap-1 text-xs mb-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <button onClick={() => navigate('/admin/scores')} className="flex items-center gap-1 text-xs mb-1.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
             <ChevronLeft size={12} /> 시험 및 성적 관리로
           </button>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>{exam.title}</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
             {categoryLabel(exam.categoryId)} · {cls ? cls.name : '학원 전체'} · {exam.examDate}
           </p>
         </div>
@@ -274,8 +276,8 @@ function BasicInfoTab({ exam, className, phase }: { exam: Exam; className?: stri
               <span className="px-1.5 py-0.5 rounded" style={{ background: isAutoGraded(q.type) ? 'oklch(0.94 0.06 160)' : 'oklch(0.95 0.06 60)', color: isAutoGraded(q.type) ? 'oklch(0.4 0.13 160)' : 'oklch(0.45 0.13 60)' }}>
                 {q.type}
               </span>
-              <span style={{ color: 'oklch(0.5 0.015 250)' }}>{q.points}점</span>
-              {isAutoGraded(q.type) && <span className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>정답: {q.correctAnswer}</span>}
+              <span style={{ color: 'oklch(0.4 0.015 250)' }}>{q.points}점</span>
+              {isAutoGraded(q.type) && <span className="text-xs" style={{ color: 'oklch(0.49 0.01 250)' }}>정답: {q.correctAnswer}</span>}
             </div>
           ))}
         </div>
@@ -287,7 +289,7 @@ function BasicInfoTab({ exam, className, phase }: { exam: Exam; className?: stri
 function Info2({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.5 0.015 250)' }}>{label}</div>
+      <div className="text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>{label}</div>
       <div className="text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{value}</div>
     </div>
   );
@@ -309,7 +311,7 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
           <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
             {['학생명', '휴대폰번호', '응시상태', '획득점수', '채점상태', '공개여부', '관리'].map((h) => (
               <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
-                style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
+                style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -320,9 +322,9 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
             return (
               <tr key={sub.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                 <td className="px-3 py-2.5 font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{stu?.name ?? '-'}</td>
-                <td className="px-3 py-2.5 text-xs tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>{stu?.phone ?? '-'}</td>
+                <td className="px-3 py-2.5 text-xs tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{stu?.phone ?? '-'}</td>
                 <td className="px-3 py-2.5"><SubmissionStatusBadge status={sub.status} /></td>
-                <td className="px-3 py-2.5 text-xs tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                <td className="px-3 py-2.5 text-xs tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>
                   {sub.totalScore !== undefined ? `${sub.totalScore} / ${exam.totalScore}` : '-'}
                 </td>
                 <td className="px-3 py-2.5 text-xs" style={{ color: isGradedSubmission(sub) ? 'oklch(0.35 0.15 145)' : 'oklch(0.55 0.015 250)' }}>
@@ -341,7 +343,7 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
                       </Button>
                     ) : (
                       <Button variant="outline" size="sm" onClick={() => markAbsent(exam.id, sub.studentId)} className="h-7 text-xs gap-1"
-                        style={{ color: 'oklch(0.577 0.245 27.325)', borderColor: 'oklch(0.9 0.06 27)' }}>
+                        style={{ color: 'oklch(0.447 0.245 27.325)', borderColor: 'oklch(0.9 0.06 27)' }}>
                         <UserX size={11} /> 결석 처리
                       </Button>
                     )
@@ -353,7 +355,7 @@ function SubmissionsTab({ exam, submissions, canGrade, locked }: { exam: Exam; s
         </tbody>
       </table>
       </div>
-      {submissions.length === 0 && <p className="text-center py-10 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>응시 대상이 없습니다.</p>}
+      {submissions.length === 0 && <p className="text-center py-10 text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>응시 대상이 없습니다.</p>}
     </div>
   );
 }
@@ -406,16 +408,16 @@ function GradingTab({
           <thead>
             <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
               <th className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap"
-                style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>학생명</th>
+                style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>학생명</th>
               {exam.questions.map((q) => (
                 <th key={q.id} className="px-2 py-2.5 text-center text-xs font-semibold whitespace-nowrap"
-                  style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>
+                  style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>
                   {q.no}번<br /><span className="text-[10px]" style={{ color: isAutoGraded(q.type) ? 'oklch(0.5 0.13 160)' : 'oklch(0.5 0.13 60)' }}>{q.type}({q.points})</span>
-                  {isAutoGraded(q.type) && <div className="text-[10px] mt-0.5" style={{ color: 'oklch(0.6 0.015 250)' }}>정답: {q.correctAnswer}</div>}
+                  {isAutoGraded(q.type) && <div className="text-[10px] mt-0.5" style={{ color: 'oklch(0.47 0.015 250)' }}>정답: {q.correctAnswer}</div>}
                 </th>
               ))}
               <th className="px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap"
-                style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>합계</th>
+                style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>합계</th>
             </tr>
           </thead>
           <tbody>
@@ -450,7 +452,7 @@ function GradingTab({
                               <span className="text-xs tabular-nums" style={{ color: ans?.score !== undefined ? 'oklch(0.4 0.015 250)' : 'oklch(0.8 0.01 250)' }}>
                                 {ans?.studentAnswer || '-'}
                               </span>
-                              <span className="text-[10px] tabular-nums" style={{ color: 'oklch(0.6 0.015 250)' }}>{ans?.score ?? '미채점'}</span>
+                              <span className="text-[10px] tabular-nums" style={{ color: 'oklch(0.47 0.015 250)' }}>{ans?.score ?? '미채점'}</span>
                             </div>
                           )
                         ) : canGrade && !locked ? (
@@ -479,12 +481,12 @@ function GradingTab({
           </tbody>
         </table>
       </div>
-      {submissions.length === 0 && <p className="text-center py-10 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>응시 대상이 없습니다.</p>}
+      {submissions.length === 0 && <p className="text-center py-10 text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>응시 대상이 없습니다.</p>}
       {!locked && canGrade && (
-        <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}><Info size={11} /> 답안·점수 입력 후 포커스를 벗어나면 저장됩니다.</p>
+        <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}><Info size={11} /> 답안·점수 입력 후 포커스를 벗어나면 저장됩니다.</p>
       )}
       {locked && (
-        <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+        <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
           <Info size={11} />
           {requiresPublishAction(exam)
             ? '성적이 공개되어 결과가 확정되었습니다. 점수 변경은 결과분석 탭의 정정 처리를 이용하세요.'
@@ -600,9 +602,9 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
               const heightPct = (b.count / maxCount) * 100;
               return (
                 <div key={b.label} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="w-full rounded-t" style={{ height: `${Math.max(heightPct, 4)}%`, background: b.count > 0 ? '#040D1E' : 'oklch(0.92 0.005 250)', minHeight: 4 }} />
-                  <span className="text-xs tabular-nums" style={{ color: 'oklch(0.55 0.01 250)', fontSize: 10 }}>{b.count}명</span>
-                  <span className="text-xs" style={{ color: 'oklch(0.65 0.01 250)', fontSize: 9 }}>{b.label}</span>
+                  <div className="w-full rounded-t" style={{ height: `${Math.max(heightPct, 4)}%`, background: b.count > 0 ? CHART_BLUE : 'oklch(0.92 0.005 250)', minHeight: 4 }} />
+                  <span className="text-xs tabular-nums" style={{ color: 'oklch(0.42 0.01 250)', fontSize: 10 }}>{b.count}명</span>
+                  <span className="text-xs" style={{ color: 'oklch(0.49 0.01 250)', fontSize: 9 }}>{b.label}</span>
                 </div>
               );
             })}
@@ -619,7 +621,7 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
               <div key={className} className="flex items-center gap-3 text-xs">
                 <span className="w-36 flex-shrink-0 truncate" style={{ color: 'oklch(0.4 0.02 250)' }}>{className}</span>
                 <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.round((cAvg / exam.totalScore) * 100)}%`, background: '#040D1E' }} />
+                  <div className="h-full rounded-full" style={{ width: `${Math.round((cAvg / exam.totalScore) * 100)}%`, background: CHART_TEAL }} />
                 </div>
                 <span className="w-24 text-right tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{cAvg}점 ({count}명)</span>
               </div>
@@ -635,9 +637,9 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
           <div className="space-y-1.5">
             {questionStats.map(({ q, rate }) => (
               <div key={q.id} className="flex items-center gap-2 text-xs">
-                <span className="w-12 flex-shrink-0" style={{ color: 'oklch(0.5 0.015 250)' }}>{q.no}번</span>
+                <span className="w-12 flex-shrink-0" style={{ color: 'oklch(0.4 0.015 250)' }}>{q.no}번</span>
                 <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.92 0.005 250)' }}>
-                  <div className="h-full rounded-full" style={{ width: `${rate}%`, background: '#040D1E' }} />
+                  <div className="h-full rounded-full" style={{ width: `${rate}%`, background: rate < 50 ? CHART_AMBER : CHART_BLUE }} />
                 </div>
                 <span className="w-10 text-right tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>{rate}%</span>
               </div>
@@ -649,18 +651,18 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
       {/* IF 분석 플레이스홀더 — 계산실수 / 개념부족 / 시간부족 */}
       <div>
         <Label className="text-xs font-semibold mb-2 block">
-          IF 분석 <span className="font-normal" style={{ color: 'oklch(0.6 0.01 250)' }}>(준비 중 — 향후 문항별 오답 패턴 분석과 연동 예정)</span>
+          IF 분석 <span className="font-normal" style={{ color: 'oklch(0.47 0.01 250)' }}>(준비 중 — 향후 문항별 오답 패턴 분석과 연동 예정)</span>
         </Label>
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: '계산 실수', desc: '정답 개념은 알지만 계산 과정에서 오류 발생', color: 'oklch(0.55 0.18 45)' },
-            { label: '개념 부족', desc: '관련 개념이나 공식의 이해 및 암기 부족', color: 'oklch(0.5 0.15 250)' },
-            { label: '시간 부족', desc: '풀이 시간 배분 실패로 인한 미완성 또는 공란', color: 'oklch(0.45 0.15 320)' },
+            { label: '계산 실수', desc: '정답 개념은 알지만 계산 과정에서 오류 발생', color: 'oklch(0.42 0.18 45)' },
+            { label: '개념 부족', desc: '관련 개념이나 공식의 이해 및 암기 부족', color: 'oklch(0.4 0.15 250)' },
+            { label: '시간 부족', desc: '풀이 시간 배분 실패로 인한 미완성 또는 공란', color: 'oklch(0.35 0.15 320)' },
           ].map(({ label, desc, color }) => (
             <div key={label} className="rounded-xl p-3 border" style={{ borderColor: 'oklch(0.92 0.01 250)' }}>
               <div className="text-xs font-semibold mb-1" style={{ color }}>{label}</div>
-              <div className="text-xs" style={{ color: 'oklch(0.6 0.01 250)' }}>{desc}</div>
-              <div className="mt-2 text-xs italic" style={{ color: 'oklch(0.7 0.01 250)' }}>데이터 수집 준비 중</div>
+              <div className="text-xs" style={{ color: 'oklch(0.47 0.01 250)' }}>{desc}</div>
+              <div className="mt-2 text-xs italic" style={{ color: 'oklch(0.54 0.01 250)' }}>데이터 수집 준비 중</div>
             </div>
           ))}
         </div>
@@ -670,7 +672,7 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
       <div>
         <Label className="text-xs font-semibold mb-2 block">
           학생별 결과 {locked && (
-            <span style={{ color: 'oklch(0.6 0.015 250)' }}>
+            <span style={{ color: 'oklch(0.47 0.015 250)' }}>
               {requiresPublishAction(exam) ? '(공개 완료 — 점수 변경은 정정 처리로만 가능)' : '(채점 완료 — 점수 변경은 정정 처리로만 가능)'}
             </span>
           )}
@@ -681,7 +683,7 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
             <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
               {['학생명', '총점', '정정 이력', ''].map((h) => (
                 <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold"
-                  style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
+                  style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -691,10 +693,10 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
               return (
                 <tr key={sub.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                   <td className="px-3 py-2.5 font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{stu?.name ?? '-'}</td>
-                  <td className="px-3 py-2.5 text-xs tabular-nums" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                  <td className="px-3 py-2.5 text-xs tabular-nums" style={{ color: 'oklch(0.4 0.015 250)' }}>
                     {sub.status === '결석' ? '결석' : (sub.totalScore ?? '미채점')}
                   </td>
-                  <td className="px-3 py-2.5 text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                  <td className="px-3 py-2.5 text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>
                     {sub.corrections.length > 0 ? `${sub.corrections.length}건 (최근: ${sub.corrections[sub.corrections.length - 1].previousScore}→${sub.corrections[sub.corrections.length - 1].newScore})` : '-'}
                   </td>
                   <td className="px-3 py-2.5">
@@ -721,7 +723,7 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
               <Input type="number" value={newScoreInput} onChange={(e) => setNewScoreInput(e.target.value)} className="text-sm" />
             </div>
             <div>
-              <Label className="text-xs font-semibold mb-1.5 block">정정 사유 <span style={{ color: 'oklch(0.577 0.245 27.325)' }}>(필수)</span></Label>
+              <Label className="text-xs font-semibold mb-1.5 block">정정 사유 <span style={{ color: 'oklch(0.447 0.245 27.325)' }}>(필수)</span></Label>
               <Textarea value={reasonInput} onChange={(e) => setReasonInput(e.target.value)} placeholder="정정 사유를 입력하세요" className="text-sm resize-none" rows={3} />
             </div>
             <div className="flex items-start gap-2 p-2.5 rounded text-xs" style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.38 0.18 250)' }}>
@@ -741,7 +743,7 @@ function AnalysisTab({ exam, submissions, canCorrect, currentUserName, locked }:
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="axis-card p-3.5 text-center">
-      <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>{label}</div>
+      <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>{label}</div>
       <div className="text-lg font-bold" style={{ color: '#040D1E' }}>{value}</div>
     </div>
   );

@@ -133,7 +133,7 @@ export default function AssessmentList() {
     return (
       <AdminLayout title="시험 및 성적 관리" breadcrumbs={[{ label: '시험 및 성적 관리' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>시험 및 성적 관리 조회 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>시험 및 성적 관리 조회 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -144,7 +144,7 @@ export default function AssessmentList() {
       <div className="flex items-start justify-between mb-5">
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>시험 및 성적 관리</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
             학원 전체·학년·과정 공통 시험을 관리합니다. 선생님 개인 시험지는 포함되지 않습니다.
           </p>
         </div>
@@ -158,19 +158,19 @@ export default function AssessmentList() {
       {/* 요약 카드 — 상태 카드 대신 파생 정보(공개 여부 + 채점 완료 여부)로 보여준다 */}
       <div className="grid grid-cols-4 gap-3 mb-4">
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>전체 시험</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>전체 시험</div>
           <div className="text-2xl font-bold" style={{ color: '#040D1E' }}>{stats.total}</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>미채점 있음</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>미채점 있음</div>
           <div className="text-2xl font-bold" style={{ color: 'oklch(0.42 0.14 60)' }}>{stats.ungraded}</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>채점 완료</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>채점 완료</div>
           <div className="text-2xl font-bold" style={{ color: 'oklch(0.38 0.18 250)' }}>{stats.graded}</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>공개 완료</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>공개 완료</div>
           <div className="text-2xl font-bold" style={{ color: 'oklch(0.28 0.15 160)' }}>{stats.published}</div>
         </div>
       </div>
@@ -178,12 +178,12 @@ export default function AssessmentList() {
       {/* Phase 3C: 교사별 시험 현황 요약(건수만 — 열람/편집 불가) */}
       {teacherPrivateSummary.length > 0 && (
         <div className="axis-card p-4 mb-4">
-          <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.5 0.015 250)' }}>
+          <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.4 0.015 250)' }}>
             교사별 시험 현황 (선생님 개인 시험지 — 이 목록에는 표시되지 않음, 건수만)
           </div>
           <div className="flex flex-wrap gap-2">
             {teacherPrivateSummary.map(({ teacherId, name, count }) => (
-              <span key={teacherId} className="text-xs px-2.5 py-1 rounded-full" style={{ background: 'oklch(0.96 0.02 250)', color: 'oklch(0.45 0.015 250)' }}>
+              <span key={teacherId} className="text-xs px-2.5 py-1 rounded-full" style={{ background: 'oklch(0.96 0.02 250)', color: 'oklch(0.35 0.015 250)' }}>
                 {name} · {count}건
               </span>
             ))}
@@ -195,7 +195,7 @@ export default function AssessmentList() {
       <div className="axis-card p-4 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.65 0.01 250)' }} />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.49 0.01 250)' }} />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="시험명 검색" className="h-9 w-52 pl-8 text-sm" />
           </div>
           <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -244,7 +244,7 @@ export default function AssessmentList() {
       {/* 목록 */}
       <div className="axis-card overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          <div className="text-center py-12 text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>
             <FileText size={28} style={{ color: 'oklch(0.82 0.01 250)', margin: '0 auto 10px' }} />
             조회 조건에 해당하는 시험이 없습니다.
           </div>
@@ -255,7 +255,7 @@ export default function AssessmentList() {
               <tr style={{ background: 'oklch(0.985 0.003 250)' }}>
                 {['시험명', '종류', '과목', '대상', '시험일', '응시/채점', '진행상태', '공개일', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap"
-                    style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
+                    style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -269,11 +269,11 @@ export default function AssessmentList() {
                 return (
                   <tr key={exam.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
                     <td className="px-4 py-3 font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{exam.title}</td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{categoryLabel(exam.categoryId)}</td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{exam.subject ?? '-'}</td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{cls ? cls.name : '학원 전체'}</td>
-                    <td className="px-4 py-3 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>{exam.examDate}</td>
-                    <td className="px-4 py-3 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                    <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{categoryLabel(exam.categoryId)}</td>
+                    <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{exam.subject ?? '-'}</td>
+                    <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{cls ? cls.name : '학원 전체'}</td>
+                    <td className="px-4 py-3 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>{exam.examDate}</td>
+                    <td className="px-4 py-3 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>
                       <span className="inline-flex items-center gap-1">
                         <Users size={11} /> {gradedCnt}/{subs.length}명
                       </span>
@@ -286,7 +286,7 @@ export default function AssessmentList() {
                         {phase}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                    <td className="px-4 py-3 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>
                       {exam.publishedAt ? exam.publishedAt.slice(0, 10) : '-'}
                     </td>
                     <td className="px-4 py-3">

@@ -92,7 +92,7 @@ function WeeklySchedule({ cls }: { cls: ClassRoom }) {
         {/* 시간 그리드 */}
         {hours.map(hour => (
           <div key={hour} className="grid" style={{ gridTemplateColumns: `60px repeat(${displayDays.length}, 1fr)`, borderTop: '1px solid oklch(0.94 0.003 250)' }}>
-            <div className="px-2 py-1.5 text-xs text-right" style={{ color: 'oklch(0.65 0.01 250)' }}>
+            <div className="px-2 py-1.5 text-xs text-right" style={{ color: 'oklch(0.49 0.01 250)' }}>
               {String(hour).padStart(2, '0')}:00
             </div>
             {displayDays.map(day => {
@@ -160,7 +160,7 @@ export default function ClassDetail() {
       <AdminLayout breadcrumbs={[{ label: '반관리' }, { label: '반 목록', path: '/classes' }, { label: '반 없음' }]}>
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <BookOpen size={40} style={{ color: 'oklch(0.8 0.01 250)' }} />
-          <p style={{ color: 'oklch(0.5 0.015 250)' }}>존재하지 않는 반입니다.</p>
+          <p style={{ color: 'oklch(0.4 0.015 250)' }}>존재하지 않는 반입니다.</p>
           <Button variant="outline" onClick={() => navigate('/admin/classes')}>반 목록으로</Button>
         </div>
       </AdminLayout>
@@ -173,7 +173,7 @@ export default function ClassDetail() {
     return (
       <AdminLayout breadcrumbs={[{ label: '반관리' }, { label: '반 목록', path: '/classes' }, { label: cls.name }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>이 반에 접근할 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>이 반에 접근할 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -286,12 +286,12 @@ export default function ClassDetail() {
                   {cls.status}
                 </span>
                 {isFull && (
-                  <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'oklch(0.97 0.06 27)', color: 'oklch(0.45 0.15 27)' }}>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'oklch(0.97 0.06 27)', color: 'oklch(0.35 0.15 27)' }}>
                     정원 마감
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-3 mt-1.5 text-sm flex-wrap" style={{ color: 'oklch(0.55 0.015 250)' }}>
+              <div className="flex items-center gap-3 mt-1.5 text-sm flex-wrap" style={{ color: 'oklch(0.42 0.015 250)' }}>
                 <span className="flex items-center gap-1.5">
                   <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'oklch(0.55 0.15 250)' }}>
                     {cls.teacher[0]}
@@ -305,7 +305,7 @@ export default function ClassDetail() {
                 <span>개강 {cls.startDate}</span>
               </div>
               {cls.description && (
-                <p className="text-xs mt-1.5" style={{ color: 'oklch(0.6 0.015 250)' }}>{cls.description}</p>
+                <p className="text-xs mt-1.5" style={{ color: 'oklch(0.47 0.015 250)' }}>{cls.description}</p>
               )}
             </div>
           </div>
@@ -321,7 +321,7 @@ export default function ClassDetail() {
               onClick={() => setDeleteDialog(true)}
               disabled={currentCount > 0}
               className="h-8 text-xs gap-1.5 hover:bg-rose-50 hover:border-rose-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-              style={{ color: 'oklch(0.577 0.245 27.325)' }}
+              style={{ color: 'oklch(0.447 0.245 27.325)' }}
               title={currentCount > 0 ? '현재 수강생이 있는 반은 삭제할 수 없습니다. 먼저 수강 종료 또는 퇴원 처리를 해주세요.' : undefined}
             >
               <Trash2 size={12} /> 삭제
@@ -332,7 +332,7 @@ export default function ClassDetail() {
         {/* 정원 바 */}
         <div className="mt-4 pt-4 border-t" style={{ borderColor: 'oklch(0.93 0.005 250)' }}>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-medium" style={{ color: 'oklch(0.5 0.015 250)' }}>수강생 현황</span>
+            <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>수강생 현황</span>
             <span className="text-xs font-bold" style={{ color: isFull ? 'oklch(0.577 0.245 27.325)' : 'oklch(0.3 0.015 250)' }}>
               {currentCount} / {cls.capacity}명 ({fillRate}%)
             </span>
@@ -391,7 +391,7 @@ export default function ClassDetail() {
               {activeEnrollments.length === 0 ? (
                 <div className="text-center py-12 rounded-lg" style={{ background: 'oklch(0.985 0.003 250)', border: '2px dashed oklch(0.9 0.005 250)' }}>
                   <Users size={28} style={{ color: 'oklch(0.8 0.01 250)', margin: '0 auto 8px' }} />
-                  <p className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>수강생이 없습니다.</p>
+                  <p className="text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>수강생이 없습니다.</p>
                   {canManageEnrollment && (
                     <Button variant="outline" size="sm" onClick={() => setAddStudentDialog(true)} className="mt-3 h-7 text-xs gap-1">
                       <Plus size={11} /> 수강생 추가
@@ -403,7 +403,7 @@ export default function ClassDetail() {
                   <thead>
                     <tr style={{ borderBottom: '1px solid oklch(0.92 0.005 250)', background: 'oklch(0.985 0.003 250)' }}>
                       {['#', '학생명', '휴대폰번호', '보호자 연락처', '수강 시작일', '수강상태', '관리'].map(h => (
-                        <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{h}</th>
+                        <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -413,7 +413,7 @@ export default function ClassDetail() {
                       if (!stu) return null;
                       return (
                         <tr key={enr.id} className="axis-table-row border-b" style={{ borderColor: 'oklch(0.95 0.003 250)' }}>
-                          <td className="px-3 py-2.5 text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>{idx + 1}</td>
+                          <td className="px-3 py-2.5 text-xs" style={{ color: 'oklch(0.49 0.01 250)' }}>{idx + 1}</td>
                           <td className="px-3 py-2.5">
                             <div className="flex items-center gap-2">
                               <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: '#040D1E' }}>
@@ -428,16 +428,16 @@ export default function ClassDetail() {
                               </button>
                             </div>
                           </td>
-                          <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                          <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>
                             <div className="flex items-center gap-1">
                               <Phone size={10} />
                               {stu.phone}
                             </div>
                           </td>
-                          <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                          <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>
                             {stu.guardians.length > 0 ? stu.guardians[0].phone : '-'}
                           </td>
-                          <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                          <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>
                             {enr.startDate}
                           </td>
                           <td className="px-3 py-2.5 whitespace-nowrap">
@@ -452,7 +452,7 @@ export default function ClassDetail() {
                                 className="p-1.5 rounded hover:bg-slate-100 transition-colors"
                                 title="학생 상세로 이동"
                               >
-                                <Users size={13} style={{ color: 'oklch(0.45 0.015 250)' }} />
+                                <Users size={13} style={{ color: 'oklch(0.35 0.015 250)' }} />
                               </button>
                               {canManageEnrollment && (
                                 <>
@@ -461,14 +461,14 @@ export default function ClassDetail() {
                                     className="p-1.5 rounded hover:bg-rose-50 transition-colors"
                                     title="수강 종료"
                                   >
-                                    <UserMinus size={13} style={{ color: 'oklch(0.577 0.245 27.325)' }} />
+                                    <UserMinus size={13} style={{ color: 'oklch(0.447 0.245 27.325)' }} />
                                   </button>
                                   <button
                                     onClick={() => openEnd(enr.id, stu.name, '퇴원')}
                                     className="p-1.5 rounded hover:bg-rose-50 transition-colors"
                                     title="퇴원 처리"
                                   >
-                                    <UserX size={13} style={{ color: 'oklch(0.577 0.245 27.325)' }} />
+                                    <UserX size={13} style={{ color: 'oklch(0.447 0.245 27.325)' }} />
                                   </button>
                                 </>
                               )}
@@ -477,7 +477,7 @@ export default function ClassDetail() {
                                 className="p-1.5 rounded hover:bg-slate-100 transition-colors"
                                 title="메모 확인/수정"
                               >
-                                <StickyNote size={13} style={{ color: 'oklch(0.45 0.015 250)' }} />
+                                <StickyNote size={13} style={{ color: 'oklch(0.35 0.015 250)' }} />
                               </button>
                             </div>
                           </td>
@@ -505,7 +505,7 @@ export default function ClassDetail() {
               {cls.timeSlots.length === 0 ? (
                 <div className="text-center py-12 rounded-lg" style={{ background: 'oklch(0.985 0.003 250)', border: '2px dashed oklch(0.9 0.005 250)' }}>
                   <Clock size={28} style={{ color: 'oklch(0.8 0.01 250)', margin: '0 auto 8px' }} />
-                  <p className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>등록된 시간표가 없습니다.</p>
+                  <p className="text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>등록된 시간표가 없습니다.</p>
                 </div>
               ) : (
                 <>
@@ -536,7 +536,7 @@ export default function ClassDetail() {
                   </div>
 
                   {/* 주간 수업 시간 합계 */}
-                  <div className="mt-3 text-xs text-right" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                  <div className="mt-3 text-xs text-right" style={{ color: 'oklch(0.47 0.015 250)' }}>
                     주간 총 수업 시간: {(() => {
                       const total = cls.timeSlots.reduce((sum, ts) => {
                         const [sh, sm] = ts.startTime.split(':').map(Number);
@@ -561,10 +561,10 @@ export default function ClassDetail() {
                 {[
                   { label: '최대 정원', value: `${cls.capacity}명`, color: '#040D1E' },
                   { label: '현재 수강생', value: `${currentCount}명`, color: isFull ? 'oklch(0.577 0.245 27.325)' : 'oklch(0.5 0.15 160)' },
-                  { label: '잔여 자리', value: `${Math.max(0, cls.capacity - currentCount)}명`, color: 'oklch(0.5 0.015 250)' },
+                  { label: '잔여 자리', value: `${Math.max(0, cls.capacity - currentCount)}명`, color: 'oklch(0.4 0.015 250)' },
                 ].map((item, i) => (
                   <div key={i} className="p-4 rounded-lg text-center" style={{ background: 'oklch(0.985 0.003 250)', border: '1px solid oklch(0.92 0.005 250)' }}>
-                    <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>{item.label}</div>
+                    <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>{item.label}</div>
                     <div className="text-2xl font-bold" style={{ color: item.color }}>{item.value}</div>
                   </div>
                 ))}
@@ -588,7 +588,7 @@ export default function ClassDetail() {
                   />
                 </div>
                 {isFull && (
-                  <div className="flex items-center gap-1.5 mt-2 text-xs" style={{ color: 'oklch(0.577 0.245 27.325)' }}>
+                  <div className="flex items-center gap-1.5 mt-2 text-xs" style={{ color: 'oklch(0.447 0.245 27.325)' }}>
                     <AlertCircle size={12} />
                     정원이 마감되었습니다. 수강생 추가가 불가합니다.
                   </div>
@@ -616,7 +616,7 @@ export default function ClassDetail() {
                     );
                   })}
                 </div>
-                <div className="flex items-center gap-4 mt-3 text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+                <div className="flex items-center gap-4 mt-3 text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>
                   <div className="flex items-center gap-1.5">
                     <div className="w-3 h-3 rounded" style={{ background: '#040D1E' }} />
                     수강중 ({currentCount}명)
@@ -637,18 +637,18 @@ export default function ClassDetail() {
                   </div>
                   <div className="grid grid-cols-3 gap-3 text-xs">
                     <div>
-                      <div style={{ color: 'oklch(0.55 0.015 250)' }}>월 수강료</div>
+                      <div style={{ color: 'oklch(0.42 0.015 250)' }}>월 수강료</div>
                       <div className="font-bold mt-0.5" style={{ color: 'oklch(0.3 0.015 250)' }}>{cls.fee.toLocaleString()}원</div>
                     </div>
                     <div>
-                      <div style={{ color: 'oklch(0.55 0.015 250)' }}>현재 월 매출</div>
+                      <div style={{ color: 'oklch(0.42 0.015 250)' }}>현재 월 매출</div>
                       <div className="font-bold mt-0.5" style={{ color: '#040D1E' }}>
                         {(currentCount * cls.fee).toLocaleString()}원
                       </div>
                     </div>
                     <div>
-                      <div style={{ color: 'oklch(0.55 0.015 250)' }}>정원 마감 시 매출</div>
-                      <div className="font-bold mt-0.5" style={{ color: 'oklch(0.5 0.15 160)' }}>
+                      <div style={{ color: 'oklch(0.42 0.015 250)' }}>정원 마감 시 매출</div>
+                      <div className="font-bold mt-0.5" style={{ color: 'oklch(0.4 0.15 160)' }}>
                         {(cls.capacity * cls.fee).toLocaleString()}원
                       </div>
                     </div>
@@ -698,14 +698,14 @@ export default function ClassDetail() {
             </div>
             <div className="p-4 space-y-3">
               <label className="block">
-                <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{endModal.mode}일<span style={{ color: 'oklch(0.55 0.2 27)' }}> *</span></span>
+                <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>{endModal.mode}일<span style={{ color: 'oklch(0.42 0.2 27)' }}> *</span></span>
                 <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1 w-full text-sm px-2.5 py-2 rounded-md border tabular-nums" style={{ borderColor: 'oklch(0.9 0.008 250)' }} />
               </label>
               <label className="block">
-                <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>{endModal.mode} 사유 (선택)</span>
+                <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>{endModal.mode} 사유 (선택)</span>
                 <Textarea value={endMemo} onChange={(e) => setEndMemo(e.target.value)} rows={3} placeholder={endModal.mode === '종료' ? '예: 반 변경, 상위반 이동 등' : '예: 개인 사정으로 수강 중단'} className="mt-1 text-sm resize-none" />
               </label>
-              <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>저장 시 해당 수강은 {endModal.mode} 처리되고 {endModal.mode}일이 기록됩니다(삭제되지 않고 이력으로 보관됩니다).</p>
+              <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>저장 시 해당 수강은 {endModal.mode} 처리되고 {endModal.mode}일이 기록됩니다(삭제되지 않고 이력으로 보관됩니다).</p>
             </div>
             <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
               <button onClick={() => setEndModal(null)} className="px-3 py-1.5 rounded-md text-sm border hover:bg-slate-50" style={{ borderColor: 'oklch(0.9 0.008 250)', color: 'oklch(0.4 0.02 250)' }}>취소</button>
@@ -748,11 +748,11 @@ export default function ClassDetail() {
             <DialogTitle className="text-sm">수강생 추가</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <p className="text-xs mb-3" style={{ color: 'oklch(0.55 0.015 250)' }}>
+            <p className="text-xs mb-3" style={{ color: 'oklch(0.42 0.015 250)' }}>
               현재 재원 중이며 이 반에 미등록된 학생만 표시됩니다.
             </p>
             {availableStudents.length === 0 ? (
-              <div className="text-center py-6 text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+              <div className="text-center py-6 text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>
                 추가 가능한 학생이 없습니다.
               </div>
             ) : (

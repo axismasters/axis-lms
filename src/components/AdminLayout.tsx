@@ -325,9 +325,9 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
           <div className="flex items-center gap-3">
             <button className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md transition-colors hover:bg-slate-100"
               onClick={() => setMobileOpen(true)} aria-label="메뉴 열기">
-              <Menu size={18} style={{ color: 'oklch(0.4 0.015 250)' }} />
+              <Menu size={18} style={{ color: 'oklch(0.35 0.015 250)' }} />
             </button>
-            <div className="flex items-center gap-2 text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>
+            <div className="flex items-center gap-2 text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>
               {breadcrumbs ? (
                 breadcrumbs.map((b, i) => (
                   <span key={i} className="flex items-center gap-2">
@@ -335,12 +335,12 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
                     {b.path ? (
                       <Link href={b.path}>
                         <span className="hover:text-primary cursor-pointer transition-colors"
-                          style={{ color: i === breadcrumbs.length - 1 ? 'oklch(0.2 0.02 250)' : undefined }}>
+                          style={{ color: i === breadcrumbs.length - 1 ? 'oklch(0.2 0.02 250)' : undefined, fontWeight: i === breadcrumbs.length - 1 ? 600 : 500 }}>
                           {b.label}
                         </span>
                       </Link>
                     ) : (
-                      <span style={{ color: i === breadcrumbs.length - 1 ? 'oklch(0.2 0.02 250)' : undefined, fontWeight: i === breadcrumbs.length - 1 ? 600 : 400 }}>
+                      <span style={{ color: i === breadcrumbs.length - 1 ? 'oklch(0.2 0.02 250)' : undefined, fontWeight: i === breadcrumbs.length - 1 ? 600 : 500 }}>
                         {b.label}
                       </span>
                     )}
@@ -353,13 +353,14 @@ export default function AdminLayout({ children, title, breadcrumbs }: AdminLayou
           </div>
           <div className="flex items-center gap-3">
             <button className="relative p-2 rounded-md transition-colors hover:bg-slate-100">
-              <Bell size={16} style={{ color: 'oklch(0.5 0.015 250)' }} />
+              <Bell size={16} style={{ color: 'oklch(0.4 0.015 250)' }} />
             </button>
-            <div className="text-xs hidden sm:block" style={{ color: 'oklch(0.5 0.015 250)' }}>
+            <div className="text-xs hidden sm:block" style={{ color: 'oklch(0.4 0.015 250)' }}>
               {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
           </div>
         </header>
+
         <main className="flex-1 p-4 lg:p-6 page-enter">{children}</main>
       </div>
     </div>

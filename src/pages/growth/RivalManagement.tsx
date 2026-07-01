@@ -29,7 +29,7 @@ export default function RivalManagement() {
       <AdminLayout title="라이벌관리" breadcrumbs={[{ label: '성장관리', path: '/growth/overview' }, { label: '라이벌관리' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm font-medium mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>접근 권한이 없습니다.</p>
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>
             라이벌 전체 관리는 최고관리자·원장·행정 계정만 접근할 수 있습니다.
           </p>
         </div>
@@ -79,7 +79,7 @@ export default function RivalManagement() {
             활성 {activeChallengeCount}건
           </span>
         </div>
-        <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+        <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>
           라이벌 연결 관계 및 승패 기록을 관리합니다. (관리자 전용 화면)
         </p>
       </div>
@@ -105,7 +105,7 @@ export default function RivalManagement() {
           </thead>
           <tbody>
             {rows.length === 0 && (
-              <tr><td colSpan={10} className="px-4 py-10 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>성장 프로필이 없습니다.</td></tr>
+              <tr><td colSpan={10} className="px-4 py-10 text-center text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>성장 프로필이 없습니다.</td></tr>
             )}
             {rows.map(({ student, profile, relation, targetStudent, targetProfile, challengersCount }) => {
               const tier = (profile.tier ?? 'UNRANKED') as StudentTier;
@@ -116,7 +116,7 @@ export default function RivalManagement() {
                     <div className="font-semibold" style={{ color: 'oklch(0.18 0.02 250)' }}>{student.name}</div>
                     <div className="text-xs font-semibold" style={{ color: TIER_COLORS[tier] }}>{TIER_LABELS[tier]}</div>
                   </td>
-                  <td className="px-4 py-2.5 text-sm italic" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                  <td className="px-4 py-2.5 text-sm italic" style={{ color: 'oklch(0.35 0.015 250)' }}>
                     {profile.nickname}
                   </td>
                   <td className="px-4 py-2.5">
@@ -159,7 +159,7 @@ export default function RivalManagement() {
                       {challengersCount}명
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                  <td className="px-4 py-2.5 text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>
                     {relation?.nextChangeAvailableAt?.slice(0, 10) ?? '—'}
                   </td>
                   <td className="px-4 py-2.5">
@@ -177,7 +177,7 @@ export default function RivalManagement() {
                         </button>
                         <button onClick={() => setConfirmEnd(relation)}
                           className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded text-xs cursor-pointer transition-all duration-150 hover:bg-slate-100 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
-                          style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.87 0.006 250)', outlineColor: 'oklch(0.6 0.015 250)' }}>
+                          style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.4 0.015 250)', border: '1px solid oklch(0.87 0.006 250)', outlineColor: 'oklch(0.6 0.015 250)' }}>
                           <StopCircle size={10} />종료
                         </button>
                       </div>
@@ -207,12 +207,12 @@ export default function RivalManagement() {
                 <span className="font-semibold" style={{ color: '#1D4ED8' }}>{challenger?.name}</span>
                 <Swords size={11} style={{ color: '#EF4444' }} />
                 <span className="font-semibold" style={{ color: 'oklch(0.3 0.02 250)' }}>{target?.name}</span>
-                <span style={{ color: 'oklch(0.6 0.015 250)' }}>({r.wins}승 {r.losses}패)</span>
+                <span style={{ color: 'oklch(0.47 0.015 250)' }}>({r.wins}승 {r.losses}패)</span>
               </div>
             );
           })}
           {rivalRelations.filter(r => r.status === 'ACTIVE').length === 0 && (
-            <p className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>활성 라이벌 관계가 없습니다.</p>
+            <p className="text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>활성 라이벌 관계가 없습니다.</p>
           )}
         </div>
       </div>
@@ -222,13 +222,13 @@ export default function RivalManagement() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
           <div className="bg-white rounded-xl shadow-2xl p-6 w-80">
             <h3 className="font-bold text-base mb-2" style={{ color: 'oklch(0.15 0.02 250)' }}>라이벌 관계 종료</h3>
-            <p className="text-sm mb-5" style={{ color: 'oklch(0.45 0.015 250)' }}>
+            <p className="text-sm mb-5" style={{ color: 'oklch(0.35 0.015 250)' }}>
               라이벌 관계를 종료합니다. 기록은 유지되며 삭제되지 않습니다.
             </p>
             <div className="flex gap-2 justify-end">
               <button onClick={() => setConfirmEnd(null)}
                 className="px-4 py-1.5 text-sm rounded-md border transition-colors hover:bg-slate-50 active:scale-95"
-                style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.5 0.015 250)' }}>취소</button>
+                style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.4 0.015 250)' }}>취소</button>
               <button onClick={() => handleEnd(confirmEnd)}
                 className="px-4 py-1.5 text-sm rounded-md font-semibold transition-colors hover:brightness-90 active:scale-95"
                 style={{ background: '#EF4444', color: '#fff' }}>종료 확인</button>

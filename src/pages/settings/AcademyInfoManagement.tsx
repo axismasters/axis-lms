@@ -13,7 +13,7 @@ export default function AcademyInfoManagement() {
   return (
     <AdminLayout title="학원정보관리" breadcrumbs={[{ label: '시스템설정', path: '/settings' }, { label: '학원정보관리' }]}>
       <h1 className="text-lg font-bold flex items-center gap-2 mb-1" style={{ color: 'oklch(0.2 0.02 250)' }}><Building2 size={18} /> 학원정보관리</h1>
-      <p className="text-xs mb-4" style={{ color: 'oklch(0.5 0.015 250)' }}>학원 기본 정보·로고·브랜드 설정을 관리합니다.</p>
+      <p className="text-xs mb-4" style={{ color: 'oklch(0.4 0.015 250)' }}>학원 기본 정보·로고·브랜드 설정을 관리합니다.</p>
 
       {!canEdit && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-md mb-4 text-xs" style={{ background: 'oklch(0.97 0.02 250)', color: 'oklch(0.42 0.08 250)' }}>
@@ -22,8 +22,8 @@ export default function AcademyInfoManagement() {
       )}
 
       <div className="axis-card p-12 text-center">
-        <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>학원정보관리 상세 화면은 추후 확장 예정입니다.</p>
-        <p className="text-xs mt-1" style={{ color: 'oklch(0.6 0.015 250)' }}>(AXIS 브랜드북·로고·연락처 등 항목은 별도 요청 시 구현)</p>
+        <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>학원정보관리 상세 화면은 추후 확장 예정입니다.</p>
+        <p className="text-xs mt-1" style={{ color: 'oklch(0.47 0.015 250)' }}>(AXIS 브랜드북·로고·연락처 등 항목은 별도 요청 시 구현)</p>
       </div>
     </AdminLayout>
   );

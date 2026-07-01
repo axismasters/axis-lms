@@ -53,7 +53,7 @@ function SummaryFilterCard({
           {active && <span className="text-xs px-1 py-0 rounded" style={{ background: '#040D1E', color: 'white' }}>✓</span>}
         </div>
         <div className="text-xl font-bold tabular-nums" style={{ color: 'oklch(0.2 0.02 250)' }}>
-          {value}<span className="text-xs font-normal ml-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>명</span>
+          {value}<span className="text-xs font-normal ml-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>명</span>
         </div>
       </div>
     </button>
@@ -245,8 +245,8 @@ export default function StudentList() {
     return (
       <AdminLayout title="학생 목록" breadcrumbs={[{ label: '학생관리' }, { label: '학생 목록' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>학생 목록 조회 권한이 없습니다.</p>
-          <p className="text-xs mt-1" style={{ color: 'oklch(0.6 0.015 250)' }}>필요 시 권한설정에서 student.view 권한을 요청하세요.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>학생 목록 조회 권한이 없습니다.</p>
+          <p className="text-xs mt-1" style={{ color: 'oklch(0.47 0.015 250)' }}>필요 시 권한설정에서 student.view 권한을 요청하세요.</p>
         </div>
       </AdminLayout>
     );
@@ -257,7 +257,7 @@ export default function StudentList() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'oklch(0.2 0.02 250)' }}>학생 목록</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'oklch(0.5 0.015 250)' }}>학생을 등록하고 관리하세요</p>
+          <p className="text-xs mt-0.5" style={{ color: 'oklch(0.4 0.015 250)' }}>학생을 등록하고 관리하세요</p>
         </div>
         {can('student.create') && (
           <Link href="/admin/students/new">
@@ -308,7 +308,7 @@ export default function StudentList() {
       <div className="axis-card p-3 mb-3">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.6 0.015 250)' }} />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'oklch(0.47 0.015 250)' }} />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="학생명 · 학생 휴대폰 · 보호자 휴대폰 통합 검색" className="w-full text-sm rounded-md pl-9 pr-3 py-2 outline-none focus:ring-2" style={{ border: '1px solid oklch(0.9 0.008 250)', color: 'oklch(0.2 0.02 250)' }} />
           </div>
           <button onClick={() => setShowFilters((v) => !v)} className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-50" style={{ border: '1px solid oklch(0.9 0.008 250)', color: 'oklch(0.35 0.02 250)' }}>
@@ -321,39 +321,39 @@ export default function StudentList() {
         {showFilters && (
           <div className="mt-3 pt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5" style={{ borderTop: '1px solid oklch(0.93 0.008 250)' }}>
             <label className="flex flex-col gap-1">
-              <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>재원 상태</span>
+              <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>재원 상태</span>
               <select className={selectCls} style={selectStyle} value={fStatus} onChange={(e) => setFStatus(e.target.value as StudentStatus | '전체')}>{STATUS_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}</select>
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>수강반</span>
+              <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>수강반</span>
               <select className={selectCls} style={selectStyle} value={fClass} onChange={(e) => setFClass(e.target.value)}><option value="전체">전체</option>{classOptions.map((o) => <option key={o} value={o}>{o}</option>)}</select>
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>담당강사</span>
+              <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>담당강사</span>
               <select className={selectCls} style={selectStyle} value={fTeacher} onChange={(e) => setFTeacher(e.target.value)}><option value="전체">전체</option>{teacherOptions.map((o) => <option key={o} value={o}>{o}</option>)}</select>
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>학년</span>
+              <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>학년</span>
               <select className={selectCls} style={selectStyle} value={fGrade} onChange={(e) => setFGrade(e.target.value)}>{['전체', '고1', '고2', '고3'].map((o) => <option key={o} value={o}>{o}</option>)}</select>
             </label>
             {showFinanceColumn && (
               <label className="flex flex-col gap-1">
-                <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>미납 여부</span>
+                <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>미납 여부</span>
                 <select className={selectCls} style={selectStyle} value={fUnpaid} onChange={(e) => setFUnpaid(e.target.value as (typeof UNPAID_OPTIONS)[number])}>{UNPAID_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}</select>
               </label>
             )}
             <label className="flex flex-col gap-1">
-              <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>대학추천 데이터</span>
+              <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>대학추천 데이터</span>
               <select className={selectCls} style={selectStyle} value={fUniv} onChange={(e) => setFUniv(e.target.value as UnivStatus | '전체')}>{UNIV_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}</select>
             </label>
             <div className="col-span-2 md:col-span-3 lg:col-span-6 flex justify-end">
-              <button onClick={resetFilters} className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md hover:bg-slate-50" style={{ color: 'oklch(0.5 0.015 250)' }}><X size={12} /> 필터 초기화</button>
+              <button onClick={resetFilters} className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md hover:bg-slate-50" style={{ color: 'oklch(0.4 0.015 250)' }}><X size={12} /> 필터 초기화</button>
             </div>
           </div>
         )}
       </div>
 
-      <div className="text-xs mb-2" style={{ color: 'oklch(0.5 0.015 250)' }}>
+      <div className="text-xs mb-2" style={{ color: 'oklch(0.4 0.015 250)' }}>
         <b style={{ color: 'oklch(0.1605 0.0394 259.41)' }}>{currentFilterLabel}</b> <b style={{ color: 'oklch(0.1605 0.0394 259.41)' }}>{filtered.length}</b>명
       </div>
 
@@ -362,7 +362,7 @@ export default function StudentList() {
           <table className="w-full text-sm" style={{ minWidth: showFinanceColumn ? 1180 : 1060 }}>
             <thead>
               <tr style={{ background: 'oklch(0.98 0.004 247)' }}>
-                {headers.map((h) => <th key={h} className="text-left font-semibold px-3 py-2.5 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', fontSize: 12, background: 'oklch(0.98 0.004 247)', boxShadow: 'inset 0 -1px 0 oklch(0.9 0.008 250)' }}>{h}</th>)}
+                {headers.map((h) => <th key={h} className="text-left font-semibold px-3 py-2.5 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)', fontSize: 12, background: 'oklch(0.98 0.004 247)', boxShadow: 'inset 0 -1px 0 oklch(0.9 0.008 250)' }}>{h}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -375,17 +375,17 @@ export default function StudentList() {
                   <tr key={s.id} className="axis-table-row" style={{ borderBottom: '1px solid oklch(0.95 0.006 250)' }}>
                     <td className="px-3 py-2.5 font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{s.name}</td>
                     <td className="px-3 py-2.5 tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{s.phone}</td>
-                    <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)' }}>
-                      {guardian ? <span className="tabular-nums">{guardian.phone}<span className="ml-1 text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>({guardian.relation})</span></span> : '-'}
+                    <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>
+                      {guardian ? <span className="tabular-nums">{guardian.phone}<span className="ml-1 text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>({guardian.relation})</span></span> : '-'}
                     </td>
                     <td className="px-3 py-2.5"><StatusBadge status={s.status} /></td>
                     <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)' }}>
-                      {active.length ? (active.length > 1 ? `${firstName} 외 ${active.length - 1}` : firstName) : <span style={{ color: 'oklch(0.65 0.015 250)' }}>미배정</span>}
+                      {active.length ? (active.length > 1 ? `${firstName} 외 ${active.length - 1}` : firstName) : <span style={{ color: 'oklch(0.49 0.015 250)' }}>미배정</span>}
                     </td>
                     <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{teachers.length ? teachers.join(', ') : '-'}</td>
-                    <td className="px-3 py-2.5">{s.recentAttendance ? <AttendanceBadge status={s.recentAttendance.status} /> : <span className="text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>-</span>}</td>
+                    <td className="px-3 py-2.5">{s.recentAttendance ? <AttendanceBadge status={s.recentAttendance.status} /> : <span className="text-xs" style={{ color: 'oklch(0.49 0.015 250)' }}>-</span>}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>{getRecentScoreLabel(s)}</td>
-                    {showFinanceColumn && (canViewFinance(s.id) ? <td className="px-3 py-2.5"><FinancePill student={s} getClass={getClass} /></td> : <td className="px-3 py-2.5 text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>-</td>)}
+                    {showFinanceColumn && (canViewFinance(s.id) ? <td className="px-3 py-2.5"><FinancePill student={s} getClass={getClass} /></td> : <td className="px-3 py-2.5 text-xs" style={{ color: 'oklch(0.49 0.015 250)' }}>-</td>)}
                     <td className="px-3 py-2.5"><UnivPill status={getUnivDataStatus(s)} /></td>
                     <td className="px-3 py-2.5"><QuickActions studentId={s.id} showFinance={showFinanceColumn && canViewFinance(s.id)} /></td>
                   </tr>
@@ -395,9 +395,9 @@ export default function StudentList() {
                 <tr>
                   <td colSpan={headers.length} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
-                      <Search size={22} style={{ color: 'oklch(0.7 0.01 250)' }} />
-                      <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>조건에 맞는 학생이 없습니다.</p>
-                      <p className="text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>검색어나 필터를 조정해 보세요.</p>
+                      <Search size={22} style={{ color: 'oklch(0.54 0.01 250)' }} />
+                      <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>조건에 맞는 학생이 없습니다.</p>
+                      <p className="text-xs" style={{ color: 'oklch(0.49 0.015 250)' }}>검색어나 필터를 조정해 보세요.</p>
                     </div>
                   </td>
                 </tr>

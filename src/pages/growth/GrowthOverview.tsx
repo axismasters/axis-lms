@@ -32,7 +32,7 @@ export default function GrowthOverview() {
     return (
       <AdminLayout title="성장현황" breadcrumbs={[{ label: '성장관리', path: '/growth/overview' }, { label: '성장현황' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>접근 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>접근 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -74,7 +74,7 @@ export default function GrowthOverview() {
           <div key={i} className="axis-card p-4">
             <div className="flex items-center gap-2 mb-2" style={{ color: card.color }}>
               {card.icon}
-              <span className="text-xs font-medium" style={{ color: 'oklch(0.5 0.015 250)' }}>{card.label}</span>
+              <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>{card.label}</span>
             </div>
             <div className="text-2xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>{card.value}</div>
           </div>
@@ -101,7 +101,7 @@ export default function GrowthOverview() {
         <div className="axis-card p-4 mb-4">
           <h3 className="text-sm font-bold mb-3" style={{ color: 'oklch(0.15 0.02 250)' }}>최근 SP 지급 이력 (최근 10건)</h3>
           {recentLogs.length === 0 ? (
-            <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>이력 없음</p>
+            <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>이력 없음</p>
           ) : (
             <div className="axis-table-scroll" style={{ maxHeight: 320 }}>
             <table className="w-full text-xs border-collapse" style={{ minWidth: 480 }}>
@@ -117,7 +117,7 @@ export default function GrowthOverview() {
                   const st = students.find(s => s.id === log.studentId);
                   return (
                     <tr key={log.id} style={{ borderBottom: '1px solid oklch(0.96 0.004 250)' }}>
-                      <td className="py-1.5" style={{ color: 'oklch(0.5 0.015 250)' }}>{log.createdAt}</td>
+                      <td className="py-1.5" style={{ color: 'oklch(0.4 0.015 250)' }}>{log.createdAt}</td>
                       <td className="py-1.5 font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{st?.name ?? log.studentId}</td>
                       <td className="py-1.5 font-bold" style={{ color: '#059669' }}>+{log.amount}</td>
                       <td className="py-1.5" style={{ color: 'oklch(0.4 0.015 250)', maxWidth: 200 }}>
@@ -128,7 +128,7 @@ export default function GrowthOverview() {
                           {SOURCE_TYPE_LABELS[log.sourceType]}
                         </span>
                       </td>
-                      <td className="py-1.5" style={{ color: 'oklch(0.55 0.015 250)' }}>{log.createdBy}</td>
+                      <td className="py-1.5" style={{ color: 'oklch(0.42 0.015 250)' }}>{log.createdBy}</td>
                     </tr>
                   );
                 })}
@@ -153,14 +153,14 @@ export default function GrowthOverview() {
           </thead>
           <tbody>
             {rows.length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-10 text-center text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>성장 프로필이 있는 학생이 없습니다.</td></tr>
+              <tr><td colSpan={9} className="px-4 py-10 text-center text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>성장 프로필이 있는 학생이 없습니다.</td></tr>
             )}
             {rows.map(({ s, profile, achieved, repEmblems, rivalName }) => {
               const tier = (profile?.tier ?? 'UNRANKED') as StudentTier;
               return (
                 <tr key={s.id} style={{ borderBottom: '1px solid oklch(0.95 0.004 250)' }}>
                   <td className="px-4 py-2.5 font-semibold" style={{ color: 'oklch(0.18 0.02 250)' }}>{s.name}</td>
-                  <td className="px-4 py-2.5 italic" style={{ color: 'oklch(0.45 0.015 250)' }}>
+                  <td className="px-4 py-2.5 italic" style={{ color: 'oklch(0.35 0.015 250)' }}>
                     {profile?.nickname ?? <span style={{ color: 'oklch(0.8 0.01 250)' }}>—</span>}
                   </td>
                   <td className="px-4 py-2.5">

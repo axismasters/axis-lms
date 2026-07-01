@@ -69,11 +69,11 @@ function TemplateModal({ open, mode, initial, currentUserName, onClose, onSave }
           <h3 className="text-base font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>
             {mode === 'add' ? '템플릿 추가' : '템플릿 수정'}
           </h3>
-          <button onClick={onClose} className="text-sm px-3 py-1 rounded-lg hover:bg-gray-100" style={{ color: 'oklch(0.5 0.015 250)' }}>✕</button>
+          <button onClick={onClose} className="text-sm px-3 py-1 rounded-lg hover:bg-gray-100" style={{ color: 'oklch(0.4 0.015 250)' }}>✕</button>
         </div>
         <div className="p-6 flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>알림유형 *</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>알림유형 *</label>
             <select
               className="w-full border rounded-lg px-3 py-2 text-sm"
               style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.2 0.02 250)' }}
@@ -84,7 +84,7 @@ function TemplateModal({ open, mode, initial, currentUserName, onClose, onSave }
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>템플릿명 *</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>템플릿명 *</label>
             <input
               className="w-full border rounded-lg px-3 py-2 text-sm"
               style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.2 0.02 250)' }}
@@ -94,7 +94,7 @@ function TemplateModal({ open, mode, initial, currentUserName, onClose, onSave }
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>발송 채널</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>발송 채널</label>
             <div className="flex gap-2">
               {(['KAKAO', 'SMS', 'LMS'] as NotificationChannel[]).map((c) => (
                 <button
@@ -113,7 +113,7 @@ function TemplateModal({ open, mode, initial, currentUserName, onClose, onSave }
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>제목 *</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>제목 *</label>
             <input
               className="w-full border rounded-lg px-3 py-2 text-sm"
               style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.2 0.02 250)' }}
@@ -123,7 +123,7 @@ function TemplateModal({ open, mode, initial, currentUserName, onClose, onSave }
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>내용 *</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>내용 *</label>
             <textarea
               className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
               style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.2 0.02 250)' }}
@@ -134,7 +134,7 @@ function TemplateModal({ open, mode, initial, currentUserName, onClose, onSave }
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.45 0.02 250)' }}>변수 (쉼표 구분)</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'oklch(0.35 0.02 250)' }}>변수 (쉼표 구분)</label>
             <input
               className="w-full border rounded-lg px-3 py-2 text-sm"
               style={{ borderColor: 'oklch(0.88 0.01 250)', color: 'oklch(0.2 0.02 250)' }}
@@ -279,13 +279,13 @@ export default function NotificationTemplates() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           {[
             { label: '전체 템플릿', value: templates.length, color: 'oklch(0.25 0.05 250)' },
-            { label: '활성 템플릿', value: totalActive, color: 'oklch(0.45 0.18 145)' },
-            { label: '카카오', value: totalKakao, color: 'oklch(0.65 0.18 85)' },
-            { label: 'SMS/LMS', value: totalSmsLms, color: 'oklch(0.55 0.15 200)' },
-            { label: '비활성', value: totalInactive, color: 'oklch(0.55 0.01 250)' },
+            { label: '활성 템플릿', value: totalActive, color: 'oklch(0.35 0.18 145)' },
+            { label: '카카오', value: totalKakao, color: 'oklch(0.49 0.18 85)' },
+            { label: 'SMS/LMS', value: totalSmsLms, color: 'oklch(0.42 0.15 200)' },
+            { label: '비활성', value: totalInactive, color: 'oklch(0.42 0.01 250)' },
           ].map((card) => (
             <div key={card.label} className="rounded-xl p-4 bg-white shadow-sm border" style={{ borderColor: 'oklch(0.93 0.01 250)' }}>
-              <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{card.label}</p>
+              <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{card.label}</p>
               <p className="text-2xl font-bold mt-1" style={{ color: card.color }}>{card.value}</p>
             </div>
           ))}
@@ -294,14 +294,14 @@ export default function NotificationTemplates() {
         {/* 필터 */}
         <div className="bg-white rounded-xl border p-4 grid grid-cols-2 gap-3 sm:grid-cols-4" style={{ borderColor: 'oklch(0.93 0.01 250)' }}>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>알림유형</label>
+            <label className="block text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>알림유형</label>
             <select className="w-full border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} value={filterType} onChange={(e) => setFilterType(e.target.value as NotificationType | '')}>
               <option value="">전체</option>
               {ALL_TYPES.map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>채널</label>
+            <label className="block text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>채널</label>
             <select className="w-full border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} value={filterChannel} onChange={(e) => setFilterChannel(e.target.value as NotificationChannel | '')}>
               <option value="">전체</option>
               <option value="KAKAO">카카오</option>
@@ -310,7 +310,7 @@ export default function NotificationTemplates() {
             </select>
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>사용 여부</label>
+            <label className="block text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>사용 여부</label>
             <select className="w-full border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} value={filterActive} onChange={(e) => setFilterActive(e.target.value as 'all' | 'active' | 'inactive')}>
               <option value="all">전체</option>
               <option value="active">활성</option>
@@ -318,7 +318,7 @@ export default function NotificationTemplates() {
             </select>
           </div>
           <div>
-            <label className="block text-xs mb-1" style={{ color: 'oklch(0.55 0.015 250)' }}>검색</label>
+            <label className="block text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>검색</label>
             <input className="w-full border rounded-lg px-2 py-1.5 text-xs" style={{ borderColor: 'oklch(0.88 0.01 250)' }} placeholder="템플릿명/제목" value={filterSearch} onChange={(e) => setFilterSearch(e.target.value)} />
           </div>
         </div>
@@ -333,31 +333,31 @@ export default function NotificationTemplates() {
               <thead>
                 <tr style={{ background: 'oklch(0.97 0.005 250)' }}>
                   {['템플릿명', '알림유형', '채널', '사용여부', '기본', '변수', '수정일', '관리'].map((h) => (
-                    <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.45 0.015 250)', background: 'oklch(0.97 0.005 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
+                    <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.35 0.015 250)', background: 'oklch(0.97 0.005 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-12 text-sm" style={{ color: 'oklch(0.6 0.01 250)' }}>템플릿이 없습니다.</td>
+                    <td colSpan={8} className="text-center py-12 text-sm" style={{ color: 'oklch(0.47 0.01 250)' }}>템플릿이 없습니다.</td>
                   </tr>
                 ) : (
                   filtered.map((tpl, idx) => (
                     <tr key={tpl.id} className="border-t" style={{ borderColor: 'oklch(0.95 0.005 250)', background: idx % 2 === 0 ? 'white' : 'oklch(0.99 0.002 250)' }}>
                       <td className="px-4 py-3 text-xs font-medium" style={{ color: 'oklch(0.25 0.02 250)' }}>{tpl.name}</td>
                       <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.02 250)' }}>{NOTIFICATION_TYPE_LABEL[tpl.type]}</td>
-                      <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.45 0.02 250)' }}>{NOTIFICATION_CHANNEL_LABEL[tpl.channel]}</td>
+                      <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.35 0.02 250)' }}>{NOTIFICATION_CHANNEL_LABEL[tpl.channel]}</td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: tpl.isActive ? 'oklch(0.92 0.08 145)' : 'oklch(0.93 0.01 250)', color: tpl.isActive ? 'oklch(0.35 0.15 145)' : 'oklch(0.55 0.01 250)' }}>
                           {tpl.isActive ? '활성' : '비활성'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {tpl.isDefault && <span className="text-xs font-bold" style={{ color: 'oklch(0.65 0.18 85)' }}>★</span>}
+                        {tpl.isDefault && <span className="text-xs font-bold" style={{ color: 'oklch(0.49 0.18 85)' }}>★</span>}
                       </td>
-                      <td className="px-4 py-3 text-xs max-w-[160px] truncate" style={{ color: 'oklch(0.55 0.015 250)' }} title={tpl.variables.join(', ')}>{tpl.variables.join(', ') || '-'}</td>
-                      <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>{tpl.updatedAt.slice(0, 10)}</td>
+                      <td className="px-4 py-3 text-xs max-w-[160px] truncate" style={{ color: 'oklch(0.42 0.015 250)' }} title={tpl.variables.join(', ')}>{tpl.variables.join(', ') || '-'}</td>
+                      <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: 'oklch(0.42 0.015 250)' }}>{tpl.updatedAt.slice(0, 10)}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {canManage ? (
                           <div className="flex items-center gap-1">
@@ -373,7 +373,7 @@ export default function NotificationTemplates() {
                             >{tpl.isActive ? '비활성' : '활성'}</button>
                           </div>
                         ) : (
-                          <span className="text-xs" style={{ color: 'oklch(0.65 0.01 250)' }}>조회만</span>
+                          <span className="text-xs" style={{ color: 'oklch(0.49 0.01 250)' }}>조회만</span>
                         )}
                       </td>
                     </tr>

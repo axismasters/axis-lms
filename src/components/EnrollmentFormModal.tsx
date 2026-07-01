@@ -87,7 +87,7 @@ export default function EnrollmentFormModal({ open, onClose, studentId }: Props)
           <div>
             <Label className="text-xs font-semibold mb-1.5 block">반 선택</Label>
             {availableClasses.length === 0 ? (
-              <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>등록 가능한 반이 없습니다(이미 수강중인 반은 제외됩니다).</p>
+              <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>등록 가능한 반이 없습니다(이미 수강중인 반은 제외됩니다).</p>
             ) : (
               <Select value={classId} onValueChange={handleClassChange}>
                 <SelectTrigger className="h-9 text-sm w-full"><SelectValue placeholder="반 선택…" /></SelectTrigger>
@@ -126,7 +126,7 @@ export default function EnrollmentFormModal({ open, onClose, studentId }: Props)
             <Textarea value={memo} onChange={(e) => setMemo(e.target.value)} className="text-sm resize-none" rows={2} placeholder="특이사항이 있으면 입력하세요" />
           </div>
 
-          <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.6 0.015 250)' }}>
+          <p className="text-xs flex items-center gap-1" style={{ color: 'oklch(0.47 0.015 250)' }}>
             <Info size={11} /> 수강료는 Finance Engine 준비용 값으로만 저장되며, 이 단계에서는 실제 청구·계산에 사용되지 않습니다.
           </p>
         </div>

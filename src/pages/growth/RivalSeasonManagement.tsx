@@ -22,7 +22,7 @@ function StatusBadge({ status }: { status: RivalSeasonStatus }) {
   const style = {
     '진행중': { bg: 'oklch(0.92 0.08 145)', color: 'oklch(0.3 0.15 145)' },
     '예정':   { bg: 'oklch(0.93 0.06 80)',  color: 'oklch(0.4 0.15 80)' },
-    '종료':   { bg: 'oklch(0.93 0.006 250)', color: 'oklch(0.5 0.01 250)' },
+    '종료':   { bg: 'oklch(0.93 0.006 250)', color: 'oklch(0.4 0.01 250)' },
   }[status];
   return (
     <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={style}>
@@ -44,7 +44,7 @@ function SeasonDetail({ season }: { season: RivalSeason }) {
           { label: '활성 Rival', value: `${season.activeRivalCount}쌍` },
         ].map(({ label, value }) => (
           <div key={label} className="rounded-lg p-2" style={{ background: 'oklch(0.97 0.003 250)' }}>
-            <div style={{ color: 'oklch(0.55 0.015 250)', marginBottom: 2 }}>{label}</div>
+            <div style={{ color: 'oklch(0.42 0.015 250)', marginBottom: 2 }}>{label}</div>
             <div className="font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>{value}</div>
           </div>
         ))}
@@ -52,16 +52,16 @@ function SeasonDetail({ season }: { season: RivalSeason }) {
       {/* 승패 기준 */}
       <div className="rounded-lg p-3 text-xs" style={{ background: 'oklch(0.97 0.003 250)' }}>
         <div className="font-semibold mb-1" style={{ color: 'oklch(0.3 0.02 250)' }}>승패 기준</div>
-        <div className="space-y-1" style={{ color: 'oklch(0.5 0.015 250)' }}>
-          <div><span className="font-semibold" style={{ color: 'oklch(0.45 0.15 145)' }}>WIN: </span>{season.winCondition}</div>
-          <div><span className="font-semibold" style={{ color: 'oklch(0.55 0.2 27)' }}>LOSE: </span>{season.loseCondition}</div>
+        <div className="space-y-1" style={{ color: 'oklch(0.4 0.015 250)' }}>
+          <div><span className="font-semibold" style={{ color: 'oklch(0.35 0.15 145)' }}>WIN: </span>{season.winCondition}</div>
+          <div><span className="font-semibold" style={{ color: 'oklch(0.42 0.2 27)' }}>LOSE: </span>{season.loseCondition}</div>
           <div><span className="font-semibold">무승부: </span>{season.drawCondition}</div>
         </div>
       </div>
       {/* 보상 기준 */}
       <div className="rounded-lg p-3 text-xs" style={{ background: 'oklch(0.97 0.003 250)' }}>
         <div className="font-semibold mb-1" style={{ color: 'oklch(0.3 0.02 250)' }}>보상 기준</div>
-        <div className="space-y-1" style={{ color: 'oklch(0.5 0.015 250)' }}>
+        <div className="space-y-1" style={{ color: 'oklch(0.4 0.015 250)' }}>
           <div className="flex gap-2">
             <span className="font-semibold text-green-600">SP 승리: +{season.spReward.win}</span>
             <span className="font-semibold text-gray-500">패배: +{season.spReward.loss}</span>
@@ -80,7 +80,7 @@ function SeasonDetail({ season }: { season: RivalSeason }) {
           <StopCircle size={15} /> 시즌 종료 처리 (관리자 승인 필요)
         </button>
       )}
-      <div className="text-xs text-center" style={{ color: 'oklch(0.65 0.015 250)' }}>
+      <div className="text-xs text-center" style={{ color: 'oklch(0.49 0.015 250)' }}>
         시즌 종료 후 기록은 영구 보관됩니다. SP/엠블럼 지급은 관리자가 수동 처리합니다.
       </div>
     </div>
@@ -108,7 +108,7 @@ function CreateSeasonModal({ onClose }: { onClose: () => void }) {
     width: '100%', border: '1px solid oklch(0.9 0.008 250)', borderRadius: 8,
     padding: '7px 12px', fontSize: 13, background: 'oklch(0.98 0.002 250)', outline: 'none',
   };
-  const labelStyle = { fontSize: 11, color: 'oklch(0.55 0.015 250)', marginBottom: 4, display: 'block' as const };
+  const labelStyle = { fontSize: 11, color: 'oklch(0.42 0.015 250)', marginBottom: 4, display: 'block' as const };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
@@ -117,7 +117,7 @@ function CreateSeasonModal({ onClose }: { onClose: () => void }) {
         style={{ maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div className="font-bold text-base" style={{ color: 'oklch(0.15 0.02 250)' }}>시즌 생성 (mock)</div>
-          <button onClick={onClose} className="text-xs px-2 py-1 rounded" style={{ color: 'oklch(0.5 0.015 250)' }}>닫기</button>
+          <button onClick={onClose} className="text-xs px-2 py-1 rounded" style={{ color: 'oklch(0.4 0.015 250)' }}>닫기</button>
         </div>
         <div className="px-5 pb-6 space-y-4">
           <div>
@@ -182,7 +182,7 @@ function CreateSeasonModal({ onClose }: { onClose: () => void }) {
             style={{ background: '#040D1E', color: 'white' }}>
             시즌 생성 (mock)
           </button>
-          <div className="text-xs text-center" style={{ color: 'oklch(0.65 0.015 250)' }}>
+          <div className="text-xs text-center" style={{ color: 'oklch(0.49 0.015 250)' }}>
             실제 DB 저장은 Phase 3+ API 연동 시 구현됩니다.
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function RivalSeasonManagement() {
         breadcrumbs={[{ label: '성장관리', path: '/admin/growth/overview' }, { label: 'Rival 시즌 관리' }]}>
         <div className="axis-card p-12 text-center">
           <p className="text-sm font-medium mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>접근 권한이 없습니다.</p>
-          <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>Rival 시즌 관리는 최고관리자·원장·행정 계정만 접근할 수 있습니다.</p>
+          <p className="text-xs" style={{ color: 'oklch(0.47 0.015 250)' }}>Rival 시즌 관리는 최고관리자·원장·행정 계정만 접근할 수 있습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -221,7 +221,7 @@ export default function RivalSeasonManagement() {
         {activeSeason ? (
           <div className="axis-card p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Play size={15} style={{ color: 'oklch(0.45 0.15 145)' }} />
+              <Play size={15} style={{ color: 'oklch(0.35 0.15 145)' }} />
               <span className="font-semibold text-sm">진행 중인 시즌</span>
               <StatusBadge status={activeSeason.status} />
             </div>
@@ -235,14 +235,14 @@ export default function RivalSeasonManagement() {
               ].map(({ label, value }) => (
                 <div key={label} className="rounded-lg p-2 text-center" style={{ background: 'oklch(0.97 0.003 250)' }}>
                   <div className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>{value}</div>
-                  <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{label}</div>
+                  <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{label}</div>
                 </div>
               ))}
             </div>
           </div>
         ) : (
           <div className="axis-card p-4 text-center">
-            <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>진행 중인 시즌이 없습니다.</div>
+            <div className="text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>진행 중인 시즌이 없습니다.</div>
           </div>
         )}
 
@@ -257,7 +257,7 @@ export default function RivalSeasonManagement() {
 
         {/* 시즌 목록 */}
         <div className="space-y-2">
-          <div className="px-1 text-xs font-semibold" style={{ color: 'oklch(0.5 0.015 250)' }}>
+          <div className="px-1 text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)' }}>
             전체 시즌 ({seasons.length}개)
           </div>
           {seasons.map(season => (
@@ -275,7 +275,7 @@ export default function RivalSeasonManagement() {
                       <span className="font-semibold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{season.name}</span>
                       <StatusBadge status={season.status} />
                     </div>
-                    <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                    <div className="text-xs mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
                       <Calendar size={10} className="inline mr-1" />
                       {season.startDate} ~ {season.endDate}
                       <Users size={10} className="inline ml-2 mr-1" />
@@ -291,7 +291,7 @@ export default function RivalSeasonManagement() {
         </div>
 
         {/* 기록 보관 안내 */}
-        <div className="axis-card p-4 text-xs" style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.5 0.015 250)' }}>
+        <div className="axis-card p-4 text-xs" style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.4 0.015 250)' }}>
           <strong>시즌 기록 보관 정책:</strong> 종료된 시즌의 승패 기록과 SP 지급 내역은 영구 보관됩니다.
           학생에게는 자신의 기록만 공개되며, 전체 Rival 연결 관계는 관리자만 조회할 수 있습니다.
         </div>

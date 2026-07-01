@@ -12,7 +12,7 @@
 //   - 수납/재무/청구 표현 금지
 
 import { useState, useEffect } from 'react';
-import { User, Edit3, Check, X, Trophy, Zap, Award, Swords, Shield, BookOpen, CalendarCheck } from 'lucide-react';
+import { User, Edit3, Check, X, Trophy, Zap, Award, TrendingUp, Shield, BookOpen, CalendarCheck } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
@@ -27,6 +27,8 @@ import {
 } from '@/lib/studentProfile';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
 import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
+import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
+import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
 import { Link } from 'wouter';
 
 export default function StudentMyPage() {
@@ -138,19 +140,19 @@ export default function StudentMyPage() {
             </div>
           )}
 
-          {/* SP + 엠블럼 */}
+          {/* 누적 성장 활동 + 성장 단계 */}
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
-              <Zap size={16} className="mx-auto mb-1" style={{ color: 'oklch(0.7 0.18 80)' }} />
-              <div className="font-black text-base tabular-nums" style={{ color: 'oklch(0.4 0.1 80)' }}>
+              <TrendingUp size={16} className="mx-auto mb-1" style={{ color: 'oklch(0.55 0.06 80)' }} />
+              <div className="font-black text-base tabular-nums" style={{ color: 'oklch(0.35 0.05 80)' }}>
                 {profile?.totalSP.toLocaleString() ?? 0}
               </div>
-              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>누적 SP</div>
+              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>누적 성장 활동</div>
             </div>
-            <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
-              <Award size={16} className="mx-auto mb-1" style={{ color: tierColor }} />
-              <div className="font-black text-base" style={{ color: tierColor }}>{tierLabel}</div>
-              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>현재 티어</div>
+            <div className="rounded-lg p-3 flex flex-col items-center justify-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
+              <AxisTierMedallion tier={profile?.tier ?? 'UNRANKED'} size={40} />
+              <div className="font-bold text-sm mt-0.5" style={{ color: tierColor }}>{tierLabel}</div>
+              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>현재 성장 단계</div>
             </div>
           </div>
         </div>
@@ -158,7 +160,7 @@ export default function StudentMyPage() {
         {/* 닉네임 설정 */}
         <div className="axis-card p-5">
           <div className="flex items-center gap-2 mb-3">
-            <Swords size={16} style={{ color: '#040D1E' }} />
+            <TrendingUp size={16} style={{ color: '#0B1B33' }} />
             <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
               Rival 닉네임
             </span>
@@ -278,20 +280,14 @@ export default function StudentMyPage() {
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {myEmblemDefs.slice(0, 9).map(({ se, def }) => {
-                const badge = MATERIAL_BADGE[def.material];
-                return (
-                  <div key={se.id} className="flex flex-col items-center gap-1 w-16">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center text-lg"
-                      style={{ background: badge.bg, border: `2px solid ${badge.border}` }}>
-                      🏅
-                    </div>
-                    <div className="text-xs text-center truncate w-full" style={{ color: 'oklch(0.5 0.015 250)', fontSize: 10 }}>
-                      {def.name}
-                    </div>
+              {myEmblemDefs.slice(0, 9).map(({ se, def }) => (
+                <div key={se.id} className="flex flex-col items-center gap-1 w-16">
+                  <AxisEmblemBadge iconKey={def.iconKey} level={def.level} size={48} />
+                  <div className="text-xs text-center truncate w-full" style={{ color: 'oklch(0.5 0.015 250)', fontSize: 10 }}>
+                    {def.name}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -306,7 +302,7 @@ export default function StudentMyPage() {
               { icon: BookOpen, label: '내 반 / 수업', path: '/student/classes', color: 'oklch(0.45 0.15 160)' },
               { icon: CalendarCheck, label: '출결 확인', path: '/student/attendance', color: 'oklch(0.55 0.15 80)' },
               { icon: Trophy, label: '성장 진열장', path: '/student/growth', color: '#040D1E' },
-              { icon: Swords, label: 'Rival', path: '/student/rival', color: '#040D1E' },
+              { icon: TrendingUp, label: 'Rival', path: '/student/rival', color: '#0B1B33' },
             ].map(({ icon: Icon, label, path, color }) => (
               <Link key={path} href={path} style={{ display: 'block' }}>
                 <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer"

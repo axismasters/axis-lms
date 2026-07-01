@@ -60,7 +60,7 @@ export default function FinanceSettlements() {
     return (
       <AdminLayout breadcrumbs={[{ label: '재무관리' }, { label: '정산관리' }]}>
         <div className="axis-card p-12 text-center">
-          <p className="text-sm" style={{ color: 'oklch(0.5 0.015 250)' }}>재무관리 접근 권한이 없습니다.</p>
+          <p className="text-sm" style={{ color: 'oklch(0.4 0.015 250)' }}>재무관리 접근 권한이 없습니다.</p>
         </div>
       </AdminLayout>
     );
@@ -95,7 +95,7 @@ export default function FinanceSettlements() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>정산관리</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
             월별 청구·수납·미납·환불을 요약해 확정합니다. 금액은 실제 청구/수납/환불 데이터에서 매번 계산됩니다.
           </p>
         </div>
@@ -111,23 +111,23 @@ export default function FinanceSettlements() {
       {/* 선택 월 요약 카드 — 실시간 계산값 */}
       <div className="grid grid-cols-5 gap-3 mb-4">
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>{selectedMonth} 총 청구액</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>{selectedMonth} 총 청구액</div>
           <div className="text-lg font-bold" style={{ color: 'oklch(0.38 0.18 250)' }}>{won(selectedAmounts.totalBilled)}</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>총 수납액</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>총 수납액</div>
           <div className="text-lg font-bold" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(selectedAmounts.totalPaid)}</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>총 미납액</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(selectedAmounts.totalUnpaid)}</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>총 미납액</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.4 0.18 27)' }}>{won(selectedAmounts.totalUnpaid)}</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>총 환불액</div>
-          <div className="text-lg font-bold" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(selectedAmounts.totalRefunded)}</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>총 환불액</div>
+          <div className="text-lg font-bold" style={{ color: 'oklch(0.35 0.13 60)' }}>{won(selectedAmounts.totalRefunded)}</div>
         </div>
         <div className="axis-card p-4 text-center">
-          <div className="text-xs mb-1" style={{ color: 'oklch(0.6 0.015 250)' }}>순매출</div>
+          <div className="text-xs mb-1" style={{ color: 'oklch(0.47 0.015 250)' }}>순매출</div>
           <div className="text-lg font-bold" style={{ color: '#040D1E' }}>{won(selectedAmounts.netRevenue)}</div>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function FinanceSettlements() {
             <thead>
               <tr style={{ background: 'oklch(0.985 0.003 250)', borderBottom: '1px solid oklch(0.92 0.005 250)' }}>
                 {['정산월', '청구액', '수납액', '미납액', '환불액', '순매출', '상태', '확정자', '확정일', '관리'].map(h => (
-                  <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
+                  <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.985 0.003 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.005 250)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -155,8 +155,8 @@ export default function FinanceSettlements() {
                     <td className="px-3 py-2.5 text-xs tabular-nums font-medium whitespace-nowrap" style={{ color: 'oklch(0.2 0.02 250)' }}>{month}</td>
                     <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{won(amounts.totalBilled)}</td>
                     <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.3 0.13 160)' }}>{won(amounts.totalPaid)}</td>
-                    <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.5 0.18 27)' }}>{won(amounts.totalUnpaid)}</td>
-                    <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.45 0.13 60)' }}>{won(amounts.totalRefunded)}</td>
+                    <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.4 0.18 27)' }}>{won(amounts.totalUnpaid)}</td>
+                    <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.35 0.13 60)' }}>{won(amounts.totalRefunded)}</td>
                     <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap font-semibold" style={{ color: '#040D1E' }}>{won(amounts.netRevenue)}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
                       {hasRecord ? (
@@ -164,11 +164,11 @@ export default function FinanceSettlements() {
                           {s!.status === 'CONFIRMED' && <Lock size={10} />} {SETTLEMENT_STATUS_LABEL[s!.status]}
                         </span>
                       ) : (
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.003 250)', color: 'oklch(0.65 0.01 250)' }}>레코드 없음</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.003 250)', color: 'oklch(0.49 0.01 250)' }}>레코드 없음</span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.5 0.015 250)' }}>{s?.confirmedBy ?? '-'}</td>
-                    <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.55 0.015 250)' }}>{s?.confirmedAt?.slice(0, 10) ?? '-'}</td>
+                    <td className="px-3 py-2.5 text-xs whitespace-nowrap" style={{ color: 'oklch(0.4 0.015 250)' }}>{s?.confirmedBy ?? '-'}</td>
+                    <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'oklch(0.42 0.015 250)' }}>{s?.confirmedAt?.slice(0, 10) ?? '-'}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
                       {/* ★ Settlement 레코드가 없는 달 — "정산 생성" 버튼 제공 */}
                       {!hasRecord && canConfirm && (
@@ -188,14 +188,14 @@ export default function FinanceSettlements() {
                         </button>
                       )}
                       {hasRecord && s!.status === 'DRAFT' && !canConfirm && (
-                        <span className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>정산 확정은 원장 또는 최고관리자만 가능합니다.</span>
+                        <span className="text-xs" style={{ color: 'oklch(0.54 0.01 250)' }}>정산 확정은 원장 또는 최고관리자만 가능합니다.</span>
                       )}
                       {hasRecord && s!.status === 'CONFIRMED' && (
-                        <span className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>이미 확정된 정산입니다.</span>
+                        <span className="text-xs" style={{ color: 'oklch(0.54 0.01 250)' }}>이미 확정된 정산입니다.</span>
                       )}
                       {/* 레코드 없는 달, 행정 권한 — 안내만 표시 */}
                       {!hasRecord && !canConfirm && (
-                        <span className="text-xs" style={{ color: 'oklch(0.7 0.01 250)' }}>정산 레코드 미생성</span>
+                        <span className="text-xs" style={{ color: 'oklch(0.54 0.01 250)' }}>정산 레코드 미생성</span>
                       )}
                     </td>
                   </tr>
