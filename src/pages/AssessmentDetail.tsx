@@ -3,7 +3,7 @@
 // 탭: 기본정보 / 응시자목록 / 채점현황 / 결과분석
 // StudentDetail.tsx와 동일하게 ?tab= 쿼리로 진입 탭을 유지하고, 탭마다 별도 컴포넌트로 분리한다.
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,13 +22,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { toast } from 'sonner';
 import {
   ChevronLeft, FileText, Users, ClipboardCheck, BarChart2, Lock, Unlock,
-  CheckCircle2, AlertTriangle, Info, RefreshCw, Pencil, UserX, UserCheck,
+  CheckCircle2, AlertTriangle, Info, RefreshCw, Pencil, UserX, UserCheck, CalendarCheck2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 // [Phase 3D v3-r10] 막대그래프 색상 정리 — 딥 네이비 단색 대신 muted blue/teal/amber 사용
 import { CHART_BLUE, CHART_TEAL, CHART_AMBER } from '@/lib/brandColors';
+// [Phase 3D v3-r15 / r15-r1] 내신 대비 운영 가이드 엔진 — 시험/성적관리 안에 탭으로만 붙는다
+// (독립 메뉴 금지). 내신대비모의고사(mock-school) 시험 상세에서만 노출한다(§ Opinion for
+// Lead Developer 참고). 엠블럼 에셋/매핑/디자인 파일은 이 기능과 무관하며 전혀 건드리지 않는다.
+import ExamPrepGuidePanel from '@/components/ExamPrepGuidePanel';
 
-type TabKey = 'basic' | 'submissions' | 'grading' | 'analysis';
+type TabKey = 'basic' | 'submissions' | 'grading' | 'analysis' | 'prep';
 
 export default function AssessmentDetail() {
   const params = useParams<{ id: string }>();
@@ -42,10 +46,23 @@ export default function AssessmentDetail() {
   const initialTab = useMemo(() => {
     const sp = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
     const t = sp.get('tab') as TabKey;
-    const valid: TabKey[] = ['basic', 'submissions', 'grading', 'analysis'];
+    const valid: TabKey[] = ['basic', 'submissions', 'grading', 'analysis', 'prep'];
+    // [Phase 3D v3-r15-r1] 'prep'은 내신대비모의고사(mock-school) 시험에서만 유효하다.
+    // 그 외 시험에 ?tab=prep으로 직접 접근하면(URL 직접 입력·즐겨찾기 등) 탭이 없는
+    // 빈 화면이 되지 않도록 진입 시점에 '기본정보'로 보정한다.
+    if (t === 'prep' && exam?.categoryId !== 'mock-school') return 'basic';
     return valid.includes(t) ? t : 'basic';
-  }, []);
+  }, [exam]);
   const [tab, setTab] = useState<TabKey>(initialTab);
+
+  // [Phase 3D v3-r15-r1] 위 초기 보정 이후에도(예: 같은 페이지에서 exam 데이터가 뒤늦게
+  // 갱신되는 경우) tab==='prep'인데 대상 시험이 mock-school이 아니게 되는 상황을 한 번 더
+  // 방어한다 — 이중 가드로 "탭은 선택돼 있는데 내용이 비어 보이는" 상태를 원천 차단한다.
+  useEffect(() => {
+    if (tab === 'prep' && exam && exam.categoryId !== 'mock-school') {
+      setTab('basic');
+    }
+  }, [tab, exam]);
 
   // 직접 URL 접근 보강(항목 6) — 메뉴는 RBAC로 숨겨지지만, /scores/:id 직접 진입 시에도
   // assessment.view를 먼저 확인한다. 시험 존재 여부보다 권한 체크를 앞에 둔다.
@@ -130,11 +147,17 @@ export default function AssessmentDetail() {
     setPublishConfirmOpen(false);
   };
 
+  // [Phase 3D v3-r15-r1] 내신 대비 가이드 탭 — 내신대비모의고사(mock-school) 시험에서만 노출한다.
+  // 다른 시험 종류(단원평가/입학테스트/인증평가 등)는 "내신 대비" 개념과 직접 관련이 없어
+  // 탭 자체를 숨긴다(§ Opinion for Lead Developer에 근거 정리).
   const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
     { key: 'basic', label: '기본정보', icon: <FileText size={13} /> },
     { key: 'submissions', label: '응시자목록', icon: <Users size={13} /> },
     { key: 'grading', label: '채점현황', icon: <ClipboardCheck size={13} /> },
     { key: 'analysis', label: '결과분석', icon: <BarChart2 size={13} /> },
+    ...(exam.categoryId === 'mock-school'
+      ? [{ key: 'prep' as TabKey, label: '내신 대비 가이드', icon: <CalendarCheck2 size={13} /> }]
+      : []),
   ];
 
   return (
@@ -222,6 +245,17 @@ export default function AssessmentDetail() {
           {tab === 'submissions' && <SubmissionsTab exam={exam} submissions={submissions} canGrade={canGrade} locked={locked} />}
           {tab === 'grading' && <GradingTab exam={exam} submissions={submissions} canGrade={canGrade} currentUserName={currentUser.name} locked={locked} setStudentAnswer={setStudentAnswer} />}
           {tab === 'analysis' && <AnalysisTab exam={exam} submissions={submissions} canCorrect={canCorrect} currentUserName={currentUser.name} locked={locked} />}
+          {tab === 'prep' && exam.categoryId === 'mock-school' && (
+            <ExamPrepGuidePanel
+              examId={exam.id}
+              examTitle={exam.title}
+              examDate={exam.examDate}
+              defaultClassName={cls?.name ?? ''}
+              defaultTeacher={exam.createdBy}
+              currentUserName={currentUser.name}
+              canEdit={canGrade}
+            />
+          )}
         </div>
       </div>
 
