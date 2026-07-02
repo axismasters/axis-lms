@@ -1,4 +1,6 @@
 // AXIS LMS v1.2 — Phase 2F: StudentMyPage (Student Portal Core Rebuild v1)
+// [Phase 3D v3-r14-r4] 보유 엠블럼 섹션 프리미엄화(48px flex-wrap → 64px 그리드 타일) —
+// 학생 성장/Rival/Emblem 프리미엄 UI 정리 작업.
 // 학생 마이페이지 — 닉네임, 대표 엠블럼, SP, 티어, Rival 공개 프로필
 //
 // Phase 2F 정책:
@@ -286,12 +288,16 @@ export default function StudentMyPage() {
         </div>
 
         {/* 획득 엠블럼 — 좌측 메인. [Phase 3D v3-r12] emblemEnabled가 false면 비활성 안내로 대체 */}
-        <div className="axis-card p-4 lg:col-span-2">
+        {/* [Phase 3D v3-r14-r4] 48px 배지를 w-16 flex-wrap에 욱여넣던 방식이 엠블럼을
+            작은 아이콘처럼 보이게 해 "가치가 낮아 보인다"는 지적을 받았다 — 그리드 기반
+            타일로 바꾸고 배지를 64px로 키워 성장 갤러리(StudentGrowthShowcase)와 톤을
+            맞췄다. AxisEmblemImageBadge.tsx 자체는 수정하지 않는다(size prop만 조정). */}
+        <div className="axis-card p-5 lg:col-span-2">
           {!emblemEnabled ? (
             <FeatureDisabledNotice compact description="Emblem 시스템이 현재 비활성화되어 있습니다." />
           ) : (
           <>
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-4">
             <Award size={15} style={{ color: '#040D1E' }} />
             <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
               보유 엠블럼
@@ -299,17 +305,26 @@ export default function StudentMyPage() {
             <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
               {myEmblemDefs.length}개
             </span>
+            {myEmblemDefs.length > 9 && (
+              <Link href="/student/growth" style={{ display: 'block', marginLeft: 'auto' }}>
+                <span className="text-xs font-semibold cursor-pointer" style={{ color: '#0B1B33' }}>전체 보기</span>
+              </Link>
+            )}
           </div>
           {myEmblemDefs.length === 0 ? (
             <div className="text-center py-6 text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>
               아직 획득한 엠블럼이 없습니다.
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
               {myEmblemDefs.slice(0, 9).map(({ se, def }) => (
-                <div key={se.id} className="flex flex-col items-center gap-1 w-16">
-                  <AxisEmblemImageBadge emblemId={def.id} iconKey={def.iconKey} level={def.level} size={48} />
-                  <div className="text-xs text-center truncate w-full" style={{ color: 'oklch(0.5 0.015 250)', fontSize: 10 }}>
+                <div key={se.id} className="rounded-xl px-2 pt-4 pb-3 flex flex-col items-center text-center"
+                  style={{ background: 'linear-gradient(180deg, white 0%, oklch(0.98 0.008 85) 100%)', border: '1px solid oklch(0.9 0.03 85)' }}>
+                  <div className="rounded-full flex items-center justify-center mb-2"
+                    style={{ width: 76, height: 76, background: 'white', border: '1px solid oklch(0.93 0.03 85)' }}>
+                    <AxisEmblemImageBadge emblemId={def.id} iconKey={def.iconKey} level={def.level} size={64} />
+                  </div>
+                  <div className="text-xs font-semibold text-center leading-tight" style={{ color: 'oklch(0.3 0.02 250)' }}>
                     {def.name}
                   </div>
                 </div>

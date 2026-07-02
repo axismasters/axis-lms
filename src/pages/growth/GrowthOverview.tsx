@@ -5,6 +5,10 @@
 // 탭에서만 한다(한 학생을 열어서 처리하는 것이 원칙). 엠블럼/라이벌 전체 관리 화면으로
 // 가는 바로가기도 이 화면에서는 제공하지 않는다(주 운영 메뉴처럼 보이지 않게 함).
 // 관리자 전용. 학생/보호자 화면 없음.
+//
+// [Phase 3D v3-r14-r4] 요약 카드 아이콘 색을 Tailwind 기본 팔레트(#3B82F6/#10B981/#EF4444
+// 등)에서 AXIS 팔레트(CHART_BLUE/CHART_TEAL/CHART_GOLD/CHART_AMBER)로 통일 — 학생 성장/
+// Rival/Emblem 프리미엄 UI 정리 작업의 일부.
 
 import { useState } from 'react';
 import { Link } from 'wouter';
@@ -19,6 +23,7 @@ import {
   TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
   CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
 } from '@/lib/growthData';
+import { AXIS_NAVY, CHART_BLUE, CHART_TEAL, CHART_GOLD, CHART_AMBER } from '@/lib/brandColors';
 import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
 
 export default function GrowthOverview() {
@@ -64,11 +69,11 @@ export default function GrowthOverview() {
     .slice(0, 10);
 
   const statCards = [
-    { label: '성장 프로필 학생 수', value: stats.profileCount,                  icon: <Users size={18} />, color: '#3B82F6' },
-    ...(emblemEnabled ? [{ label: '총 발급 엠블럼', value: stats.totalEmblemsIssued, icon: <Trophy size={18} />, color: '#C8A15A' }] : []),
-    { label: '이번 시즌 SP 합계',   value: stats.seasonSPTotal.toLocaleString(), icon: <Zap size={18} />,   color: '#10B981' },
-    ...(rivalEnabled ? [{ label: '활성 라이벌 수', value: stats.activeRivals, icon: <Star size={18} />, color: '#EF4444' }] : []),
-    ...(emblemEnabled ? [{ label: '숨겨진 엠블럼', value: stats.hiddenEmblems, icon: <Eye size={18} />, color: '#040D1E' }] : []),
+    { label: '성장 프로필 학생 수', value: stats.profileCount,                  icon: <Users size={18} />, color: CHART_BLUE },
+    ...(emblemEnabled ? [{ label: '총 발급 엠블럼', value: stats.totalEmblemsIssued, icon: <Trophy size={18} />, color: CHART_GOLD }] : []),
+    { label: '이번 시즌 SP 합계',   value: stats.seasonSPTotal.toLocaleString(), icon: <Zap size={18} />,   color: CHART_TEAL },
+    ...(rivalEnabled ? [{ label: '활성 라이벌 수', value: stats.activeRivals, icon: <Star size={18} />, color: CHART_AMBER }] : []),
+    ...(emblemEnabled ? [{ label: '숨겨진 엠블럼', value: stats.hiddenEmblems, icon: <Eye size={18} />, color: AXIS_NAVY }] : []),
   ];
 
   return (
@@ -96,7 +101,7 @@ export default function GrowthOverview() {
         </div>
         <button onClick={() => setShowRecentLogs(!showRecentLogs)}
           className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium"
-          style={{ background: showRecentLogs ? '#E7EBF3' : 'oklch(0.97 0.004 250)', color: showRecentLogs ? '#4F46E5' : 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.9 0.006 250)' }}>
+          style={{ background: showRecentLogs ? '#F1EEE4' : 'oklch(0.97 0.004 250)', color: showRecentLogs ? '#8A6D2E' : 'oklch(0.5 0.015 250)', border: '1px solid oklch(0.9 0.006 250)' }}>
           <Clock size={14} /> 최근 SP 이력
         </button>
       </div>
@@ -124,12 +129,12 @@ export default function GrowthOverview() {
                     <tr key={log.id} style={{ borderBottom: '1px solid oklch(0.96 0.004 250)' }}>
                       <td className="py-1.5" style={{ color: 'oklch(0.4 0.015 250)' }}>{log.createdAt}</td>
                       <td className="py-1.5 font-medium" style={{ color: 'oklch(0.2 0.02 250)' }}>{st?.name ?? log.studentId}</td>
-                      <td className="py-1.5 font-bold" style={{ color: '#059669' }}>+{log.amount}</td>
+                      <td className="py-1.5 font-bold" style={{ color: CHART_TEAL }}>+{log.amount}</td>
                       <td className="py-1.5" style={{ color: 'oklch(0.4 0.015 250)', maxWidth: 200 }}>
                         <span className="block truncate" title={log.reason}>{log.reason}</span>
                       </td>
                       <td className="py-1.5">
-                        <span className="px-1.5 py-0.5 rounded text-xs" style={{ background: '#E7EBF3', color: '#040D1E' }}>
+                        <span className="px-1.5 py-0.5 rounded text-xs" style={{ background: '#F1EEE4', color: '#8A6D2E' }}>
                           {SOURCE_TYPE_LABELS[log.sourceType]}
                         </span>
                       </td>
@@ -182,10 +187,10 @@ export default function GrowthOverview() {
                       </span>
                     ) : <span className="text-xs" style={{ color: 'oklch(0.75 0.01 250)' }}>미등록</span>}
                   </td>
-                  <td className="px-4 py-2.5 font-semibold" style={{ color: '#1D4ED8' }}>
+                  <td className="px-4 py-2.5 font-semibold" style={{ color: CHART_BLUE }}>
                     {profile?.totalSP.toLocaleString() ?? '0'}
                   </td>
-                  <td className="px-4 py-2.5 font-semibold" style={{ color: '#059669' }}>
+                  <td className="px-4 py-2.5 font-semibold" style={{ color: CHART_TEAL }}>
                     {profile?.seasonSP.toLocaleString() ?? '0'}
                   </td>
                   {emblemEnabled && (
@@ -211,7 +216,7 @@ export default function GrowthOverview() {
                   {emblemEnabled && (
                     <td className="px-4 py-2.5">
                       <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                        style={{ background: achieved.length > 0 ? '#E7EBF3' : 'oklch(0.95 0.004 250)', color: achieved.length > 0 ? '#4F46E5' : 'oklch(0.6 0.015 250)' }}>
+                        style={{ background: achieved.length > 0 ? '#F1EEE4' : 'oklch(0.95 0.004 250)', color: achieved.length > 0 ? '#8A6D2E' : 'oklch(0.6 0.015 250)' }}>
                         {achieved.length}개
                       </span>
                     </td>

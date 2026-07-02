@@ -1,4 +1,6 @@
 // AXIS LMS v1.2 — Phase 3D v3-r10-r1: StudentRival (Rival Dashboard Rebuild)
+// [Phase 3D v3-r14-r4] 유사 수준 비교 차트의 막대 높이 계산 버그 수정(퍼센트 → 픽셀,
+// BAR_MAX_PX 참고) — 학생 성장/Rival/Emblem 프리미엄 UI 정리 작업의 일부.
 //
 // ⚠ Rival 철학(코드에도 박아둔다):
 //   - Rival은 싸움/전투 게임이 아니다. "나와 비슷한 수준의 상대가 있다"는 성장 자극 장치다.
@@ -32,6 +34,9 @@ import { CHART_TEAL, CHART_BLUE } from '@/lib/brandColors';
 
 const MINE_COLOR = CHART_TEAL;
 const RIVAL_COLOR = CHART_BLUE;
+// [Phase 3D v3-r14-r4] 막대 최대 높이(px) — 아래 유사 수준 비교 차트에서 퍼센트(%) 높이
+// 대신 픽셀 고정값으로 계산하는 데 쓴다(버그 수정 근거는 사용처 주석 참고).
+const BAR_MAX_PX = 108;
 
 function toPcts(results: { earnedScore: number; totalPoints: number; examDate: string }[]): number[] {
   return [...results]
@@ -156,20 +161,24 @@ export default function StudentRival() {
                 </span>
               </div>
             </div>
+            {/* [Phase 3D v3-r14-r4] 버그 수정: 막대 높이를 퍼센트(%)로 주면 그 부모(내용 기반
+                auto-height flex item)에 명시적 높이가 없어 퍼센트가 정상적으로 계산되지 않아
+                막대가 찌그러지는 문제가 있었다(§ CHANGES 문서 참고). 픽셀 고정값 기반으로
+                바꿔 컨테이너 높이와 무관하게 항상 올바른 비율로 그려지도록 했다. */}
             <div className="flex items-end justify-around gap-3 h-40 pt-2">
               {subjectCompare.map(({ subject, mine, rival }) => (
-                <div key={subject} className="flex flex-col items-center gap-1.5 flex-1">
-                  <div className="flex items-end gap-1.5 h-32">
+                <div key={subject} className="flex flex-col items-center gap-2 flex-1">
+                  <div className="flex items-end gap-2 h-32">
                     <div className="flex flex-col items-center justify-end">
-                      <span className="text-xs font-bold tabular-nums mb-0.5" style={{ color: MINE_COLOR }}>{mine}</span>
-                      <div className="w-6 rounded-t" style={{ height: `${(mine / maxSub) * 100}%`, background: MINE_COLOR }} />
+                      <span className="text-xs font-bold tabular-nums mb-1" style={{ color: MINE_COLOR }}>{mine}</span>
+                      <div className="w-7 rounded-t-md" style={{ height: `${Math.max(4, (mine / maxSub) * BAR_MAX_PX)}px`, background: MINE_COLOR }} />
                     </div>
                     <div className="flex flex-col items-center justify-end">
-                      <span className="text-xs font-bold tabular-nums mb-0.5" style={{ color: RIVAL_COLOR }}>{rival}</span>
-                      <div className="w-6 rounded-t" style={{ height: `${(rival / maxSub) * 100}%`, background: RIVAL_COLOR }} />
+                      <span className="text-xs font-bold tabular-nums mb-1" style={{ color: RIVAL_COLOR }}>{rival}</span>
+                      <div className="w-7 rounded-t-md" style={{ height: `${Math.max(4, (rival / maxSub) * BAR_MAX_PX)}px`, background: RIVAL_COLOR }} />
                     </div>
                   </div>
-                  <span className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>{subject}</span>
+                  <span className="text-xs font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>{subject}</span>
                 </div>
               ))}
             </div>

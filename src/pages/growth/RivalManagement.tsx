@@ -2,15 +2,25 @@
 // 관리자는 전체 연결 관계를 볼 수 있음.
 // 학생에게 누가 자신을 지정했는지 절대 노출하지 않음.
 // 라이벌 이력 삭제 없음 — 관계 종료만 제공.
+//
+// [Phase 3D v3-r14-r4] 학생 성장/Rival/Emblem 프리미엄 UI 정리 — 이 화면(관리자 성장관리
+// 중 학생 화면과 직결되는 라이벌 데이터 관리)도 함께 정리한다.
+//   - Swords(칼) 아이콘·강한 red 배지를 걷어냈다 — "Rival은 전투가 아니라 성장 자극
+//     장치"라는 원칙이 관리자 화면에도 예외 없이 적용되어야 한다.
+//   - 승/패 관련 색상을 Tailwind 기본 green/red 대신 AXIS 팔레트(CHART_TEAL/CHART_AMBER)로
+//     통일했다(brandColors.ts의 기존 원칙 "강한 red 남발 금지 → warm amber로 제한"과 동일).
+//   - 진짜 파괴적 액션(관계 종료 확정)만 기존 공용 Button destructive 변형과 동일한 rose
+//     톤을 유지한다 — 이건 "전투 표현"이 아니라 UX상 정당한 위험 신호다.
 
 import { useState } from 'react';
-import { Swords, Plus, Minus, StopCircle, AlertTriangle } from 'lucide-react';
+import { Users, Plus, Minus, StopCircle, Info, ArrowRight } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { useGrowth } from '@/contexts/GrowthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { canManageRivals, canAccessGrowth } from '@/lib/rbac';
 import { TIER_LABELS, TIER_COLORS, StudentTier, RivalRelation } from '@/lib/growthData';
+import { AXIS_NAVY, AXIS_GOLD, CHART_TEAL, CHART_AMBER } from '@/lib/brandColors';
 import { toast } from 'sonner';
 
 export default function RivalManagement() {
@@ -73,21 +83,21 @@ export default function RivalManagement() {
       {/* 헤더 */}
       <div className="mb-5">
         <div className="flex items-center gap-2 mb-1">
-          <Swords size={18} style={{ color: '#EF4444' }} />
+          <Users size={18} style={{ color: AXIS_NAVY }} />
           <h1 className="text-lg font-bold" style={{ color: 'oklch(0.15 0.02 250)' }}>라이벌관리</h1>
-          <span className="text-xs px-2 py-0.5 rounded-full font-semibold ml-1" style={{ background: '#FEE2E2', color: '#991B1B' }}>
+          <span className="text-xs px-2 py-0.5 rounded-full font-semibold ml-1" style={{ background: '#F1EEE4', color: '#8A6D2E' }}>
             활성 {activeChallengeCount}건
           </span>
         </div>
         <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>
-          라이벌 연결 관계 및 승패 기록을 관리합니다. (관리자 전용 화면)
+          라이벌 연결 관계 및 성장 비교 기록을 관리합니다. (관리자 전용 화면)
         </p>
       </div>
 
-      {/* 보안 안내 배너 */}
+      {/* 안내 배너 */}
       <div className="flex items-center gap-2 px-4 py-3 rounded-lg mb-4 text-xs font-medium"
-        style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
-        <AlertTriangle size={14} />
+        style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.38 0.18 250)' }}>
+        <Info size={14} />
         지정받은 학생에게는 누가 자신을 라이벌로 설정했는지 절대 노출되지 않습니다.
         관리자 화면에서만 전체 연결 관계를 확인할 수 있습니다.
       </div>
@@ -129,15 +139,15 @@ export default function RivalManagement() {
                       </div>
                     ) : <span className="text-xs" style={{ color: 'oklch(0.75 0.01 250)' }}>없음</span>}
                   </td>
-                  <td className="px-4 py-2.5 text-center font-bold" style={{ color: '#059669' }}>
+                  <td className="px-4 py-2.5 text-center font-bold" style={{ color: CHART_TEAL }}>
                     {profile.rivalWins}
                   </td>
-                  <td className="px-4 py-2.5 text-center font-bold" style={{ color: '#DC2626' }}>
+                  <td className="px-4 py-2.5 text-center font-bold" style={{ color: CHART_AMBER }}>
                     {profile.rivalLosses}
                   </td>
                   <td className="px-4 py-2.5 text-center">
                     {relation ? (
-                      <span className="font-semibold text-sm" style={{ color: relation.winRate >= 50 ? '#059669' : '#DC2626' }}>
+                      <span className="font-semibold text-sm" style={{ color: relation.winRate >= 50 ? CHART_TEAL : CHART_AMBER }}>
                         {relation.winRate}%
                       </span>
                     ) : <span style={{ color: 'oklch(0.75 0.01 250)' }}>—</span>}
@@ -146,8 +156,8 @@ export default function RivalManagement() {
                     {relation ? (
                       <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
                         style={{
-                          background: relation.streak > 0 ? '#D1FAE5' : relation.streak < 0 ? '#FEE2E2' : 'oklch(0.95 0.004 250)',
-                          color: relation.streak > 0 ? '#065F46' : relation.streak < 0 ? '#991B1B' : 'oklch(0.5 0.015 250)',
+                          background: relation.streak > 0 ? 'oklch(0.94 0.06 195)' : relation.streak < 0 ? 'oklch(0.95 0.08 70)' : 'oklch(0.95 0.004 250)',
+                          color: relation.streak > 0 ? '#0F6E56' : relation.streak < 0 ? '#854F0B' : 'oklch(0.5 0.015 250)',
                         }}>
                         {relation.streak > 0 ? `${relation.streak}연승` : relation.streak < 0 ? `${Math.abs(relation.streak)}연패` : '—'}
                       </span>
@@ -155,7 +165,7 @@ export default function RivalManagement() {
                   </td>
                   <td className="px-4 py-2.5 text-center">
                     <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ background: challengersCount > 0 ? '#E7EBF3' : 'oklch(0.95 0.004 250)', color: challengersCount > 0 ? '#4F46E5' : 'oklch(0.6 0.015 250)' }}>
+                      style={{ background: challengersCount > 0 ? '#F1EEE4' : 'oklch(0.95 0.004 250)', color: challengersCount > 0 ? '#8A6D2E' : 'oklch(0.6 0.015 250)' }}>
                       {challengersCount}명
                     </span>
                   </td>
@@ -167,12 +177,12 @@ export default function RivalManagement() {
                       <div className="flex gap-1.5 flex-wrap">
                         <button onClick={() => handleWin(relation)}
                           className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all duration-150 hover:brightness-95 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
-                          style={{ background: '#D1FAE5', color: '#065F46', border: '1px solid #A7F3D0', outlineColor: '#059669' }}>
+                          style={{ background: 'oklch(0.94 0.06 195)', color: '#0F6E56', border: '1px solid oklch(0.88 0.07 195)', outlineColor: CHART_TEAL }}>
                           <Plus size={10} />승
                         </button>
                         <button onClick={() => handleLoss(relation)}
                           className="inline-flex items-center gap-0.5 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all duration-150 hover:brightness-95 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
-                          style={{ background: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA', outlineColor: '#DC2626' }}>
+                          style={{ background: 'oklch(0.95 0.08 70)', color: '#854F0B', border: '1px solid oklch(0.89 0.09 70)', outlineColor: CHART_AMBER }}>
                           <Minus size={10} />패
                         </button>
                         <button onClick={() => setConfirmEnd(relation)}
@@ -194,7 +204,7 @@ export default function RivalManagement() {
       {/* 전체 라이벌 연결 관계 (관리자 전용 뷰) */}
       <div className="axis-card p-4">
         <h3 className="text-sm font-bold mb-3" style={{ color: 'oklch(0.15 0.02 250)' }}>
-          전체 라이벌 연결 관계 <span className="text-xs font-normal ml-1" style={{ color: '#EF4444' }}>관리자 전용</span>
+          전체 라이벌 연결 관계 <span className="text-xs font-normal ml-1" style={{ color: 'oklch(0.5 0.015 250)' }}>관리자 전용</span>
         </h3>
         <div className="flex flex-wrap gap-2">
           {rivalRelations.filter(r => r.status === 'ACTIVE').map(r => {
@@ -204,8 +214,8 @@ export default function RivalManagement() {
               <div key={r.id}
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs"
                 style={{ background: 'oklch(0.97 0.004 250)', border: '1px solid oklch(0.92 0.006 250)' }}>
-                <span className="font-semibold" style={{ color: '#1D4ED8' }}>{challenger?.name}</span>
-                <Swords size={11} style={{ color: '#EF4444' }} />
+                <span className="font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>{challenger?.name}</span>
+                <ArrowRight size={11} style={{ color: AXIS_GOLD }} />
                 <span className="font-semibold" style={{ color: 'oklch(0.3 0.02 250)' }}>{target?.name}</span>
                 <span style={{ color: 'oklch(0.47 0.015 250)' }}>({r.wins}승 {r.losses}패)</span>
               </div>
@@ -231,7 +241,7 @@ export default function RivalManagement() {
                 style={{ borderColor: 'oklch(0.87 0.006 250)', color: 'oklch(0.4 0.015 250)' }}>취소</button>
               <button onClick={() => handleEnd(confirmEnd)}
                 className="px-4 py-1.5 text-sm rounded-md font-semibold transition-colors hover:brightness-90 active:scale-95"
-                style={{ background: '#EF4444', color: '#fff' }}>종료 확인</button>
+                style={{ background: '#E11D48', color: '#fff' }}>종료 확인</button>
             </div>
           </div>
         </div>

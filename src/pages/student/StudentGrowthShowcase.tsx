@@ -1,4 +1,6 @@
 // AXIS LMS v1.2 — Phase 3D v3-r10-r1: StudentGrowthShowcase (PC-first Premium Gallery)
+// [Phase 3D v3-r14-r4] 엠블럼 타일 프리미엄화(이미지 72→96px, 카드 여백/프레임 확대,
+// 그리드 열 수 축소로 타일 면적 확보) — 학생 성장/Rival/Emblem 프리미엄 UI 정리 작업.
 //
 // 05-growth-showcase-screen.png 기준 재구성. "성장 진열장"이라는 이름에 맞게 학생이
 // 오래 머무르고 눌러보고 싶은 프리미엄 학습 업적 갤러리로 만든다.
@@ -43,6 +45,11 @@ const IF_SUMMARY_META = [
 ] as const;
 
 // ─── 엠블럼 갤러리 타일 ────────────────────────────────────────────────
+// [Phase 3D v3-r14-r4] 96px 프리미엄 이미지가 좁은 3~5열 그리드의 p-3 카드 안에 작게
+// 눌려 보여 "가치가 낮아 보인다"는 지적을 받았다 — 타일 자체를 키우고(이미지 72→96px),
+// 카드 여백/구분을 넉넉히 주고, 열 수를 줄여(최대 5→4) 한 타일이 차지하는 면적을 늘렸다.
+// AxisEmblemImageBadge.tsx(엠블럼 렌더러) 자체는 수정하지 않는다 — size prop과 감싸는
+// 카드 스타일만 이 파일에서 조정한다.
 function EmblemTile({ emblem, record }: { emblem: Emblem; record?: StudentEmblem }) {
   const achieved = record?.achieved ?? false;
   const level = emblem.level ?? 'BASIC';
@@ -51,23 +58,29 @@ function EmblemTile({ emblem, record }: { emblem: Emblem; record?: StudentEmblem
     ? Math.min(100, Math.round((record.progressCount / emblem.requiredCount) * 100)) : 0;
 
   return (
-    <div className="rounded-xl p-3 flex flex-col items-center text-center transition-shadow hover:shadow-md"
-      style={{ background: achieved ? 'oklch(0.985 0.006 90)' : 'oklch(0.98 0.004 250)', border: '1px solid oklch(0.92 0.008 250)' }}>
-      <AxisEmblemImageBadge emblemId={emblem.id} iconKey={emblem.iconKey} level={emblem.level} accent={accent} size={72} locked={!achieved} />
-      <div className="mt-1.5 font-semibold text-xs" style={{ color: achieved ? 'oklch(0.22 0.02 250)' : 'oklch(0.5 0.015 250)' }}>
+    <div className="rounded-2xl px-4 pt-5 pb-4 flex flex-col items-center text-center transition-shadow hover:shadow-md"
+      style={{
+        background: achieved ? 'linear-gradient(180deg, white 0%, oklch(0.98 0.008 85) 100%)' : 'oklch(0.98 0.004 250)',
+        border: achieved ? '1px solid oklch(0.9 0.03 85)' : '1px solid oklch(0.92 0.008 250)',
+      }}>
+      <div className="rounded-full flex items-center justify-center mb-3"
+        style={{ width: 112, height: 112, background: achieved ? 'white' : 'transparent', border: achieved ? '1px solid oklch(0.93 0.03 85)' : 'none' }}>
+        <AxisEmblemImageBadge emblemId={emblem.id} iconKey={emblem.iconKey} level={emblem.level} accent={accent} size={96} locked={!achieved} />
+      </div>
+      <div className="font-semibold text-sm" style={{ color: achieved ? 'oklch(0.22 0.02 250)' : 'oklch(0.5 0.015 250)' }}>
         {emblem.parentSafeLabel ? studentTitle(emblem) : emblem.name}
       </div>
       {achieved ? (
-        <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)', fontSize: 10 }}>{record?.acquiredAt}</div>
+        <div className="text-xs mt-1" style={{ color: '#B7935A' }}>{record?.acquiredAt} 획득</div>
       ) : (
         <>
-          <div className="text-xs mt-0.5" style={{ color: 'oklch(0.6 0.015 250)', fontSize: 10 }}>다음 성장 목표</div>
+          <div className="text-xs mt-1" style={{ color: 'oklch(0.6 0.015 250)' }}>다음 성장 목표</div>
           {record && emblem.requiredCount > 1 && (
-            <div className="w-full mt-1.5">
+            <div className="w-full mt-2.5">
               <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'oklch(0.93 0.006 250)' }}>
                 <div className="h-full rounded-full" style={{ width: `${progressPct}%`, background: accent }} />
               </div>
-              <div className="text-xs mt-0.5 tabular-nums" style={{ color: 'oklch(0.55 0.015 250)', fontSize: 10 }}>
+              <div className="text-xs mt-1 tabular-nums" style={{ color: 'oklch(0.55 0.015 250)' }}>
                 {record.progressCount} / {emblem.requiredCount}
               </div>
             </div>
@@ -218,7 +231,7 @@ export default function StudentGrowthShowcase() {
                 </div>
               </div>
               <p className="text-xs mb-3" style={{ color: 'oklch(0.5 0.015 250)' }}>노력의 여정이 특별한 엠블럼으로 기록됩니다.</p>
-              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {galleryEmblems.map(({ emblem, record }) => (
                   <EmblemTile key={emblem.id} emblem={emblem} record={record} />
                 ))}
