@@ -34,7 +34,7 @@ import { computeBriefing, buildTeacherGrowthConsultingNote } from '@/lib/student
 // [Phase 3D v3-r10] 교사 학생 상세 성장 탭: IF/엠블럼/Rival을 상담용 요약으로 노출.
 import { useGrowth } from '@/contexts/GrowthContext';
 import { TIER_LABELS, MATERIAL_BADGE } from '@/lib/growthData';
-import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
+import { AxisEmblemImageBadge } from '@/components/brand/AxisEmblemImageBadge';
 import { getIfCumulativeSummary, buildCumulativeImprovementNote } from '@/lib/ifAnalysisEngine';
 import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
 
@@ -390,7 +390,7 @@ export default function TeacherStudentDetail() {
                   <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>보유 엠블럼 {achievedEmblems.length}개 · 최근:</span>
                   <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium"
                     style={{ background: 'oklch(0.98 0.006 90)', color: 'oklch(0.3 0.02 250)', border: '1px solid oklch(0.9 0.01 90)' }}>
-                    <AxisEmblemBadge iconKey={recentEmblemDef.iconKey} level={recentEmblemDef.level} size={20} />
+                    <AxisEmblemImageBadge emblemId={recentEmblemDef.id} iconKey={recentEmblemDef.iconKey} level={recentEmblemDef.level} size={20} />
                     {recentEmblemDef.name}
                   </span>
                 </div>

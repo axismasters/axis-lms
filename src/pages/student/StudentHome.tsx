@@ -32,7 +32,7 @@ import { STUDENT_HIDDEN_CATEGORY_IDS } from '@/lib/phase2dData';
 import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
 import { loadStudentProfile, canUseRival } from '@/lib/studentProfile';
 import { ResultDetailModal } from '@/pages/student/StudentGrades';
-import { isRivalEnabled } from '@/lib/systemFeatureFlags';
+import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
 import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
 
 export default function StudentHome() {
@@ -66,6 +66,7 @@ export default function StudentHome() {
 
   // [Phase 3D v3-r12] 시스템 기능 온/오프
   const rivalEnabled = isRivalEnabled();
+  const emblemEnabled = isEmblemEnabled();
 
   // 최근 성적 (입학테스트 제외)
   const allPublishedResults = getPublishedResultsForStudent(exams, submissions, myStudentId)
@@ -298,7 +299,7 @@ export default function StudentHome() {
                     성장 진열장
                   </div>
                   <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                    성장 활동 {profile?.totalSP.toLocaleString() ?? 0} · 엠블럼 {myEmblems.length}개 보유
+                    성장 활동 {profile?.totalSP.toLocaleString() ?? 0}{emblemEnabled ? ` · 엠블럼 ${myEmblems.length}개 보유` : ''}
                   </div>
                 </div>
               </div>

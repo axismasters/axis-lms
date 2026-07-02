@@ -27,8 +27,8 @@ import {
 } from '@/lib/studentProfile';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
 import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
-import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
-import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
+import { AxisEmblemImageBadge } from '@/components/brand/AxisEmblemImageBadge';
+import { AxisTierImageMedallion } from '@/components/brand/AxisTierImageMedallion';
 import { Link } from 'wouter';
 import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
 import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
@@ -160,7 +160,7 @@ export default function StudentMyPage() {
               <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>누적 성장 활동</div>
             </div>
             <div className="rounded-lg p-3 flex flex-col items-center justify-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
-              <AxisTierMedallion tier={profile?.tier ?? 'UNRANKED'} size={40} />
+              <AxisTierImageMedallion tier={profile?.tier ?? 'UNRANKED'} size={40} />
               <div className="font-bold text-sm mt-0.5" style={{ color: tierColor }}>{tierLabel}</div>
               <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>현재 성장 단계</div>
             </div>
@@ -205,7 +205,7 @@ export default function StudentMyPage() {
                   </div>
                 )}
                 <div className="text-xs mt-0.5" style={{ color: 'oklch(0.65 0.015 250)' }}>
-                  닉네임은 Rival, Emblem, 성장 진열장에서 사용됩니다. 닉네임은 2주에 한 번만 변경할 수 있습니다.
+                  닉네임은 Rival{emblemEnabled ? ', Emblem' : ''}, 성장 진열장에서 사용됩니다. 닉네임은 2주에 한 번만 변경할 수 있습니다.
                 </div>
                 {!nickGate.allowed && (
                   <div className="text-xs mt-1 font-medium" style={{ color: 'oklch(0.55 0.15 60)' }}>
@@ -308,7 +308,7 @@ export default function StudentMyPage() {
             <div className="flex flex-wrap gap-2">
               {myEmblemDefs.slice(0, 9).map(({ se, def }) => (
                 <div key={se.id} className="flex flex-col items-center gap-1 w-16">
-                  <AxisEmblemBadge iconKey={def.iconKey} level={def.level} size={48} />
+                  <AxisEmblemImageBadge emblemId={def.id} iconKey={def.iconKey} level={def.level} size={48} />
                   <div className="text-xs text-center truncate w-full" style={{ color: 'oklch(0.5 0.015 250)', fontSize: 10 }}>
                     {def.name}
                   </div>

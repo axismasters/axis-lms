@@ -18,7 +18,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { useGrowth } from '@/contexts/GrowthContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
-import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
+import { AxisEmblemImageBadge } from '@/components/brand/AxisEmblemImageBadge';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
 import { getSchoolRecordsForStudent, getNationalMocksForStudent } from '@/lib/phase2dData';
 import { estimateIfPotentialFromAveragePct } from '@/lib/ifAnalysisEngine';
@@ -106,7 +106,7 @@ function GrowthCard({ studentId }: { studentId: string }) {
             {recentEmblems.map(({ e, def }) => (
               <span key={e.id} className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium"
                 style={{ background: 'oklch(0.98 0.006 90)', color: 'oklch(0.3 0.02 250)', border: '1px solid oklch(0.9 0.01 90)' }}>
-                <AxisEmblemBadge iconKey={def!.iconKey} level={def!.level} size={20} />
+                <AxisEmblemImageBadge emblemId={def!.id} iconKey={def!.iconKey} level={def!.level} size={20} />
                 {def!.name}
               </span>
             ))}

@@ -14,7 +14,7 @@ import {
   CATEGORY_LABELS, MATERIAL_LABELS, MATERIAL_BADGE, CATEGORY_BADGE,
   EMBLEM_FAMILY_LABELS,
 } from '@/lib/growthData';
-import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
+import { AxisEmblemImageBadge } from '@/components/brand/AxisEmblemImageBadge';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useDraggableModal } from '@/hooks/useDraggableModal';
@@ -168,7 +168,7 @@ export default function EmblemManagement() {
                 <tr key={e.id} style={{ borderBottom: '1px solid oklch(0.95 0.004 250)', opacity: e.active ? 1 : 0.5 }}>
                   <td className="px-4 py-2.5 font-semibold" style={{ color: 'oklch(0.18 0.02 250)' }}>
                     <div className="flex items-center gap-2">
-                      {e.family && <AxisEmblemBadge iconKey={e.iconKey} level={e.level} size={28} />}
+                      {e.family && <AxisEmblemImageBadge emblemId={e.id} iconKey={e.iconKey} level={e.level} size={28} />}
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {e.name}
                         {e.family && (

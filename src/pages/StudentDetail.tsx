@@ -68,7 +68,8 @@ import {
   TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
   CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
 } from '@/lib/growthData';
-import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
+import { AxisTierImageMedallion } from '@/components/brand/AxisTierImageMedallion';
+import { getEmblemImageByExistingId } from '@/lib/emblemAssetManifest';
 import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
 import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
 
@@ -2258,7 +2259,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
             <div className="text-xs font-bold tracking-widest mb-1" style={{ color: '#C8A15A' }}>AXIS 진열장</div>
             <div className="text-xl font-bold text-white mb-2">{profile.nickname}</div>
             <div className="flex items-center gap-2">
-              <AxisTierMedallion tier={tier} size={34} />
+              <AxisTierImageMedallion tier={tier} size={34} />
               <span className="inline-block px-3 py-1 rounded-full text-xs font-bold"
                 style={{ background: TIER_COLORS[tier] + '30', color: '#E4C979', border: `1px solid ${TIER_COLORS[tier]}60` }}>
                 {TIER_LABELS[tier]}
@@ -2280,17 +2281,21 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               )}
             </div>
           </div>
-          {/* 대표 엠블럼 3슬롯 — [Phase 3D v3-r12] emblemEnabled가 false면 숨김 */}
+          {/* 대표 엠블럼 3슬롯 — [Phase 3D v3-r12] emblemEnabled가 false면 숨김.
+              [Phase 3D v3-r14] 이미지 매핑이 있으면 PNG를, 없으면 기존 트로피+재질 라벨 그대로. */}
           {emblemEnabled && (
           <div className="flex gap-2">
             {[0, 1, 2].map(i => {
               const emb = repEmblems[i];
               const mat = emb ? MATERIAL_BADGE[emb.material] : null;
+              const img = emb && emblemEnabled ? getEmblemImageByExistingId(emb.id) : undefined;
               return (
-                <div key={i} className="flex flex-col items-center justify-center rounded-lg"
+                <div key={i} className="flex flex-col items-center justify-center rounded-lg overflow-hidden"
                   style={{ width: 52, height: 52, background: mat ? mat.bg : 'oklch(0.22 0.025 250)', border: `2px solid ${mat ? mat.border : 'oklch(0.3 0.02 250)'}` }}
                   title={emb?.name}>
-                  {emb ? (
+                  {emb && img ? (
+                    <img src={img} alt={emb.name} style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+                  ) : emb ? (
                     <><Trophy size={18} style={{ color: mat?.text }} /><span style={{ fontSize: 9, color: mat?.text, fontWeight: 700, marginTop: 2 }}>{MATERIAL_LABELS[emb.material]}</span></>
                   ) : <span style={{ color: 'oklch(0.4 0.02 250)', fontSize: 18 }}>?</span>}
                 </div>
@@ -2332,7 +2337,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
             <div>
               <div className="text-base font-bold mb-1" style={{ color: 'oklch(0.18 0.02 250)' }}>{rivalStudentName}</div>
               <div className="text-xs font-semibold mb-1" style={{ color: TIER_COLORS[currentRivalProfile.tier as StudentTier] }}>{TIER_LABELS[currentRivalProfile.tier as StudentTier]}</div>
-              <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>SP {currentRivalProfile.totalSP.toLocaleString()} · 엠블럼 {growth.getAchievedEmblems(currentRivalProfile.studentId).length}개</div>
+              <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>SP {currentRivalProfile.totalSP.toLocaleString()}{emblemEnabled ? ` · 엠블럼 ${growth.getAchievedEmblems(currentRivalProfile.studentId).length}개` : ''}</div>
               {/* [Phase 3D v3-r7] 라이벌 운영(승/패/종료)을 이 카드에서 바로 처리 —
                   별도 관리자 "라이벌관리" 메뉴로 이동하지 않아도 된다. */}
               {canManageRival && relation && (
@@ -2427,11 +2432,12 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               const emb = growth.getEmblemById(se.emblemId);
               if (!emb) return null;
               const mat = MATERIAL_BADGE[emb.material];
+              const img = emblemEnabled ? getEmblemImageByExistingId(emb.id) : undefined;
               return (
                 <div key={se.id} className="flex items-center gap-3 px-3 py-2 rounded-lg"
                   style={{ background: 'oklch(0.97 0.004 250)', border: '1px solid oklch(0.92 0.006 250)' }}>
-                  <div className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: mat.bg, border: `1px solid ${mat.border}` }}>
-                    <Trophy size={14} style={{ color: mat.text }} />
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: mat.bg, border: `1px solid ${mat.border}` }}>
+                    {img ? <img src={img} alt={emb.name} style={{ width: '85%', height: '85%', objectFit: 'contain' }} /> : <Trophy size={14} style={{ color: mat.text }} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate" style={{ color: 'oklch(0.18 0.02 250)' }}>{emb.name}</div>
@@ -2458,11 +2464,12 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               if (!emb) return null;
               const pct = Math.min(100, Math.round((se.progressCount / emb.requiredCount) * 100));
               const mat = MATERIAL_BADGE[emb.material];
+              const img = emblemEnabled ? getEmblemImageByExistingId(emb.id) : undefined;
               return (
                 <div key={se.id} className="flex items-center gap-3 px-3 py-2 rounded-lg"
                   style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
-                  <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: mat.bg }}>
-                    <Trophy size={12} style={{ color: mat.text }} />
+                  <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: mat.bg }}>
+                    {img ? <img src={img} alt={emb.name} style={{ width: '85%', height: '85%', objectFit: 'contain', filter: 'grayscale(0.4)', opacity: 0.7 }} /> : <Trophy size={12} style={{ color: mat.text }} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
@@ -2520,8 +2527,10 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         </div>
       )}
 
-      {/* 엠블럼 수동 지급 모달 */}
-      {embModal && (
+      {/* 엠블럼 수동 지급 모달 — [Phase 3D v3-r14-r1] emblemEnabled 방어 가드 추가.
+          버튼은 이미 emblemEnabled로 가려져 있지만, 모달을 연 뒤 다른 탭에서 설정을
+          꺼도 embModal 상태 자체는 true로 남을 수 있어 렌더 조건에도 명시적으로 넣는다. */}
+      {embModal && emblemEnabled && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
           <div className="bg-white rounded-xl shadow-2xl w-96 p-6">
             <h3 className="font-bold text-base mb-1" style={{ color: 'oklch(0.15 0.02 250)' }}>엠블럼 수동 지급</h3>

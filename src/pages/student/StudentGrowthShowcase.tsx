@@ -28,8 +28,8 @@ import {
 } from '@/lib/growthData';
 import type { Emblem, StudentEmblem } from '@/lib/growthData';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
-import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
-import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
+import { AxisTierImageMedallion } from '@/components/brand/AxisTierImageMedallion';
+import { AxisEmblemImageBadge } from '@/components/brand/AxisEmblemImageBadge';
 import { loadIfRecords, getIfCumulativeSummary } from '@/lib/ifAnalysisEngine';
 import { CHART_TEAL, CHART_GOLD, CHART_BLUE, CHART_AMBER } from '@/lib/brandColors';
 import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
@@ -53,7 +53,7 @@ function EmblemTile({ emblem, record }: { emblem: Emblem; record?: StudentEmblem
   return (
     <div className="rounded-xl p-3 flex flex-col items-center text-center transition-shadow hover:shadow-md"
       style={{ background: achieved ? 'oklch(0.985 0.006 90)' : 'oklch(0.98 0.004 250)', border: '1px solid oklch(0.92 0.008 250)' }}>
-      <AxisEmblemBadge iconKey={emblem.iconKey} level={emblem.level} accent={accent} size={72} locked={!achieved} />
+      <AxisEmblemImageBadge emblemId={emblem.id} iconKey={emblem.iconKey} level={emblem.level} accent={accent} size={72} locked={!achieved} />
       <div className="mt-1.5 font-semibold text-xs" style={{ color: achieved ? 'oklch(0.22 0.02 250)' : 'oklch(0.5 0.015 250)' }}>
         {emblem.parentSafeLabel ? studentTitle(emblem) : emblem.name}
       </div>
@@ -166,7 +166,7 @@ export default function StudentGrowthShowcase() {
         <div className="axis-card p-5">
           <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] items-center gap-5">
             <div className="flex flex-col items-center">
-              <AxisTierMedallion tier={tier} size={104} />
+              <AxisTierImageMedallion tier={tier} size={104} />
             </div>
             <div>
               <div className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>현재 성장 단계</div>
@@ -192,7 +192,7 @@ export default function StudentGrowthShowcase() {
             {tierProgress.next && (
               <div className="hidden sm:flex flex-col items-center gap-1 pl-4" style={{ borderLeft: '1px solid oklch(0.93 0.008 250)' }}>
                 <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>다음 단계</span>
-                <AxisTierMedallion tier={tierProgress.next} size={54} />
+                <AxisTierImageMedallion tier={tierProgress.next} size={54} />
                 <span className="text-xs font-semibold" style={{ color: TIER_COLORS[tierProgress.next] }}>{TIER_LABELS[tierProgress.next]}</span>
               </div>
             )}
