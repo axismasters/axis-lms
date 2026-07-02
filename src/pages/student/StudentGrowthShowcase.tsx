@@ -49,22 +49,14 @@ function EmblemTile({ emblem, record }: { emblem: Emblem; record?: StudentEmblem
     ? Math.min(100, Math.round((record.progressCount / emblem.requiredCount) * 100)) : 0;
 
   return (
-    <div className="rounded-xl p-3.5 flex flex-col items-center text-center transition-all hover:-translate-y-0.5 hover:shadow-md"
-      style={{
-        background: achieved
-          ? 'linear-gradient(180deg, #FFFDF7 0%, #F8F0DC 100%)'
-          : 'linear-gradient(180deg, #FBFAF7 0%, #F1EFE9 100%)',
-        border: achieved ? '1px solid #E5D29A' : '1px solid #DED8CC',
-        boxShadow: achieved ? 'inset 0 1px 0 #FFFFFF' : 'none',
-      }}>
-      <AxisEmblemBadge iconKey={emblem.iconKey} level={emblem.level} accent={accent} size={78} locked={!achieved} />
-      <div className="mt-2 font-bold text-xs leading-tight" style={{ color: achieved ? 'oklch(0.2 0.02 250)' : 'oklch(0.48 0.015 250)' }}>
+    <div className="rounded-xl p-3 flex flex-col items-center text-center transition-shadow hover:shadow-md"
+      style={{ background: achieved ? 'oklch(0.985 0.006 90)' : 'oklch(0.98 0.004 250)', border: '1px solid oklch(0.92 0.008 250)' }}>
+      <AxisEmblemBadge iconKey={emblem.iconKey} level={emblem.level} accent={accent} size={72} locked={!achieved} />
+      <div className="mt-1.5 font-semibold text-xs" style={{ color: achieved ? 'oklch(0.22 0.02 250)' : 'oklch(0.5 0.015 250)' }}>
         {emblem.parentSafeLabel ? studentTitle(emblem) : emblem.name}
       </div>
       {achieved ? (
-        <div className="text-xs mt-1 px-1.5 py-0.5 rounded-full" style={{ background: '#F8F0DC', color: '#8A6D2E', fontSize: 10 }}>
-          {record?.acquiredAt}
-        </div>
+        <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)', fontSize: 10 }}>{record?.acquiredAt}</div>
       ) : (
         <>
           <div className="text-xs mt-0.5" style={{ color: 'oklch(0.6 0.015 250)', fontSize: 10 }}>다음 성장 목표</div>
@@ -80,44 +72,6 @@ function EmblemTile({ emblem, record }: { emblem: Emblem; record?: StudentEmblem
           )}
         </>
       )}
-    </div>
-  );
-}
-
-function ShowcaseEmblemCard({ emblem, record, index }: { emblem: Emblem; record?: StudentEmblem; index: number }) {
-  const level = emblem.level ?? 'BASIC';
-  const accent = EMBLEM_LEVEL_STYLE[level].accent;
-  const achieved = record?.achieved ?? false;
-
-  return (
-    <div className="rounded-2xl p-4 min-h-[178px] flex flex-col justify-between"
-      style={{
-        background: achieved
-          ? 'linear-gradient(135deg, #FFFDF7 0%, #F8F0DC 46%, #FFFFFF 100%)'
-          : 'linear-gradient(135deg, #F8F7F2 0%, #EFEBE0 100%)',
-        border: achieved ? '1px solid #D7BF78' : '1px solid #DED8CC',
-        boxShadow: achieved ? '0 14px 28px rgba(11, 27, 51, 0.08), inset 0 1px 0 #FFFFFF' : 'inset 0 1px 0 #FFFFFF',
-      }}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-xs font-black tracking-wide" style={{ color: '#8A6D2E' }}>SIGNATURE {index + 1}</div>
-          <div className="mt-1 font-black text-base leading-tight" style={{ color: 'oklch(0.18 0.02 250)' }}>
-            {studentTitle(emblem)}
-          </div>
-          <div className="mt-1 text-xs leading-relaxed" style={{ color: 'oklch(0.45 0.015 250)' }}>
-            {emblem.parentSafeLabel ?? emblem.description}
-          </div>
-        </div>
-        <AxisEmblemBadge iconKey={emblem.iconKey} level={emblem.level} accent={accent} size={94} locked={!achieved} />
-      </div>
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <span className="text-xs px-2 py-1 rounded-full font-semibold" style={{ background: '#0B1B33', color: '#F8E7A2' }}>
-          {level}
-        </span>
-        <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
-          {achieved ? `${record?.acquiredAt} 기록` : '다음 성장 목표'}
-        </span>
-      </div>
     </div>
   );
 }
@@ -160,14 +114,6 @@ export default function StudentGrowthShowcase() {
       return av - bv;
     });
   const achievedCount = galleryEmblems.filter(g => g.record?.achieved).length;
-  const representativeIds = profile?.representativeEmblemIds ?? [];
-  const representativeEmblems = [
-    ...representativeIds
-      .map(id => catalogEmblems.find(e => e.id === id))
-      .filter((e): e is Emblem => !!e),
-    ...galleryEmblems.filter(g => g.record?.achieved).map(g => g.emblem),
-    ...catalogEmblems,
-  ].filter((emblem, index, arr) => arr.findIndex(e => e.id === emblem.id) === index).slice(0, 3);
 
   // IF 누적 요약(실데이터) — 개선 % 는 사유 비율의 역수 기반 결정적 표현
   const ifRecords = loadIfRecords(myStudentId);
@@ -247,34 +193,6 @@ export default function StudentGrowthShowcase() {
           </div>
         </div>
 
-        {/* 대표 성장 엠블럼 — 학생 화면의 핵심 전시 영역 */}
-        <div className="axis-card p-5">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <Award size={17} style={{ color: '#C8A15A' }} />
-                <h2 className="font-black text-base" style={{ color: 'oklch(0.18 0.02 250)' }}>대표 성장 엠블럼</h2>
-              </div>
-              <p className="text-xs mt-1" style={{ color: 'oklch(0.5 0.015 250)' }}>
-                이번 시즌 나를 가장 잘 설명하는 성장 기록입니다.
-              </p>
-            </div>
-            <span className="hidden sm:inline-flex text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: '#F8F0DC', color: '#8A6D2E' }}>
-              AXIS Growth Signature
-            </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {representativeEmblems.map((emblem, index) => (
-              <ShowcaseEmblemCard
-                key={emblem.id}
-                emblem={emblem}
-                record={recordByEmblem.get(emblem.id)}
-                index={index}
-              />
-            ))}
-          </div>
-        </div>
-
         {/* 본문 — 좌: 엠블럼 갤러리 / 우: IF 기반 성장 요약 (PC에서 균형 2컬럼) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           {/* ── 좌: 성장 엠블럼 컬렉션 ── */}
@@ -290,7 +208,7 @@ export default function StudentGrowthShowcase() {
                 </div>
               </div>
               <p className="text-xs mb-3" style={{ color: 'oklch(0.5 0.015 250)' }}>노력의 여정이 특별한 엠블럼으로 기록됩니다.</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
                 {galleryEmblems.map(({ emblem, record }) => (
                   <EmblemTile key={emblem.id} emblem={emblem} record={record} />
                 ))}

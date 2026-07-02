@@ -123,7 +123,7 @@ export interface RivalRelation {
   wins: number;
   losses: number;
   winRate: number;
-  streak: number;                // 양수: 연승, 음수: 연패
+  streak: number;                // 양수: 연속 상승 흐름, 음수: 보완 흐름 (내부 비교 데이터)
   createdAt: string;
   nextChangeAvailableAt: string;
 }
@@ -342,17 +342,17 @@ export const MOCK_EMBLEMS: Emblem[] = [
     hidden: false, active: true, createdAt: '2025-03-01' },
 
   // ── RIVAL
-  { id: 'emb-012', name: '첫 승리', category: 'RIVAL', material: 'STONE',
-    description: '라이벌 대결 첫 승리', conditionText: '라이벌 대결 1승', requiredCount: 1,
+  { id: 'emb-012', name: '첫 성장 비교', category: 'RIVAL', material: 'STONE',
+    description: '성장 매치업에서 첫 성장 우위', conditionText: '성장 매치업 1회 우위', requiredCount: 1,
     hidden: false, active: true, createdAt: '2025-03-01' },
-  { id: 'emb-013', name: '연승 질주', category: 'RIVAL', material: 'BRONZE',
-    description: '라이벌 대결 3연승', conditionText: '라이벌 3연승', requiredCount: 3,
+  { id: 'emb-013', name: '연속 상승 흐름', category: 'RIVAL', material: 'BRONZE',
+    description: '성장 매치업 3회 연속 상승', conditionText: '성장 매치업 3회 연속 우위', requiredCount: 3,
     hidden: false, active: true, createdAt: '2025-03-01' },
-  { id: 'emb-014', name: '라이벌 챔피언', category: 'RIVAL', material: 'GOLD',
-    description: '라이벌 대결 10승 달성', conditionText: '라이벌 총 10승 이상', requiredCount: 10,
+  { id: 'emb-014', name: '성장 하이라이트', category: 'RIVAL', material: 'GOLD',
+    description: '성장 매치업 누적 10회 우위', conditionText: '성장 매치업 누적 10회 이상 우위', requiredCount: 10,
     hidden: false, active: true, createdAt: '2025-03-01' },
-  { id: 'emb-023', name: '리벤지 성공', category: 'RIVAL', material: 'SILVER',
-    description: '연패 후 연승 전환', conditionText: '연패 후 3연승 달성', requiredCount: 3,
+  { id: 'emb-023', name: '재도전 성장', category: 'RIVAL', material: 'SILVER',
+    description: '보완 흐름에서 상승 흐름으로 전환', conditionText: '보완 흐름 후 3회 연속 상승', requiredCount: 3,
     hidden: false, active: true, createdAt: '2025-03-01' },
 
   // ── SKILL
@@ -472,13 +472,13 @@ export const MOCK_GROWTH_PROFILES: StudentGrowthProfile[] = [
 export const MOCK_SP_LOGS: StudentSPLog[] = [
   { id: 'spl-001', studentId: 'stu-001', amount: 50, reason: '엠블럼 획득: 90점 클럽', sourceType: 'ASSESSMENT', sourceId: 'emb-008', createdAt: '2025-05-10', createdBy: 'SYSTEM' },
   { id: 'spl-002', studentId: 'stu-001', amount: 100, reason: '관리자 수동 지급 - 시험 준비 노력 인정', sourceType: 'MANUAL', createdAt: '2025-05-20', createdBy: '한태준' },
-  { id: 'spl-003', studentId: 'stu-001', amount: 50, reason: '엠블럼 획득: 라이벌 챔피언', sourceType: 'RIVAL', sourceId: 'emb-014', createdAt: '2025-06-01', createdBy: 'SYSTEM' },
+  { id: 'spl-003', studentId: 'stu-001', amount: 50, reason: '엠블럼 획득: 성장 하이라이트', sourceType: 'RIVAL', sourceId: 'emb-014', createdAt: '2025-06-01', createdBy: 'SYSTEM' },
   { id: 'spl-004', studentId: 'stu-001', amount: 30, reason: '월 개근 달성 (6월)', sourceType: 'ATTENDANCE', createdAt: '2025-06-30', createdBy: 'SYSTEM' },
   { id: 'spl-005', studentId: 'stu-002', amount: 50, reason: '엠블럼 획득: 성실의 증거', sourceType: 'ATTENDANCE', sourceId: 'emb-002', createdAt: '2025-06-01', createdBy: 'SYSTEM' },
   { id: 'spl-006', studentId: 'stu-002', amount: 30, reason: '단원평가 우수 성적', sourceType: 'ASSESSMENT', createdAt: '2025-06-10', createdBy: '원장' },
   { id: 'spl-007', studentId: 'stu-003', amount: 50, reason: '엠블럼 획득: 개근왕', sourceType: 'ATTENDANCE', sourceId: 'emb-001', createdAt: '2025-05-01', createdBy: 'SYSTEM' },
   { id: 'spl-008', studentId: 'stu-004', amount: 20, reason: '첫 시험 응시', sourceType: 'ASSESSMENT', createdAt: '2025-04-20', createdBy: 'SYSTEM' },
-  { id: 'spl-009', studentId: 'stu-005', amount: 50, reason: '엠블럼 획득: 첫 승리', sourceType: 'RIVAL', sourceId: 'emb-012', createdAt: '2025-05-20', createdBy: 'SYSTEM' },
+  { id: 'spl-009', studentId: 'stu-005', amount: 50, reason: '엠블럼 획득: 첫 성장 비교', sourceType: 'RIVAL', sourceId: 'emb-012', createdAt: '2025-05-20', createdBy: 'SYSTEM' },
 ];
 
 // ────────────────────────────────────────────────────────────

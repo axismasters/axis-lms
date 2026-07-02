@@ -65,11 +65,10 @@ import { getCounselingRecordsForStudent } from '@/lib/counselingData';
 import { resetStudentNickname } from '@/lib/studentProfile';
 import { logAccountAction } from '@/lib/accountActionLog';
 import {
-  TIER_LABELS, TIER_COLORS,
+  TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
   CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
 } from '@/lib/growthData';
 import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
-import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 
 // ════════════════════════════════════════════════════════════
 // 공통 작은 컴포넌트
@@ -2277,13 +2276,14 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
           <div className="flex gap-2">
             {[0, 1, 2].map(i => {
               const emb = repEmblems[i];
+              const mat = emb ? MATERIAL_BADGE[emb.material] : null;
               return (
-                <div key={i} className="flex flex-col items-center justify-center rounded-xl"
-                  style={{ width: 66, height: 70, background: emb ? 'rgba(255, 253, 247, 0.12)' : 'oklch(0.22 0.025 250)', border: `1px solid ${emb ? '#C8A15A66' : 'oklch(0.3 0.02 250)'}` }}
+                <div key={i} className="flex flex-col items-center justify-center rounded-lg"
+                  style={{ width: 52, height: 52, background: mat ? mat.bg : 'oklch(0.22 0.025 250)', border: `2px solid ${mat ? mat.border : 'oklch(0.3 0.02 250)'}` }}
                   title={emb?.name}>
                   {emb ? (
-                    <AxisEmblemBadge iconKey={emb.iconKey} level={emb.level} size={58} />
-                  ) : <span style={{ color: 'oklch(0.4 0.02 250)', fontSize: 18 }}>+</span>}
+                    <><Trophy size={18} style={{ color: mat?.text }} /><span style={{ fontSize: 9, color: mat?.text, fontWeight: 700, marginTop: 2 }}>{MATERIAL_LABELS[emb.material]}</span></>
+                  ) : <span style={{ color: 'oklch(0.4 0.02 250)', fontSize: 18 }}>?</span>}
                 </div>
               );
             })}
@@ -2407,13 +2407,16 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
             {recentEmblems.map(se => {
               const emb = growth.getEmblemById(se.emblemId);
               if (!emb) return null;
+              const mat = MATERIAL_BADGE[emb.material];
               return (
                 <div key={se.id} className="flex items-center gap-3 px-3 py-2 rounded-lg"
-                  style={{ background: '#FFFDF7', border: '1px solid #E8DDC3' }}>
-                  <AxisEmblemBadge iconKey={emb.iconKey} level={emb.level} size={42} />
+                  style={{ background: 'oklch(0.97 0.004 250)', border: '1px solid oklch(0.92 0.006 250)' }}>
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: mat.bg, border: `1px solid ${mat.border}` }}>
+                    <Trophy size={14} style={{ color: mat.text }} />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate" style={{ color: 'oklch(0.18 0.02 250)' }}>{emb.name}</div>
-                    <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{CATEGORY_LABELS[emb.category]} · {emb.level ?? '성장 기록'}</div>
+                    <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{CATEGORY_LABELS[emb.category]} · {MATERIAL_LABELS[emb.material]}</div>
                   </div>
                   <div className="text-xs flex-shrink-0" style={{ color: 'oklch(0.47 0.015 250)' }}>{se.acquiredAt}</div>
                 </div>
@@ -2435,10 +2438,13 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               const emb = growth.getEmblemById(se.emblemId);
               if (!emb) return null;
               const pct = Math.min(100, Math.round((se.progressCount / emb.requiredCount) * 100));
+              const mat = MATERIAL_BADGE[emb.material];
               return (
                 <div key={se.id} className="flex items-center gap-3 px-3 py-2 rounded-lg"
                   style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
-                  <AxisEmblemBadge iconKey={emb.iconKey} level={emb.level} size={38} locked />
+                  <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: mat.bg }}>
+                    <Trophy size={12} style={{ color: mat.text }} />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-semibold" style={{ color: 'oklch(0.2 0.02 250)' }}>{emb.name}</span>
@@ -2501,7 +2507,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               className="w-full border rounded-md px-3 py-2 text-sm mb-3" style={{ borderColor: 'oklch(0.87 0.006 250)' }}>
               <option value="">— 엠블럼 선택 —</option>
               {activeEmblems.map(e => (
-                <option key={e.id} value={e.id}>[{CATEGORY_LABELS[e.category]}] {e.name} ({e.level ?? '성장 기록'})</option>
+                <option key={e.id} value={e.id}>[{CATEGORY_LABELS[e.category]}] {e.name} ({MATERIAL_LABELS[e.material]})</option>
               ))}
             </select>
             <div className="flex gap-2 justify-end">

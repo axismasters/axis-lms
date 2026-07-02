@@ -178,7 +178,7 @@ export function buildTeacherGrowthConsultingNote(input: TeacherGrowthConsultingI
     parts.push(`최근 획득 엠블럼은 "${input.recentEmblemName}"입니다.`);
   }
   if (input.rivalWins + input.rivalLosses > 0) {
-    parts.push(`Rival 전적 ${input.rivalWins}승 ${input.rivalLosses}패로, 상담 시 학습 동기부여 소재로 활용할 수 있습니다.`);
+    parts.push(`Rival 성장 비교에서 ${input.rivalWins}회 우위 · ${input.rivalLosses}회 보완 흐름으로, 상담 시 학습 동기부여 소재로 활용할 수 있습니다.`);
   }
   if (input.ifImprovementNote) {
     parts.push(input.ifImprovementNote);

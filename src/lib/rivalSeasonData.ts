@@ -18,13 +18,13 @@ export interface RivalSeason {
   targetClassIds: string[];
   participantCount: number;
   activeRivalCount: number;
-  // 승패 기준
+  // 성장 비교 기준
   winCondition: string;
   loseCondition: string;
   drawCondition: string;
   // 보상
-  streakBonus: string;             // 예: '연승 3회 시 SP +50'
-  revengeBonus: string;            // 예: '복수 성공 시 SP +30'
+  streakBonus: string;             // 예: '연속 상승 3회 시 SP +50'
+  revengeBonus: string;            // 예: '재도전 성공 시 SP +30'
   spReward: {
     win: number;
     loss: number;
@@ -50,10 +50,10 @@ export const MOCK_RIVAL_SEASONS: RivalSeason[] = [
     winCondition: '단원평가 점수 상대보다 5점 이상 높을 때',
     loseCondition: '단원평가 점수 상대보다 5점 이상 낮을 때',
     drawCondition: '5점 이내 차이',
-    streakBonus: '연승 3회 시 SP +50, 연승 5회 시 SP +100',
-    revengeBonus: '이전 패배 상대 승리 시 SP +30',
+    streakBonus: '연속 상승 3회 시 SP +50, 연속 상승 5회 시 SP +100',
+    revengeBonus: '이전 보완 상대 우위 시 SP +30',
     spReward: { win: 20, loss: 5, draw: 10 },
-    emblemCondition: '시즌 5승 이상: "Rival Conqueror" 엠블럼 지급',
+    emblemCondition: '시즌 성장 우위 5회 이상: "성장 하이라이트" 엠블럼 지급',
     createdAt: '2024-05-20',
     createdBy: '한태준',
   },
@@ -70,10 +70,10 @@ export const MOCK_RIVAL_SEASONS: RivalSeason[] = [
     winCondition: '전국모의 수학 점수 상대보다 높을 때',
     loseCondition: '전국모의 수학 점수 상대보다 낮을 때',
     drawCondition: '동점',
-    streakBonus: '연승 3회 시 SP +60',
-    revengeBonus: '복수 성공 시 SP +40',
+    streakBonus: '연속 상승 3회 시 SP +60',
+    revengeBonus: '재도전 성공 시 SP +40',
     spReward: { win: 25, loss: 5, draw: 10 },
-    emblemCondition: '시즌 승률 70% 이상: "Fall Champion" 엠블럼',
+    emblemCondition: '시즌 성장 우위 비율 70% 이상: "성장 하이라이트" 엠블럼',
     createdAt: '2024-08-25',
     createdBy: '한태준',
   },
@@ -90,8 +90,8 @@ export const MOCK_RIVAL_SEASONS: RivalSeason[] = [
     winCondition: '단원평가 100점 만점 기준 점수 비교',
     loseCondition: '상대 점수가 더 높을 때',
     drawCondition: '동점 또는 5점 이내',
-    streakBonus: '연승 3회: SP +50 / 연승 5회: SP +120 + 엠블럼 후보',
-    revengeBonus: '복수 성공: SP +35',
+    streakBonus: '연속 상승 3회: SP +50 / 연속 상승 5회: SP +120 + 엠블럼 후보',
+    revengeBonus: '재도전 성공: SP +35',
     spReward: { win: 20, loss: 5, draw: 8 },
     emblemCondition: '시즌 MVP (최다 승리 학생): "Spring MVP" 특별 엠블럼',
     createdAt: '2025-02-15',
