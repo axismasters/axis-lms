@@ -3,19 +3,27 @@
 //
 // - 관리자용 상세 분석 및 상담 리포트 관리
 // - 학생용 프리뷰와 분리된 상세 화면
-// - PDF 출력 준비 (Phase 4+)
 //
 // 경로: /admin/university-reports
+//
+// [Phase 3E v3-r16-r1] "핵심 상담 흐름만 연결" 원칙에 따라 정리:
+//   - "PDF 다운로드"/"상담 리포트 생성" 버튼은 클릭해도 토스트만 뜨는 더미였고, PDF 내보내기는
+//     이 프로젝트의 영구 금지 항목이라 애초에 만들 수 없는 기능이었다 — 제거했다.
+//   - 학생 성적을 이 화면에서 다시 나열하는 대신, 실제 대학추천 분석 도구(어댑터/게이트/
+//     Phase 5.1 연동)가 이미 갖춰진 학생 상세 화면(StudentDetail.tsx GradesTab)으로
+//     바로 연결한다 — 같은 기능을 두 곳에서 다르게 만들지 않는다.
+// [Phase 3E v3-r16-r2] 화면에 실제로 노출되는 문구에서 "Phase 5.1 연동"/"어댑터" 같은
+// 개발자용 표현을 제거했다(이 파일 상단 주석은 개발 문서이므로 그대로 둔다). 로직 변경 없음.
 //
 // ⚠ 금지: 합격률/합격 가능성/합격 보장/불합격/안정 합격 표현 금지
 
 import { useState } from 'react';
-import { GraduationCap, FileText, Download, ChevronRight, BookOpen } from 'lucide-react';
+import { Link } from 'wouter';
+import { GraduationCap, ChevronRight, ArrowRight } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
-import { toast } from 'sonner';
 
 export default function UniversityReportManagement() {
   const { currentUser } = useAuth();
@@ -37,10 +45,11 @@ export default function UniversityReportManagement() {
 
         {/* 안내 배너 */}
         <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.4 0.015 250)' }}>
-          이 화면은 관리자·원장 전용 상세 리포트 화면입니다.
-          학생용 프리뷰(목표 변화 방향)와 분리되어 있으며, 상담 참고 리포트 및 PDF 준비에 사용됩니다.
+          이 화면은 관리자·원장 전용 상세 리포트 입구입니다. 학생용 프리뷰(목표 변화 방향)와
+          분리되어 있으며, 학생을 선택하면 상세 분석 도구가 갖춰진
+          학생 상세 화면으로 이동합니다.
           <strong className="block mt-1" style={{ color: 'oklch(0.35 0.2 27)' }}>
-            ⚠ 이 화면에서는 확정 결과를 단정하는 표현 대신, 추천 적합도·보완 필요도 중심의 참고 지표만 사용합니다.
+            ⚠ 확정 결과를 단정하는 표현 대신, 추천 적합도·보완 필요도 중심의 참고 지표만 사용합니다.
           </strong>
         </div>
 
@@ -89,17 +98,22 @@ export default function UniversityReportManagement() {
                         onClick={() => { setSelectedStudentId(student.id); setActiveSection('detail'); }}
                         className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold"
                         style={{ background: 'oklch(0.95 0.04 250)', color: 'oklch(0.4 0.1 250)' }}>
-                        리포트 <ChevronRight size={12} />
+                        확인 <ChevronRight size={12} />
                       </button>
                     </div>
                   </div>
                 );
               })}
+              {eligibleStudents.length === 0 && (
+                <div className="axis-card p-8 text-center text-sm" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                  재원 중인 학생이 없습니다.
+                </div>
+              )}
             </div>
           </>
         )}
 
-        {/* 학생 상세 리포트 */}
+        {/* 학생 상세 — 데이터 요약만 보여주고, 상세 분석은 학생 상세 화면으로 연결한다 */}
         {activeSection === 'detail' && selectedStudent && (
           <>
             <button type="button" onClick={() => setActiveSection('list')}
@@ -116,89 +130,40 @@ export default function UniversityReportManagement() {
                 </div>
                 <div>
                   <div className="font-bold text-base" style={{ color: 'oklch(0.15 0.02 250)' }}>
-                    {selectedStudent.name} — {universityLabel} 관리자 리포트
+                    {selectedStudent.name} — {universityLabel}
                   </div>
                   <div className="text-xs mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
-                    {gradeLevel ?? '학년 미확인'} · 관리자 전용 상세 화면
+                    {gradeLevel ?? '학년 미확인'}
                   </div>
                 </div>
               </div>
 
-              {/* 성적 데이터 현황 */}
-              <div className="space-y-3">
-                <div className="text-xs font-semibold px-1" style={{ color: 'oklch(0.4 0.015 250)' }}>
-                  데이터 현황
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: '모의고사 기록', value: `${selectedStudent.mockExamScores.length}회`, ok: selectedStudent.mockExamScores.length > 0 },
-                    { label: '내신 기록', value: `${selectedStudent.internalScores.length}건`, ok: selectedStudent.internalScores.length > 0 },
-                  ].map(({ label, value, ok }) => (
-                    <div key={label} className="rounded-lg p-3" style={{ background: ok ? 'oklch(0.92 0.08 145)' : 'oklch(0.95 0.004 250)' }}>
-                      <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{label}</div>
-                      <div className="font-bold text-sm" style={{ color: ok ? 'oklch(0.3 0.15 145)' : 'oklch(0.55 0.015 250)' }}>{value}</div>
-                    </div>
-                  ))}
-                </div>
+              {/* 데이터 현황 요약 */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {[
+                  { label: '모의고사 기록', value: `${selectedStudent.mockExamScores.length}회`, ok: selectedStudent.mockExamScores.length > 0 },
+                  { label: '내신 기록', value: `${selectedStudent.internalScores.length}건`, ok: selectedStudent.internalScores.length > 0 },
+                ].map(({ label, value, ok }) => (
+                  <div key={label} className="rounded-lg p-3" style={{ background: ok ? 'oklch(0.92 0.08 145)' : 'oklch(0.95 0.004 250)' }}>
+                    <div className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{label}</div>
+                    <div className="font-bold text-sm" style={{ color: ok ? 'oklch(0.3 0.15 145)' : 'oklch(0.55 0.015 250)' }}>{value}</div>
+                  </div>
+                ))}
+              </div>
 
-                {/* 성적 목록 */}
-                {selectedStudent.mockExamScores.length > 0 && (
+              {/* 상세 분석 도구로 이동 — 중복 화면을 만들지 않고 기존 도구로 연결한다 */}
+              <Link href={`/admin/students/${selectedStudent.id}?tab=grades`}>
+                <div className="flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer"
+                  style={{ background: '#040D1E' }}>
                   <div>
-                    <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.4 0.015 250)' }}>모의고사 성적</div>
-                    {selectedStudent.mockExamScores.map(score => (
-                      <div key={score.id} className="axis-card p-3 mb-2">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>{score.examName}</div>
-                            <div className="text-xs mt-0.5" style={{ color: 'oklch(0.42 0.015 250)' }}>
-                              {score.examDate} · {score.grade}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            {score.math && (
-                              <div className="text-xs font-medium" style={{ color: 'oklch(0.35 0.15 250)' }}>
-                                수학 {score.math.grade}등급 ({score.math.percentile}%)
-                              </div>
-                            )}
-                            {score.korean && (
-                              <div className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>
-                                국어 {score.korean.grade}등급
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                    <div className="font-semibold text-sm text-white">학생 상세에서 상세 분석 확인</div>
+                    <div className="text-xs mt-0.5" style={{ color: 'oklch(0.85 0.01 250)' }}>
+                      대학추천 데이터 상태 · 상담 리포트 미리보기 · 상세 분석 도구 연결
+                    </div>
                   </div>
-                )}
-
-                {/* 리포트/PDF 섹션 */}
-                <div className="rounded-xl p-4" style={{ background: 'oklch(0.95 0.04 260)' }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <FileText size={15} style={{ color: '#040D1E' }} />
-                    <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
-                      상담 리포트 / PDF 준비
-                    </span>
-                    <span className="text-xs px-2 py-0.5 rounded font-medium"
-                      style={{ background: 'oklch(0.93 0.06 80)', color: 'oklch(0.4 0.15 80)' }}>
-                      Phase 4+
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {[
-                      { label: '상담 리포트 생성', icon: BookOpen },
-                      { label: 'PDF 다운로드 (준비 중)', icon: Download },
-                    ].map(({ label, icon: Icon }) => (
-                      <button key={label} type="button"
-                        onClick={() => toast.info(`${label} — Phase 4+에서 구현됩니다.`)}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold"
-                        style={{ background: 'white', color: 'oklch(0.4 0.015 250)', border: '1px solid oklch(0.9 0.008 250)' }}>
-                        <Icon size={13} /> {label}
-                      </button>
-                    ))}
-                  </div>
+                  <ArrowRight size={16} style={{ color: '#C8A15A' }} />
                 </div>
-              </div>
+              </Link>
             </div>
           </>
         )}

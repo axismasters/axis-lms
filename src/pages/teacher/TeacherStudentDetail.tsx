@@ -3,10 +3,12 @@
 // - 담당 학생만 조회 가능 (assignedStudentIds 기준)
 // - 보호자/재무/권한 정보 노출 금지
 // - 상담관리 독립 기능 없음
+// [Phase 3E v3-r16-r1] 대학추천/목표대학 상담 요약 섹션 추가(기존 어댑터 재사용, 신규
+// 계산 로직 없음) — 대학추천 엔진 fast-attach 작업의 일부.
 
 import { useState } from 'react';
 import { useParams, Link } from 'wouter';
-import { ChevronLeft, BarChart2, CalendarCheck, FileText, MessageSquare, Plus, X, KeyRound, UserCog, Sparkles } from 'lucide-react';
+import { ChevronLeft, BarChart2, CalendarCheck, FileText, MessageSquare, Plus, X, KeyRound, UserCog, Sparkles, GraduationCap, ChevronRight } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -37,6 +39,11 @@ import { TIER_LABELS, MATERIAL_BADGE } from '@/lib/growthData';
 import { AxisEmblemImageBadge } from '@/components/brand/AxisEmblemImageBadge';
 import { getIfCumulativeSummary, buildCumulativeImprovementNote } from '@/lib/ifAnalysisEngine';
 import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
+// [Phase 3E v3-r16-r1] 대학추천 상담 요약 — TeacherUniversityData.tsx의 DataStatusTab과
+// 동일한 함수를 재사용한다(새 계산 로직을 만들지 않는다). "빠르게 실사용 흐름에 붙인다"는
+// 이번 Phase 목표에 맞게, 이미 검증된 어댑터를 그대로 가져다 쓴다.
+import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
+import { buildUniversityRecommendationPayloadForStudent, getReadinessLabel, getRecommendationFitScore } from '@/lib/universityPayloadAdapter';
 
 export default function TeacherStudentDetail() {
   const { studentId } = useParams<{ studentId: string }>();
@@ -194,6 +201,14 @@ export default function TeacherStudentDetail() {
         ifImprovementNote,
       })
     : null;
+
+  // [Phase 3E v3-r16-r1] 대학추천/목표대학 상담 요약 — TeacherUniversityData.tsx의
+  // DataStatusTab과 동일한 어댑터 함수를 그대로 재사용한다(계산 로직 신규 작성 없음).
+  const universityGradeLevel = detectStudentGradeLevel(student);
+  const universityLabel = getUniversityMenuLabel(universityGradeLevel);
+  const universityPayload = buildUniversityRecommendationPayloadForStudent(studentId, universityGradeLevel);
+  const universityReadiness = getReadinessLabel(universityPayload);
+  const universityFitScore = getRecommendationFitScore(universityPayload);
 
   // Phase 3D v3-r1: 학부모 공개 코멘트 — 상담 기록 원문과 별개로, 학부모에게 보여줄
   // 문장을 선생님이 직접 다시 써서 저장한다.
@@ -403,6 +418,51 @@ export default function TeacherStudentDetail() {
             </div>
           </section>
         )}
+
+        {/* [Phase 3E v3-r16-r1] 대학추천/목표대학 상담 요약 — 관리자 화면(StudentDetail.tsx
+            GradesTab)의 상세 분석 도구와 별개로, 교사는 여기서 준비 상태만 빠르게 확인하고
+            상세 입력/확인은 기존 "대학추천 데이터"(/teacher/university-data) 화면으로 이동한다.
+            데이터가 부족하면 readiness.label이 "데이터 준비 중"으로 명확히 표시된다. */}
+        <section
+          className="rounded-lg overflow-hidden"
+          style={{ border: '1px solid oklch(0.88 0.01 250)', background: 'white', boxShadow: '0 1px 3px oklch(0 0 0 / 0.06)' }}
+        >
+          <div
+            className="flex items-center gap-2 px-4 py-2.5"
+            style={{ background: 'oklch(0.97 0.004 247)', borderBottom: '1px solid oklch(0.92 0.008 250)' }}
+          >
+            <GraduationCap size={15} style={{ color: '#040D1E' }} />
+            <span className="text-sm font-bold" style={{ color: 'oklch(0.25 0.02 250)' }}>{universityLabel} 준비 상태</span>
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              {universityGradeLevel && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: '#F8F0DC', color: '#C8A15A' }}>
+                  {universityGradeLevel}
+                </span>
+              )}
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: universityReadiness.color + '18', color: universityReadiness.color }}>
+                {universityReadiness.label}
+              </span>
+            </div>
+            {universityPayload.dataCompleteness.readyForAnalysis ? (
+              <div className="flex items-center gap-3">
+                <span className="text-2xl font-black tabular-nums" style={{ color: universityFitScore.color }}>{universityFitScore.score}</span>
+                <div>
+                  <div className="text-xs font-semibold" style={{ color: universityFitScore.color }}>{universityFitScore.label} · 추천 적합도</div>
+                  <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{universityReadiness.description}</div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{universityReadiness.description}</p>
+            )}
+            <Link href="/teacher/university-data" style={{ display: 'block' }}>
+              <div className="inline-flex items-center gap-1 text-xs font-semibold cursor-pointer" style={{ color: '#0B1B33' }}>
+                대학추천 데이터에서 확인/입력하기 <ChevronRight size={12} />
+              </div>
+            </Link>
+          </div>
+        </section>
 
         {/* 담당 수업 */}
         <section>

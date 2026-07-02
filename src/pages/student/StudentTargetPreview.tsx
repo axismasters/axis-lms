@@ -7,6 +7,11 @@
 //   - 수학 향상 시나리오
 //   - 대학추천 준비 상태
 //
+// [Phase 3E v3-r16-r1] "학생 화면은 최소 정보만" 원칙에 따라 과목별 상세 원자료
+// (내신/전국연합/수능실전/수학 시나리오)를 <details> 토글 뒤로 접었다 — 기본으로
+// 보이는 것은 헤더/추천 적합도/보완 필요 과목/데이터 준비 현황/상태 요약뿐이다.
+// 삭제된 내용/로직은 없다.
+//
 // ⚠ 금지: 합격률/합격 가능성/합격 보장/불합격/안정 합격 표현 금지
 // 학생: 조회만 (성적 입력 버튼 없음)
 
@@ -161,6 +166,18 @@ export default function StudentTargetPreview() {
           ))}
         </div>
 
+        {/* [Phase 3E v3-r16-r1] 학생 화면은 "목표 대학 변화 요약만" 노출 원칙에 따라,
+            아래 과목별 상세 원자료(내신/전국연합/수능실전/수학 시나리오)는 기본적으로
+            접어둔다. 삭제가 아니라 숨김/축약 — 필요하면 눌러서 펼쳐볼 수 있다. */}
+        {(includedSubjects.length > 0 || nationalMocks.length > 0 || (isGrade3 && suneungMocks.length > 0) || payload.mathImprovementScenarios.length > 0) && (
+        <details className="group">
+          <summary className="flex items-center gap-1.5 px-1 py-1 text-xs font-semibold cursor-pointer list-none"
+            style={{ color: 'oklch(0.42 0.015 250)' }}>
+            <ChevronRight size={13} className="transition-transform group-open:rotate-90" />
+            과목별 상세 성적 보기
+          </summary>
+          <div className="space-y-4 mt-2">
+
         {/* 내신 성적 요약 */}
         {includedSubjects.length > 0 && mainInternalRecord && (
           <section>
@@ -309,6 +326,10 @@ export default function StudentTargetPreview() {
               </div>
             </div>
           </section>
+        )}
+
+          </div>
+        </details>
         )}
 
         {/* 상태 요약 */}

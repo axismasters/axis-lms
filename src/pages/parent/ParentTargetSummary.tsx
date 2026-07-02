@@ -7,6 +7,10 @@
 //   - 학생용보다 설명형
 //   - 합격 관련 표현 금지
 //
+// [Phase 3E v3-r16-r1] 미사용 import(UNIVERSITY_BAND_PREVIEW) 제거 — 이미 아래
+// "밴드 잠금 안내" 카드가 그 역할을 단일 메시지로 대체하고 있어 실제로는 참조되지
+// 않던 죽은 import였다. 로직/화면 구성 변경 없음.
+//
 // 경로: /parent/target-summary
 
 import { GraduationCap, CheckCircle2, Clock } from 'lucide-react';
@@ -18,7 +22,7 @@ import { useAssessment } from '@/contexts/AssessmentContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
 import { getNationalMocksForStudent, getSchoolRecordsForStudent, STUDENT_HIDDEN_CATEGORY_IDS } from '@/lib/phase2dData';
-import { UNIVERSITY_BAND_PREVIEW, getUniversityPreviewState, getPreviewChecklist } from '@/lib/studentUniversityPreview';
+import { getUniversityPreviewState, getPreviewChecklist } from '@/lib/studentUniversityPreview';
 
 export default function ParentTargetSummary() {
   const { currentUser } = useAuth();

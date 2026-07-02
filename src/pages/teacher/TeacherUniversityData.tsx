@@ -6,7 +6,11 @@
 //   2. 전국연합모의고사 입력 (성적표 구조)
 //   3. 수능실전모의고사 입력 (수능 구조)
 //   4. 학생별 데이터 현황
-//   5. Payload 미리보기
+//   5. 상담 요약 (구 "Payload") — [Phase 3E v3-r16-r1] 원자료를 그대로 보여주던 탭을
+//      상담용 요약 카드(준비 상태 + 추천 적합도)가 먼저 보이도록 바꾸고, 세부 데이터는
+//      "상담 원자료 보기" 토글 뒤로 숨겼다. [Phase 3E v3-r16-r2] 화면 문구에서
+//      "Payload"/"Engine"/"AnalyzeRequest" 같은 개발자용 표현을 전부 상담 운영 문구로
+//      바꿨다("상담 원자료 보기", "입력 데이터 확인" 등). 로직/데이터는 그대로.
 //
 // 경로: /teacher/university-data
 // ⚠ 금지: 합격률/합격 가능성/합격 보장/불합격 표현 금지
@@ -32,7 +36,7 @@ import {
 } from '@/lib/teacherMockExamInput';
 import type { TeacherMockExamInput, ExploreTrack, KoreanOptSubject, MathOptSubject } from '@/lib/teacherMockExamInput';
 import {
-  buildUniversityRecommendationPayloadForStudent, getReadinessLabel, getRecommendationFitScore, ENGINE_CONNECTED,
+  buildUniversityRecommendationPayloadForStudent, getReadinessLabel, getRecommendationFitScore,
 } from '@/lib/universityPayloadAdapter';
 import { toast } from 'sonner';
 
@@ -43,7 +47,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'national-mock',  label: '전국연합' },
   { id: 'suneung-mock',   label: '수능실전' },
   { id: 'data-status',    label: '데이터 현황' },
-  { id: 'payload',        label: 'Payload' },
+  { id: 'payload',        label: '상담 요약' },
 ];
 
 const inputStyle = {
@@ -557,6 +561,7 @@ function PayloadTab({ assignedStudentIds }: { assignedStudentIds: string[] }) {
   const gradeLevel = detectStudentGradeLevel(student);
   const payload = buildUniversityRecommendationPayloadForStudent(selectedId, gradeLevel);
   const fitScore = getRecommendationFitScore(payload);
+  const readiness = getReadinessLabel(payload);
 
   return (
     <div className="space-y-3">
@@ -573,35 +578,64 @@ function PayloadTab({ assignedStudentIds }: { assignedStudentIds: string[] }) {
         })}
       </div>
 
+      {/* [Phase 3E v3-r16-r1] 상담용 요약 카드 — 원자료 JSON을 그대로 보여주기 전에
+          선생님이 바로 확인할 수 있는 상태를 먼저 보여준다. 데이터가 부족하면
+          "데이터 준비 중"으로 명확히 표시된다(payload.dataCompleteness.readyForAnalysis 기준). */}
       <div className="axis-card p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>Payload 미리보기</span>
-          <span className="text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>
-            Engine: {ENGINE_CONNECTED ? '✅ 연결' : '⚠️ 미연결 (Phase 4+)'}
+        <div className="flex items-center gap-2 mb-1">
+          <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>{student?.name ?? '학생'} 대학추천 상담 요약</span>
+          <span className="text-xs px-2 py-0.5 rounded-full font-medium ml-auto" style={{ background: readiness.color + '18', color: readiness.color }}>
+            {readiness.label}
           </span>
         </div>
-        <pre className="rounded-lg p-3 text-xs overflow-x-auto overflow-y-auto"
-          style={{ background: 'oklch(0.97 0.003 250)', color: 'oklch(0.3 0.02 250)', maxHeight: 360, fontSize: 10, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-          {JSON.stringify({
-            studentId: payload.studentId,
-            gradeLevel: payload.gradeLevel,
-            track: payload.track,
-            payloadVersion: payload.payloadVersion,
-            adapterVersion: payload.adapterVersion,
-            engineConnected: payload.engineConnected,
-            dataCompleteness: payload.dataCompleteness,
-            fitScore: { score: fitScore.score, label: fitScore.label },
-            internalGradeCount: payload.internalGrades.length,
-            mockExamCount: payload.mockExamRecords.length,
-            suneungMockCount: payload.suneungMockRecords.length,
-            mathImprovementScenarios: payload.mathImprovementScenarios,
-            builtAt: payload.builtAt,
-          }, null, 2)}
-        </pre>
-        <div className="mt-2 text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>
-          ※ 실제 대학추천 엔진 연결은 Phase 4+에서 구현됩니다. 이 payload는 AnalyzeRequest 구조와 연결 가능한 형식입니다.
-        </div>
+        <p className="text-xs mb-3" style={{ color: 'oklch(0.55 0.015 250)' }}>{readiness.description}</p>
+        {payload.dataCompleteness.readyForAnalysis ? (
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-black tabular-nums" style={{ color: fitScore.color }}>{fitScore.score}</span>
+            <div>
+              <div className="text-xs font-semibold" style={{ color: fitScore.color }}>{fitScore.label} · 추천 적합도</div>
+              <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{fitScore.description}</div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs px-3 py-2 rounded-md" style={{ background: 'oklch(0.97 0.005 250)', color: 'oklch(0.5 0.015 250)' }}>
+            내신 또는 전국연합모의고사 성적을 입력하면 추천 적합도가 표시됩니다.
+          </div>
+        )}
       </div>
+
+      {/* 상담 원자료 — 상담에는 필요 없고, 확인이 필요할 때만 펼쳐본다 */}
+      <details>
+        <summary className="cursor-pointer text-xs font-medium px-1" style={{ color: 'oklch(0.42 0.015 250)' }}>
+          상담 원자료 보기
+        </summary>
+        <div className="axis-card p-4 mt-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>입력 데이터 확인</span>
+          </div>
+          <pre className="rounded-lg p-3 text-xs overflow-x-auto overflow-y-auto"
+            style={{ background: 'oklch(0.97 0.003 250)', color: 'oklch(0.3 0.02 250)', maxHeight: 360, fontSize: 10, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+            {JSON.stringify({
+              studentId: payload.studentId,
+              gradeLevel: payload.gradeLevel,
+              track: payload.track,
+              payloadVersion: payload.payloadVersion,
+              adapterVersion: payload.adapterVersion,
+              engineConnected: payload.engineConnected,
+              dataCompleteness: payload.dataCompleteness,
+              fitScore: { score: fitScore.score, label: fitScore.label },
+              internalGradeCount: payload.internalGrades.length,
+              mockExamCount: payload.mockExamRecords.length,
+              suneungMockCount: payload.suneungMockRecords.length,
+              mathImprovementScenarios: payload.mathImprovementScenarios,
+              builtAt: payload.builtAt,
+            }, null, 2)}
+          </pre>
+          <div className="mt-2 text-xs" style={{ color: 'oklch(0.65 0.015 250)' }}>
+            ※ 이 자료는 상담 참고용입니다. 대학추천 상세 분석 연결은 다음 단계에서 제공됩니다.
+          </div>
+        </div>
+      </details>
     </div>
   );
 }
