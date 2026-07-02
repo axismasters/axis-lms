@@ -10,14 +10,21 @@
 //      상담용 요약 카드(준비 상태 + 추천 적합도)가 먼저 보이도록 바꾸고, 세부 데이터는
 //      "상담 원자료 보기" 토글 뒤로 숨겼다. [Phase 3E v3-r16-r2] 화면 문구에서
 //      "Payload"/"Engine"/"AnalyzeRequest" 같은 개발자용 표현을 전부 상담 운영 문구로
-//      바꿨다("상담 원자료 보기", "입력 데이터 확인" 등). 로직/데이터는 그대로.
+//      바꿨다("상담 원자료 보기", "입력 데이터 확인" 등). [Phase 3E v3-r16-r2 추가]
+//      상담 요약 엔진(universityCounselingSummary.ts)을 연결해 한 줄 요약/현재 위치/
+//      보완 필요 과목 TOP3/수학·내신 개선 시나리오를 추가로 보여준다. 로직/데이터는
+//      기존 payload 구조 그대로 재사용한다(신규 계산은 전부 그 lib 파일에 있음).
+//   [Phase 3E v3-r16-r3] "데이터 신뢰도" 카드 추가 — 신뢰도 등급, 내신/전국연합/수능실전
+//      데이터 축 현황(선생님 화면이므로 건수까지 노출), 상담 전 확인 항목을 함께 보여준다.
+//      universityReliabilityEngine.ts(신규, 순수 계산)의 결과를 그대로 표시만 한다.
 //
 // 경로: /teacher/university-data
 // ⚠ 금지: 합격률/합격 가능성/합격 보장/불합격 표현 금지
 
 import { useState, useMemo, Fragment } from 'react';
 import {
-  GraduationCap, BarChart2, FileText, Save, CheckCircle2, ChevronDown, ChevronUp
+  GraduationCap, BarChart2, FileText, Save, CheckCircle2, ChevronDown, ChevronUp,
+  ShieldCheck, AlertTriangle,
 } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,8 +43,9 @@ import {
 } from '@/lib/teacherMockExamInput';
 import type { TeacherMockExamInput, ExploreTrack, KoreanOptSubject, MathOptSubject } from '@/lib/teacherMockExamInput';
 import {
-  buildUniversityRecommendationPayloadForStudent, getReadinessLabel, getRecommendationFitScore,
+  buildUniversityRecommendationPayloadForStudent, getReadinessLabel, getRecommendationFitScore, getSubjectImprovementNeeds,
 } from '@/lib/universityPayloadAdapter';
+import { buildUniversityCounselingSummary } from '@/lib/universityCounselingSummary';
 import { toast } from 'sonner';
 
 type TabId = 'school-record' | 'national-mock' | 'suneung-mock' | 'data-status' | 'payload';
@@ -505,6 +513,9 @@ function DataStatusTab({ assignedStudentIds }: { assignedStudentIds: string[] })
         const payload = buildUniversityRecommendationPayloadForStudent(studentId, gradeLevel);
         const readiness = getReadinessLabel(payload);
         const fitScore = getRecommendationFitScore(payload);
+        // [Phase 3E v3-r16-r2] 보완 필요 과목 TOP1을 카드에 짧게 노출 — 상담 요약 탭에서
+        // 전체 목록을 보기 전에도 담당 학생 목록에서 바로 우선순위를 알 수 있게 한다.
+        const topWeak = getSubjectImprovementNeeds(payload)[0];
 
         return (
           <div key={studentId} className="axis-card p-4">
@@ -545,6 +556,11 @@ function DataStatusTab({ assignedStudentIds }: { assignedStudentIds: string[] })
                 {payload.dataCompleteness.latestMathGrade && ` · 최신 수학: ${payload.dataCompleteness.latestMathGrade}등급`}
               </div>
             )}
+            {topWeak && (
+              <div className="mt-1.5 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                보완 우선 과목: <span className="font-semibold" style={{ color: 'oklch(0.35 0.015 250)' }}>{topWeak.subjectName}</span>
+              </div>
+            )}
             <div className="text-xs mt-1" style={{ color: readiness.color }}>{readiness.description}</div>
           </div>
         );
@@ -553,7 +569,7 @@ function DataStatusTab({ assignedStudentIds }: { assignedStudentIds: string[] })
   );
 }
 
-// ─── Payload 미리보기 탭 ────────────────────────────────────────────
+// ─── 상담 요약 탭 ────────────────────────────────────────────────────
 function PayloadTab({ assignedStudentIds }: { assignedStudentIds: string[] }) {
   const { students } = useStudents();
   const [selectedId, setSelectedId] = useState(assignedStudentIds[0] ?? '');
@@ -562,6 +578,9 @@ function PayloadTab({ assignedStudentIds }: { assignedStudentIds: string[] }) {
   const payload = buildUniversityRecommendationPayloadForStudent(selectedId, gradeLevel);
   const fitScore = getRecommendationFitScore(payload);
   const readiness = getReadinessLabel(payload);
+  // [Phase 3E v3-r16-r2] 상담 요약 엔진(universityCounselingSummary.ts) 연결 —
+  // 현재 위치 / 보완 필요 과목 TOP3 / 수학·내신 개선 시나리오 / 한 줄 요약을 여기서 가져온다.
+  const summary = buildUniversityCounselingSummary(payload, student?.name);
 
   return (
     <div className="space-y-3">
@@ -578,9 +597,12 @@ function PayloadTab({ assignedStudentIds }: { assignedStudentIds: string[] }) {
         })}
       </div>
 
-      {/* [Phase 3E v3-r16-r1] 상담용 요약 카드 — 원자료 JSON을 그대로 보여주기 전에
-          선생님이 바로 확인할 수 있는 상태를 먼저 보여준다. 데이터가 부족하면
-          "데이터 준비 중"으로 명확히 표시된다(payload.dataCompleteness.readyForAnalysis 기준). */}
+      {/* 한 줄 요약 — 상담 시작 전에 바로 읽을 수 있는 문장 */}
+      <div className="rounded-lg px-4 py-3" style={{ background: 'oklch(0.97 0.04 250)', border: '1px solid oklch(0.93 0.008 250)' }}>
+        <p className="text-sm font-medium" style={{ color: 'oklch(0.3 0.02 250)' }}>{summary.oneLiner}</p>
+      </div>
+
+      {/* 데이터 준비 상태 + 추천 적합도 */}
       <div className="axis-card p-4">
         <div className="flex items-center gap-2 mb-1">
           <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>{student?.name ?? '학생'} 대학추천 상담 요약</span>
@@ -603,6 +625,130 @@ function PayloadTab({ assignedStudentIds }: { assignedStudentIds: string[] }) {
           </div>
         )}
       </div>
+
+      {/* [Phase 3E v3-r16-r3] 데이터 신뢰도 — 등급 + 내신/전국연합/수능실전 축 현황(PC
+          3열 그리드) + 상담 전 확인 항목. 선생님 화면이므로 근거(건수)를 그대로 보여준다. */}
+      <div className="axis-card p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <ShieldCheck size={14} style={{ color: summary.reliability.grade.color }} />
+          <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>데이터 신뢰도</span>
+          <span className="text-xs px-2 py-0.5 rounded-full font-bold ml-auto"
+            style={{ background: summary.reliability.grade.color + '18', color: summary.reliability.grade.color }}>
+            {summary.reliability.grade.grade}등급 · {summary.reliability.grade.label}
+          </span>
+        </div>
+        <p className="text-xs mb-3" style={{ color: 'oklch(0.5 0.015 250)' }}>{summary.reliability.grade.description}</p>
+
+        {/* 내신/전국연합/수능실전 데이터 축 현황 — PC 3열 그리드(모바일 세로 쌓기 아님) */}
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {summary.reliability.balance.axes.map((axis) => {
+            const levelStyle = axis.level === 'strong'
+              ? { bg: 'oklch(0.92 0.08 145)', text: 'oklch(0.3 0.15 145)', label: '충분' }
+              : axis.level === 'adequate'
+              ? { bg: 'oklch(0.96 0.06 80)', text: 'oklch(0.45 0.14 80)', label: '적정' }
+              : { bg: 'oklch(0.95 0.004 250)', text: 'oklch(0.55 0.015 250)', label: '얇음' };
+            return (
+              <div key={axis.key} className="rounded-lg p-2.5 text-center" style={{ background: levelStyle.bg }}>
+                <div className="text-xs" style={{ color: levelStyle.text }}>{axis.label}</div>
+                <div className="font-bold text-sm tabular-nums" style={{ color: levelStyle.text }}>{axis.count}건</div>
+                <div className="text-xs" style={{ color: levelStyle.text }}>{levelStyle.label}</div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-xs mb-3" style={{ color: 'oklch(0.55 0.015 250)' }}>{summary.reliability.balance.note}</p>
+
+        {/* 고3 수능실전 누적 회차 신뢰도 */}
+        {summary.reliability.suneungCumulative.applicable && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md mb-3" style={{ background: 'oklch(0.97 0.005 250)' }}>
+            <span className="text-xs font-semibold flex-shrink-0" style={{ color: 'oklch(0.35 0.015 250)' }}>수능실전 누적</span>
+            <span className="text-xs" style={{ color: 'oklch(0.45 0.015 250)' }}>{summary.reliability.suneungCumulative.note}</span>
+          </div>
+        )}
+
+        {/* 상담 전 확인 항목 */}
+        {summary.reliability.inputGaps.length > 0 ? (
+          <div>
+            <div className="text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.35 0.015 250)' }}>상담 전 확인 항목</div>
+            <div className="space-y-1.5">
+              {summary.reliability.inputGaps.map((gap) => (
+                <div key={gap.key} className="flex items-start gap-2 px-3 py-2 rounded-md text-xs"
+                  style={{ background: gap.priority === 'high' ? 'oklch(0.97 0.03 60)' : 'oklch(0.97 0.005 250)' }}>
+                  <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" style={{ color: gap.priority === 'high' ? 'oklch(0.55 0.15 60)' : 'oklch(0.55 0.015 250)' }} />
+                  <div>
+                    <span className="font-medium" style={{ color: 'oklch(0.3 0.02 250)' }}>{gap.label}</span>
+                    <span style={{ color: 'oklch(0.5 0.015 250)' }}> — {gap.reason}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 text-xs" style={{ color: 'oklch(0.45 0.15 145)' }}>
+            <CheckCircle2 size={12} /> 상담 전 추가로 확인할 데이터가 없습니다.
+          </div>
+        )}
+      </div>
+
+      {/* 현재 위치 */}
+      {summary.currentPosition.available && (
+        <div className="axis-card p-4">
+          <div className="text-xs font-semibold mb-1.5" style={{ color: 'oklch(0.35 0.015 250)' }}>현재 위치</div>
+          <p className="text-sm" style={{ color: 'oklch(0.3 0.02 250)' }}>{summary.currentPosition.summary}</p>
+        </div>
+      )}
+
+      {/* 보완 필요 과목 TOP3 */}
+      {summary.topWeakSubjects.length > 0 && (
+        <div className="axis-card p-4">
+          <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.35 0.015 250)' }}>보완 필요 과목 TOP {summary.topWeakSubjects.length}</div>
+          <div className="space-y-2">
+            {summary.topWeakSubjects.map((n, i) => (
+              <div key={n.subjectName + n.source} className="flex items-center gap-2">
+                <span className="text-xs font-bold w-4 flex-shrink-0" style={{ color: 'oklch(0.5 0.015 250)' }}>{i + 1}</span>
+                <span className="text-xs w-16 flex-shrink-0" style={{ color: 'oklch(0.35 0.015 250)' }}>{n.subjectName}</span>
+                <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'oklch(0.93 0.006 250)' }}>
+                  <div className="h-full rounded-full" style={{ width: `${n.needScore}%`, background: n.needScore >= 60 ? 'oklch(0.55 0.2 27)' : n.needScore >= 30 ? 'oklch(0.55 0.15 80)' : 'oklch(0.45 0.15 145)' }} />
+                </div>
+                <span className="text-xs font-bold tabular-nums w-8 text-right flex-shrink-0" style={{ color: 'oklch(0.5 0.015 250)' }}>{n.needScore}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 수학 등급 상승 시나리오 + 내신 개선 시나리오 */}
+      {(summary.mathScenario.available || summary.internalGradeScenario.available) && (
+        <div className="axis-card p-4">
+          <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.35 0.015 250)' }}>등급 개선 시나리오</div>
+          <div className="space-y-3">
+            {summary.mathScenario.available && (
+              <div>
+                <div className="text-xs mb-1" style={{ color: 'oklch(0.5 0.015 250)' }}>{summary.mathScenario.subjectLabel} · {summary.mathScenario.note}</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {summary.mathScenario.steps.map(s => (
+                    <span key={s.improvedGrade} className="text-xs px-2 py-1 rounded-md" style={{ background: 'oklch(0.96 0.008 250)', color: 'oklch(0.3 0.02 250)' }}>
+                      {s.label} <span style={{ color: 'oklch(0.5 0.015 250)' }}>(백분위 +{s.percentileGain}p, {s.direction})</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {summary.internalGradeScenario.available && (
+              <div>
+                <div className="text-xs mb-1" style={{ color: 'oklch(0.5 0.015 250)' }}>{summary.internalGradeScenario.subjectLabel} · {summary.internalGradeScenario.note}</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {summary.internalGradeScenario.steps.map(s => (
+                    <span key={s.improvedGrade} className="text-xs px-2 py-1 rounded-md" style={{ background: 'oklch(0.96 0.008 250)', color: 'oklch(0.3 0.02 250)' }}>
+                      {s.label} <span style={{ color: 'oklch(0.5 0.015 250)' }}>({s.direction})</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 상담 원자료 — 상담에는 필요 없고, 확인이 필요할 때만 펼쳐본다 */}
       <details>

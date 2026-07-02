@@ -10,6 +10,12 @@
 // [Phase 3E v3-r16-r1] 미사용 import(UNIVERSITY_BAND_PREVIEW) 제거 — 이미 아래
 // "밴드 잠금 안내" 카드가 그 역할을 단일 메시지로 대체하고 있어 실제로는 참조되지
 // 않던 죽은 import였다. 로직/화면 구성 변경 없음.
+// [Phase 3E v3-r16-r2] 상담 요약 엔진(universityCounselingSummary.ts) 연결 — "보완 필요
+// 과목 · 다음 상담 포인트" 섹션을 추가했다. Rival/Emblem/SP/Tier는 여전히 이 파일
+// 어디에서도 참조하지 않는다(§ 금지 목록 그대로 유지).
+// [Phase 3E v3-r16-r3] "상담 참고도"를 설명형 문장 1개로 추가했다(summary.reliability.
+// parentMessage). 등급 문자(A/B/C/D)나 점수, 원자료 건수는 노출하지 않는다 —
+// "숫자 과다 노출 금지" 원칙(§ 지시서 4-6)에 따라 문장으로만 전달한다.
 //
 // 경로: /parent/target-summary
 
@@ -23,6 +29,8 @@ import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
 import { getNationalMocksForStudent, getSchoolRecordsForStudent, STUDENT_HIDDEN_CATEGORY_IDS } from '@/lib/phase2dData';
 import { getUniversityPreviewState, getPreviewChecklist } from '@/lib/studentUniversityPreview';
+import { buildUniversityRecommendationPayloadForStudent } from '@/lib/universityPayloadAdapter';
+import { buildUniversityCounselingSummary } from '@/lib/universityCounselingSummary';
 
 export default function ParentTargetSummary() {
   const { currentUser } = useAuth();
@@ -46,6 +54,13 @@ export default function ParentTargetSummary() {
   const checklist = getPreviewChecklist(previewState);
   const readyCount = checklist.filter(c => c.done).length;
   const suneungRounds = previewState.suneungRounds;
+  // [Phase 3E v3-r16-r2] 상담 요약 엔진 연결 — 보완 필요 과목과 다음 상담 포인트만
+  // 뽑아서 보여준다(§ 지시서 4-6 "학부모 화면: 상담용 요약만 표시, 보완 필요 과목,
+  // 다음 상담 포인트 중심"). Rival/Emblem/SP/Tier는 이 파일 어디에서도 참조하지 않는다.
+  const counselingSummary = buildUniversityCounselingSummary(
+    buildUniversityRecommendationPayloadForStudent(selectedId, gradeLevel),
+    student?.name,
+  );
 
   return (
     <ParentLayout title={universityLabel}>
@@ -121,6 +136,15 @@ export default function ParentTargetSummary() {
           )}
         </div>
 
+        {/* [Phase 3E v3-r16-r3] 상담 참고도 — 설명형 문장 1개만 표시한다. 등급 문자/점수/
+            원자료 건수는 노출하지 않는다("숫자 과다 노출 금지" 원칙). */}
+        <div className="axis-card p-4">
+          <div className="font-semibold text-sm mb-1.5" style={{ color: 'oklch(0.2 0.02 250)' }}>상담 참고도</div>
+          <p className="text-sm leading-relaxed" style={{ color: 'oklch(0.4 0.015 250)' }}>
+            {counselingSummary.reliability.parentMessage}
+          </p>
+        </div>
+
         {/* 데이터 준비 현황 */}
         <div className="axis-card">
           <div className="px-4 py-3 border-b" style={{ borderColor: 'oklch(0.93 0.006 250)' }}>
@@ -157,6 +181,28 @@ export default function ParentTargetSummary() {
               : '내신·모의고사 성장 흐름을 바탕으로 앞으로의 목표 방향을 논의하게 됩니다.'}
           </div>
         </div>
+
+        {/* [Phase 3E v3-r16-r2] 보완 필요 과목 + 다음 상담 포인트 — 학부모용 설명형
+            문구로 작성한다(점수/등급 숫자 나열보다 방향 안내 중심). 데이터가 부족하면
+            자연스럽게 이 섹션 없이 넘어간다(과장/추측 문구를 넣지 않는다). */}
+        {counselingSummary.topWeakSubjects.length > 0 && (
+          <div className="axis-card p-4">
+            <div className="font-semibold text-sm mb-2" style={{ color: 'oklch(0.2 0.02 250)' }}>
+              보완 필요 과목 · 다음 상담 포인트
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap mb-2">
+              {counselingSummary.topWeakSubjects.map(n => (
+                <span key={n.subjectName + n.source} className="text-xs px-2 py-0.5 rounded-full font-medium"
+                  style={{ background: '#F8F0DC', color: '#8A6D2E' }}>
+                  {n.subjectName}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs leading-relaxed" style={{ color: 'oklch(0.45 0.015 250)' }}>
+              위 과목을 중심으로 다음 상담 때 보완 계획을 선생님과 함께 확인해보시길 권장합니다.
+            </p>
+          </div>
+        )}
 
         {/* Phase 3D v3: "상담 리포트"라는 표현이 내부 상담 기록처럼 오해될 수 있어
             "선생님 안내 필요" 수준으로 조정 — 클릭해도 이동하지 않으므로 클릭 가능한

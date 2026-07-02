@@ -11,6 +11,12 @@
 // (내신/전국연합/수능실전/수학 시나리오)를 <details> 토글 뒤로 접었다 — 기본으로
 // 보이는 것은 헤더/추천 적합도/보완 필요 과목/데이터 준비 현황/상태 요약뿐이다.
 // 삭제된 내용/로직은 없다.
+// [Phase 3E v3-r16-r2] 상담 요약 엔진(universityCounselingSummary.ts) 연결 — "현재 위치"와
+// "목표 변화 가능성"(수학/내신 등급 상승 시나리오 요약)을 간단한 문장으로 추가했다.
+// 여전히 과목별 raw 데이터는 접기 섹션 안에만 있다(원자료 과다 노출 금지 원칙 유지).
+// [Phase 3E v3-r16-r3] "분석 신뢰도" 한 줄만 추가 — summary.reliability.studentMessage와
+// grade.label만 짧게 노출한다. 배치표 원점수/컷/합격 관련 표현은 이 파일 어디에도
+// 없다(엔진 쪽에서부터 그런 문구를 만들지 않는다). 불안 조장 표현 없음.
 //
 // ⚠ 금지: 합격률/합격 가능성/합격 보장/불합격/안정 합격 표현 금지
 // 학생: 조회만 (성적 입력 버튼 없음)
@@ -23,6 +29,7 @@ import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universit
 import { getSchoolRecordsForStudentAll, SCHOOL_SUBJECTS } from '@/lib/teacherSchoolRecordInput';
 import { getNationalMockRecordsForStudent, getSuneungRecordsForStudent, getMockExamLabel } from '@/lib/teacherMockExamInput';
 import { buildUniversityRecommendationPayloadForStudent, getReadinessLabel, getRecommendationFitScore, getSubjectImprovementNeeds } from '@/lib/universityPayloadAdapter';
+import { buildUniversityCounselingSummary } from '@/lib/universityCounselingSummary';
 
 function gradeColor(g: number) {
   return g <= 2 ? 'oklch(0.45 0.15 145)' : g <= 4 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)';
@@ -48,6 +55,9 @@ export default function StudentTargetPreview() {
   const readiness = getReadinessLabel(payload);
   const fitScore = getRecommendationFitScore(payload);
   const improvementNeeds = getSubjectImprovementNeeds(payload).slice(0, 5);
+  // [Phase 3E v3-r16-r2] 상담 요약 엔진 연결 — 현재 위치와 목표 변화 가능성(수학/내신
+  // 시나리오)을 "간단히" 보여준다(§ 지시서 4-5 "학생 화면: 원자료 과다 노출 금지").
+  const summary = buildUniversityCounselingSummary(payload, student?.name);
 
   // 데이터 체크리스트
   const checklist = [
@@ -95,11 +105,49 @@ export default function StudentTargetPreview() {
               style={{ background: readiness.color + '18', color: readiness.color }}>
               {readiness.label}
             </span>
+            {/* [Phase 3E v3-r16-r3] 분석 신뢰도 — 등급 라벨만 짧게(내부 점수·원점수 노출 없음) */}
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{ background: summary.reliability.grade.color + '18', color: summary.reliability.grade.color }}>
+              분석 {summary.reliability.grade.label}
+            </span>
             <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>
               {payload.dataCompleteness.totalDataPoints}개 확정 데이터
             </span>
           </div>
         </div>
+
+        {/* [Phase 3E v3-r16-r3] 분석 신뢰도 한 줄 — 불안 조장/합격·불합격 뉘앙스 없는
+            아주 짧은 문장만 보여준다. 등급 근거(내신/모의고사 건수 등)는 여기서 노출하지
+            않는다(그건 선생님/관리자 화면 몫). */}
+        <p className="text-xs px-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
+          {summary.reliability.studentMessage}
+        </p>
+
+        {/* [Phase 3E v3-r16-r2] 현재 위치 + 목표 변화 가능성 — 학생 화면 최소 정보
+            원칙에 따라 간단한 문장으로만 보여준다(상세 원자료는 아래 접기 섹션 참고). */}
+        {summary.currentPosition.available && (
+          <div className="axis-card p-4">
+            <div className="text-sm font-semibold mb-1" style={{ color: 'oklch(0.25 0.02 250)' }}>현재 위치</div>
+            <p className="text-sm" style={{ color: 'oklch(0.35 0.015 250)' }}>{summary.currentPosition.summary}</p>
+          </div>
+        )}
+        {(summary.mathScenario.available || summary.internalGradeScenario.available) && (
+          <div className="axis-card p-4">
+            <div className="text-sm font-semibold mb-2" style={{ color: 'oklch(0.25 0.02 250)' }}>목표 변화 가능성</div>
+            <div className="space-y-1.5">
+              {summary.mathScenario.available && summary.mathScenario.steps[0] && (
+                <p className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>
+                  {summary.mathScenario.steps[0].label} 시 백분위 약 <span className="font-semibold">+{summary.mathScenario.steps[0].percentileGain}p</span> 상승 예상({summary.mathScenario.steps[0].direction})
+                </p>
+              )}
+              {summary.internalGradeScenario.available && summary.internalGradeScenario.steps[0] && (
+                <p className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>
+                  {summary.internalGradeScenario.steps[0].label} 시 {summary.internalGradeScenario.steps[0].direction}으로 이동
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 추천 적합도 (0~100 + 5단계 라벨) */}
         {payload.dataCompleteness.readyForAnalysis && (

@@ -5,6 +5,8 @@
 // - 상담관리 독립 기능 없음
 // [Phase 3E v3-r16-r1] 대학추천/목표대학 상담 요약 섹션 추가(기존 어댑터 재사용, 신규
 // 계산 로직 없음) — 대학추천 엔진 fast-attach 작업의 일부.
+// [Phase 3E v3-r16-r2] 상담 요약 엔진(universityCounselingSummary.ts) 연결 — 보완 필요
+// 과목/수학 등급 상승 시나리오를 이 카드에도 짧게 노출.
 
 import { useState } from 'react';
 import { useParams, Link } from 'wouter';
@@ -44,6 +46,7 @@ import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
 // 이번 Phase 목표에 맞게, 이미 검증된 어댑터를 그대로 가져다 쓴다.
 import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
 import { buildUniversityRecommendationPayloadForStudent, getReadinessLabel, getRecommendationFitScore } from '@/lib/universityPayloadAdapter';
+import { buildUniversityCounselingSummary } from '@/lib/universityCounselingSummary';
 
 export default function TeacherStudentDetail() {
   const { studentId } = useParams<{ studentId: string }>();
@@ -209,6 +212,9 @@ export default function TeacherStudentDetail() {
   const universityPayload = buildUniversityRecommendationPayloadForStudent(studentId, universityGradeLevel);
   const universityReadiness = getReadinessLabel(universityPayload);
   const universityFitScore = getRecommendationFitScore(universityPayload);
+  // [Phase 3E v3-r16-r2] 상담 요약 엔진 연결 — 보완 필요 과목/수학 등급 상승 시나리오를
+  // 이 카드에도 짧게 보여준다(전체 내용은 /teacher/university-data "상담 요약" 탭 참고).
+  const universitySummary = buildUniversityCounselingSummary(universityPayload, student.name);
 
   // Phase 3D v3-r1: 학부모 공개 코멘트 — 상담 기록 원문과 별개로, 학부모에게 보여줄
   // 문장을 선생님이 직접 다시 써서 저장한다.
@@ -455,6 +461,16 @@ export default function TeacherStudentDetail() {
               </div>
             ) : (
               <p className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>{universityReadiness.description}</p>
+            )}
+            {universitySummary.topWeakSubjects.length > 0 && (
+              <div className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>
+                보완 우선 과목: <span className="font-semibold">{universitySummary.topWeakSubjects[0].subjectName}</span>
+              </div>
+            )}
+            {universitySummary.mathScenario.available && (
+              <div className="text-xs" style={{ color: 'oklch(0.4 0.015 250)' }}>
+                수학 시나리오: {universitySummary.mathScenario.steps.map(s => `${s.label}(+${s.percentileGain}p)`).join(' · ')}
+              </div>
             )}
             <Link href="/teacher/university-data" style={{ display: 'block' }}>
               <div className="inline-flex items-center gap-1 text-xs font-semibold cursor-pointer" style={{ color: '#0B1B33' }}>

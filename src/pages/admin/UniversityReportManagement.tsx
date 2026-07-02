@@ -14,6 +14,16 @@
 //     바로 연결한다 — 같은 기능을 두 곳에서 다르게 만들지 않는다.
 // [Phase 3E v3-r16-r2] 화면에 실제로 노출되는 문구에서 "Phase 5.1 연동"/"어댑터" 같은
 // 개발자용 표현을 제거했다(이 파일 상단 주석은 개발 문서이므로 그대로 둔다). 로직 변경 없음.
+// [Phase 3E v3-r16-r2 추가] 학생 선택 시 상담 요약 엔진(universityCounselingSummary.ts)을
+// 연결해 현재 위치/보완 필요 과목/상담 준비 상태를 보여준다.
+// [Phase 3E v3-r16-r3] 기존 "상담 준비 상태" 카드 안에 신뢰도 등급 배지 + 요약 문장만
+// 추가했다(새 카드 아님 — 지시서 §6 "카드에 신뢰도 요약 추가" 그대로). 배치표 원점수/
+// 컷/합격 관련 표현은 여전히 이 파일 어디에도 없다.
+// ⚠ 참고: 이 화면 상단의 "데이터 현황 요약"(모의고사/내신 건수)은 Assessment Engine
+//   데이터(student.mockExamScores/internalScores)를 쓰고, 새로 추가한 "상담 준비 상태"는
+//   교사 입력 데이터(universityPayloadAdapter.ts, TeacherUniversityData.tsx와 동일 소스)를
+//   쓴다 — 이 프로젝트에 대학추천 데이터 파이프라인이 두 갈래로 존재하기 때문이다(§ CHANGES
+//   문서에 통합 제안 있음). 두 값이 다르게 보일 수 있음을 알고 있어야 한다.
 //
 // ⚠ 금지: 합격률/합격 가능성/합격 보장/불합격/안정 합격 표현 금지
 
@@ -24,6 +34,8 @@ import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
+import { buildUniversityRecommendationPayloadForStudent, getReadinessLabel } from '@/lib/universityPayloadAdapter';
+import { buildUniversityCounselingSummary } from '@/lib/universityCounselingSummary';
 
 export default function UniversityReportManagement() {
   const { currentUser } = useAuth();
@@ -37,6 +49,14 @@ export default function UniversityReportManagement() {
   const selectedStudent = students.find(s => s.id === selectedStudentId);
   const gradeLevel = detectStudentGradeLevel(selectedStudent);
   const universityLabel = getUniversityMenuLabel(gradeLevel);
+  // [Phase 3E v3-r16-r2] 상담 요약 엔진 연결 — 학생 선택 시 현재 위치/보완 과목/상담
+  // 준비 상태를 요약해서 보여준다(§ 지시서 4-8). PDF/리포트 생성 버튼은 추가하지 않는다.
+  const counselingSummary = selectedStudent
+    ? buildUniversityCounselingSummary(
+        buildUniversityRecommendationPayloadForStudent(selectedStudent.id, gradeLevel),
+        selectedStudent.name,
+      )
+    : null;
 
   return (
     <AdminLayout title="대학추천/목표대학 관리자 리포트"
@@ -150,6 +170,43 @@ export default function UniversityReportManagement() {
                   </div>
                 ))}
               </div>
+
+              {/* 상담 준비 상태 요약 — 현재 위치 / 보완 필요 과목 */}
+              {counselingSummary && (
+                <div className="rounded-lg p-3.5 mb-4" style={{ background: 'oklch(0.97 0.04 250)', border: '1px solid oklch(0.93 0.008 250)' }}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xs font-semibold" style={{ color: 'oklch(0.35 0.015 250)' }}>상담 준비 상태</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium ml-auto"
+                      style={{ background: counselingSummary.dataReadiness.color + '18', color: counselingSummary.dataReadiness.color }}>
+                      {counselingSummary.dataReadiness.label}
+                    </span>
+                    {/* [Phase 3E v3-r16-r3] 신뢰도 등급 배지 — 기존 카드 안에 추가 */}
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                      style={{ background: counselingSummary.reliability.grade.color + '18', color: counselingSummary.reliability.grade.color }}>
+                      신뢰도 {counselingSummary.reliability.grade.grade}등급
+                    </span>
+                  </div>
+                  <p className="text-sm mb-2" style={{ color: 'oklch(0.3 0.02 250)' }}>{counselingSummary.oneLiner}</p>
+                  {counselingSummary.currentPosition.available && (
+                    <p className="text-xs mb-1" style={{ color: 'oklch(0.42 0.015 250)' }}>{counselingSummary.currentPosition.summary}</p>
+                  )}
+                  {counselingSummary.topWeakSubjects.length > 0 && (
+                    <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                      <span className="text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>보완 필요 과목:</span>
+                      {counselingSummary.topWeakSubjects.map(n => (
+                        <span key={n.subjectName + n.source} className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: 'oklch(0.95 0.004 250)', color: 'oklch(0.35 0.02 250)' }}>
+                          {n.subjectName}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {/* [Phase 3E v3-r16-r3] 신뢰도 요약 한 줄 — 부족 데이터 근거 포함 */}
+                  <div className="mt-2 pt-2 text-xs" style={{ borderTop: '1px solid oklch(0.9 0.006 250)', color: 'oklch(0.45 0.015 250)' }}>
+                    {counselingSummary.reliability.teacherHeadline}
+                  </div>
+                </div>
+              )}
 
               {/* 상세 분석 도구로 이동 — 중복 화면을 만들지 않고 기존 도구로 연결한다 */}
               <Link href={`/admin/students/${selectedStudent.id}?tab=grades`}>
