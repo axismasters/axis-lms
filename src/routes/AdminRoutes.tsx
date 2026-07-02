@@ -40,6 +40,8 @@ import UniversityReportManagement from '@/pages/admin/UniversityReportManagement
 import EmployeeList from '@/pages/EmployeeList';
 import EmployeeDetail from '@/pages/EmployeeDetail';
 import NotFound from '@/pages/NotFound';
+import { isFinanceEnabled, isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
+import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
 
 function AdminPlaceholder({ title }: { title: string }) {
   return (
@@ -50,6 +52,23 @@ function AdminPlaceholder({ title }: { title: string }) {
         </div>
         <p className="text-sm font-medium" style={{ color: 'oklch(0.4 0.015 250)' }}>{title} 화면은 다음 단계에서 구현됩니다.</p>
       </div>
+    </AdminLayout>
+  );
+}
+
+// [Phase 3D v3-r12] 시스템 기능 온/오프 — 라우트 레벨 가드.
+// 메뉴만 숨기는 게 아니라 URL 직접 접근도 막아야 하므로, 대상 라우트의 component를
+// 이 헬퍼로 감싼다. OFF면 실제 페이지 컴포넌트를 렌더링하지 않는다(마운트조차 안 됨).
+function withFeatureGate(
+  enabled: boolean,
+  Comp: React.ComponentType,
+  title: string,
+  breadcrumbs: { label: string; path?: string }[],
+) {
+  if (enabled) return <Comp />;
+  return (
+    <AdminLayout title={title} breadcrumbs={breadcrumbs}>
+      <FeatureDisabledNotice description="관리자 설정 > 시스템설정 > 학원정보관리에서 다시 켤 수 있습니다." />
     </AdminLayout>
   );
 }
@@ -86,13 +105,13 @@ export default function AdminRoutes() {
         <Route path="/admin/scores/:id" component={AssessmentDetail} />
         <Route path="/admin/scores" component={AssessmentList} />
 
-        {/* 재무관리 */}
+        {/* 재무관리 — [Phase 3D v3-r12] financeEnabled 게이트 */}
         <Route path="/admin/finance" component={() => <Redirect to="/admin/finance/payments" />} />
-        <Route path="/admin/finance/payments" component={FinancePayments} />
-        <Route path="/admin/finance/refunds" component={FinanceRefunds} />
-        <Route path="/admin/finance/unpaid" component={FinanceUnpaid} />
-        <Route path="/admin/finance/settlements" component={FinanceSettlements} />
-        <Route path="/admin/finance/statistics" component={FinanceStatistics} />
+        <Route path="/admin/finance/payments" component={() => withFeatureGate(isFinanceEnabled(), FinancePayments, '수납관리', [{ label: '재무관리', path: '/admin/finance' }, { label: '수납관리' }])} />
+        <Route path="/admin/finance/refunds" component={() => withFeatureGate(isFinanceEnabled(), FinanceRefunds, '환불관리', [{ label: '재무관리', path: '/admin/finance' }, { label: '환불관리' }])} />
+        <Route path="/admin/finance/unpaid" component={() => withFeatureGate(isFinanceEnabled(), FinanceUnpaid, '미납관리', [{ label: '재무관리', path: '/admin/finance' }, { label: '미납관리' }])} />
+        <Route path="/admin/finance/settlements" component={() => withFeatureGate(isFinanceEnabled(), FinanceSettlements, '정산관리', [{ label: '재무관리', path: '/admin/finance' }, { label: '정산관리' }])} />
+        <Route path="/admin/finance/statistics" component={() => withFeatureGate(isFinanceEnabled(), FinanceStatistics, '통계', [{ label: '재무관리', path: '/admin/finance' }, { label: '통계' }])} />
 
         {/* 알림관리 */}
         <Route path="/admin/notifications" component={() => <Redirect to="/admin/notifications/history" />} />
@@ -100,12 +119,12 @@ export default function AdminRoutes() {
         <Route path="/admin/notifications/templates" component={NotificationTemplates} />
         <Route path="/admin/notifications/settings" component={NotificationSettingsPage} />
 
-        {/* 성장관리 */}
+        {/* 성장관리 — [Phase 3D v3-r12] Rival/Emblem 게이트. 성장현황(overview)은 게이트 없음. */}
         <Route path="/admin/growth" component={() => <Redirect to="/admin/growth/overview" />} />
         <Route path="/admin/growth/overview" component={GrowthOverview} />
-        <Route path="/admin/growth/emblems" component={EmblemManagement} />
-        <Route path="/admin/growth/rivals" component={RivalManagement} />
-        <Route path="/admin/growth/rival-seasons" component={RivalSeasonManagement} />
+        <Route path="/admin/growth/emblems" component={() => withFeatureGate(isEmblemEnabled(), EmblemManagement, '엠블럼 관리', [{ label: '성장관리', path: '/admin/growth' }, { label: '엠블럼 관리' }])} />
+        <Route path="/admin/growth/rivals" component={() => withFeatureGate(isRivalEnabled(), RivalManagement, '라이벌 관리', [{ label: '성장관리', path: '/admin/growth' }, { label: '라이벌 관리' }])} />
+        <Route path="/admin/growth/rival-seasons" component={() => withFeatureGate(isRivalEnabled(), RivalSeasonManagement, 'Rival 시즌 관리', [{ label: '성장관리', path: '/admin/growth' }, { label: 'Rival 시즌 관리' }])} />
         <Route path="/admin/growth/showcase-policy" component={ShowcasePolicyManagement} />
 
         {/* 대학추천/목표대학 관리자 리포트 */}

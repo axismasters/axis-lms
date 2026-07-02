@@ -22,6 +22,7 @@ import { useStudents } from '@/contexts/StudentContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
 import { AxisMark } from '@/components/brand/AxisMark';
+import { isRivalEnabled } from '@/lib/systemFeatureFlags';
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -40,11 +41,12 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
   // Phase 3A-1: 5탭
   // "성적" → "테스트" (단원평가/내신대비 중심)
   // 대학추천/목표대학추천은 홈 카드에서 접근
+  // [Phase 3D v3-r12] Rival 탭은 rivalEnabled가 false면 목록에서 제외한다(상단/하단 네비 공용).
   const STUDENT_NAV = [
     { path: '/student',        label: '홈',    icon: Home },
     { path: '/student/grades', label: '테스트', icon: ClipboardList },
     { path: '/student/growth', label: '진열장', icon: Trophy },
-    { path: '/student/rival',  label: 'Rival', icon: TrendingUp },
+    ...(isRivalEnabled() ? [{ path: '/student/rival', label: 'Rival', icon: TrendingUp }] : []),
     { path: '/student/my',     label: '마이',   icon: User },
   ];
 

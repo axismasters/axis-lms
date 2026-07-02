@@ -69,6 +69,8 @@ import {
   CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
 } from '@/lib/growthData';
 import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
+import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
+import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
 
 // ════════════════════════════════════════════════════════════
 // 공통 작은 컴포넌트
@@ -2168,6 +2170,10 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
   const canManageRival = canManageRivals(currentUser.accountType);
   const [confirmEndRival, setConfirmEndRival] = useState(false);
 
+  // [Phase 3D v3-r12] 시스템 기능 온/오프
+  const rivalEnabled = isRivalEnabled();
+  const emblemEnabled = isEmblemEnabled();
+
   const [spModal, setSpModal] = useState(false);
   const [spAmount, setSpAmount] = useState('');
   const [spReason, setSpReason] = useState('');
@@ -2263,7 +2269,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
                   <Plus size={11} /> SP 지급
                 </button>
               )}
-              {canGrantEmblem && (
+              {canGrantEmblem && emblemEnabled && (
                 <button onClick={() => { setEmbModal(true); setEmblemId(''); }}
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold"
                   style={{ background: '#FEF3C7', color: '#92400E' }}>
@@ -2272,7 +2278,8 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               )}
             </div>
           </div>
-          {/* 대표 엠블럼 3슬롯 */}
+          {/* 대표 엠블럼 3슬롯 — [Phase 3D v3-r12] emblemEnabled가 false면 숨김 */}
+          {emblemEnabled && (
           <div className="flex gap-2">
             {[0, 1, 2].map(i => {
               const emb = repEmblems[i];
@@ -2288,16 +2295,18 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
               );
             })}
           </div>
+          )}
         </div>
       </div>
 
-      {/* 성장 활동 / 성장 비교 / 엠블럼 카드 */}
+      {/* 성장 활동 / 성장 비교 / 엠블럼 카드 — [Phase 3D v3-r12] emblemEnabled/rivalEnabled에
+          따라 해당 항목을 목록에서 제외한다(grid-cols-4는 고정, 빈 칸은 자연스럽게 남음). */}
       <div className="grid grid-cols-4 gap-3">
         {[
           { label: '누적 성장 활동', value: profile.totalSP.toLocaleString(), icon: <Zap size={15} />, color: '#C8A15A' },
           { label: '이번 시즌 활동', value: profile.seasonSP.toLocaleString(), icon: <Star size={15} />, color: '#3B82F6' },
-          { label: '보유 엠블럼', value: `${achievedEmblems.length}개`, icon: <Award size={15} />, color: '#040D1E' },
-          { label: '또래 성장 비교', value: `${profile.rivalWins + profile.rivalLosses}회 참여`, icon: <TrendingUp size={15} />, color: '#0B1B33' },
+          ...(emblemEnabled ? [{ label: '보유 엠블럼', value: `${achievedEmblems.length}개`, icon: <Award size={15} />, color: '#040D1E' }] : []),
+          ...(rivalEnabled ? [{ label: '또래 성장 비교', value: `${profile.rivalWins + profile.rivalLosses}회 참여`, icon: <TrendingUp size={15} />, color: '#0B1B33' }] : []),
         ].map((c, i) => (
           <div key={i} className="axis-card p-3">
             <div className="flex items-center gap-1.5 mb-1.5" style={{ color: c.color }}>{c.icon}<span className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>{c.label}</span></div>
@@ -2306,7 +2315,10 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         ))}
       </div>
 
-      {/* 라이벌 */}
+      {/* 라이벌 — [Phase 3D v3-r12] rivalEnabled가 false면 비활성 안내로 대체 */}
+      {!rivalEnabled ? (
+        <FeatureDisabledNotice description="Rival 시스템이 현재 비활성화되어 있습니다." />
+      ) : (
       <div className="grid grid-cols-2 gap-3">
         <div className="axis-card p-4">
           <div className="flex items-center gap-1.5 mb-3">
@@ -2352,6 +2364,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
           <p className="text-xs" style={{ color: 'oklch(0.49 0.015 250)' }}>※ 누구인지는 학생에게 공개되지 않습니다</p>
         </div>
       </div>
+      )}
 
       {/* SP 최근 이력 */}
       <div className="axis-card p-4">
@@ -2391,7 +2404,11 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         )}
       </div>
 
-      {/* 최근 획득 엠블럼 */}
+      {/* 최근 획득 엠블럼 / 진행 중 엠블럼 — [Phase 3D v3-r12] emblemEnabled가 false면 비활성 안내로 대체 */}
+      {!emblemEnabled ? (
+        <FeatureDisabledNotice description="Emblem 시스템이 현재 비활성화되어 있습니다." />
+      ) : (
+      <>
       <div className="axis-card p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
@@ -2459,6 +2476,8 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
             })}
           </div>
         </div>
+      )}
+      </>
       )}
 
       {/* IF 성장 힌트 placeholder */}

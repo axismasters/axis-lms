@@ -38,6 +38,8 @@ import { computeSubjectGaps } from '@/lib/observationSignals';
 import type { StudentSignalBundle } from '@/lib/observationSignals';
 import { computeParentInsight } from '@/lib/parentInsightEngine';
 import { computeBriefing } from '@/lib/studentBriefingEngine';
+import { isFinanceEnabled } from '@/lib/systemFeatureFlags';
+import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
 
 function scoreColor(pct: number) {
   return pct >= 80 ? 'oklch(0.45 0.15 160)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)';
@@ -198,6 +200,9 @@ export default function ParentHome() {
     : [];
   const financeUnpaid = childInvoices.reduce((s, inv) => s + getUnpaidAmount(inv.id), 0);
   const hasUnpaid = financeUnpaid > 0;
+
+  // [Phase 3D v3-r12] 시스템 기능 온/오프
+  const financeEnabled = isFinanceEnabled();
 
   // Phase 3D v3-r4-r1: 학부모 객관 지표 + 상담 전 확인 카드 + 자녀에게 해줄 말 —
   // 화면 표시용으로 위에서 이미 슬라이스한 데이터(publishedResults 2건/childRecords 10건)와
@@ -659,12 +664,16 @@ export default function ParentHome() {
             </section>
 
             {/* 수납 상태 — Phase 3D v2: 총 청구액/총 납부액 등 총액성 금액 표시를 제거하고
-                미납 유무 배지만 표시한다(상태 확인 중심, 총액 과시형 화면 금지). */}
+                미납 유무 배지만 표시한다(상태 확인 중심, 총액 과시형 화면 금지).
+                [Phase 3D v3-r12] financeEnabled가 false면 비활성 안내로 대체. */}
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
                 <CreditCard size={15} style={{ color: 'oklch(0.45 0.15 160)' }} />
                 <span className="text-sm font-semibold" style={{ color: 'oklch(0.25 0.02 250)' }}>수납 상태</span>
               </div>
+              {!financeEnabled ? (
+                <FeatureDisabledNotice compact description="재무관리 시스템이 현재 비활성화되어 있습니다." />
+              ) : (
               <Link href="/parent/finance">
                 <div className="axis-card axis-card-clickable p-4 flex items-center justify-between">
                   {childInvoices.length === 0 ? (
@@ -685,6 +694,7 @@ export default function ParentHome() {
                   <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)' }} />
                 </div>
               </Link>
+              )}
             </section>
 
             {/* 목표대학 추천 / 대학추천 요약 — Phase 3D v2: "상담 리포트" 카드는 제거했다

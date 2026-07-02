@@ -20,6 +20,8 @@ import StudentTargetPreview from '@/pages/student/StudentTargetPreview';
 import StudentGrowthShowcase from '@/pages/student/StudentGrowthShowcase';
 import StudentRival from '@/pages/student/StudentRival';
 import StudentLayout from '@/layouts/StudentLayout';
+import { isRivalEnabled } from '@/lib/systemFeatureFlags';
+import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
 
 function StudentPlaceholder({ title }: { title: string }) {
   return (
@@ -75,8 +77,14 @@ export default function StudentRoutes() {
         {/* 성장 진열장 — v3-r1: placeholder 대신 실제 화면 연결 */}
         <Route path="/student/growth" component={StudentGrowthShowcase} />
 
-        {/* Rival — v3-r1: 신규 Foundation 화면 연결 */}
-        <Route path="/student/rival" component={StudentRival} />
+        {/* Rival — v3-r1: 신규 Foundation 화면 연결. [Phase 3D v3-r12] rivalEnabled 게이트 */}
+        <Route path="/student/rival" component={() => isRivalEnabled() ? <StudentRival /> : (
+          <StudentLayout title="Rival">
+            <div className="max-w-lg mx-auto px-4 py-5">
+              <FeatureDisabledNotice description="관리자 설정에서 Rival 시스템이 켜지면 다시 이용할 수 있습니다." />
+            </div>
+          </StudentLayout>
+        )} />
 
         {/* 구 경로 하위호환 리다이렉트 */}
         <Route path="/student/scores" component={() => <Redirect to="/student/grades" />} />

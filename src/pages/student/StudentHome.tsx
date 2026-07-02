@@ -32,6 +32,8 @@ import { STUDENT_HIDDEN_CATEGORY_IDS } from '@/lib/phase2dData';
 import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
 import { loadStudentProfile, canUseRival } from '@/lib/studentProfile';
 import { ResultDetailModal } from '@/pages/student/StudentGrades';
+import { isRivalEnabled } from '@/lib/systemFeatureFlags';
+import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
 
 export default function StudentHome() {
   const { currentUser } = useAuth();
@@ -61,6 +63,9 @@ export default function StudentHome() {
   const myEmblems = getStudentEmblems(myStudentId).filter(e => e.achieved);
   const tierColor = profile ? TIER_COLORS[profile.tier] : 'oklch(0.7 0.01 250)';
   const tierLabel = profile ? TIER_LABELS[profile.tier] : '-';
+
+  // [Phase 3D v3-r12] 시스템 기능 온/오프
+  const rivalEnabled = isRivalEnabled();
 
   // 최근 성적 (입학테스트 제외)
   const allPublishedResults = getPublishedResultsForStudent(exams, submissions, myStudentId)
@@ -131,7 +136,7 @@ export default function StudentHome() {
                 { icon: BookOpen,      label: '내 반',      path: '/student/classes',          color: 'oklch(0.45 0.15 160)' },
                 { icon: CalendarCheck, label: '출결',       path: '/student/attendance',       color: 'oklch(0.55 0.15 80)' },
                 { icon: Trophy,        label: '진열장',     path: '/student/growth',           color: 'oklch(0.7 0.18 80)' },
-                { icon: TrendingUp,    label: 'Rival',     path: '/student/rival',            color: '#0B1B33' },
+                ...(rivalEnabled ? [{ icon: TrendingUp, label: 'Rival', path: '/student/rival', color: '#0B1B33' }] : []),
                 { icon: GraduationCap, label: universityLabel, path: '/student/target-preview', color: '#C8A15A' },
               ].map(({ icon: Icon, label, path, color }) => (
                 <Link key={`${path}-${label}`} href={path} style={{ display: 'block' }}>
@@ -238,8 +243,10 @@ export default function StudentHome() {
 
           {/* 우측 요약 패널: Rival · 성장 진열장 · 목표대학 */}
           <div className="space-y-4 lg:col-span-1">
-        {/* Rival 현황 카드 */}
-        {hasNickname && rivalInfo?.relation ? (
+        {/* Rival 현황 카드 — [Phase 3D v3-r12] rivalEnabled가 false면 비활성 안내로 대체 */}
+        {!rivalEnabled ? (
+          <FeatureDisabledNotice compact description="Rival 시스템이 현재 비활성화되어 있습니다." />
+        ) : hasNickname && rivalInfo?.relation ? (
           <Link href="/student/rival" style={{ display: 'block' }}>
             <div className="axis-card p-4 cursor-pointer">
               <div className="flex items-center justify-between">

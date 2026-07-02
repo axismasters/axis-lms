@@ -169,11 +169,18 @@ export interface TeacherGrowthConsultingInput {
   rivalWins: number;
   rivalLosses: number;
   ifImprovementNote: string | null; // ifAnalysisEngine.buildCumulativeImprovementNote() 결과
+  // [Phase 3D v3-r12-r2] 첫 문장이 achievedEmblemCount 값과 무관하게 항상 "엠블럼 N개"
+  // 절을 포함하고 있었다 — Emblem OFF 시 achievedEmblemCount를 0으로 전달해도 "엠블럼
+  // 0개"라는 문구 자체는 남아 §5 반려 사유("Emblem 표현이 OFF 상태에서도 남을 수 있다")를
+  // 완전히 해소하지 못했다. 이 플래그를 명시적으로 false로 주면 그 절 자체를 뺀다.
+  // 생략 시 기존과 동일하게 true(항상 포함)로 동작한다 — 기존 동작 변경 없음.
+  showEmblemCount?: boolean;
 }
 
 export function buildTeacherGrowthConsultingNote(input: TeacherGrowthConsultingInput): string {
   const parts: string[] = [];
-  parts.push(`현재 ${input.tierLabel} 티어 · 누적 SP ${input.totalSP.toLocaleString()}점 · 엠블럼 ${input.achievedEmblemCount}개.`);
+  const emblemClause = input.showEmblemCount === false ? '' : ` · 엠블럼 ${input.achievedEmblemCount}개`;
+  parts.push(`현재 ${input.tierLabel} 티어 · 누적 SP ${input.totalSP.toLocaleString()}점${emblemClause}.`);
   if (input.recentEmblemName) {
     parts.push(`최근 획득 엠블럼은 "${input.recentEmblemName}"입니다.`);
   }

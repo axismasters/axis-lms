@@ -10,6 +10,7 @@ import {
   StudentGrowthProfile, Emblem, StudentEmblem, RivalRelation,
   StudentSPLog, GrowthSourceType,
 } from '@/lib/growthData';
+import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
 
 // ────────────────────────────────────────────────────────────
 // Context 타입
@@ -232,6 +233,9 @@ export function GrowthProvider({ children }: { children: ReactNode }) {
     sourceId?: string,
     createdBy = 'SYSTEM',
   ): { ok: boolean; reason?: string } => {
+    // [Phase 3D v3-r12] emblemEnabled 방어 가드 — UI(라우트/버튼) 게이트가 우회되더라도
+    // OFF 상태에서는 이 액션이 실행되지 않는다.
+    if (!isEmblemEnabled()) return { ok: false, reason: '현재 Emblem 시스템이 비활성화되어 있습니다.' };
     const emblem = emblems.find(e => e.id === emblemId);
     if (!emblem) return { ok: false, reason: '엠블럼을 찾을 수 없습니다.' };
     if (!emblem.active) return { ok: false, reason: '비활성 엠블럼입니다.' };
@@ -261,6 +265,8 @@ export function GrowthProvider({ children }: { children: ReactNode }) {
 
   // ── 엠블럼 진행도 증가 (수정 1)
   const updateEmblemProgress = useCallback((studentId: string, emblemId: string, amount: number): { ok: boolean } => {
+    // [Phase 3D v3-r12-r2] emblemEnabled 방어 가드
+    if (!isEmblemEnabled()) return { ok: false };
     setStudentEmblems(prev => {
       const existing = prev.find(se => se.studentId === studentId && se.emblemId === emblemId && !se.achieved);
       if (existing) {
@@ -280,22 +286,30 @@ export function GrowthProvider({ children }: { children: ReactNode }) {
 
   // ── 엠블럼 정책 관리
   const addEmblem = useCallback((data: Omit<Emblem, 'id' | 'createdAt'>): { ok: boolean; reason?: string } => {
+    // [Phase 3D v3-r12-r2] emblemEnabled 방어 가드
+    if (!isEmblemEnabled()) return { ok: false, reason: '현재 Emblem 시스템이 비활성화되어 있습니다.' };
     if (!data.name.trim()) return { ok: false, reason: '엠블럼 이름을 입력하세요.' };
     setEmblems(prev => [...prev, { ...data, id: `emb-${Date.now()}`, createdAt: new Date().toISOString().slice(0, 10) }]);
     return { ok: true };
   }, []);
 
   const updateEmblem = useCallback((emblemId: string, patch: Partial<Emblem>): { ok: boolean; reason?: string } => {
+    // [Phase 3D v3-r12-r2] emblemEnabled 방어 가드
+    if (!isEmblemEnabled()) return { ok: false, reason: '현재 Emblem 시스템이 비활성화되어 있습니다.' };
     setEmblems(prev => prev.map(e => e.id === emblemId ? { ...e, ...patch } : e));
     return { ok: true };
   }, []);
 
   const toggleEmblemActive = useCallback((emblemId: string): { ok: boolean } => {
+    // [Phase 3D v3-r12-r2] emblemEnabled 방어 가드
+    if (!isEmblemEnabled()) return { ok: false };
     setEmblems(prev => prev.map(e => e.id === emblemId ? { ...e, active: !e.active } : e));
     return { ok: true };
   }, []);
 
   const toggleEmblemHidden = useCallback((emblemId: string): { ok: boolean } => {
+    // [Phase 3D v3-r12-r2] emblemEnabled 방어 가드
+    if (!isEmblemEnabled()) return { ok: false };
     setEmblems(prev => prev.map(e => e.id === emblemId ? { ...e, hidden: !e.hidden } : e));
     return { ok: true };
   }, []);
@@ -320,6 +334,8 @@ export function GrowthProvider({ children }: { children: ReactNode }) {
   [rivalRelations]);
 
   const addRivalWin = useCallback((relationId: string): { ok: boolean; reason?: string } => {
+    // [Phase 3D v3-r12] rivalEnabled 방어 가드
+    if (!isRivalEnabled()) return { ok: false, reason: '현재 Rival 시스템이 비활성화되어 있습니다.' };
     const rel = rivalRelations.find(r => r.id === relationId);
     if (!rel) return { ok: false, reason: '라이벌 관계를 찾을 수 없습니다.' };
     const newWins = rel.wins + 1;
@@ -336,6 +352,8 @@ export function GrowthProvider({ children }: { children: ReactNode }) {
   }, [rivalRelations]);
 
   const addRivalLoss = useCallback((relationId: string): { ok: boolean; reason?: string } => {
+    // [Phase 3D v3-r12] rivalEnabled 방어 가드
+    if (!isRivalEnabled()) return { ok: false, reason: '현재 Rival 시스템이 비활성화되어 있습니다.' };
     const rel = rivalRelations.find(r => r.id === relationId);
     if (!rel) return { ok: false, reason: '라이벌 관계를 찾을 수 없습니다.' };
     const newLosses = rel.losses + 1;
@@ -352,6 +370,8 @@ export function GrowthProvider({ children }: { children: ReactNode }) {
   }, [rivalRelations]);
 
   const endRivalRelation = useCallback((relationId: string): { ok: boolean } => {
+    // [Phase 3D v3-r12] rivalEnabled 방어 가드
+    if (!isRivalEnabled()) return { ok: false };
     setRivalRelations(prev => prev.map(r => r.id === relationId ? { ...r, status: 'ENDED' } : r));
     return { ok: true };
   }, []);

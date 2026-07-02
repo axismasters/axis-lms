@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { PermissionKey, POSITION_LABEL, canAccessGrowth, canExportAcademyWideScores } from '@/lib/rbac';
 import { AxisMark } from '@/components/brand/AxisMark';
+import { isFinanceEnabled, isRivalEnabled } from '@/lib/systemFeatureFlags';
 
 interface NavItem {
   label: string;
@@ -87,13 +88,14 @@ const NAV_ITEMS: NavItem[] = [
     label: '재무관리',
     path: '/admin/finance',
     icon: <Wallet size={16} />,
-    requires: 'finance.view',
+    // [Phase 3D v3-r12] financeEnabled 게이트 — OFF면 메뉴 자체가 사라진다(하위 항목도 전부).
+    requiresFn: (can, _accountType) => can('finance.view') && isFinanceEnabled(),
     children: [
-      { label: '수납관리', path: '/admin/finance/payments', requires: 'finance.view' },
-      { label: '환불관리', path: '/admin/finance/refunds', requires: 'finance.view' },
-      { label: '미납관리', path: '/admin/finance/unpaid', requires: 'finance.view' },
-      { label: '정산관리', path: '/admin/finance/settlements', requires: 'finance.view' },
-      { label: '통계', path: '/admin/finance/statistics', requires: 'finance.view' },
+      { label: '수납관리', path: '/admin/finance/payments', requiresFn: (can) => can('finance.view') && isFinanceEnabled() },
+      { label: '환불관리', path: '/admin/finance/refunds', requiresFn: (can) => can('finance.view') && isFinanceEnabled() },
+      { label: '미납관리', path: '/admin/finance/unpaid', requiresFn: (can) => can('finance.view') && isFinanceEnabled() },
+      { label: '정산관리', path: '/admin/finance/settlements', requiresFn: (can) => can('finance.view') && isFinanceEnabled() },
+      { label: '통계', path: '/admin/finance/statistics', requiresFn: (can) => can('finance.view') && isFinanceEnabled() },
     ],
   },
       { label: '성장관리',
@@ -105,7 +107,7 @@ const NAV_ITEMS: NavItem[] = [
         // GrowthShowcaseTab 참조). 이 메뉴에는 정책/템플릿/시즌 설정만 남긴다.
         children: [
           { label: '성장현황', path: '/admin/growth/overview' },
-          { label: 'Rival 시즌 관리', path: '/admin/growth/rival-seasons' },
+          { label: 'Rival 시즌 관리', path: '/admin/growth/rival-seasons', requiresFn: () => isRivalEnabled() },
           { label: '진열장 노출 정책', path: '/admin/growth/showcase-policy' },
         ],
       },

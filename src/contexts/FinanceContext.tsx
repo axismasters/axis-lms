@@ -32,6 +32,7 @@ import { useEnrollment } from '@/contexts/EnrollmentContext';
 import { useNotification } from '@/contexts/NotificationContext';
 import { useStudents } from '@/contexts/StudentContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { isFinanceEnabled } from '@/lib/systemFeatureFlags';
 
 interface AddPaymentInput {
   invoiceId: string;
@@ -117,6 +118,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // 동일한 함수를 호출하면 된다; 이 mock 환경에서는 앱이 켜져 있는 동안 enrollments 변경을 트리거로
   // 사용해 같은 구조를 시연한다(신규 수강 등록 직후 즉시 이번 달 일할 청구서가 생기는 것도 이 경로다).
   useEffect(() => {
+    // [Phase 3D v3-r12-r2] financeEnabled가 false면 자동 청구서 생성 자체를 실행하지 않는다.
+    if (!isFinanceEnabled()) return;
     const month = currentBillingMonth();
     setInvoices((prev) => {
       const newOnes = generateMonthlyInvoices(month, enrollments, prev);
@@ -125,6 +128,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   }, [enrollments]);
 
   const generateInvoicesForMonth = useCallback((month: string): number => {
+    // [Phase 3D v3-r12-r2] financeEnabled 방어 가드
+    if (!isFinanceEnabled()) return 0;
     let createdCount = 0;
     setInvoices((prev) => {
       const newOnes = generateMonthlyInvoices(month, enrollments, prev);
@@ -168,6 +173,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // 기준으로 재계산한다(완납 시 PAID, 일부만 납부 시 PARTIAL). AXIS 확정 원칙 4: 수납금액은 남은
   // 미납금액을 초과할 수 없다.
   const addPayment = useCallback((input: AddPaymentInput): { ok: boolean; reason?: string; payment?: Payment } => {
+    // [Phase 3D v3-r12-r2] financeEnabled 방어 가드
+    if (!isFinanceEnabled()) return { ok: false, reason: '현재 재무관리 시스템이 비활성화되어 있습니다.' };
     const invoice = invoices.find(i => i.id === input.invoiceId);
     if (!invoice) return { ok: false, reason: '청구서를 찾을 수 없습니다.' };
     if (invoice.status === 'PAID') return { ok: false, reason: '이미 완납된 청구서입니다.' };
@@ -200,6 +207,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // 레거시 수동 발급 — v1/v2 mock 데이터 중 receiptIssued:false로 남아있던 결제(자동 발급 도입 전
   // 상태를 보존)에 대해, 담당자가 버튼으로 직접 발급하면 이 시점에 Receipt를 생성한다.
   const issueReceipt = useCallback((paymentId: string) => {
+    // [Phase 3D v3-r12-r2] financeEnabled 방어 가드
+    if (!isFinanceEnabled()) return;
     const payment = payments.find((p) => p.id === paymentId);
     if (!payment || payment.receiptIssued) return;
     setPayments(prev => prev.map(p => (p.id === paymentId ? { ...p, receiptIssued: true } : p)));
@@ -210,6 +219,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // 원칙 5: 환불요청액은 실제 수납된 금액을 초과할 수 없다. 이미 완료/승인된 환불이 있으면 그만큼
   // 차감한 "환불 가능 금액"을 기준으로 다시 제한한다.
   const requestRefund = useCallback((input: RequestRefundInput): { ok: boolean; reason?: string; refund?: Refund } => {
+    // [Phase 3D v3-r12-r2] financeEnabled 방어 가드
+    if (!isFinanceEnabled()) return { ok: false, reason: '현재 재무관리 시스템이 비활성화되어 있습니다.' };
     const invoice = invoices.find(i => i.id === input.invoiceId);
     if (!invoice) return { ok: false, reason: '청구서를 찾을 수 없습니다.' };
     if (invoice.status === 'CANCELED') return { ok: false, reason: '취소된 청구서는 환불 요청을 할 수 없습니다.' };
@@ -260,6 +271,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // 않아 호출 자체가 일어나지 않는다). AXIS 확정 원칙 6: 승인금액은 환불요청액을 초과할 수 없고,
   // 동시에 그 시점의 실제 환불 가능 금액(다른 환불이 먼저 처리됐을 수 있으므로 재검증)도 넘을 수 없다.
   const approveRefund = useCallback((refundId: string, approvedAmount: number, approvedBy: string): { ok: boolean; reason?: string } => {
+    // [Phase 3D v3-r12-r2] financeEnabled 방어 가드
+    if (!isFinanceEnabled()) return { ok: false, reason: '현재 재무관리 시스템이 비활성화되어 있습니다.' };
     const refund = refunds.find(r => r.id === refundId);
     if (!refund) return { ok: false, reason: '환불 요청을 찾을 수 없습니다.' };
     if (refund.status !== 'REQUESTED') return { ok: false, reason: '이미 처리된 환불 요청입니다.' };
@@ -295,6 +308,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   }, [refunds, payments]);
 
   const rejectRefund = useCallback((refundId: string, approvedBy: string) => {
+    // [Phase 3D v3-r12-r2] financeEnabled 방어 가드
+    if (!isFinanceEnabled()) return;
     const refund = refunds.find(r => r.id === refundId);
     setRefunds(prev => prev.map(r => (r.id === refundId
       ? { ...r, status: 'REJECTED', approvedBy, approvedAt: new Date().toISOString() }
@@ -322,6 +337,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   // 환불 완료 처리 — 실제 계좌 환불/PG 취소 연동 없이 상태만 COMPLETED로 변경(mock).
   const completeRefund = useCallback((refundId: string) => {
+    // [Phase 3D v3-r12-r2] financeEnabled 방어 가드
+    if (!isFinanceEnabled()) return;
     const refund = refunds.find(r => r.id === refundId);
     setRefunds(prev => prev.map(r => (r.id === refundId ? { ...r, status: 'COMPLETED' } : r)));
 
@@ -348,6 +365,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // 정산 확정 — 원장/최고관리자만(화면에서 canConfirmSettlement로 게이트). 확정 후 되돌리기는 제공하지
   // 않으며, 이미 CONFIRMED인 정산은 다시 확정할 수 없다(AXIS 확정 원칙).
   const confirmSettlement = useCallback((settlementId: string, confirmedBy: string): { ok: boolean; reason?: string } => {
+    // [Phase 3D v3-r12-r2] financeEnabled 방어 가드
+    if (!isFinanceEnabled()) return { ok: false, reason: '현재 재무관리 시스템이 비활성화되어 있습니다.' };
     const settlement = settlements.find(s => s.id === settlementId);
     if (!settlement) return { ok: false, reason: '정산 항목을 찾을 수 없습니다.' };
     if (settlement.status === 'CONFIRMED') return { ok: false, reason: '이미 확정된 정산입니다.' };
@@ -362,6 +381,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // calculateMonthlySettlement로 실시간 합산값을 총계로 사용하고 DRAFT 상태로 생성한다.
   // idempotent: 이미 레코드가 있으면 기존 레코드를 그대로 반환한다.
   const generateSettlementForMonth = useCallback((month: string): Settlement => {
+    // [Phase 3D v3-r12-r2] financeEnabled 방어 가드 — 반환 타입이 Settlement(non-null)라
+    // STUDENT_SAFE_FINANCE와 동일한 형태의 안전한 더미 레코드를 반환한다(저장하지 않음).
+    if (!isFinanceEnabled()) {
+      return { id: 'finance-disabled', month, totalBilled: 0, totalPaid: 0, totalUnpaid: 0, totalRefunded: 0, status: 'DRAFT' };
+    }
     const existing = settlements.find(s => s.month === month);
     if (existing) return existing;
 

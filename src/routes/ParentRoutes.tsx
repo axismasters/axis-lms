@@ -12,6 +12,8 @@ import ParentWeeklyMocks from '@/pages/parent/ParentWeeklyMocks';
 import ParentGrowthReport from '@/pages/parent/ParentGrowthReport';
 import ParentTargetSummary from '@/pages/parent/ParentTargetSummary';
 import ParentLayout from '@/layouts/ParentLayout';
+import { isFinanceEnabled } from '@/lib/systemFeatureFlags';
+import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
 
 function ParentPlaceholder({ title }: { title: string }) {
   return (
@@ -42,8 +44,14 @@ export default function ParentRoutes() {
         {/* 자녀 테스트 조회 (공개/반영 결과만) — Phase 3D v2: "성적" → "테스트" 동기화 */}
         <Route path="/parent/grades" component={ParentGrades} />
 
-        {/* 자녀 수납 내역 조회 (읽기 전용, 상태 중심) */}
-        <Route path="/parent/finance" component={ParentFinance} />
+        {/* 자녀 수납 내역 조회 (읽기 전용, 상태 중심). [Phase 3D v3-r12] financeEnabled 게이트 */}
+        <Route path="/parent/finance" component={() => isFinanceEnabled() ? <ParentFinance /> : (
+          <ParentLayout title="수납">
+            <div className="max-w-lg mx-auto px-4 py-5">
+              <FeatureDisabledNotice description="관리자 설정에서 재무관리 시스템이 켜지면 다시 이용할 수 있습니다." />
+            </div>
+          </ParentLayout>
+        )} />
 
         {/* 자녀 모의고사 결과 조회 (읽기 전용) */}
         <Route path="/parent/mock-exams" component={ParentMockExams} />

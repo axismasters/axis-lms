@@ -32,6 +32,8 @@ import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
 import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 import { loadIfRecords, getIfCumulativeSummary } from '@/lib/ifAnalysisEngine';
 import { CHART_TEAL, CHART_GOLD, CHART_BLUE, CHART_AMBER } from '@/lib/brandColors';
+import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
+import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
 
 // ─── IF 기반 성장 요약 항목 ────────────────────────────────────────────
 const IF_SUMMARY_META = [
@@ -143,6 +145,10 @@ export default function StudentGrowthShowcase() {
   ];
   const maxHours = Math.max(...weekly.map(w => w.hours));
 
+  // [Phase 3D v3-r12] 시스템 기능 온/오프
+  const rivalEnabled = isRivalEnabled();
+  const emblemEnabled = isEmblemEnabled();
+
   return (
     <StudentLayout title="성장 진열장">
       <div className="max-w-2xl lg:max-w-6xl mx-auto px-4 py-5 space-y-5">
@@ -198,8 +204,12 @@ export default function StudentGrowthShowcase() {
           {/* ── 좌: 성장 엠블럼 컬렉션 ── */}
           <div className="space-y-5">
 
-            {/* 성장 엠블럼 컬렉션 */}
+            {/* 성장 엠블럼 컬렉션 — [Phase 3D v3-r12] emblemEnabled가 false면 비활성 안내로 대체 */}
             <div className="axis-card p-5">
+              {!emblemEnabled ? (
+                <FeatureDisabledNotice compact description="Emblem 시스템이 현재 비활성화되어 있습니다." />
+              ) : (
+              <>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Award size={16} style={{ color: '#C8A15A' }} />
@@ -216,6 +226,8 @@ export default function StudentGrowthShowcase() {
               <p className="text-xs mt-3 flex items-center gap-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
                 <TrendingUp size={11} /> 엠블럼은 자동으로 수여되며, 일부 목표는 직접 선택할 수 있습니다.
               </p>
+              </>
+              )}
             </div>
 
             {/* 주간 학습 습관 */}
@@ -308,7 +320,10 @@ export default function StudentGrowthShowcase() {
               )}
             </div>
 
-            {/* Rival 매치업 연결 */}
+            {/* Rival 매치업 연결 — [Phase 3D v3-r12] rivalEnabled가 false면 비활성 안내로 대체 */}
+            {!rivalEnabled ? (
+              <FeatureDisabledNotice compact description="Rival 시스템이 현재 비활성화되어 있습니다." />
+            ) : (
             <Link href="/student/rival" style={{ display: 'block' }}>
               <div className="axis-card axis-card-clickable p-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -321,6 +336,7 @@ export default function StudentGrowthShowcase() {
                 <ChevronRight size={16} style={{ color: 'oklch(0.7 0.01 250)' }} />
               </div>
             </Link>
+            )}
           </div>
         </div>
       </div>

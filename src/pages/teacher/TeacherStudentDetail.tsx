@@ -36,6 +36,7 @@ import { useGrowth } from '@/contexts/GrowthContext';
 import { TIER_LABELS, MATERIAL_BADGE } from '@/lib/growthData';
 import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 import { getIfCumulativeSummary, buildCumulativeImprovementNote } from '@/lib/ifAnalysisEngine';
+import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
 
 export default function TeacherStudentDetail() {
   const { studentId } = useParams<{ studentId: string }>();
@@ -173,16 +174,23 @@ export default function TeacherStudentDetail() {
   const achievedEmblems = getStudentEmblems(studentId).filter((e) => e.achieved);
   const recentEmblem = getRecentEmblems(studentId, 1)[0];
   const recentEmblemDef = recentEmblem ? emblems.find((e) => e.id === recentEmblem.emblemId) : undefined;
+
+  // [Phase 3D v3-r12] 시스템 기능 온/오프
+  const rivalEnabled = isRivalEnabled();
+  const emblemEnabled = isEmblemEnabled();
   const ifCumulative = getIfCumulativeSummary(fullIfRecords);
   const ifImprovementNote = buildCumulativeImprovementNote(ifCumulative);
   const growthConsultingNote = growthProfile
     ? buildTeacherGrowthConsultingNote({
         tierLabel: TIER_LABELS[growthProfile.tier],
         totalSP: growthProfile.totalSP,
-        achievedEmblemCount: achievedEmblems.length,
-        recentEmblemName: recentEmblemDef?.name,
-        rivalWins: growthProfile.rivalWins,
-        rivalLosses: growthProfile.rivalLosses,
+        // [Phase 3D v3-r12-r2] 기능이 OFF면 자동 생성 상담 문구에도 관련 표현이 섞여
+        // 나오지 않도록, 애초에 0/undefined로 전달한다(문구 생성 로직 자체는 손대지 않음).
+        achievedEmblemCount: emblemEnabled ? achievedEmblems.length : 0,
+        recentEmblemName: emblemEnabled ? recentEmblemDef?.name : undefined,
+        showEmblemCount: emblemEnabled,
+        rivalWins: rivalEnabled ? growthProfile.rivalWins : 0,
+        rivalLosses: rivalEnabled ? growthProfile.rivalLosses : 0,
         ifImprovementNote,
       })
     : null;
@@ -369,7 +377,7 @@ export default function TeacherStudentDetail() {
                 {[
                   { label: '성장 단계', value: TIER_LABELS[growthProfile.tier] },
                   { label: '누적 성장 활동', value: growthProfile.totalSP.toLocaleString() },
-                  { label: '또래 성장 비교', value: `${growthProfile.rivalWins + growthProfile.rivalLosses}회 참여` },
+                  ...(rivalEnabled ? [{ label: '또래 성장 비교', value: `${growthProfile.rivalWins + growthProfile.rivalLosses}회 참여` }] : []),
                 ].map(({ label, value }) => (
                   <div key={label} className="rounded-lg p-2.5 text-center" style={{ background: 'oklch(0.97 0.004 247)' }}>
                     <div className="font-bold text-sm tabular-nums" style={{ color: 'oklch(0.25 0.02 250)' }}>{value}</div>
@@ -377,7 +385,7 @@ export default function TeacherStudentDetail() {
                   </div>
                 ))}
               </div>
-              {achievedEmblems.length > 0 && recentEmblemDef && (
+              {emblemEnabled && achievedEmblems.length > 0 && recentEmblemDef && (
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>보유 엠블럼 {achievedEmblems.length}개 · 최근:</span>
                   <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium"

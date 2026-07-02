@@ -22,6 +22,7 @@ import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
 import { getSchoolRecordsForStudent, getNationalMocksForStudent } from '@/lib/phase2dData';
 import { estimateIfPotentialFromAveragePct } from '@/lib/ifAnalysisEngine';
+import { isRivalEnabled } from '@/lib/systemFeatureFlags';
 
 function scoreColor(pct: number) {
   return pct >= 80 ? 'oklch(0.45 0.15 145)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)';
@@ -88,7 +89,7 @@ function GrowthCard({ studentId }: { studentId: string }) {
           {[
             { label: '학원 평균', value: avgPct !== null ? `${avgPct}%` : '-', color: avgPct !== null ? scoreColor(avgPct) : 'oklch(0.6 0.015 250)' },
             { label: 'IF 잠재력', value: ifPotential !== null ? `+${ifPotential}%p` : '-', color: '#040D1E' },
-            { label: 'Rival 승', value: profile ? `${profile.rivalWins}승` : '-', color: '#040D1E' },
+            ...(isRivalEnabled() ? [{ label: 'Rival 승', value: profile ? `${profile.rivalWins}승` : '-', color: '#040D1E' }] : []),
             { label: '모의 등급', value: nationalMocks.length > 0 ? `${Math.min(...nationalMocks.map(m => m.grade))}등급` : '-', color: 'oklch(0.45 0.15 145)' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-lg p-2 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>

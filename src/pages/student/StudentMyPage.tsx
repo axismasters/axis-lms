@@ -30,6 +30,8 @@ import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
 import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
 import { Link } from 'wouter';
+import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
+import FeatureDisabledNotice from '@/components/FeatureDisabledNotice';
 
 export default function StudentMyPage() {
   const { currentUser } = useAuth();
@@ -94,6 +96,10 @@ export default function StudentMyPage() {
 
   // 수강 반 목록
   const enrolledClasses = student?.classes.filter(c => c.status === '수강중') ?? [];
+
+  // [Phase 3D v3-r12] 시스템 기능 온/오프
+  const rivalEnabled = isRivalEnabled();
+  const emblemEnabled = isEmblemEnabled();
 
   return (
     <StudentLayout title="마이페이지">
@@ -161,8 +167,12 @@ export default function StudentMyPage() {
           </div>
         </div>
 
-        {/* 닉네임 설정 — 좌측 메인 */}
+        {/* 닉네임 설정 — 좌측 메인. [Phase 3D v3-r12] rivalEnabled가 false면 비활성 안내로 대체 */}
         <div className="axis-card p-5 lg:col-span-2">
+          {!rivalEnabled ? (
+            <FeatureDisabledNotice compact description="Rival 시스템이 현재 비활성화되어 있습니다." />
+          ) : (
+          <>
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp size={16} style={{ color: '#0B1B33' }} />
             <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
@@ -240,10 +250,16 @@ export default function StudentMyPage() {
               </div>
             </div>
           )}
+          </>
+          )}
         </div>
 
-        {/* Rival 공개 프로필 미리보기 — 우측 사이드 */}
+        {/* Rival 공개 프로필 미리보기 — 우측 사이드. [Phase 3D v3-r12] rivalEnabled 게이트 */}
         <div className="axis-card p-4 lg:col-span-1">
+          {!rivalEnabled ? (
+            <FeatureDisabledNotice compact description="Rival 시스템이 현재 비활성화되어 있습니다." />
+          ) : (
+          <>
           <div className="flex items-center gap-2 mb-3">
             <Shield size={15} style={{ color: '#040D1E' }} />
             <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
@@ -265,10 +281,16 @@ export default function StudentMyPage() {
               ※ 실명은 상대방에게 공개되지 않습니다
             </div>
           </div>
+          </>
+          )}
         </div>
 
-        {/* 획득 엠블럼 — 좌측 메인 */}
+        {/* 획득 엠블럼 — 좌측 메인. [Phase 3D v3-r12] emblemEnabled가 false면 비활성 안내로 대체 */}
         <div className="axis-card p-4 lg:col-span-2">
+          {!emblemEnabled ? (
+            <FeatureDisabledNotice compact description="Emblem 시스템이 현재 비활성화되어 있습니다." />
+          ) : (
+          <>
           <div className="flex items-center gap-2 mb-3">
             <Award size={15} style={{ color: '#040D1E' }} />
             <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
@@ -294,6 +316,8 @@ export default function StudentMyPage() {
               ))}
             </div>
           )}
+          </>
+          )}
         </div>
 
         {/* 빠른 이동 — 우측 사이드 */}
@@ -306,7 +330,7 @@ export default function StudentMyPage() {
               { icon: BookOpen, label: '내 반 / 수업', path: '/student/classes', color: 'oklch(0.45 0.15 160)' },
               { icon: CalendarCheck, label: '출결 확인', path: '/student/attendance', color: 'oklch(0.55 0.15 80)' },
               { icon: Trophy, label: '성장 진열장', path: '/student/growth', color: '#040D1E' },
-              { icon: TrendingUp, label: 'Rival', path: '/student/rival', color: '#0B1B33' },
+              ...(rivalEnabled ? [{ icon: TrendingUp, label: 'Rival', path: '/student/rival', color: '#0B1B33' }] : []),
             ].map(({ icon: Icon, label, path, color }) => (
               <Link key={path} href={path} style={{ display: 'block' }}>
                 <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer"

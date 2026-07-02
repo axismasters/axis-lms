@@ -10,17 +10,13 @@ import { Home, CalendarCheck, ClipboardList, CreditCard, TrendingUp, LogOut } fr
 import { useAuth } from '@/contexts/AuthContext';
 import DevRoleSwitcher from '@/components/DevRoleSwitcher';
 import { AxisMark } from '@/components/brand/AxisMark';
+import { isFinanceEnabled } from '@/lib/systemFeatureFlags';
 
 // Phase 3D v2: 학생 화면의 "성적" → "테스트" 개편에 맞춰 학부모 화면도 동기화.
 // 자녀 성장 리포트(테스트 변화·출결 흐름·대학추천 요약) 접근성을 위해 "성장" 탭 추가.
 // 학생용 게임형 지표는 학부모 화면에 노출하지 않음.
-const PARENT_NAV = [
-  { path: '/parent',             label: '홈',    icon: Home },
-  { path: '/parent/attendance',  label: '출결',   icon: CalendarCheck },
-  { path: '/parent/grades',      label: '테스트', icon: ClipboardList },
-  { path: '/parent/growth',      label: '성장',   icon: TrendingUp },
-  { path: '/parent/finance',     label: '수납',   icon: CreditCard },
-];
+// [Phase 3D v3-r12] PARENT_NAV는 financeEnabled를 매 렌더마다 반영해야 하므로 컴포넌트
+// 함수 내부로 옮겼다(모듈 최상단 상수로 두면 최초 로드 시 값이 고정되어 토글이 반영 안 됨).
 
 interface ParentLayoutProps {
   children: React.ReactNode;
@@ -30,6 +26,15 @@ interface ParentLayoutProps {
 export default function ParentLayout({ children, title }: ParentLayoutProps) {
   const [location] = useLocation();
   const { currentUser, logout } = useAuth();
+
+  // [Phase 3D v3-r12] financeEnabled가 false면 '수납' 탭을 목록에서 제외한다(상단/하단 네비 공용).
+  const PARENT_NAV = [
+    { path: '/parent',             label: '홈',    icon: Home },
+    { path: '/parent/attendance',  label: '출결',   icon: CalendarCheck },
+    { path: '/parent/grades',      label: '테스트', icon: ClipboardList },
+    { path: '/parent/growth',      label: '성장',   icon: TrendingUp },
+    ...(isFinanceEnabled() ? [{ path: '/parent/finance', label: '수납', icon: CreditCard }] : []),
+  ];
 
   const isActive = (path: string) =>
     path === '/parent' ? location === '/parent' : location.startsWith(path);
