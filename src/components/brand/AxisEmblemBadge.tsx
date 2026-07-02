@@ -1,40 +1,24 @@
-// AXIS LMS v1.2 — Phase 3D v3-r10-r1: AxisEmblemBadge
-//
-// 프리미엄 업적 배지 렌더러. 단일 🏅 이모지 UI를 폐기하고, 03-emblem-system-board.png
-// 기준의 "네이비 원판 + 골드 링 + 월계관 + 젬 토퍼 + 의미 아이콘 + 네임 플레이트"
-// 구조를 순수 SVG로 그린다(외부 이미지/폰트 의존 없음).
-//
-// ⚠ 브랜드/디자인 원칙:
-//   - 색상은 AXIS 팔레트(Deep Navy / Gold / Ivory / Soft Teal / Muted Blue / Warm Amber)만
-//     사용한다. 보라/네온/그라데이션 blob 금지.
-//   - 이 컴포넌트는 실제 AXIS "마크/워드마크"가 아니라 "성취 엠블럼"이다 —
-//     axis-mark-icon.png(브랜드 마크)를 대체하지 않는다(둘은 별개).
-//   - 미획득(locked) 상태는 "잠금 금지 아이템"이 아니라 "다음 성장 목표"처럼 은은하게
-//     보이도록 채도/불투명도를 낮춘 아웃라인으로 렌더한다.
-//
-// 레벨(EmblemLevel)에 따라 프레임 강도가 달라진다(EMBLEM_LEVEL_STYLE 참조):
-//   BASIC → GROWTH → FOCUS → SIGNATURE → MASTER 순으로 골드 프레임/광택이 강해진다.
+// AXIS LMS v1.2 — Premium Achievement Emblem Renderer
+// Reference direction: classic academic medal, deep navy enamel, gold bevels, laurel,
+// top jewel, inner symbolic icon, and lower name-plate form.
 
+import { useId } from 'react';
 import type { EmblemIconKey, EmblemLevel } from '@/lib/growthData';
 import { EMBLEM_LEVEL_STYLE } from '@/lib/growthData';
 
 interface AxisEmblemBadgeProps {
   iconKey?: EmblemIconKey;
   level?: EmblemLevel;
-  /** 강조 색(계열) — IF 사유/패밀리별 포인트. 없으면 레벨 accent 사용 */
   accent?: string;
   size?: number;
-  /** 미획득(다음 목표) 상태 — 채도/불투명도 하향 */
   locked?: boolean;
   className?: string;
 }
 
-// ─── 의미 아이콘(SVG path) — 카탈로그 iconKey별 심볼 ────────────────────
-// 각 심볼은 60x60 뷰박스(중앙 원판 안)에 그려지도록 좌표를 맞춘다.
 function EmblemSymbol({ iconKey, color }: { iconKey: EmblemIconKey; color: string }) {
   const s = { fill: 'none', stroke: color, strokeWidth: 3, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   switch (iconKey) {
-    case 'calc': // 계산 정밀 — 계산기 + 체크
+    case 'calc':
       return (
         <g transform="translate(15 14)">
           <rect x="2" y="2" width="20" height="28" rx="3" {...s} />
@@ -45,7 +29,7 @@ function EmblemSymbol({ iconKey, color }: { iconKey: EmblemIconKey; color: strin
           <path d="M20 20 l4 5 l7 -9" {...s} strokeWidth={3.4} />
         </g>
       );
-    case 'concept': // 개념 완성 — 펼친 책 + 노드
+    case 'concept':
       return (
         <g transform="translate(13 16)">
           <path d="M17 4 C12 1 5 1 2 4 L2 24 C5 21 12 21 17 24 C22 21 29 21 32 24 L32 4 C29 1 22 1 17 4 Z" {...s} />
@@ -55,14 +39,14 @@ function EmblemSymbol({ iconKey, color }: { iconKey: EmblemIconKey; color: strin
           <line x1="24" y1="9" x2="27" y2="14" {...s} strokeWidth={2} />
         </g>
       );
-    case 'time': // 시간 컨트롤 — 시계
+    case 'time':
       return (
         <g transform="translate(15 15)">
           <circle cx="15" cy="15" r="14" {...s} />
           <path d="M15 7 v8 l6 4" {...s} strokeWidth={3.2} />
         </g>
       );
-    case 'steady': // 꾸준한 성장 — 상승 막대 + 화살표
+    case 'steady':
       return (
         <g transform="translate(14 14)">
           <line x1="3" y1="30" x2="3" y2="20" {...s} />
@@ -72,7 +56,7 @@ function EmblemSymbol({ iconKey, color }: { iconKey: EmblemIconKey; color: strin
           <path d="M26 1 l3 0 l0 3" {...s} />
         </g>
       );
-    case 'comeback': // 역전 성장 — 하강 후 급상승 화살표
+    case 'comeback':
       return (
         <g transform="translate(13 15)">
           <path d="M2 8 l6 8 l6 -3 l10 -11" {...s} />
@@ -80,7 +64,7 @@ function EmblemSymbol({ iconKey, color }: { iconKey: EmblemIconKey; color: strin
           <path d="M2 26 l30 0" {...s} strokeWidth={2} opacity={0.5} />
         </g>
       );
-    case 'weekly': // 주간 꾸준함 — 캘린더 + 체크
+    case 'weekly':
       return (
         <g transform="translate(14 13)">
           <rect x="2" y="4" width="24" height="24" rx="3" {...s} />
@@ -90,14 +74,14 @@ function EmblemSymbol({ iconKey, color }: { iconKey: EmblemIconKey; color: strin
           <path d="M9 19 l4 4 l7 -8" {...s} strokeWidth={3.2} />
         </g>
       );
-    case 'focus': // 고집중 세션 — 조준/컴퍼스 별
+    case 'focus':
       return (
         <g transform="translate(15 15)">
           <circle cx="15" cy="15" r="14" {...s} />
-          <path d="M15 3 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 l9 -3 Z" fill={color} stroke="none" opacity={0.85} />
+          <path d="M15 3 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 l9 -3 Z" fill={color} stroke="none" opacity={0.9} />
         </g>
       );
-    case 'reflection': // 복습 완료 — 문서 + 돋보기
+    case 'reflection':
       return (
         <g transform="translate(13 13)">
           <path d="M6 2 h13 l6 6 v14 a2 2 0 0 1 -2 2 h-17 a2 2 0 0 1 -2 -2 v-18 a2 2 0 0 1 2 -2 Z" {...s} />
@@ -105,20 +89,21 @@ function EmblemSymbol({ iconKey, color }: { iconKey: EmblemIconKey; color: strin
           <line x1="18" y1="20" x2="23" y2="25" {...s} strokeWidth={3.2} />
         </g>
       );
-    case 'streak': // 성장 연속 — 별 + 궤도
+    case 'streak':
       return (
         <g transform="translate(15 14)">
           <path d="M15 3 l3.4 7 l7.6 0.8 l-5.6 5.2 l1.6 7.6 l-7 -4 l-7 4 l1.6 -7.6 l-5.6 -5.2 l7.6 -0.8 Z" fill={color} stroke="none" />
+          <path d="M5 27 C14 33 26 29 31 20" {...s} strokeWidth={2} opacity={0.65} />
         </g>
       );
-    case 'mentor': // 멘토 추천 — 방패 + 악수(단순화: 방패 + 별)
+    case 'mentor':
       return (
         <g transform="translate(15 13)">
           <path d="M15 2 C11 5 6 6 3 6 C3 16 6 24 15 29 C24 24 27 16 27 6 C24 6 19 5 15 2 Z" {...s} />
           <path d="M15 10 l2 4.5 l5 0.4 l-3.8 3.3 l1.2 4.8 l-4.4 -2.6 l-4.4 2.6 l1.2 -4.8 l-3.8 -3.3 l5 -0.4 Z" fill={color} stroke="none" />
         </g>
       );
-    case 'attendance': // 출결 — 캘린더 도트
+    case 'attendance':
       return (
         <g transform="translate(14 13)">
           <rect x="2" y="4" width="24" height="24" rx="3" {...s} />
@@ -128,80 +113,118 @@ function EmblemSymbol({ iconKey, color }: { iconKey: EmblemIconKey; color: strin
           <circle cx="9" cy="24" r="2" fill={color} stroke="none" />
         </g>
       );
-    default: // generic — AXIS 별 마크
+    default:
       return (
         <g transform="translate(15 14)">
-          <path d="M15 2 l2.6 8.8 l9 0 l-7.3 5.4 l2.8 8.6 l-7.1 -5.3 l-7.1 5.3 l2.8 -8.6 l-7.3 -5.4 l9 0 Z" fill={color} stroke="none" opacity={0.9} />
+          <path d="M15 2 l2.6 8.8 l9 0 l-7.3 5.4 l2.8 8.6 l-7.1 -5.3 l-7.1 5.3 l2.8 -8.6 l-7.3 -5.4 l9 0 Z" fill={color} stroke="none" opacity={0.92} />
         </g>
       );
   }
 }
 
-// ─── 월계관(양쪽) — 획득 배지에만 표시 ────────────────────────────────
-function Laurel({ color, side }: { color: string; side: 'l' | 'r' }) {
-  const flip = side === 'r' ? 'scale(-1,1) translate(-100 0)' : '';
+function LaurelSide({ color, side }: { color: string; side: 'left' | 'right' }) {
+  const flip = side === 'right' ? 'scale(-1 1) translate(-140 0)' : '';
   return (
-    <g transform={flip} opacity={0.9}>
-      <path d="M30 78 C18 70 14 55 16 40" fill="none" stroke={color} strokeWidth={2.4} strokeLinecap="round" />
-      {[0, 1, 2, 3, 4].map((i) => {
-        const y = 44 + i * 7;
-        const x = 17 + i * 2.4;
-        return <ellipse key={i} cx={x} cy={y} rx={4.4} ry={2.4} fill={color} transform={`rotate(-42 ${x} ${y})`} opacity={0.92} />;
+    <g transform={flip} opacity="0.92">
+      <path d="M42 104 C23 89 20 64 31 45" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" />
+      {[0, 1, 2, 3, 4, 5].map((i) => {
+        const x = 31 + i * 2.3;
+        const y = 52 + i * 8;
+        return <ellipse key={i} cx={x} cy={y} rx="7.2" ry="3.1" fill={color} transform={`rotate(-40 ${x} ${y})`} />;
       })}
     </g>
   );
 }
 
+function TinyStars({ color }: { color: string }) {
+  return (
+    <g opacity="0.72" fill={color}>
+      <path d="M35 47 l1.4 3.5 l3.6 1 l-3.4 1.3 l-1.6 3.4 l-1.2 -3.6 l-3.4 -1.2 l3.4 -1.2 Z" />
+      <path d="M99 45 l1 2.6 l2.7 0.8 l-2.5 1 l-1.2 2.5 l-0.9 -2.7 l-2.5 -0.9 l2.5 -0.9 Z" />
+      <circle cx="102" cy="78" r="1.5" />
+      <circle cx="39" cy="83" r="1.2" />
+    </g>
+  );
+}
+
 export function AxisEmblemBadge({
-  iconKey = 'generic', level = 'BASIC', accent, size = 84, locked = false, className,
+  iconKey = 'generic', level = 'BASIC', accent, size = 96, locked = false, className,
 }: AxisEmblemBadgeProps) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const style = EMBLEM_LEVEL_STYLE[level];
   const ring = style.ring;
   const plate = style.plate;
   const symbolColor = accent ?? style.accent;
-  const gemColor = style.premium ? '#E4C979' : symbolColor;
+  const jewel = style.premium ? '#1F5B85' : symbolColor;
+  const plateId = `axis-emblem-plate-${uid}`;
+  const rimId = `axis-emblem-rim-${uid}`;
+  const jewelId = `axis-emblem-jewel-${uid}`;
+  const shadowId = `axis-emblem-shadow-${uid}`;
 
   if (locked) {
-    // "다음 성장 목표" — 옅은 아웃라인 + 자물쇠 힌트(위협적이지 않게)
     return (
-      <svg width={size} height={size} viewBox="0 0 100 100" className={className} role="img" aria-label="다음 성장 목표">
-        <circle cx="50" cy="46" r="30" fill="#FBF9F4" stroke="#D8CFBE" strokeWidth={2} strokeDasharray="4 4" />
-        <g opacity={0.5}>
-          <rect x="42" y="42" width="16" height="13" rx="2.5" fill="none" stroke="#B9AE97" strokeWidth={2.4} />
-          <path d="M45 42 v-3 a5 5 0 0 1 10 0 v3" fill="none" stroke="#B9AE97" strokeWidth={2.4} />
-        </g>
+      <svg width={size} height={size} viewBox="0 0 140 140" className={className} role="img" aria-label="다음 성장 목표">
+        <defs>
+          <linearGradient id={rimId} x1="24" y1="16" x2="112" y2="126">
+            <stop offset="0%" stopColor="#F4E8C8" />
+            <stop offset="55%" stopColor="#CBB98D" />
+            <stop offset="100%" stopColor="#FFF8DF" />
+          </linearGradient>
+        </defs>
+        <circle cx="70" cy="66" r="45" fill="#FBF7EE" stroke={`url(#${rimId})`} strokeWidth="5" strokeDasharray="8 6" />
+        <circle cx="70" cy="66" r="35" fill="#F0EBE0" stroke="#D8CFBE" strokeWidth="1.5" />
+        <path d="M70 42 v48 M46 66 h48" stroke="#B9AE97" strokeWidth="3" strokeLinecap="round" opacity="0.55" />
+        <path d="M45 112 H95 L88 124 H52 Z" fill="#F6F0E4" stroke="#D8CFBE" strokeWidth="2" />
       </svg>
     );
   }
 
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" className={className} role="img" aria-label="성취 엠블럼">
+    <svg width={size} height={size} viewBox="0 0 140 140" className={className} role="img" aria-label="성취 엠블럼">
       <defs>
-        <radialGradient id={`plate-${iconKey}-${level}`} cx="42%" cy="34%" r="72%">
-          <stop offset="0%" stopColor={plate} stopOpacity={0.98} />
-          <stop offset="100%" stopColor="#040D1E" />
+        <radialGradient id={plateId} cx="38%" cy="28%" r="76%">
+          <stop offset="0%" stopColor={plate} />
+          <stop offset="58%" stopColor="#0B1B33" />
+          <stop offset="100%" stopColor="#030914" />
         </radialGradient>
+        <linearGradient id={rimId} x1="24" y1="8" x2="118" y2="134">
+          <stop offset="0%" stopColor="#FFF4C7" />
+          <stop offset="22%" stopColor={ring} />
+          <stop offset="50%" stopColor="#8A6D2E" />
+          <stop offset="76%" stopColor="#E4C979" />
+          <stop offset="100%" stopColor="#FFF1B8" />
+        </linearGradient>
+        <radialGradient id={jewelId} cx="36%" cy="25%" r="70%">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="42%" stopColor={jewel} />
+          <stop offset="100%" stopColor="#081428" />
+        </radialGradient>
+        <filter id={shadowId} x="-20%" y="-20%" width="140%" height="150%">
+          <feDropShadow dx="0" dy="8" stdDeviation="4" floodColor="#040D1E" floodOpacity="0.24" />
+        </filter>
       </defs>
 
-      {/* 월계관 */}
-      <Laurel color={ring} side="l" />
-      <Laurel color={ring} side="r" />
+      <g filter={`url(#${shadowId})`}>
+        <LaurelSide color={ring} side="left" />
+        <LaurelSide color={ring} side="right" />
 
-      {/* 젬 토퍼(다이아 형태) */}
-      <path d="M50 6 l7 7 l-7 7 l-7 -7 Z" fill={gemColor} stroke="#040D1E" strokeWidth={1.4} />
-      <path d="M50 6 l7 7 l-7 7 Z" fill="#000" opacity={0.12} />
+        <path d="M70 7 l10 12 l-10 12 l-10 -12 Z" fill={`url(#${jewelId})`} stroke="#0B1B33" strokeWidth="1.8" />
+        <path d="M70 7 l10 12 l-10 12 Z" fill="#000" opacity="0.15" />
 
-      {/* 외곽 골드 링 + 네이비 원판 */}
-      <circle cx="50" cy="46" r="31" fill={ring} />
-      <circle cx="50" cy="46" r="28" fill={`url(#plate-${iconKey}-${level})`} stroke="#040D1E" strokeWidth={1} />
-      {/* 내측 얇은 골드 트림 */}
-      <circle cx="50" cy="46" r="24.5" fill="none" stroke={ring} strokeWidth={style.premium ? 1.4 : 0.9} opacity={0.85} />
-      {/* 상단 광택 하이라이트 */}
-      <ellipse cx="43" cy="34" rx="12" ry="6" fill="#FFFFFF" opacity={0.08} />
+        <circle cx="70" cy="66" r="48" fill={`url(#${rimId})`} stroke="#071427" strokeWidth="1.8" />
+        <circle cx="70" cy="66" r="42" fill={`url(#${plateId})`} stroke="#F8E7A2" strokeWidth="1.3" />
+        <circle cx="70" cy="66" r="34" fill="none" stroke={ring} strokeWidth={style.premium ? 2 : 1.4} opacity="0.88" />
+        <circle cx="70" cy="66" r="27" fill="none" stroke="#FFFFFF" strokeWidth="0.8" opacity="0.16" />
+        <path d="M41 45 C55 30 83 28 100 45 C82 42 59 42 41 45 Z" fill="#FFFFFF" opacity="0.12" />
+        <TinyStars color="#F8E7A2" />
 
-      {/* 의미 아이콘 */}
-      <g transform="translate(20 16) scale(1)">
-        <EmblemSymbol iconKey={iconKey} color={symbolColor} />
+        <g transform="translate(43 38) scale(1.45)">
+          <EmblemSymbol iconKey={iconKey} color={symbolColor} />
+        </g>
+
+        <path d="M38 105 H102 L110 114 L101 124 H39 L30 114 Z" fill="#0B1B33" stroke={`url(#${rimId})`} strokeWidth="3" />
+        <path d="M44 111 H96" stroke="#F8E7A2" strokeWidth="1.2" opacity="0.7" />
+        <path d="M70 124 l5 6 l-5 6 l-5 -6 Z" fill={`url(#${rimId})`} stroke="#071427" strokeWidth="1" />
       </g>
     </svg>
   );

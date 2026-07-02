@@ -137,7 +137,7 @@ const PERM_CATEGORIES: PermCategory[] = [
       { feature: '엠블럼 수동 지급', view: null, create: 'growth.awardEmblem', update: null, remove: null, approve: null, publish: null },
       { feature: '엠블럼 정책 관리', view: null, create: null, update: 'growth.emblemManage', remove: null, approve: null, publish: null },
       { feature: '라이벌 전체 조회', view: 'growth.rivalView', create: null, update: null, remove: null, approve: null, publish: null },
-      { feature: '라이벌 관계/성장 비교 관리', view: null, create: null, update: 'growth.rivalManage', remove: null, approve: null, publish: null },
+      { feature: '라이벌 관계/승패 관리', view: null, create: null, update: 'growth.rivalManage', remove: null, approve: null, publish: null },
     ],
   },
   {

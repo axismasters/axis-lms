@@ -45,7 +45,7 @@ const POLICY_ITEMS: { key: keyof ShowcasePolicy; label: string; desc: string; ri
   { key: 'showMockGrade',          label: '모의고사 등급 표시',      desc: '전국모의/수능실전 최고 등급 노출' },
   { key: 'showEmblems',            label: '엠블럼 표시',            desc: '보유 엠블럼 목록을 진열장에 노출' },
   { key: 'showSP',                 label: 'SP 내역 표시',           desc: 'SP 포인트 내역 및 막대 그래프 표시' },
-  { key: 'showRivalSummary',       label: 'Rival 요약 표시',        desc: '진열장 내 Rival 탭에 성장 비교 요약 표시' },
+  { key: 'showRivalSummary',       label: 'Rival 요약 표시',        desc: '진열장 내 Rival 탭에 승패 요약 표시' },
   { key: 'showTargetPreviewEntry', label: '목표대학 추천 입구',      desc: '진열장 하단 목표대학 추천/대학추천 링크' },
   { key: 'studentCanSeeRankInShowcase', label: '학생 등수 표시',   desc: '진열장에서 학반 내 등수 노출 (기본 비활성)', risk: '경쟁 심화 우려' },
   { key: 'parentCanSeeShowcase',   label: '학부모 진열장 접근',      desc: '학부모 포털에서 자녀 성장 진열장 요약 조회 가능' },

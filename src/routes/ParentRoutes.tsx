@@ -51,9 +51,8 @@ export default function ParentRoutes() {
         {/* 자녀 수능실전모의고사 결과(회차별 누적) — 화면 타이틀은 "자녀 수능실전모의고사 결과"(개발 내부 코드명만 weekly-mocks) */}
         <Route path="/parent/weekly-mocks" component={ParentWeeklyMocks} />
 
-        {/* 자녀 성장 리포트 — 테스트 변화 · 출결 흐름 · 학습 습관 · 보완 필요도 · 선생님 공개 코멘트 요약.
-            Rival/Emblem/SP/Tier 등 학생용 게임형 지표는 학부모 화면에 노출하지 않는다.
-            (Phase 3D v2: 페이지는 있었으나 라우트가 없어 접근 불가였던 것을 연결) */}
+        {/* 자녀 성장 리포트 (Tier/Emblem/SP/IF 요약) — Phase 3D v2: 이전까지 페이지는 있었으나
+            라우트가 없어 접근 불가였던 것을 연결 */}
         <Route path="/parent/growth" component={ParentGrowthReport} />
 
         {/* 목표대학추천/대학추천 요약 — Phase 3D v2: 위와 동일하게 라우트 연결 */}
