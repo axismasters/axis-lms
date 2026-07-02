@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { canManageEmblems, canAccessGrowth } from '@/lib/rbac';
 import {
   Emblem, EmblemCategory, EmblemMaterial,
-  CATEGORY_LABELS, MATERIAL_BADGE, CATEGORY_BADGE,
+  CATEGORY_LABELS, MATERIAL_LABELS, MATERIAL_BADGE, CATEGORY_BADGE,
   EMBLEM_FAMILY_LABELS,
 } from '@/lib/growthData';
 import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
@@ -21,15 +21,6 @@ import { useDraggableModal } from '@/hooks/useDraggableModal';
 
 const CATEGORIES: EmblemCategory[] = ['LIFE', 'GROWTH', 'ASSESSMENT', 'RIVAL', 'SKILL', 'SPECIAL'];
 const MATERIALS: EmblemMaterial[] = ['WOOD', 'STONE', 'BRONZE', 'IRON', 'SILVER', 'GOLD', 'DIAMOND'];
-const MATERIAL_FRAME_LABELS: Record<EmblemMaterial, string> = {
-  WOOD: '기본 프레임',
-  STONE: '기초 프레임',
-  BRONZE: '성장 프레임',
-  IRON: '집중 프레임',
-  SILVER: '전략 프레임',
-  GOLD: '시그니처 프레임',
-  DIAMOND: '마스터 프레임',
-};
 
 type FormData = Omit<Emblem, 'id' | 'createdAt'>;
 
@@ -160,7 +151,7 @@ export default function EmblemManagement() {
         <table className="w-full text-sm border-collapse" style={{ minWidth: 700 }}>
           <thead>
             <tr style={{ background: 'oklch(0.97 0.004 250)' }}>
-              {['엠블럼명', '카테고리', '성장 프레임', '획득 조건', '필요 횟수', '숨김', '활성', '관리'].map(h => (
+              {['엠블럼명', '카테고리', '재질 단계', '획득 조건', '필요 횟수', '숨김', '활성', '관리'].map(h => (
                 <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold"
                   style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.97 0.004 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
               ))}
@@ -185,7 +176,7 @@ export default function EmblemManagement() {
                             {EMBLEM_FAMILY_LABELS[e.family]}{e.level ? ` · ${e.level}` : ''}
                           </span>
                         )}
-                        {e.hidden && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#F1EEE4', color: '#6F6048' }}>숨김</span>}
+                        {e.hidden && <span className="text-xs" style={{ color: '#040D1E' }}>🔒숨김</span>}
                         {e.ifPlaceholderKey && (
                           <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#E7EBF3', color: '#040D1E' }}>IF연동</span>
                         )}
@@ -201,7 +192,7 @@ export default function EmblemManagement() {
                   <td className="px-4 py-2.5">
                     <span className="inline-block px-2 py-0.5 rounded text-xs font-bold"
                       style={{ background: matBadge.bg, color: matBadge.text, border: `1px solid ${matBadge.border}` }}>
-                      {e.level ? e.level : MATERIAL_FRAME_LABELS[e.material]}
+                      {MATERIAL_LABELS[e.material]}
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-xs max-w-48" style={{ color: 'oklch(0.35 0.015 250)' }}>
@@ -292,10 +283,10 @@ export default function EmblemManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>성장 프레임</label>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: 'oklch(0.4 0.015 250)' }}>재질 단계</label>
                   <select value={form.material} onChange={e => setForm(p => ({ ...p, material: e.target.value as EmblemMaterial }))}
                     className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor: 'oklch(0.87 0.006 250)' }}>
-                    {MATERIALS.map(m => <option key={m} value={m}>{MATERIAL_FRAME_LABELS[m]}</option>)}
+                    {MATERIALS.map(m => <option key={m} value={m}>{MATERIAL_LABELS[m]}</option>)}
                   </select>
                 </div>
               </div>

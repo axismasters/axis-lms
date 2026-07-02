@@ -1,7 +1,7 @@
 // AXIS LMS v1.2 - 성장현황 (Growth Showcase v2)
 // [Phase 3D v3-r7-r1] 성장관리 대메뉴 비중 축소 — 이 화면은 전체 현황 요약(통계·최근 SP
 // 이력·학생 목록)과 "학생 상세 성장 탭" 진입만 제공한다. SP 수동 지급/엠블럼 지급/라이벌
-// 승패·종료 같은 운영 액션은 전부 제거했다 — 그 작업은 StudentDetail.tsx의 "성장/진열장"
+// 성장 비교·종료 같은 운영 액션은 전부 제거했다 — 그 작업은 StudentDetail.tsx의 "성장/진열장"
 // 탭에서만 한다(한 학생을 열어서 처리하는 것이 원칙). 엠블럼/라이벌 전체 관리 화면으로
 // 가는 바로가기도 이 화면에서는 제공하지 않는다(주 운영 메뉴처럼 보이지 않게 함).
 // 관리자 전용. 학생/보호자 화면 없음.
@@ -16,10 +16,9 @@ import { useStudents } from '@/contexts/StudentContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { canAccessGrowth } from '@/lib/rbac';
 import {
-  TIER_LABELS, TIER_COLORS,
+  TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
   CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
 } from '@/lib/growthData';
-import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 
 export default function GrowthOverview() {
   const { currentUser } = useAuth();
@@ -141,7 +140,7 @@ export default function GrowthOverview() {
       )}
 
       {/* 학생 목록 테이블 — 읽기 전용 현황. "상세" 버튼만 제공하며, 실제 SP/엠블럼 지급과
-          라이벌 승패/종료 조작은 전부 학생 상세(성장/진열장 탭)에서 처리한다. */}
+          라이벌 성장 비교/종료 조작은 전부 학생 상세(성장/진열장 탭)에서 처리한다. */}
       <div className="axis-card overflow-hidden">
         <div className="axis-table-scroll" style={{ maxHeight: 560 }}>
         <table className="w-full text-sm border-collapse" style={{ minWidth: 680 }}>
@@ -180,10 +179,12 @@ export default function GrowthOverview() {
                   </td>
                   <td className="px-4 py-2.5">
                     {repEmblems.length > 0 ? (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex gap-1">
                         {repEmblems.map(e => (
-                          <span key={e.id} title={`${e.name} (${CATEGORY_LABELS[e.category]})`} className="inline-flex items-center">
-                            <AxisEmblemBadge iconKey={e.iconKey} level={e.level} size={36} />
+                          <span key={e.id} title={`${e.name} (${CATEGORY_LABELS[e.category]})`}
+                            className="inline-block px-1.5 py-0.5 rounded text-xs font-bold"
+                            style={{ background: MATERIAL_BADGE[e.material].bg, color: MATERIAL_BADGE[e.material].text, border: `1px solid ${MATERIAL_BADGE[e.material].border}` }}>
+                            {MATERIAL_LABELS[e.material]}
                           </span>
                         ))}
                       </div>

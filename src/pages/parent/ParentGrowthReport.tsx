@@ -33,6 +33,7 @@ import { useHomeworkStatus } from '@/contexts/HomeworkStatusContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
 import type { StudentExamResult } from '@/lib/assessmentData';
 import { STUDENT_HIDDEN_CATEGORY_IDS } from '@/lib/phase2dData';
+import { IF_REASON_COLOR } from '@/lib/brandColors';
 import { STATUS_CONFIG } from '@/lib/attendanceData';
 import { loadIfRecords, getIfCumulativeSummary, IF_REASONS } from '@/lib/ifAnalysisEngine';
 import { detectStudentGradeLevel, getUniversityMenuLabel } from '@/lib/universityMenuLabel';
@@ -74,11 +75,27 @@ function HBar({ label, value, max, color, valueLabel }: { label: string; value: 
   );
 }
 
-/** 최근 N회 점수 추이 — 간단한 SVG 선 그래프 */
+/** 최근 N회 점수 추이 — 간단한 SVG 선 그래프. 1회뿐이면 점 하나만 띄우지 않고
+ * "첫 기준점"으로 안내한다(부모 화면이라 StudentGrades처럼 3분할까지는 하지 않고
+ * 한 줄 요약으로 충분히 다음 회차를 기대하게 한다). */
 function TrendSparkline({ points }: { points: { label: string; pct: number }[] }) {
   if (points.length === 0) return null;
+
+  if (points.length === 1) {
+    const p = points[0];
+    return (
+      <div className="rounded-lg px-3 py-3 flex items-center gap-3" style={{ background: 'oklch(0.97 0.004 250)' }}>
+        <div className="text-2xl font-black tabular-nums" style={{ color: scoreColor(p.pct) }}>{p.pct}%</div>
+        <div className="text-xs leading-snug" style={{ color: 'oklch(0.5 0.015 250)' }}>
+          <span style={{ color: 'oklch(0.3 0.02 250)', fontWeight: 600 }}>첫 기준점</span>({p.label})입니다.
+          <br />다음 결과가 공개되면 이 지점과 비교한 변화 추이가 쌓입니다.
+        </div>
+      </div>
+    );
+  }
+
   const W = 100, H = 36, PAD = 4;
-  const step = points.length > 1 ? (W - PAD * 2) / (points.length - 1) : 0;
+  const step = (W - PAD * 2) / (points.length - 1);
   const coords = points.map((p, i) => {
     const x = PAD + step * i;
     const y = H - PAD - ((H - PAD * 2) * p.pct) / 100;
@@ -106,7 +123,7 @@ function TrendSparkline({ points }: { points: { label: string; pct: number }[] }
 
 /** IF 이유 3종 비율 — 가로 스택 막대 */
 function ReasonRatioStack({ ratios }: { ratios: { reason: string; pct: number }[] }) {
-  const colors: Record<string, string> = { '계산 실수': '#F59E0B', '개념 부족': '#EF4444', '시간 부족': '#C8A15A' };
+  const colors: Record<string, string> = IF_REASON_COLOR;
   const total = ratios.reduce((s, r) => s + r.pct, 0);
   if (total === 0) return <p className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>아직 집계된 IF 회고가 없습니다.</p>;
   return (
