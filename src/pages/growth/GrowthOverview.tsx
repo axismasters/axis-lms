@@ -19,6 +19,7 @@ import {
   TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
   CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
 } from '@/lib/growthData';
+import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
 
 export default function GrowthOverview() {
   const { currentUser } = useAuth();
@@ -40,6 +41,10 @@ export default function GrowthOverview() {
 
   const stats = growth.getOverviewStats();
 
+  // [Phase 3D v3-r13] 시스템 기능 온/오프 — 테이블의 Rival/Emblem 관련 컬럼을 조건부로 뺀다.
+  const rivalEnabled = isRivalEnabled();
+  const emblemEnabled = isEmblemEnabled();
+
   const rows = students
     .filter(s => s.status === '재원')
     .map(s => {
@@ -60,10 +65,10 @@ export default function GrowthOverview() {
 
   const statCards = [
     { label: '성장 프로필 학생 수', value: stats.profileCount,                  icon: <Users size={18} />, color: '#3B82F6' },
-    { label: '총 발급 엠블럼',      value: stats.totalEmblemsIssued,             icon: <Trophy size={18} />, color: '#C8A15A' },
+    ...(emblemEnabled ? [{ label: '총 발급 엠블럼', value: stats.totalEmblemsIssued, icon: <Trophy size={18} />, color: '#C8A15A' }] : []),
     { label: '이번 시즌 SP 합계',   value: stats.seasonSPTotal.toLocaleString(), icon: <Zap size={18} />,   color: '#10B981' },
-    { label: '활성 라이벌 수',      value: stats.activeRivals,                   icon: <Star size={18} />,  color: '#EF4444' },
-    { label: '숨겨진 엠블럼',       value: stats.hiddenEmblems,                  icon: <Eye size={18} />,   color: '#040D1E' },
+    ...(rivalEnabled ? [{ label: '활성 라이벌 수', value: stats.activeRivals, icon: <Star size={18} />, color: '#EF4444' }] : []),
+    ...(emblemEnabled ? [{ label: '숨겨진 엠블럼', value: stats.hiddenEmblems, icon: <Eye size={18} />, color: '#040D1E' }] : []),
   ];
 
   return (
@@ -146,14 +151,20 @@ export default function GrowthOverview() {
         <table className="w-full text-sm border-collapse" style={{ minWidth: 680 }}>
           <thead>
             <tr style={{ background: 'oklch(0.97 0.004 250)' }}>
-              {['학생명', '닉네임', '티어', '누적 SP', '이번 시즌 SP', '대표 엠블럼', '현재 라이벌', '보유 엠블럼', '상세'].map(h => (
+              {[
+                '학생명', '닉네임', '티어', '누적 SP', '이번 시즌 SP',
+                ...(emblemEnabled ? ['대표 엠블럼'] : []),
+                ...(rivalEnabled ? ['현재 라이벌'] : []),
+                ...(emblemEnabled ? ['보유 엠블럼'] : []),
+                '상세',
+              ].map(h => (
                 <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.97 0.004 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-10 text-center text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>성장 프로필이 있는 학생이 없습니다.</td></tr>
+              <tr><td colSpan={6 + (emblemEnabled ? 2 : 0) + (rivalEnabled ? 1 : 0)} className="px-4 py-10 text-center text-sm" style={{ color: 'oklch(0.47 0.015 250)' }}>성장 프로필이 있는 학생이 없습니다.</td></tr>
             )}
             {rows.map(({ s, profile, achieved, repEmblems, rivalName }) => {
               const tier = (profile?.tier ?? 'UNRANKED') as StudentTier;
@@ -177,28 +188,34 @@ export default function GrowthOverview() {
                   <td className="px-4 py-2.5 font-semibold" style={{ color: '#059669' }}>
                     {profile?.seasonSP.toLocaleString() ?? '0'}
                   </td>
-                  <td className="px-4 py-2.5">
-                    {repEmblems.length > 0 ? (
-                      <div className="flex gap-1">
-                        {repEmblems.map(e => (
-                          <span key={e.id} title={`${e.name} (${CATEGORY_LABELS[e.category]})`}
-                            className="inline-block px-1.5 py-0.5 rounded text-xs font-bold"
-                            style={{ background: MATERIAL_BADGE[e.material].bg, color: MATERIAL_BADGE[e.material].text, border: `1px solid ${MATERIAL_BADGE[e.material].border}` }}>
-                            {MATERIAL_LABELS[e.material]}
-                          </span>
-                        ))}
-                      </div>
-                    ) : <span className="text-xs" style={{ color: 'oklch(0.8 0.01 250)' }}>없음</span>}
-                  </td>
-                  <td className="px-4 py-2.5 text-sm" style={{ color: 'oklch(0.35 0.015 250)' }}>
-                    {rivalName ?? <span style={{ color: 'oklch(0.8 0.01 250)' }}>없음</span>}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ background: achieved.length > 0 ? '#E7EBF3' : 'oklch(0.95 0.004 250)', color: achieved.length > 0 ? '#4F46E5' : 'oklch(0.6 0.015 250)' }}>
-                      {achieved.length}개
-                    </span>
-                  </td>
+                  {emblemEnabled && (
+                    <td className="px-4 py-2.5">
+                      {repEmblems.length > 0 ? (
+                        <div className="flex gap-1">
+                          {repEmblems.map(e => (
+                            <span key={e.id} title={`${e.name} (${CATEGORY_LABELS[e.category]})`}
+                              className="inline-block px-1.5 py-0.5 rounded text-xs font-bold"
+                              style={{ background: MATERIAL_BADGE[e.material].bg, color: MATERIAL_BADGE[e.material].text, border: `1px solid ${MATERIAL_BADGE[e.material].border}` }}>
+                              {MATERIAL_LABELS[e.material]}
+                            </span>
+                          ))}
+                        </div>
+                      ) : <span className="text-xs" style={{ color: 'oklch(0.8 0.01 250)' }}>없음</span>}
+                    </td>
+                  )}
+                  {rivalEnabled && (
+                    <td className="px-4 py-2.5 text-sm" style={{ color: 'oklch(0.35 0.015 250)' }}>
+                      {rivalName ?? <span style={{ color: 'oklch(0.8 0.01 250)' }}>없음</span>}
+                    </td>
+                  )}
+                  {emblemEnabled && (
+                    <td className="px-4 py-2.5">
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                        style={{ background: achieved.length > 0 ? '#E7EBF3' : 'oklch(0.95 0.004 250)', color: achieved.length > 0 ? '#4F46E5' : 'oklch(0.6 0.015 250)' }}>
+                        {achieved.length}개
+                      </span>
+                    </td>
+                  )}
                   <td className="px-4 py-2.5">
                     <Link href={`/admin/students/${s.id}?tab=growth`}>
                       <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs gap-0.5">

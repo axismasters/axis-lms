@@ -1170,10 +1170,12 @@ function GradesTab({ student, initialGradeType }: { student: Student; initialGra
             <div className="text-xs mt-3 font-semibold mb-1" style={{ color: 'oklch(0.35 0.015 250)' }}>취약 단원</div>
             <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>문항별 정오표·취약 단원은 채점 데이터 연동 시 표시됩니다.</p>
           </div>
+          {isEmblemEnabled() && (
           <div>
             <div className="text-xs font-semibold mb-1.5 flex items-center gap-1" style={{ color: 'oklch(0.35 0.015 250)' }}><Target size={12} /> IF 분석 / 엠블럼</div>
             <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>IF 분석 결과와 엠블럼 획득 조건은 시험관리 엔진의 결과분석과 연동됩니다.</p>
           </div>
+          )}
         </div>
       </Area>
 
@@ -2480,7 +2482,8 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
       </>
       )}
 
-      {/* IF 성장 힌트 placeholder */}
+      {/* IF 성장 힌트 placeholder — [Phase 3D v3-r13] emblemEnabled가 false면 숨김(엠블럼 언급 위주) */}
+      {emblemEnabled && (
       <div className="px-4 py-3 rounded-lg text-xs" style={{ background: '#E7EBF3', border: '1px solid #B8C2D9', color: '#040D1E' }}>
         <strong>📊 IF 성장 힌트</strong> — 시험 및 성적 관리 IF 분석 결과와 엠블럼 진행도 연동이 준비되어 있습니다.
         계산 실수 개선 → 꼼꼼한 검토자 / 계산 정확도 향상 엠블럼,
@@ -2488,6 +2491,7 @@ function GrowthShowcaseTab({ studentId, studentName }: { studentId: string; stud
         시간 부족 개선 → 시간 마스터 / 시간관리 달인 엠블럼과 연결됩니다.
         (Growth v3에서 자동화 예정)
       </div>
+      )}
 
       {/* SP 수동 지급 모달 */}
       {spModal && (

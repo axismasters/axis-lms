@@ -112,6 +112,17 @@ export default function AdminRoutes() {
         <Route path="/admin/finance/unpaid" component={() => withFeatureGate(isFinanceEnabled(), FinanceUnpaid, '미납관리', [{ label: '재무관리', path: '/admin/finance' }, { label: '미납관리' }])} />
         <Route path="/admin/finance/settlements" component={() => withFeatureGate(isFinanceEnabled(), FinanceSettlements, '정산관리', [{ label: '재무관리', path: '/admin/finance' }, { label: '정산관리' }])} />
         <Route path="/admin/finance/statistics" component={() => withFeatureGate(isFinanceEnabled(), FinanceStatistics, '통계', [{ label: '재무관리', path: '/admin/finance' }, { label: '통계' }])} />
+        {/* [Phase 3D v3-r13] 위 5개 외의 /admin/finance/* 미등록 하위 경로 — OFF 상태에서는
+            404 대신 공통 비활성 안내를 보여준다(어떤 하위 경로가 실존하는지 노출하지 않기
+            위해 OFF일 때는 페이지 존재 여부와 무관하게 동일한 안내를 준다). ON 상태에서는
+            실존하지 않는 경로이므로 기존 404로 보낸다. */}
+        <Route path="/admin/finance/*" component={() => isFinanceEnabled()
+          ? <AdminPlaceholder title="페이지를 찾을 수 없습니다" />
+          : (
+            <AdminLayout title="재무관리" breadcrumbs={[{ label: '재무관리' }]}>
+              <FeatureDisabledNotice description="관리자 설정 > 시스템설정 > 학원정보관리에서 다시 켤 수 있습니다." />
+            </AdminLayout>
+          )} />
 
         {/* 알림관리 */}
         <Route path="/admin/notifications" component={() => <Redirect to="/admin/notifications/history" />} />

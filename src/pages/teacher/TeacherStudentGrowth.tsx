@@ -22,7 +22,7 @@ import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
 import { getSchoolRecordsForStudent, getNationalMocksForStudent } from '@/lib/phase2dData';
 import { estimateIfPotentialFromAveragePct } from '@/lib/ifAnalysisEngine';
-import { isRivalEnabled } from '@/lib/systemFeatureFlags';
+import { isRivalEnabled, isEmblemEnabled } from '@/lib/systemFeatureFlags';
 
 function scoreColor(pct: number) {
   return pct >= 80 ? 'oklch(0.45 0.15 145)' : pct >= 60 ? 'oklch(0.55 0.15 80)' : 'oklch(0.55 0.2 27)';
@@ -78,7 +78,7 @@ function GrowthCard({ studentId }: { studentId: string }) {
               </span>
             </div>
             <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-              성장 활동 {profile?.totalSP.toLocaleString() ?? 0} · 엠블럼 {myEmblems.length}개
+              성장 활동 {profile?.totalSP.toLocaleString() ?? 0}{isEmblemEnabled() ? ` · 엠블럼 ${myEmblems.length}개` : ''}
             </div>
           </div>
           <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)', flexShrink: 0 }} />
@@ -99,8 +99,8 @@ function GrowthCard({ studentId }: { studentId: string }) {
           ))}
         </div>
 
-        {/* 최근 엠블럼 */}
-        {recentEmblems.length > 0 && (
+        {/* 최근 엠블럼 — [Phase 3D v3-r13] emblemEnabled가 false면 숨김 */}
+        {isEmblemEnabled() && recentEmblems.length > 0 && (
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>최근 엠블럼:</span>
             {recentEmblems.map(({ e, def }) => (

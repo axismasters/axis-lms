@@ -455,12 +455,53 @@ const STUDENT_SAFE_FINANCE: FinanceContextType = {
   }),
 };
 
+// ─── [Phase 3D v3-r13] financeEnabled 훅 레벨 안전 반환 ────────────────────────────
+// v3-r12-r2까지는 함수별 개별 가드만 있었다(각 액션 함수 최상단에서 isFinanceEnabled()
+// 체크). 이번 단계는 "라우트/버튼이 우회되어도 재무 데이터 mutation 불가"를 훅 레벨에서도
+// 보장하기 위해, 위 STUDENT_SAFE_FINANCE와 완전히 동일한 형태의 안전한 더미 객체를
+// financeEnabled === false일 때도 반환하도록 useFinance()를 확장한다.
+// ⚠ 두 차단은 서로 독립적이다 — STUDENT role 차단은 financeEnabled 값과 무관하게 항상
+// 적용되고(학생은 재무 기능이 켜져 있어도 여전히 차단), financeEnabled 차단은 role과
+// 무관하게 적용된다(관리자/원장이라도 OFF면 안전 객체를 받는다). 조회(getXxx)는 전부
+// 빈 배열/0을 반환하므로 "기존 데이터 삭제"는 발생하지 않는다 — Provider의 실제 state
+// (invoices/payments/... )는 그대로 보존되며, 이 훅을 통해 접근하는 화면에만 빈 값이
+// 보이는 것이다.
+const FINANCE_DISABLED_REASON = '현재 재무관리 시스템이 비활성화되어 있습니다.';
+
+const FINANCE_DISABLED_SAFE: FinanceContextType = {
+  invoices: [], payments: [], refunds: [], settlements: [], receipts: [],
+  getInvoicesByEnrollment: () => [],
+  getInvoicesByStudent: () => [],
+  getPaymentsByInvoice: () => [],
+  getRefundsByInvoice: () => [],
+  getPaidAmount: () => 0,
+  getUnpaidAmount: () => 0,
+  getRefundable: () => 0,
+  getReceiptByPayment: () => undefined,
+  addPayment: () => ({ ok: false, reason: FINANCE_DISABLED_REASON }),
+  issueReceipt: () => {},
+  requestRefund: () => ({ ok: false, reason: FINANCE_DISABLED_REASON }),
+  approveRefund: () => ({ ok: false, reason: FINANCE_DISABLED_REASON }),
+  rejectRefund: () => {},
+  completeRefund: () => {},
+  confirmSettlement: () => ({ ok: false, reason: FINANCE_DISABLED_REASON }),
+  generateInvoicesForMonth: () => 0,
+  generateSettlementForMonth: (month: string) => ({
+    id: 'finance-disabled', month, totalBilled: 0, totalPaid: 0, totalUnpaid: 0, totalRefunded: 0, status: 'DRAFT',
+  }),
+};
+
 export function useFinance() {
   const ctx = useContext(FinanceContext);
   if (!ctx) throw new Error('useFinance must be used within FinanceProvider');
   const { currentUser } = useAuth();
+  // 학생 role 차단 — financeEnabled 값과 무관하게 항상 우선 적용(더 강한 규칙).
   if (currentUser?.position === 'STUDENT') {
     return STUDENT_SAFE_FINANCE;
+  }
+  // [Phase 3D v3-r13] financeEnabled 차단 — role과 무관하게 독립적으로 적용.
+  if (!isFinanceEnabled()) {
+    return FINANCE_DISABLED_SAFE;
   }
   return ctx;
 }
