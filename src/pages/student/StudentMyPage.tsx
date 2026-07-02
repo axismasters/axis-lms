@@ -12,7 +12,7 @@
 //   - 수납/재무/청구 표현 금지
 
 import { useState, useEffect } from 'react';
-import { User, Edit3, Check, X, Trophy, Zap, Award, TrendingUp, Shield, BookOpen, CalendarCheck } from 'lucide-react';
+import { Edit3, Check, X, Trophy, Award, TrendingUp, Shield, BookOpen, CalendarCheck } from 'lucide-react';
 import StudentLayout from '@/layouts/StudentLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudents } from '@/contexts/StudentContext';
@@ -26,7 +26,7 @@ import {
   NICKNAME_MAX_LEN,
 } from '@/lib/studentProfile';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
-import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
+import { TIER_LABELS, TIER_COLORS } from '@/lib/growthData';
 import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
 import { Link } from 'wouter';
@@ -45,6 +45,12 @@ export default function StudentMyPage() {
   const myEmblemDefs = myEmblems
     .map(e => ({ se: e, def: emblems.find(d => d.id === e.emblemId) }))
     .filter((x): x is { se: typeof x.se; def: NonNullable<typeof x.def> } => !!x.def);
+  const representativeEmblemDefs = [
+    ...((profile?.representativeEmblemIds ?? [])
+      .map(id => myEmblemDefs.find(x => x.def.id === id))
+      .filter((x): x is (typeof myEmblemDefs)[number] => !!x)),
+    ...myEmblemDefs,
+  ].filter((item, index, arr) => arr.findIndex(x => x.def.id === item.def.id) === index).slice(0, 3);
 
   // 닉네임 state
   const [storedProfile, setStoredProfile] = useState(loadStudentProfile(myStudentId));
@@ -97,12 +103,13 @@ export default function StudentMyPage() {
 
   return (
     <StudentLayout title="마이페이지">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
+      <div className="max-w-2xl lg:max-w-6xl mx-auto px-4 py-5 space-y-5">
 
+        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-5 items-stretch">
         {/* 프로필 카드 */}
-        <div className="axis-card p-5">
+        <div className="axis-card p-5 lg:p-6">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black text-white flex-shrink-0"
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-white flex-shrink-0 shadow-sm"
               style={{ background: tierColor }}>
               {(storedProfile.nickname ?? currentUser.name).charAt(0)}
             </div>
@@ -123,7 +130,7 @@ export default function StudentMyPage() {
                 </span>
               </div>
               <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                📱 {maskedPhone}
+                휴대폰 {maskedPhone}
               </div>
             </div>
           </div>
@@ -142,21 +149,60 @@ export default function StudentMyPage() {
 
           {/* 누적 성장 활동 + 성장 단계 */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg p-3 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
+            <div className="rounded-xl p-4 text-center" style={{ background: 'linear-gradient(180deg, #FFFDF7 0%, #F8F0DC 100%)', border: '1px solid #E5D29A' }}>
               <TrendingUp size={16} className="mx-auto mb-1" style={{ color: 'oklch(0.55 0.06 80)' }} />
               <div className="font-black text-base tabular-nums" style={{ color: 'oklch(0.35 0.05 80)' }}>
                 {profile?.totalSP.toLocaleString() ?? 0}
               </div>
               <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>누적 성장 활동</div>
             </div>
-            <div className="rounded-lg p-3 flex flex-col items-center justify-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
-              <AxisTierMedallion tier={profile?.tier ?? 'UNRANKED'} size={40} />
+            <div className="rounded-xl p-4 flex flex-col items-center justify-center" style={{ background: 'oklch(0.96 0.004 250)', border: '1px solid oklch(0.9 0.006 250)' }}>
+              <AxisTierMedallion tier={profile?.tier ?? 'UNRANKED'} size={48} />
               <div className="font-bold text-sm mt-0.5" style={{ color: tierColor }}>{tierLabel}</div>
               <div className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>현재 성장 단계</div>
             </div>
           </div>
         </div>
 
+        {/* 대표 성장 엠블럼 */}
+        <div className="axis-card p-5 lg:p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2">
+                <Award size={17} style={{ color: '#C8A15A' }} />
+                <span className="font-black text-base" style={{ color: 'oklch(0.18 0.02 250)' }}>대표 성장 엠블럼</span>
+              </div>
+              <span className="text-xs px-2 py-1 rounded-full font-semibold" style={{ background: '#F8F0DC', color: '#8A6D2E' }}>
+                Growth Signature
+              </span>
+            </div>
+            <p className="text-xs mb-4" style={{ color: 'oklch(0.5 0.015 250)' }}>
+              Rival 공개 프로필과 성장 진열장에 표시되는 나의 핵심 성장 기록입니다.
+            </p>
+          </div>
+          {representativeEmblemDefs.length === 0 ? (
+            <div className="rounded-2xl p-6 text-center" style={{ background: '#FBFAF7', border: '1px dashed #D8CFBE', color: 'oklch(0.55 0.015 250)' }}>
+              아직 대표 엠블럼이 없습니다.
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {representativeEmblemDefs.map(({ se, def }, index) => (
+                <div key={se.id} className="rounded-2xl p-3 flex flex-col items-center text-center"
+                  style={{ background: 'linear-gradient(180deg, #FFFDF7 0%, #F8F0DC 100%)', border: '1px solid #E5D29A' }}>
+                  <div className="text-xs font-black mb-1" style={{ color: '#8A6D2E', fontSize: 10 }}>SIGNATURE {index + 1}</div>
+                  <AxisEmblemBadge iconKey={def.iconKey} level={def.level} size={86} />
+                  <div className="mt-2 text-xs font-bold leading-tight line-clamp-2" style={{ color: 'oklch(0.2 0.02 250)' }}>
+                    {def.parentSafeLabel ?? def.name}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+        <div className="space-y-5">
         {/* 닉네임 설정 */}
         <div className="axis-card p-5">
           <div className="flex items-center gap-2 mb-3">
@@ -262,9 +308,11 @@ export default function StudentMyPage() {
             </div>
           </div>
         </div>
+        </div>
 
+        <div className="space-y-5">
         {/* 획득 엠블럼 */}
-        <div className="axis-card p-4">
+        <div className="axis-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Award size={15} style={{ color: '#040D1E' }} />
             <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>
@@ -279,12 +327,13 @@ export default function StudentMyPage() {
               아직 획득한 엠블럼이 없습니다.
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {myEmblemDefs.slice(0, 9).map(({ se, def }) => (
-                <div key={se.id} className="flex flex-col items-center gap-1 w-16">
-                  <AxisEmblemBadge iconKey={def.iconKey} level={def.level} size={48} />
-                  <div className="text-xs text-center truncate w-full" style={{ color: 'oklch(0.5 0.015 250)', fontSize: 10 }}>
-                    {def.name}
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              {myEmblemDefs.slice(0, 12).map(({ se, def }) => (
+                <div key={se.id} className="rounded-xl p-3 flex flex-col items-center gap-1.5 text-center"
+                  style={{ background: '#FFFDF7', border: '1px solid #E8DDC3' }}>
+                  <AxisEmblemBadge iconKey={def.iconKey} level={def.level} size={64} />
+                  <div className="text-xs font-semibold leading-tight line-clamp-2 w-full" style={{ color: 'oklch(0.25 0.02 250)', fontSize: 11 }}>
+                    {def.parentSafeLabel ?? def.name}
                   </div>
                 </div>
               ))}
@@ -313,6 +362,8 @@ export default function StudentMyPage() {
               </Link>
             ))}
           </div>
+        </div>
+        </div>
         </div>
 
       </div>

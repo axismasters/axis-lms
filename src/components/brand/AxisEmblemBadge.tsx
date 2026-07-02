@@ -15,6 +15,7 @@
 // 레벨(EmblemLevel)에 따라 프레임 강도가 달라진다(EMBLEM_LEVEL_STYLE 참조):
 //   BASIC → GROWTH → FOCUS → SIGNATURE → MASTER 순으로 골드 프레임/광택이 강해진다.
 
+import { useId } from 'react';
 import type { EmblemIconKey, EmblemLevel } from '@/lib/growthData';
 import { EMBLEM_LEVEL_STYLE } from '@/lib/growthData';
 
@@ -141,12 +142,12 @@ function EmblemSymbol({ iconKey, color }: { iconKey: EmblemIconKey; color: strin
 function Laurel({ color, side }: { color: string; side: 'l' | 'r' }) {
   const flip = side === 'r' ? 'scale(-1,1) translate(-100 0)' : '';
   return (
-    <g transform={flip} opacity={0.9}>
-      <path d="M30 78 C18 70 14 55 16 40" fill="none" stroke={color} strokeWidth={2.4} strokeLinecap="round" />
+    <g transform={flip} opacity={0.78}>
+      <path d="M31 79 C18 70 14 55 17 39" fill="none" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
       {[0, 1, 2, 3, 4].map((i) => {
         const y = 44 + i * 7;
         const x = 17 + i * 2.4;
-        return <ellipse key={i} cx={x} cy={y} rx={4.4} ry={2.4} fill={color} transform={`rotate(-42 ${x} ${y})`} opacity={0.92} />;
+        return <ellipse key={i} cx={x} cy={y} rx={4.2} ry={2.1} fill={color} transform={`rotate(-42 ${x} ${y})`} opacity={0.9} />;
       })}
     </g>
   );
@@ -155,21 +156,36 @@ function Laurel({ color, side }: { color: string; side: 'l' | 'r' }) {
 export function AxisEmblemBadge({
   iconKey = 'generic', level = 'BASIC', accent, size = 84, locked = false, className,
 }: AxisEmblemBadgeProps) {
+  const rawId = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const style = EMBLEM_LEVEL_STYLE[level];
   const ring = style.ring;
   const plate = style.plate;
   const symbolColor = accent ?? style.accent;
   const gemColor = style.premium ? '#E4C979' : symbolColor;
+  const premiumBoost = style.premium ? 1 : 0;
+  const plateId = `axis-emblem-plate-${rawId}`;
+  const goldId = `axis-emblem-gold-${rawId}`;
+  const shineId = `axis-emblem-shine-${rawId}`;
+  const shadowId = `axis-emblem-shadow-${rawId}`;
 
   if (locked) {
-    // "다음 성장 목표" — 옅은 아웃라인 + 자물쇠 힌트(위협적이지 않게)
+    // "다음 성장 목표" — 잠금 아이템이 아니라 아직 비어 있는 프리미엄 슬롯처럼 렌더한다.
     return (
       <svg width={size} height={size} viewBox="0 0 100 100" className={className} role="img" aria-label="다음 성장 목표">
-        <circle cx="50" cy="46" r="30" fill="#FBF9F4" stroke="#D8CFBE" strokeWidth={2} strokeDasharray="4 4" />
-        <g opacity={0.5}>
-          <rect x="42" y="42" width="16" height="13" rx="2.5" fill="none" stroke="#B9AE97" strokeWidth={2.4} />
-          <path d="M45 42 v-3 a5 5 0 0 1 10 0 v3" fill="none" stroke="#B9AE97" strokeWidth={2.4} />
+        <defs>
+          <linearGradient id={goldId} x1="20" y1="10" x2="80" y2="90">
+            <stop offset="0%" stopColor="#ECE3CE" />
+            <stop offset="55%" stopColor="#CDBD96" />
+            <stop offset="100%" stopColor="#F8F0DC" />
+          </linearGradient>
+        </defs>
+        <path d="M50 8 L84 25 L78 68 L50 91 L22 68 L16 25 Z" fill="#FBF9F4" stroke={`url(#${goldId})`} strokeWidth="3" strokeDasharray="6 5" />
+        <path d="M50 18 L74 30 L69 63 L50 79 L31 63 L26 30 Z" fill="#F3EFE6" stroke="#D8CFBE" strokeWidth="1.4" />
+        <g opacity={0.58}>
+          <circle cx="50" cy="49" r="13" fill="none" stroke="#B9AE97" strokeWidth="2.4" />
+          <path d="M50 37 v24 M38 49 h24" fill="none" stroke="#B9AE97" strokeWidth="2.2" strokeLinecap="round" />
         </g>
+        <path d="M38 83 h24" stroke="#D8CFBE" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
       </svg>
     );
   }
@@ -177,31 +193,56 @@ export function AxisEmblemBadge({
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" className={className} role="img" aria-label="성취 엠블럼">
       <defs>
-        <radialGradient id={`plate-${iconKey}-${level}`} cx="42%" cy="34%" r="72%">
+        <radialGradient id={plateId} cx="38%" cy="25%" r="78%">
           <stop offset="0%" stopColor={plate} stopOpacity={0.98} />
+          <stop offset="58%" stopColor="#0B1B33" />
           <stop offset="100%" stopColor="#040D1E" />
         </radialGradient>
+        <linearGradient id={goldId} x1="22" y1="8" x2="80" y2="90">
+          <stop offset="0%" stopColor="#FFF1B8" />
+          <stop offset="22%" stopColor={ring} />
+          <stop offset="52%" stopColor="#8A6D2E" />
+          <stop offset="76%" stopColor={gemColor} />
+          <stop offset="100%" stopColor="#F8E7A2" />
+        </linearGradient>
+        <linearGradient id={shineId} x1="29" y1="18" x2="69" y2="72">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.34" />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+        </linearGradient>
+        <filter id={shadowId} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="5" stdDeviation="4" floodColor="#040D1E" floodOpacity="0.22" />
+        </filter>
       </defs>
 
-      {/* 월계관 */}
-      <Laurel color={ring} side="l" />
-      <Laurel color={ring} side="r" />
+      <g filter={`url(#${shadowId})`}>
+        <Laurel color={ring} side="l" />
+        <Laurel color={ring} side="r" />
 
-      {/* 젬 토퍼(다이아 형태) */}
-      <path d="M50 6 l7 7 l-7 7 l-7 -7 Z" fill={gemColor} stroke="#040D1E" strokeWidth={1.4} />
-      <path d="M50 6 l7 7 l-7 7 Z" fill="#000" opacity={0.12} />
+        {/* 프리미엄 실드 프레임 */}
+        <path d="M50 6 L84 23 L78 66 C75 78 64 87 50 94 C36 87 25 78 22 66 L16 23 Z"
+          fill={`url(#${goldId})`} stroke="#040D1E" strokeWidth={1.2} />
+        <path d="M50 14 L75 27 L70 63 C67 72 59 79 50 84 C41 79 33 72 30 63 L25 27 Z"
+          fill={`url(#${plateId})`} stroke="#071427" strokeWidth={1.4} />
 
-      {/* 외곽 골드 링 + 네이비 원판 */}
-      <circle cx="50" cy="46" r="31" fill={ring} />
-      <circle cx="50" cy="46" r="28" fill={`url(#plate-${iconKey}-${level})`} stroke="#040D1E" strokeWidth={1} />
-      {/* 내측 얇은 골드 트림 */}
-      <circle cx="50" cy="46" r="24.5" fill="none" stroke={ring} strokeWidth={style.premium ? 1.4 : 0.9} opacity={0.85} />
-      {/* 상단 광택 하이라이트 */}
-      <ellipse cx="43" cy="34" rx="12" ry="6" fill="#FFFFFF" opacity={0.08} />
+        {/* 상단 AXIS 캡 */}
+        <path d="M50 6 l7 7 l-7 7 l-7 -7 Z" fill={gemColor} stroke="#040D1E" strokeWidth={1.1} />
+        <path d="M50 6 l7 7 l-7 7 Z" fill="#000" opacity={0.12} />
 
-      {/* 의미 아이콘 */}
-      <g transform="translate(20 16) scale(1)">
-        <EmblemSymbol iconKey={iconKey} color={symbolColor} />
+        {/* 내측 트림과 중심 플레이트 */}
+        <path d="M50 21 L67 30 L64 60 C62 68 56 73 50 77 C44 73 38 68 36 60 L33 30 Z"
+          fill="none" stroke={ring} strokeWidth={1.2 + premiumBoost * 0.6} opacity={0.9} />
+        <circle cx="50" cy="48" r="23.5" fill="none" stroke="#F8E7A2" strokeWidth={0.8 + premiumBoost * 0.3} opacity={0.56} />
+        <path d="M50 25 v46 M29 48 h42" stroke="#FFFFFF" strokeWidth="0.7" strokeLinecap="round" opacity="0.11" />
+        <path d="M30 29 C42 20 56 19 69 28 C62 32 50 33 38 31 C34 30 31 30 30 29 Z" fill={`url(#${shineId})`} />
+
+        {/* 의미 아이콘 */}
+        <g transform="translate(20 18) scale(1)">
+          <EmblemSymbol iconKey={iconKey} color={symbolColor} />
+        </g>
+
+        {/* 하단 네임 플레이트 */}
+        <path d="M36 78 H64 L60 85 H40 Z" fill={`url(#${goldId})`} stroke="#040D1E" strokeWidth="0.9" />
+        <path d="M43 81 H57" stroke="#FFF1B8" strokeWidth="1.2" strokeLinecap="round" opacity="0.85" />
       </g>
     </svg>
   );

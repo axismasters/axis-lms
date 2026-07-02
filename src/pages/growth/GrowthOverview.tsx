@@ -16,9 +16,10 @@ import { useStudents } from '@/contexts/StudentContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { canAccessGrowth } from '@/lib/rbac';
 import {
-  TIER_LABELS, TIER_COLORS, MATERIAL_LABELS, MATERIAL_BADGE,
+  TIER_LABELS, TIER_COLORS,
   CATEGORY_LABELS, SOURCE_TYPE_LABELS, StudentTier,
 } from '@/lib/growthData';
+import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 
 export default function GrowthOverview() {
   const { currentUser } = useAuth();
@@ -179,12 +180,10 @@ export default function GrowthOverview() {
                   </td>
                   <td className="px-4 py-2.5">
                     {repEmblems.length > 0 ? (
-                      <div className="flex gap-1">
+                      <div className="flex items-center gap-1.5">
                         {repEmblems.map(e => (
-                          <span key={e.id} title={`${e.name} (${CATEGORY_LABELS[e.category]})`}
-                            className="inline-block px-1.5 py-0.5 rounded text-xs font-bold"
-                            style={{ background: MATERIAL_BADGE[e.material].bg, color: MATERIAL_BADGE[e.material].text, border: `1px solid ${MATERIAL_BADGE[e.material].border}` }}>
-                            {MATERIAL_LABELS[e.material]}
+                          <span key={e.id} title={`${e.name} (${CATEGORY_LABELS[e.category]})`} className="inline-flex items-center">
+                            <AxisEmblemBadge iconKey={e.iconKey} level={e.level} size={34} />
                           </span>
                         ))}
                       </div>

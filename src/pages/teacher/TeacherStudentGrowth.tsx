@@ -9,7 +9,7 @@
 // ⚠ 금지: 합격률/합격 가능성/합격 보장/불합격 표현 금지
 
 import { useState } from 'react';
-import { TrendingUp, Award, Zap, Swords, BarChart2, Lightbulb, ChevronRight } from 'lucide-react';
+import { TrendingUp, Award, Zap, BarChart2, Lightbulb, ChevronRight } from 'lucide-react';
 import TeacherLayout from '@/layouts/TeacherLayout';
 import { Link } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +17,7 @@ import { useStudents } from '@/contexts/StudentContext';
 import { useAssessment } from '@/contexts/AssessmentContext';
 import { useGrowth } from '@/contexts/GrowthContext';
 import { getPublishedResultsForStudent } from '@/lib/assessmentData';
-import { TIER_LABELS, TIER_COLORS, MATERIAL_BADGE } from '@/lib/growthData';
+import { TIER_LABELS, TIER_COLORS } from '@/lib/growthData';
 import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
 import { getSchoolRecordsForStudent, getNationalMocksForStudent } from '@/lib/phase2dData';
@@ -84,11 +84,11 @@ function GrowthCard({ studentId }: { studentId: string }) {
         </div>
 
         {/* 핵심 지표 */}
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
           {[
             { label: '학원 평균', value: avgPct !== null ? `${avgPct}%` : '-', color: avgPct !== null ? scoreColor(avgPct) : 'oklch(0.6 0.015 250)' },
             { label: 'IF 잠재력', value: ifPotential !== null ? `+${ifPotential}%p` : '-', color: '#040D1E' },
-            { label: 'Rival 승', value: profile ? `${profile.rivalWins}승` : '-', color: '#040D1E' },
+            { label: '성장 비교', value: profile ? `${profile.rivalWins + profile.rivalLosses}회` : '-', color: '#040D1E' },
             { label: '모의 등급', value: nationalMocks.length > 0 ? `${Math.min(...nationalMocks.map(m => m.grade))}등급` : '-', color: 'oklch(0.45 0.15 145)' },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-lg p-2 text-center" style={{ background: 'oklch(0.96 0.004 250)' }}>
@@ -103,9 +103,9 @@ function GrowthCard({ studentId }: { studentId: string }) {
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className="text-xs" style={{ color: 'oklch(0.6 0.015 250)' }}>최근 엠블럼:</span>
             {recentEmblems.map(({ e, def }) => (
-              <span key={e.id} className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium"
-                style={{ background: 'oklch(0.98 0.006 90)', color: 'oklch(0.3 0.02 250)', border: '1px solid oklch(0.9 0.01 90)' }}>
-                <AxisEmblemBadge iconKey={def!.iconKey} level={def!.level} size={20} />
+              <span key={e.id} className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg font-medium"
+                style={{ background: '#FFFDF7', color: 'oklch(0.3 0.02 250)', border: '1px solid #E8DDC3' }}>
+                <AxisEmblemBadge iconKey={def!.iconKey} level={def!.level} size={28} />
                 {def!.name}
               </span>
             ))}
@@ -143,7 +143,7 @@ export default function TeacherStudentGrowth() {
 
   return (
     <TeacherLayout title="학생 성장 현황">
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+      <div className="max-w-2xl lg:max-w-6xl mx-auto px-4 py-4 space-y-4">
 
         {/* 안내 */}
         <div className="axis-card px-4 py-3 text-xs" style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.5 0.015 250)' }}>
@@ -187,7 +187,7 @@ export default function TeacherStudentGrowth() {
             <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>담당 학생이 없습니다.</div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 items-start">
             {sortedIds.map(id => <GrowthCard key={id} studentId={id} />)}
           </div>
         )}
