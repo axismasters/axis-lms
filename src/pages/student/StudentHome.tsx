@@ -291,7 +291,7 @@ export default function StudentHome() {
                     성장 진열장
                   </div>
                   <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-                    SP {profile?.totalSP.toLocaleString() ?? 0} · 엠블럼 {myEmblems.length}개 보유
+                    성장 활동 {profile?.totalSP.toLocaleString() ?? 0} · 엠블럼 {myEmblems.length}개 보유
                   </div>
                 </div>
               </div>

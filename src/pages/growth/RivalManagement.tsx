@@ -80,7 +80,7 @@ export default function RivalManagement() {
           </span>
         </div>
         <p className="text-xs" style={{ color: 'oklch(0.42 0.015 250)' }}>
-          라이벌 연결 관계 및 성장 비교 기록을 관리합니다. (관리자 전용 화면)
+          라이벌 연결 관계 및 승패 기록을 관리합니다. (관리자 전용 화면)
         </p>
       </div>
 
@@ -98,7 +98,7 @@ export default function RivalManagement() {
         <table className="w-full text-sm border-collapse" style={{ minWidth: 800 }}>
           <thead>
             <tr style={{ background: 'oklch(0.97 0.004 250)' }}>
-              {['학생명', '닉네임', '현재 라이벌', '성장 우위', '보완', '성장 우위 비율', '연속 흐름', '나를 지정', '다음 변경', '관리'].map(h => (
+              {['학생명', '닉네임', '현재 라이벌', '승', '패', '승률', '연승/연패', '나를 지정', '다음 변경', '관리'].map(h => (
                 <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold" style={{ color: 'oklch(0.4 0.015 250)', background: 'oklch(0.97 0.004 250)', boxShadow: 'inset 0 -1px 0 oklch(0.92 0.006 250)' }}>{h}</th>
               ))}
             </tr>
@@ -149,7 +149,7 @@ export default function RivalManagement() {
                           background: relation.streak > 0 ? '#D1FAE5' : relation.streak < 0 ? '#FEE2E2' : 'oklch(0.95 0.004 250)',
                           color: relation.streak > 0 ? '#065F46' : relation.streak < 0 ? '#991B1B' : 'oklch(0.5 0.015 250)',
                         }}>
-                        {relation.streak > 0 ? `${relation.streak}회 연속 상승` : relation.streak < 0 ? `${Math.abs(relation.streak)}회 보완 흐름` : '—'}
+                        {relation.streak > 0 ? `${relation.streak}연승` : relation.streak < 0 ? `${Math.abs(relation.streak)}연패` : '—'}
                       </span>
                     ) : <span style={{ color: 'oklch(0.75 0.01 250)' }}>—</span>}
                   </td>

@@ -26,34 +26,25 @@ import {
   TIER_LABELS, TIER_LABELS_EN, TIER_TAGLINE, TIER_COLORS,
   calcTierProgress, EMBLEM_LEVEL_STYLE,
 } from '@/lib/growthData';
-import type { Emblem, StudentEmblem, EmblemLevel } from '@/lib/growthData';
+import type { Emblem, StudentEmblem } from '@/lib/growthData';
 import { detectStudentGradeLevel } from '@/lib/universityMenuLabel';
 import { AxisTierMedallion } from '@/components/brand/AxisTierMedallion';
 import { AxisEmblemBadge } from '@/components/brand/AxisEmblemBadge';
-import { AxisEmblemPlaque } from '@/components/brand/AxisEmblemPlaque';
 import { loadIfRecords, getIfCumulativeSummary } from '@/lib/ifAnalysisEngine';
-import { CHART_TEAL, CHART_GOLD, IF_REASON_COLOR } from '@/lib/brandColors';
+import { CHART_TEAL, CHART_GOLD, CHART_BLUE, CHART_AMBER } from '@/lib/brandColors';
 
 // ─── IF 기반 성장 요약 항목 ────────────────────────────────────────────
 const IF_SUMMARY_META = [
-  { key: 'calculationError', label: '계산 실수', icon: Calculator, color: IF_REASON_COLOR['계산 실수'] },
-  { key: 'conceptLack', label: '개념 이해 부족', icon: Brain, color: IF_REASON_COLOR['개념 부족'] },
-  { key: 'timeShortage', label: '시간 부족', icon: ClockIcon, color: IF_REASON_COLOR['시간 부족'] },
+  { key: 'calculationError', label: '계산 실수', icon: Calculator, color: CHART_TEAL },
+  { key: 'conceptLack', label: '개념 이해 부족', icon: Brain, color: CHART_BLUE },
+  { key: 'timeShortage', label: '시간 부족', icon: ClockIcon, color: CHART_AMBER },
 ] as const;
-
-// IF 3사유와 직접 연결된 엠블럼(계산 정밀/개념 완성/시간 컨트롤 등)은 해당 사유 색상을 그대로
-// 배지 accent(젬·아이콘 글로우)로 써서 "의미가 한눈에 보이게" 한다(브랜드 팔레트 재사용, 신규 색 없음).
-const IF_AXIS_ACCENT: Record<string, string> = {
-  calculationError: IF_REASON_COLOR['계산 실수'],
-  conceptLack: IF_REASON_COLOR['개념 부족'],
-  timeShortage: IF_REASON_COLOR['시간 부족'],
-};
 
 // ─── 엠블럼 갤러리 타일 ────────────────────────────────────────────────
 function EmblemTile({ emblem, record }: { emblem: Emblem; record?: StudentEmblem }) {
   const achieved = record?.achieved ?? false;
   const level = emblem.level ?? 'BASIC';
-  const accent = emblem.linkedIfAxis ? IF_AXIS_ACCENT[emblem.linkedIfAxis] : EMBLEM_LEVEL_STYLE[level].accent;
+  const accent = EMBLEM_LEVEL_STYLE[level].accent;
   const progressPct = record && !achieved && emblem.requiredCount > 0
     ? Math.min(100, Math.round((record.progressCount / emblem.requiredCount) * 100)) : 0;
 
@@ -124,18 +115,6 @@ export default function StudentGrowthShowcase() {
     });
   const achievedCount = galleryEmblems.filter(g => g.record?.achieved).length;
 
-  // [v3-r11] "대표 엠블럼 / 보유 엠블럼 / 다음 성장 목표" 3분할 갤러리를 위한 데이터 준비.
-  const achievedEmblems = galleryEmblems.filter(g => g.record?.achieved);
-  const lockedEmblems = galleryEmblems.filter(g => !g.record?.achieved);
-  const LEVEL_RANK: Record<EmblemLevel, number> = { BASIC: 0, GROWTH: 1, FOCUS: 2, SIGNATURE: 3, MASTER: 4 };
-  const representative = achievedEmblems.length > 0
-    ? [...achievedEmblems].sort((a, b) => {
-        const byLevel = LEVEL_RANK[b.emblem.level ?? 'BASIC'] - LEVEL_RANK[a.emblem.level ?? 'BASIC'];
-        if (byLevel !== 0) return byLevel;
-        return (b.record?.acquiredAt ?? '').localeCompare(a.record?.acquiredAt ?? '');
-      })[0]
-    : null;
-
   // IF 누적 요약(실데이터) — 개선 % 는 사유 비율의 역수 기반 결정적 표현
   const ifRecords = loadIfRecords(myStudentId);
   const ifCumulative = getIfCumulativeSummary(ifRecords);
@@ -166,7 +145,7 @@ export default function StudentGrowthShowcase() {
 
   return (
     <StudentLayout title="성장 진열장">
-      <div className="max-w-2xl lg:max-w-[1280px] mx-auto px-4 py-5 space-y-5">
+      <div className="max-w-2xl lg:max-w-6xl mx-auto px-4 py-5 space-y-5">
 
         {/* 헤더 */}
         <div className="flex items-center gap-2">
@@ -214,102 +193,95 @@ export default function StudentGrowthShowcase() {
           </div>
         </div>
 
-        {/* [v3-r11] 성장 엠블럼 컬렉션 — 전체 폭 프리미엄 갤러리.
-            대표 엠블럼 / 보유 엠블럼 / 다음 성장 목표 3섹션을 명확히 구분한다. */}
-        <div className="axis-card p-5">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <Award size={16} style={{ color: '#C8A15A' }} />
-              <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>성장 엠블럼 컬렉션</span>
-            </div>
-            <span className="text-xs px-1.5 py-0.5 rounded-full tabular-nums" style={{ background: '#F8F0DC', color: '#8A6D2E' }}>{achievedCount} / {galleryEmblems.length}</span>
-          </div>
-          <p className="text-xs mb-4" style={{ color: 'oklch(0.5 0.015 250)' }}>노력의 여정이 특별한 엠블럼으로 기록됩니다.</p>
+        {/* 본문 — 좌: 엠블럼 갤러리 / 우: IF 기반 성장 요약 (PC에서 균형 2컬럼) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+          {/* ── 좌: 성장 엠블럼 컬렉션 ── */}
+          <div className="space-y-5">
 
-          {representative && (
-            <div className="mb-5 pb-5" style={{ borderBottom: '1px solid oklch(0.93 0.008 250)' }}>
-              <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.5 0.015 250)' }}>대표 엠블럼</div>
-              <div className="flex items-center gap-4 flex-wrap">
-                <AxisEmblemBadge
-                  iconKey={representative.emblem.iconKey}
-                  level={representative.emblem.level}
-                  accent={representative.emblem.linkedIfAxis ? IF_AXIS_ACCENT[representative.emblem.linkedIfAxis] : undefined}
-                  size={100}
-                />
-                <div className="min-w-0">
-                  <AxisEmblemPlaque
-                    title={representative.emblem.name}
-                    subtitle={representative.emblem.parentSafeLabel ?? studentTitle(representative.emblem)}
-                    accent={representative.emblem.linkedIfAxis ? IF_AXIS_ACCENT[representative.emblem.linkedIfAxis] : undefined}
-                  />
-                  <div className="text-xs mt-2" style={{ color: 'oklch(0.55 0.015 250)' }}>{representative.record?.acquiredAt} 획득</div>
+            {/* 성장 엠블럼 컬렉션 */}
+            <div className="axis-card p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Award size={16} style={{ color: '#C8A15A' }} />
+                  <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>성장 엠블럼 컬렉션</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded-full tabular-nums" style={{ background: '#F8F0DC', color: '#8A6D2E' }}>{achievedCount} / {galleryEmblems.length}</span>
                 </div>
               </div>
-            </div>
-          )}
-
-          <div className="mb-5">
-            <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.5 0.015 250)' }}>보유 엠블럼 · {achievedEmblems.length}개</div>
-            {achievedEmblems.length === 0 ? (
-              <div className="text-xs py-4" style={{ color: 'oklch(0.6 0.015 250)' }}>아직 획득한 엠블럼이 없습니다. 아래 다음 성장 목표부터 시작해보세요.</div>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-3">
-                {achievedEmblems.map(({ emblem, record }) => (
+              <p className="text-xs mb-3" style={{ color: 'oklch(0.5 0.015 250)' }}>노력의 여정이 특별한 엠블럼으로 기록됩니다.</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                {galleryEmblems.map(({ emblem, record }) => (
                   <EmblemTile key={emblem.id} emblem={emblem} record={record} />
                 ))}
               </div>
-            )}
-          </div>
+              <p className="text-xs mt-3 flex items-center gap-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
+                <TrendingUp size={11} /> 엠블럼은 자동으로 수여되며, 일부 목표는 직접 선택할 수 있습니다.
+              </p>
+            </div>
 
-          <div>
-            <div className="text-xs font-semibold mb-2" style={{ color: 'oklch(0.5 0.015 250)' }}>다음 성장 목표 · {lockedEmblems.length}개</div>
-            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-3">
-              {lockedEmblems.map(({ emblem, record }) => (
-                <EmblemTile key={emblem.id} emblem={emblem} record={record} />
-              ))}
-            </div>
-            <p className="text-xs mt-3 flex items-center gap-1" style={{ color: 'oklch(0.55 0.015 250)' }}>
-              <TrendingUp size={11} /> 엠블럼은 자동으로 수여되며, 일부 목표는 직접 선택할 수 있습니다.
-            </p>
-          </div>
-        </div>
-
-        {/* [v3-r11] 요약 패널 + 성장 기록 + 차트 — PC 3컬럼, 모바일 1컬럼 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
-          {/* IF 기반 성장 요약 */}
-          <div className="axis-card p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>IF 기반 성장 요약</span>
-            </div>
-            <p className="text-xs mb-4" style={{ color: 'oklch(0.5 0.015 250)' }}>나의 약점을 정확히 분석하고, 확실히 개선하고 있어요.</p>
-            <div className="space-y-4">
-              {ifSummary.map(({ key, label, icon: Icon, color, currentPct, improvedPct }) => (
-                <div key={key}>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: color + '1A' }}>
-                      <Icon size={16} style={{ color }} />
-                    </div>
-                    <span className="text-sm font-medium flex-1" style={{ color: 'oklch(0.3 0.02 250)' }}>{label}</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0" style={{ background: CHART_TEAL + '1A', color: CHART_TEAL }}>개선됨</span>
-                    <span className="text-lg font-black tabular-nums flex-shrink-0" style={{ color: CHART_TEAL }}>{improvedPct}%</span>
+            {/* 주간 학습 습관 */}
+            <div className="axis-card p-5">
+              <div className="font-semibold text-sm mb-1" style={{ color: 'oklch(0.25 0.02 250)' }}>주간 학습 습관</div>
+              <p className="text-xs mb-3" style={{ color: 'oklch(0.5 0.015 250)' }}>꾸준한 습관이 최고의 성과를 만듭니다.</p>
+              <div className="relative h-40 flex items-end justify-between gap-1 px-1">
+                {/* 막대(학습 시간) */}
+                {weekly.map((w) => (
+                  <div key={w.wk} className="flex flex-col items-center gap-1 flex-1">
+                    <span className="text-xs tabular-nums" style={{ color: 'oklch(0.5 0.015 250)', fontSize: 9 }}>{w.hours}</span>
+                    <div className="w-full rounded-t" style={{ height: `${(w.hours / maxHours) * 100}px`, background: CHART_TEAL, minHeight: 4 }} />
+                    <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)', fontSize: 8 }}>{w.wk}</span>
                   </div>
-                  <div className="h-2 rounded-full overflow-hidden ml-10" style={{ background: 'oklch(0.93 0.006 250)' }}>
-                    <div className="h-full rounded-full" style={{ width: `${Math.max(20, 100 + improvedPct)}%`, background: color }} />
-                  </div>
-                  <div className="text-xs mt-1 ml-10" style={{ color: 'oklch(0.55 0.015 250)' }}>현재 비중 {currentPct}% · 4주 전 대비 개선 흐름</div>
-                </div>
-              ))}
-            </div>
-            <Link href="/student/grades">
-              <div className="mt-4 w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer"
-                style={{ border: '1px solid oklch(0.88 0.01 250)', color: '#0B1B33' }}>
-                상세 분석 리포트 보기 <ChevronRight size={14} />
+                ))}
+                {/* 라인(목표 달성률) */}
+                <svg className="absolute inset-x-1 top-0 pointer-events-none" style={{ height: 120 }} viewBox={`0 0 ${weekly.length * 40} 120`} preserveAspectRatio="none">
+                  <polyline
+                    points={weekly.map((w, i) => `${i * 40 + 20},${120 - (w.goalPct / 100) * 106}`).join(' ')}
+                    fill="none" stroke={CHART_GOLD} strokeWidth={2} />
+                  {weekly.map((w, i) => (
+                    <circle key={i} cx={i * 40 + 20} cy={120 - (w.goalPct / 100) * 106} r={2.5} fill={CHART_GOLD} />
+                  ))}
+                </svg>
               </div>
-            </Link>
+              <div className="flex items-center gap-3 mt-2 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: CHART_TEAL }} /> 학습 시간</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: CHART_GOLD }} /> 주간 목표 달성률</span>
+              </div>
+            </div>
           </div>
 
-          {/* 최근 성장 기록 + Rival 연결 */}
+          {/* ── 우: IF 기반 성장 요약 + 최근 성장 기록 + Rival 연결 ── */}
           <div className="space-y-5">
+            <div className="axis-card p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-sm" style={{ color: 'oklch(0.25 0.02 250)' }}>IF 기반 성장 요약</span>
+              </div>
+              <p className="text-xs mb-4" style={{ color: 'oklch(0.5 0.015 250)' }}>나의 약점을 정확히 분석하고, 확실히 개선하고 있어요.</p>
+              <div className="space-y-4">
+                {ifSummary.map(({ key, label, icon: Icon, color, currentPct, improvedPct }) => (
+                  <div key={key}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: color + '1A' }}>
+                        <Icon size={16} style={{ color }} />
+                      </div>
+                      <span className="text-sm font-medium flex-1" style={{ color: 'oklch(0.3 0.02 250)' }}>{label}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0" style={{ background: CHART_TEAL + '1A', color: CHART_TEAL }}>개선됨</span>
+                      <span className="text-lg font-black tabular-nums flex-shrink-0" style={{ color: CHART_TEAL }}>{improvedPct}%</span>
+                    </div>
+                    <div className="h-2 rounded-full overflow-hidden ml-10" style={{ background: 'oklch(0.93 0.006 250)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${Math.max(20, 100 + improvedPct)}%`, background: color }} />
+                    </div>
+                    <div className="text-xs mt-1 ml-10" style={{ color: 'oklch(0.55 0.015 250)' }}>현재 비중 {currentPct}% · 4주 전 대비 개선 흐름</div>
+                  </div>
+                ))}
+              </div>
+              <Link href="/student/grades">
+                <div className="mt-4 w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer"
+                  style={{ border: '1px solid oklch(0.88 0.01 250)', color: '#0B1B33' }}>
+                  상세 분석 리포트 보기 <ChevronRight size={14} />
+                </div>
+              </Link>
+            </div>
+
+            {/* 최근 성장 기록 */}
             <div className="axis-card p-5">
               <div className="font-semibold text-sm mb-1" style={{ color: 'oklch(0.25 0.02 250)' }}>최근 성장 기록</div>
               <p className="text-xs mb-3" style={{ color: 'oklch(0.5 0.015 250)' }}>한 걸음 한 걸음, 성장이 이어지고 있어요.</p>
@@ -336,6 +308,7 @@ export default function StudentGrowthShowcase() {
               )}
             </div>
 
+            {/* Rival 매치업 연결 */}
             <Link href="/student/rival" style={{ display: 'block' }}>
               <div className="axis-card axis-card-clickable p-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -348,33 +321,6 @@ export default function StudentGrowthShowcase() {
                 <ChevronRight size={16} style={{ color: 'oklch(0.7 0.01 250)' }} />
               </div>
             </Link>
-          </div>
-
-          {/* 주간 학습 습관 */}
-          <div className="axis-card p-5">
-            <div className="font-semibold text-sm mb-1" style={{ color: 'oklch(0.25 0.02 250)' }}>주간 학습 습관</div>
-            <p className="text-xs mb-3" style={{ color: 'oklch(0.5 0.015 250)' }}>꾸준한 습관이 최고의 성과를 만듭니다.</p>
-            <div className="relative h-40 flex items-end justify-between gap-1 px-1">
-              {weekly.map((w) => (
-                <div key={w.wk} className="flex flex-col items-center gap-1 flex-1">
-                  <span className="text-xs tabular-nums" style={{ color: 'oklch(0.5 0.015 250)', fontSize: 9 }}>{w.hours}</span>
-                  <div className="w-full rounded-t" style={{ height: `${(w.hours / maxHours) * 100}px`, background: CHART_TEAL, minHeight: 4 }} />
-                  <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)', fontSize: 8 }}>{w.wk}</span>
-                </div>
-              ))}
-              <svg className="absolute inset-x-1 top-0 pointer-events-none" style={{ height: 120 }} viewBox={`0 0 ${weekly.length * 40} 120`} preserveAspectRatio="none">
-                <polyline
-                  points={weekly.map((w, i) => `${i * 40 + 20},${120 - (w.goalPct / 100) * 106}`).join(' ')}
-                  fill="none" stroke={CHART_GOLD} strokeWidth={2} />
-                {weekly.map((w, i) => (
-                  <circle key={i} cx={i * 40 + 20} cy={120 - (w.goalPct / 100) * 106} r={2.5} fill={CHART_GOLD} />
-                ))}
-              </svg>
-            </div>
-            <div className="flex items-center gap-3 mt-2 text-xs" style={{ color: 'oklch(0.5 0.015 250)' }}>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: CHART_TEAL }} /> 학습 시간</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: CHART_GOLD }} /> 주간 목표 달성률</span>
-            </div>
           </div>
         </div>
       </div>

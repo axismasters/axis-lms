@@ -77,7 +77,7 @@ function GrowthCard({ studentId }: { studentId: string }) {
               </span>
             </div>
             <div className="text-xs mt-0.5" style={{ color: 'oklch(0.55 0.015 250)' }}>
-              SP {profile?.totalSP.toLocaleString() ?? 0} · 엠블럼 {myEmblems.length}개
+              성장 활동 {profile?.totalSP.toLocaleString() ?? 0} · 엠블럼 {myEmblems.length}개
             </div>
           </div>
           <ChevronRight size={14} style={{ color: 'oklch(0.7 0.01 250)', flexShrink: 0 }} />
@@ -143,6 +143,9 @@ export default function TeacherStudentGrowth() {
 
   return (
     <TeacherLayout title="학생 성장 현황">
+      {/* [Phase 3D v3-r11-r5] PC 최적화: 모바일형 단일 카드 스택에서 PC 대시보드 구조로 전환.
+          컨테이너를 lg:max-w-6xl로 확장하고, 담당 학생 성장 카드 목록을 lg:grid-cols-2로
+          배치해 PC에서 좁게 중앙에 몰리지 않도록 한다. 모바일은 기존과 동일. */}
       <div className="max-w-lg lg:max-w-6xl mx-auto px-4 py-4 space-y-4">
 
         {/* 안내 */}
@@ -154,7 +157,7 @@ export default function TeacherStudentGrowth() {
         <div className="grid grid-cols-3 gap-2">
           {[
             { icon: BarChart2, label: '담당 학생', value: `${assignedStudentIds.length}명`, color: '#040D1E' },
-            { icon: Zap, label: '평균 SP', value: assignedStudentIds.length > 0 ? `${Math.round(assignedStudentIds.reduce((s, id) => s + (getProfile(id)?.totalSP ?? 0), 0) / assignedStudentIds.length).toLocaleString()}` : '-', color: 'oklch(0.4 0.1 80)' },
+            { icon: Zap, label: '평균 성장 활동', value: assignedStudentIds.length > 0 ? `${Math.round(assignedStudentIds.reduce((s, id) => s + (getProfile(id)?.totalSP ?? 0), 0) / assignedStudentIds.length).toLocaleString()}` : '-', color: 'oklch(0.4 0.1 80)' },
             { icon: Lightbulb, label: 'IF 분석 안내', value: '성적 탭', color: '#040D1E' },
           ].map(({ icon: Icon, label, value, color }) => (
             <div key={label} className="axis-card p-3 text-center">
@@ -168,7 +171,7 @@ export default function TeacherStudentGrowth() {
         {/* 정렬 */}
         <div className="flex items-center gap-2">
           <span className="text-xs" style={{ color: 'oklch(0.55 0.015 250)' }}>정렬:</span>
-          {[['sp', 'SP 높은 순'], ['name', '기본 순서']] .map(([key, label]) => (
+          {[['sp', '성장 활동 높은 순'], ['name', '기본 순서']] .map(([key, label]) => (
             <button key={key} type="button" onClick={() => setSortBy(key as 'sp' | 'name')}
               className="px-2.5 py-1 rounded-lg text-xs font-semibold"
               style={{
@@ -187,7 +190,7 @@ export default function TeacherStudentGrowth() {
             <div className="text-sm" style={{ color: 'oklch(0.6 0.015 250)' }}>담당 학생이 없습니다.</div>
           </div>
         ) : (
-          <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {sortedIds.map(id => <GrowthCard key={id} studentId={id} />)}
           </div>
         )}

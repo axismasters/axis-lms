@@ -49,13 +49,13 @@ function SeasonDetail({ season }: { season: RivalSeason }) {
           </div>
         ))}
       </div>
-      {/* 성장 비교 기준 */}
+      {/* 승패 기준 */}
       <div className="rounded-lg p-3 text-xs" style={{ background: 'oklch(0.97 0.003 250)' }}>
-        <div className="font-semibold mb-1" style={{ color: 'oklch(0.3 0.02 250)' }}>성장 비교 기준</div>
+        <div className="font-semibold mb-1" style={{ color: 'oklch(0.3 0.02 250)' }}>승패 기준</div>
         <div className="space-y-1" style={{ color: 'oklch(0.4 0.015 250)' }}>
-          <div><span className="font-semibold" style={{ color: 'oklch(0.35 0.15 145)' }}>우위: </span>{season.winCondition}</div>
-          <div><span className="font-semibold" style={{ color: 'oklch(0.42 0.2 27)' }}>보완: </span>{season.loseCondition}</div>
-          <div><span className="font-semibold">대등: </span>{season.drawCondition}</div>
+          <div><span className="font-semibold" style={{ color: 'oklch(0.35 0.15 145)' }}>WIN: </span>{season.winCondition}</div>
+          <div><span className="font-semibold" style={{ color: 'oklch(0.42 0.2 27)' }}>LOSE: </span>{season.loseCondition}</div>
+          <div><span className="font-semibold">무승부: </span>{season.drawCondition}</div>
         </div>
       </div>
       {/* 보상 기준 */}
@@ -63,12 +63,12 @@ function SeasonDetail({ season }: { season: RivalSeason }) {
         <div className="font-semibold mb-1" style={{ color: 'oklch(0.3 0.02 250)' }}>보상 기준</div>
         <div className="space-y-1" style={{ color: 'oklch(0.4 0.015 250)' }}>
           <div className="flex gap-2">
-            <span className="font-semibold text-green-600">SP 우위: +{season.spReward.win}</span>
-            <span className="font-semibold text-gray-500">보완: +{season.spReward.loss}</span>
-            <span className="font-semibold text-blue-500">대등: +{season.spReward.draw}</span>
+            <span className="font-semibold text-green-600">SP 승리: +{season.spReward.win}</span>
+            <span className="font-semibold text-gray-500">패배: +{season.spReward.loss}</span>
+            <span className="font-semibold text-blue-500">무: +{season.spReward.draw}</span>
           </div>
-          <div><span className="font-semibold">연속 상승 보너스: </span>{season.streakBonus}</div>
-          <div><span className="font-semibold">재도전 보너스: </span>{season.revengeBonus}</div>
+          <div><span className="font-semibold">연승 보너스: </span>{season.streakBonus}</div>
+          <div><span className="font-semibold">복수 보너스: </span>{season.revengeBonus}</div>
           <div><span className="font-semibold">엠블럼: </span>{season.emblemCondition}</div>
         </div>
       </div>
@@ -96,8 +96,8 @@ function CreateSeasonModal({ onClose }: { onClose: () => void }) {
   const [winSP, setWinSP] = useState('20');
   const [loseSP, setLoseSP] = useState('5');
   const [drawSP, setDrawSP] = useState('10');
-  const [streakBonus, setStreakBonus] = useState('연속 상승 3회 시 SP +50');
-  const [revengeBonus, setRevengeBonus] = useState('재도전 성공 시 SP +30');
+  const [streakBonus, setStreakBonus] = useState('연승 3회 시 SP +50');
+  const [revengeBonus, setRevengeBonus] = useState('복수 성공 시 SP +30');
   const [emblemCond, setEmblemCond] = useState('');
 
   const GRADE_OPTIONS = ['고1', '고2', '고3', 'N수'];
@@ -152,7 +152,7 @@ function CreateSeasonModal({ onClose }: { onClose: () => void }) {
           <div>
             <label style={labelStyle}>SP 지급 기준</label>
             <div className="grid grid-cols-3 gap-2">
-              {[['우위', winSP, setWinSP], ['보완', loseSP, setLoseSP], ['대등', drawSP, setDrawSP]].map(
+              {[['승리', winSP, setWinSP], ['패배', loseSP, setLoseSP], ['무승부', drawSP, setDrawSP]].map(
                 ([label, val, setter]) => (
                   <div key={label as string}>
                     <div style={{ ...labelStyle, marginBottom: 2 }}>{label as string}</div>
@@ -164,11 +164,11 @@ function CreateSeasonModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
           <div>
-            <label style={labelStyle}>연속 상승 보너스 설명</label>
+            <label style={labelStyle}>연승 보너스 설명</label>
             <input style={inputStyle} value={streakBonus} onChange={e => setStreakBonus(e.target.value)} />
           </div>
           <div>
-            <label style={labelStyle}>재도전 성공 보너스 설명</label>
+            <label style={labelStyle}>복수 성공 보너스 설명</label>
             <input style={inputStyle} value={revengeBonus} onChange={e => setRevengeBonus(e.target.value)} />
           </div>
           <div>
@@ -215,7 +215,7 @@ export default function RivalSeasonManagement() {
   return (
     <AdminLayout title="Rival 시즌 관리"
       breadcrumbs={[{ label: '성장관리', path: '/admin/growth/overview' }, { label: 'Rival 시즌 관리' }]}>
-      <div className="max-w-2xl lg:max-w-4xl space-y-4">
+      <div className="max-w-2xl space-y-4">
 
         {/* 현재 시즌 요약 */}
         {activeSeason ? (
@@ -292,7 +292,7 @@ export default function RivalSeasonManagement() {
 
         {/* 기록 보관 안내 */}
         <div className="axis-card p-4 text-xs" style={{ borderLeft: '3px solid #040D1E', color: 'oklch(0.4 0.015 250)' }}>
-          <strong>시즌 기록 보관 정책:</strong> 종료된 시즌의 성장 비교 기록과 SP 지급 내역은 영구 보관됩니다.
+          <strong>시즌 기록 보관 정책:</strong> 종료된 시즌의 승패 기록과 SP 지급 내역은 영구 보관됩니다.
           학생에게는 자신의 기록만 공개되며, 전체 Rival 연결 관계는 관리자만 조회할 수 있습니다.
         </div>
 

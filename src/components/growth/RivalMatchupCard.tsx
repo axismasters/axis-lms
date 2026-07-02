@@ -12,8 +12,7 @@
 // ⚠ 전투/몬스터/무기/아이템샵 표현 금지. VS 메달은 학습 대전 톤(월계관+네이비 원판).
 //    실명/식별정보 노출 금지 — 상대는 "Rival 평균" 또는 익명 닉네임만.
 
-import { useId } from 'react';
-import { ChevronRight, Target, CalendarCheck, Clock, User, GraduationCap, Trophy } from 'lucide-react';
+import { ChevronRight, Target, CalendarCheck, Clock, User, GraduationCap } from 'lucide-react';
 import type { RivalMatchup } from '@/lib/rivalMatchupEngine';
 import { CHART_TEAL, CHART_BLUE } from '@/lib/brandColors';
 
@@ -44,44 +43,21 @@ function MiniTrend({ points, color }: { points: { label: string; value: number }
 }
 
 function VsMedallion() {
-  // v3-r11: AxisEmblemBadge와 동일한 "뾰족한 잎 + 크리스프 킬라인" 언어로 재작업
-  // (기존은 얇은 타원 잎 4개 + 단색 원판이라 허접해 보였다).
-  const rid = useId();
-  const uid = `vs${rid.replace(/[:]/g, '')}`;
-  const cx = 36, cy = 36, ring = '#C8A15A', keyline = '#04101F';
-  const nodes = [
-    { a: 100, r: 19, len: 6.5 }, { a: 135, r: 24.2, len: 5.5 },
-    { a: 170, r: 24.2, len: 4.5 }, { a: 205, r: 19, len: 3.5 },
-  ];
-  const pt = (a: number, r: number) => ({ x: cx + r * Math.cos((a * Math.PI) / 180), y: cy + r * Math.sin((a * Math.PI) / 180) });
-  const left = nodes.map(n => ({ ...pt(n.a, n.r), a: n.a, len: n.len }));
-  const right = left.map(p => ({ x: cx - (p.x - cx), y: p.y, a: 180 - p.a, len: p.len }));
-  const leafPath = (len: number) => {
-    const w = len * 0.36;
-    return `M 0 0 Q ${(len * 0.32).toFixed(2)} ${w.toFixed(2)} ${(len * 0.68).toFixed(2)} ${(w * 0.55).toFixed(2)} ` +
-      `Q ${(len * 0.92).toFixed(2)} ${(w * 0.2).toFixed(2)} ${len.toFixed(2)} 0 ` +
-      `Q ${(len * 0.68).toFixed(2)} ${(-w * 0.55).toFixed(2)} ${(len * 0.32).toFixed(2)} ${(-w).toFixed(2)} ` +
-      `Q ${(len * 0.1).toFixed(2)} ${(-w * 0.4).toFixed(2)} 0 0 Z`;
-  };
   return (
-    <svg width={72} height={72} viewBox="0 0 72 72" className="flex-shrink-0" role="img" aria-label="VS">
-      <defs>
-        <radialGradient id={`ring-${uid}`} cx="36%" cy="28%" r="80%">
-          <stop offset="0%" stopColor="#FFF7DE" /><stop offset="55%" stopColor={ring} /><stop offset="100%" stopColor={ring} />
-        </radialGradient>
-        <radialGradient id={`plate-${uid}`} cx="40%" cy="32%" r="75%">
-          <stop offset="0%" stopColor="#12233B" /><stop offset="100%" stopColor="#04101F" />
-        </radialGradient>
-      </defs>
-      {[...left, ...right].map((p, i) => (
-        <g key={i} transform={`translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${(i < 4 ? p.a + 98 : p.a - 98).toFixed(1)})`}>
-          <path d={leafPath(p.len)} fill={ring} stroke={keyline} strokeWidth={0.4} opacity={0.92} />
+    <svg width={72} height={72} viewBox="0 0 72 72" className="flex-shrink-0" aria-label="VS">
+      {/* 월계관 */}
+      {([-1, 1] as const).map((dir) => (
+        <g key={dir} transform={dir === 1 ? 'scale(-1,1) translate(-72 0)' : ''} opacity={0.9}>
+          {[0, 1, 2, 3].map((i) => {
+            const y = 26 + i * 6; const x = 10 + i * 1.6;
+            return <ellipse key={i} cx={x} cy={y} rx={3.4} ry={1.9} fill="#C8A15A" transform={`rotate(-40 ${x} ${y})`} />;
+          })}
         </g>
       ))}
-      <circle cx={cx} cy={cy} r={18.5} fill={`url(#ring-${uid})`} stroke={keyline} strokeWidth={0.6} />
-      <circle cx={cx} cy={cy} r={15.5} fill={`url(#plate-${uid})`} stroke={keyline} strokeWidth={0.6} />
-      <circle cx={cx} cy={cy} r={13.2} fill="none" stroke={ring} strokeWidth={0.5} opacity={0.85} />
-      <text x={cx} y={cy + 5.5} textAnchor="middle" fontSize="16" fontWeight={800} fill="#E4C979" fontStyle="italic">VS</text>
+      <circle cx="36" cy="36" r="21" fill="#C8A15A" />
+      <circle cx="36" cy="36" r="18.5" fill="#0B1B33" stroke="#040D1E" strokeWidth={1} />
+      <circle cx="36" cy="36" r="15.5" fill="none" stroke="#C8A15A" strokeWidth={1} opacity={0.8} />
+      <text x="36" y="42" textAnchor="middle" fontSize="17" fontWeight="800" fill="#E4C979" fontStyle="italic">VS</text>
     </svg>
   );
 }
@@ -179,7 +155,7 @@ export function RivalMatchupCard({
       <div className="flex items-center justify-between gap-3 px-5 py-4 flex-wrap" style={{ borderTop: '1px solid oklch(0.93 0.008 250)', background: 'oklch(0.98 0.006 90)' }}>
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#F8F0DC' }}>
-            <Trophy size={17} style={{ color: '#C8A15A' }} />
+            <span style={{ fontSize: 18 }}>🏆</span>
           </div>
           <div className="min-w-0">
             <div className="font-bold text-sm" style={{ color: 'oklch(0.2 0.02 250)' }}>
