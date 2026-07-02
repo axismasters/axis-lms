@@ -19,6 +19,7 @@
 // 외부 API(props)는 v1과 100% 동일 — 기존 6개 호출부(EmblemManagement, TeacherStudentDetail,
 // TeacherStudentGrowth, StudentGrowthShowcase, StudentMyPage) 수정 없이 시각만 업그레이드된다.
 
+import { useId } from 'react';
 import type { EmblemIconKey, EmblemLevel } from '@/lib/growthData';
 import { EMBLEM_LEVEL_STYLE } from '@/lib/growthData';
 
@@ -190,6 +191,43 @@ function LaurelWreath({ gradId, stemColor }: { gradId: string; stemColor: string
   );
 }
 
+/** 링 리드(reeded) 눈금 — 동전 테두리 각인 느낌. 큰 사이즈에서만 사용. */
+function RingTicks({ color }: { color: string }) {
+  const n = 48, rIn = RING_OUT * 0.94, rOut = RING_OUT * 1.0;
+  const ticks: React.ReactElement[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = (360 * i) / n * Math.PI / 180;
+    ticks.push(
+      <line key={i}
+        x1={(CX + rIn * Math.cos(a)).toFixed(2)} y1={(CY + rIn * Math.sin(a)).toFixed(2)}
+        x2={(CX + rOut * Math.cos(a)).toFixed(2)} y2={(CY + rOut * Math.sin(a)).toFixed(2)}
+        stroke={color} strokeWidth={0.5} opacity={0.45} />
+    );
+  }
+  return <g>{ticks}</g>;
+}
+
+/** 하단 리본 플라크(배너) — 참고 이미지처럼 메달 아래 매달린 골드 테두리 네임플레이트 형상.
+ * 텍스트는 넣지 않고(작은 크기에서 뭉개짐) "형상"만 그린다. 큰 사이즈에서만 사용. */
+function PlaqueBanner({ ring, uid }: { ring: string; uid: string }) {
+  const top = CY + RING_OUT - 2;
+  return (
+    <g>
+      <path d={`M ${CX - 4} ${top - 1} L ${CX - 15} ${top + 6}`} stroke={ring} strokeWidth={2} opacity={0.85} />
+      <path d={`M ${CX + 4} ${top - 1} L ${CX + 15} ${top + 6}`} stroke={ring} strokeWidth={2} opacity={0.85} />
+      <path d={`M ${CX - 26} ${top + 4}
+                L ${CX + 26} ${top + 4}
+                L ${CX + 22} ${top + 13}
+                L ${CX + 26} ${top + 22}
+                L ${CX - 26} ${top + 22}
+                L ${CX - 22} ${top + 13} Z`}
+        fill={`url(#plate-${uid})`} stroke={KEYLINE} strokeWidth={0.7} />
+      <rect x={CX - 20} y={top + 8} width={40} height={10} rx={1.5} fill="none" stroke={ring} strokeWidth={0.5} opacity={0.7} />
+      <path d={`M ${CX} ${top + 9.5} l 2 3.5 l -2 3.5 l -2 -3.5 Z`} fill={ring} opacity={0.9} />
+    </g>
+  );
+}
+
 export function AxisEmblemBadge({
   iconKey = 'generic', level = 'BASIC', accent, size = 84, locked = false, className,
 }: AxisEmblemBadgeProps) {
@@ -198,7 +236,13 @@ export function AxisEmblemBadge({
   const plate = style.plate;
   const symbolColor = accent ?? style.accent;
   const gemColor = accent ?? (style.premium ? '#E4C979' : style.ring);
-  const uid = `${iconKey}-${level}${accent ? '-a' : ''}`;
+  // useId(): 같은 엠블럼이 화면에 여러 개 렌더돼도 gradient/filter id가 절대 충돌하지 않도록
+  // React가 보장하는 고유 id를 접두어로 사용한다(콜론 포함 id는 url(#...) 참조에 안전).
+  const rid = useId();
+  const uid = `e${rid.replace(/[:]/g, '')}`;
+  // 큰 사이즈에서만 리드 눈금 + 하단 플라크 배너를 그린다(작은 배지에선 뭉개짐).
+  const detailed = size >= 88;
+  const viewBox = detailed ? '0 0 100 118' : '0 0 100 100';
 
   if (locked) {
     return (
@@ -213,7 +257,7 @@ export function AxisEmblemBadge({
   }
 
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" className={className} role="img" aria-label="성취 엠블럼">
+    <svg width={size} height={detailed ? size * 1.18 : size} viewBox={viewBox} className={className} role="img" aria-label="성취 엠블럼">
       <defs>
         <radialGradient id={`plate-${uid}`} cx="40%" cy="32%" r="75%">
           <stop offset="0%" stopColor={plate} stopOpacity={0.98} />
@@ -239,6 +283,9 @@ export function AxisEmblemBadge({
         </radialGradient>
       </defs>
 
+      {/* 하단 플라크 배너 — 링 뒤로 매달리게 먼저 그린다 */}
+      {detailed && <PlaqueBanner ring={ring} uid={uid} />}
+
       <LaurelWreath gradId={`leaf-${uid}`} stemColor={ring} />
 
       <path d="M50 8 L58 17.5 L50 24.5 L42 17.5 Z" fill={`url(#gem-${uid})`} stroke={KEYLINE} strokeWidth={0.7} />
@@ -249,6 +296,7 @@ export function AxisEmblemBadge({
       <path d="M65 15 l1 2.2 l2.2 0.9 l-2.2 0.9 l-1 2.2 l-1 -2.2 l-2.2 -0.9 l2.2 -0.9 Z" fill="#FFF7DE" opacity={0.7} />
 
       <circle cx={CX} cy={CY} r={RING_OUT} fill={`url(#ring-${uid})`} stroke={KEYLINE} strokeWidth={0.7} />
+      {detailed && <RingTicks color={KEYLINE} />}
       <path d={`M ${CX - RING_OUT * 0.66} ${CY - RING_OUT * 0.75} A ${RING_OUT * 0.9} ${RING_OUT * 0.9} 0 0 1 ${CX + RING_OUT * 0.86} ${CY - RING_OUT * 0.4}`}
         fill="none" stroke="#FFFFFF" strokeWidth={1.3} opacity={0.4} strokeLinecap="round" />
 

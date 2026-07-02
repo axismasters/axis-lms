@@ -166,7 +166,7 @@ export default function StudentGrowthShowcase() {
 
   return (
     <StudentLayout title="성장 진열장">
-      <div className="max-w-2xl lg:max-w-6xl mx-auto px-4 py-5 space-y-5">
+      <div className="max-w-2xl lg:max-w-[1280px] mx-auto px-4 py-5 space-y-5">
 
         {/* 헤더 */}
         <div className="flex items-center gap-2">

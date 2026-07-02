@@ -7,6 +7,7 @@
 // ⚠ Mastery / Axis Master 단계만 딥 네이비+골드 프리미엄 프레임(방패)을 쓴다.
 //    하위 단계는 밝은 아이보리 배경 + 단계 색 라인아트로 "가벼운 프리미엄" 톤 유지.
 
+import { useId } from 'react';
 import type { StudentTier } from '@/lib/growthData';
 import { TIER_COLORS, TIER_IS_PREMIUM_FRAME } from '@/lib/growthData';
 
@@ -75,6 +76,8 @@ function TierSymbol({ tier, color }: { tier: StudentTier; color: string }) {
 }
 
 export function AxisTierMedallion({ tier, size = 96, className }: AxisTierMedallionProps) {
+  const rid = useId();
+  const gid = `tier${rid.replace(/[:]/g, '')}`;
   const color = TIER_COLORS[tier];
   const premium = TIER_IS_PREMIUM_FRAME[tier];
   const gold = '#C8A15A';
@@ -85,7 +88,7 @@ export function AxisTierMedallion({ tier, size = 96, className }: AxisTierMedall
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" className={className} role="img" aria-label="성장 단계">
       <defs>
-        <linearGradient id={`tier-${tier}`} x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={premium ? '#12233B' : '#FFFFFF'} />
           <stop offset="100%" stopColor={premium ? '#081428' : '#FBF9F4'} />
         </linearGradient>
@@ -95,14 +98,14 @@ export function AxisTierMedallion({ tier, size = 96, className }: AxisTierMedall
         // 프리미엄 단계: 골드 이중 프레임
         <>
           <path d={shield} fill={gold} />
-          <path d="M50 10 C39 17 24 20 17 20 C17 44 24 71 50 87 C76 71 83 44 83 20 C76 20 61 17 50 10 Z" fill={`url(#tier-${tier})`} stroke="#081428" strokeWidth={1} />
+          <path d="M50 10 C39 17 24 20 17 20 C17 44 24 71 50 87 C76 71 83 44 83 20 C76 20 61 17 50 10 Z" fill={`url(#${gid})`} stroke="#081428" strokeWidth={1} />
           <path d="M50 15 C40 21 27 24 21 24 C21 45 27 68 50 82 C73 68 79 45 79 24 C73 24 60 21 50 15 Z" fill="none" stroke={gold} strokeWidth={1.2} opacity={0.75} />
         </>
       )}
       {!premium && (
         // 하위 단계: 밝은 배경 + 단계색 라인 프레임
         <>
-          <path d={shield} fill={`url(#tier-${tier})`} stroke={color} strokeWidth={2.4} />
+          <path d={shield} fill={`url(#${gid})`} stroke={color} strokeWidth={2.4} />
           <path d="M50 14 C40 20 27 23 21 23 C21 45 27 69 50 84 C73 69 79 45 79 23 C73 23 60 20 50 14 Z" fill="none" stroke={gold} strokeWidth={1} opacity={0.5} />
         </>
       )}

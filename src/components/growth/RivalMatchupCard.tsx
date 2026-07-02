@@ -12,6 +12,7 @@
 // ⚠ 전투/몬스터/무기/아이템샵 표현 금지. VS 메달은 학습 대전 톤(월계관+네이비 원판).
 //    실명/식별정보 노출 금지 — 상대는 "Rival 평균" 또는 익명 닉네임만.
 
+import { useId } from 'react';
 import { ChevronRight, Target, CalendarCheck, Clock, User, GraduationCap, Trophy } from 'lucide-react';
 import type { RivalMatchup } from '@/lib/rivalMatchupEngine';
 import { CHART_TEAL, CHART_BLUE } from '@/lib/brandColors';
@@ -45,6 +46,8 @@ function MiniTrend({ points, color }: { points: { label: string; value: number }
 function VsMedallion() {
   // v3-r11: AxisEmblemBadge와 동일한 "뾰족한 잎 + 크리스프 킬라인" 언어로 재작업
   // (기존은 얇은 타원 잎 4개 + 단색 원판이라 허접해 보였다).
+  const rid = useId();
+  const uid = `vs${rid.replace(/[:]/g, '')}`;
   const cx = 36, cy = 36, ring = '#C8A15A', keyline = '#04101F';
   const nodes = [
     { a: 100, r: 19, len: 6.5 }, { a: 135, r: 24.2, len: 5.5 },
@@ -63,10 +66,10 @@ function VsMedallion() {
   return (
     <svg width={72} height={72} viewBox="0 0 72 72" className="flex-shrink-0" role="img" aria-label="VS">
       <defs>
-        <radialGradient id="vsRing" cx="36%" cy="28%" r="80%">
+        <radialGradient id={`ring-${uid}`} cx="36%" cy="28%" r="80%">
           <stop offset="0%" stopColor="#FFF7DE" /><stop offset="55%" stopColor={ring} /><stop offset="100%" stopColor={ring} />
         </radialGradient>
-        <radialGradient id="vsPlate" cx="40%" cy="32%" r="75%">
+        <radialGradient id={`plate-${uid}`} cx="40%" cy="32%" r="75%">
           <stop offset="0%" stopColor="#12233B" /><stop offset="100%" stopColor="#04101F" />
         </radialGradient>
       </defs>
@@ -75,8 +78,8 @@ function VsMedallion() {
           <path d={leafPath(p.len)} fill={ring} stroke={keyline} strokeWidth={0.4} opacity={0.92} />
         </g>
       ))}
-      <circle cx={cx} cy={cy} r={18.5} fill="url(#vsRing)" stroke={keyline} strokeWidth={0.6} />
-      <circle cx={cx} cy={cy} r={15.5} fill="url(#vsPlate)" stroke={keyline} strokeWidth={0.6} />
+      <circle cx={cx} cy={cy} r={18.5} fill={`url(#ring-${uid})`} stroke={keyline} strokeWidth={0.6} />
+      <circle cx={cx} cy={cy} r={15.5} fill={`url(#plate-${uid})`} stroke={keyline} strokeWidth={0.6} />
       <circle cx={cx} cy={cy} r={13.2} fill="none" stroke={ring} strokeWidth={0.5} opacity={0.85} />
       <text x={cx} y={cy + 5.5} textAnchor="middle" fontSize="16" fontWeight={800} fill="#E4C979" fontStyle="italic">VS</text>
     </svg>
